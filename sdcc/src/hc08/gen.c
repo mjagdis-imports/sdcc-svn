@@ -8946,6 +8946,54 @@ decodePointerOffset (operand * opOffset, int * litOffset, char ** rematOffset)
     wassertl (0, "Pointer get/set with non-constant offset");
 }
 
+/*-----------------------------------------------------------------*/
+/* genMaskExtendSign - generate masking code for masking top       */
+/* byte of bit-field and extending sign for signed bitfield        */
+/*-----------------------------------------------------------------*/
+static void
+genMaskExtendSign (bool sign, int len)
+{
+  if (!(len % 8))
+    return;
+
+  if (sign && len == 1)
+    {
+      emitcode ("rora", "");
+      emitcode ("clra", "");
+      emitcode ("sbc", zero);
+      regalloc_dry_run_cost += 4;
+    }
+  else if (sign && (len >= 6 || optimize.nosidechannels))
+    {
+      for (int i = len; i < 8; i++)
+        {
+          emitcode ("lsla", "");
+          regalloc_dry_run_cost++;
+        }
+      for (int i = len; i < 8; i++)
+        {
+          emitcode ("asra", "");
+          regalloc_dry_run_cost++;
+        }
+    }
+  else
+    {
+      emitcode ("and", "#0x%02x", 0xff >> (8 - len));
+      regalloc_dry_run_cost += 2;
+      
+      if (sign)
+        {
+          symbol *tlbl = regalloc_dry_run ? 0 : newiTempLabel (0);
+          emitcode ("bit", "#0x%02x", 1u << (len % 8 - 1));
+          if (!regalloc_dry_run)
+            emitcode ("beq", "!tlabel", labelKey2num (tlbl->key));
+          emitcode ("ora", "#0x%02x", (0xff << len) & 0xff);
+          regalloc_dry_run_cost += 6;
+          emitLabel (tlbl);
+        }
+    }
+  hc08_dirtyReg (hc08_reg_a, false);
+}
 
 /*-----------------------------------------------------------------*/
 /* genUnpackBits - generates code for unpacking bits               */
@@ -9007,21 +9055,7 @@ genUnpackBits (operand * result, operand * left, operand * right, iCode * ifx)
     {
       loadRegIndexed (hc08_reg_a, litOffset, rematOffset);
       AccRsh (bstr, false);
-      emitcode ("and", "#0x%02x", ((unsigned char) - 1) >> (8 - blen));
-      regalloc_dry_run_cost += 2;
-      if (!SPEC_USIGN (etype) && !IS_BOOLEAN (etype))
-        {
-          /* signed bitfield */
-          symbol *tlbl = (regalloc_dry_run ? 0 : newiTempLabel (NULL));
-
-          emitcode ("bit", "#0x%02x", 1 << (blen - 1));
-          if (!regalloc_dry_run)
-            emitcode ("beq", "%05d$", labelKey2num (tlbl->key));
-          emitcode ("ora", "#0x%02x", (unsigned char) (0xff << blen));
-          regalloc_dry_run_cost += 6;
-          if (!regalloc_dry_run)
-            emitLabel (tlbl);
-        }
+      genMaskExtendSign (!SPEC_USIGN (etype) && !IS_BOOLEAN (etype), blen);
       storeRegToAop (hc08_reg_a, AOP (result), offset++);
       goto finish;
     }
@@ -9094,7 +9128,6 @@ finish:
   pullOrFreeReg (hc08_reg_a, needpulla);
 }
 
-
 /*-----------------------------------------------------------------*/
 /* genUnpackBitsImmed - generates code for unpacking bits          */
 /*-----------------------------------------------------------------*/
@@ -9137,7 +9170,7 @@ genUnpackBitsImmed (operand * left, operand *right, operand * result, iCode * ic
   /* if the bitfield is a single bit in the direct page */
   if (blen == 1 && derefaop->type == AOP_DIR)
     {
-      if (!ifx && bstr)
+      if (!ifx && bstr && !optimize.nosidechannels)
         {
           symbol *tlbl = (regalloc_dry_run ? 0 : newiTempLabel (NULL));
 
@@ -9193,22 +9226,7 @@ genUnpackBitsImmed (operand * left, operand *right, operand * result, iCode * ic
       if (!ifx)
         {
           AccRsh (bstr, false);
-          emitcode ("and", "#0x%02x", ((unsigned char) - 1) >> (8 - blen));
-          regalloc_dry_run_cost += 2;
-          hc08_dirtyReg (hc08_reg_a, false);
-          if (!SPEC_USIGN (etype))
-            {
-              /* signed bitfield */
-              symbol *tlbl = (regalloc_dry_run ? 0 : newiTempLabel (NULL));
-
-              emitcode ("bit", "#0x%02x", 1 << (blen - 1));
-              if (!regalloc_dry_run)
-                emitcode ("beq", "%05d$", labelKey2num (tlbl->key));
-              emitcode ("ora", "#0x%02x", (unsigned char) (0xff << blen));
-              regalloc_dry_run_cost += 6;
-              if (!regalloc_dry_run)
-                emitLabel (tlbl);
-            }
+          genMaskExtendSign (!SPEC_USIGN (etype) && !IS_BOOLEAN (etype), blen);
           storeRegToAop (hc08_reg_a, AOP (result), offset);
           if (AOP_TYPE (result) == AOP_REG && AOP(result)->aopu.aop_reg[offset]->rIdx == A_IDX)
             assigned_a = true;
@@ -10526,18 +10544,7 @@ genCast (iCode * ic)
             pushReg(hc08_reg_a, false);
           loadRegFromAop (hc08_reg_a, result->aop, result->aop->size - 1);
         }
-      emitcode ("and", "#0x%02x", topbytemask);
-      regalloc_dry_run_cost += 2;
-      if (!SPEC_USIGN (resulttype)) // Sign-extend
-        {
-          symbol *tlbl = regalloc_dry_run ? 0 : newiTempLabel (0);
-          emitcode ("bit", "#0x%02x", 1u << (SPEC_BITINTWIDTH (resulttype) % 8 - 1));
-          if (!regalloc_dry_run)
-            emitcode ("beq", "!tlabel", labelKey2num (tlbl->key));
-          emitcode ("ora", "#0x%02x", ~topbytemask & 0xff);
-          regalloc_dry_run_cost += 6;
-          emitLabel (tlbl);
-        }
+      genMaskExtendSign (!SPEC_USIGN (resulttype), SPEC_BITINTWIDTH (resulttype) % 8);
       storeRegToAop (hc08_reg_a, result->aop, result->aop->size - 1);
       if (save_a)
         pullReg (hc08_reg_a);

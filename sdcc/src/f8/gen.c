@@ -4747,7 +4747,7 @@ genCmp (const iCode *ic, iCode *ifx)
       left = t;  
     }
 
-  if (ifx && right->aop->type == AOP_LIT && sign && aopIsLitVal (right->aop, 0, size, 0) && (aopIsOp8_1 (left->aop, size - 1) || size >= 2 && aopIsOp16_1 (left->aop, size - 2))) // Use tst(w)
+  if (ifx && sign && aopIsLitVal (right->aop, 0, size, 0) && (aopIsOp8_1 (left->aop, size - 1) || size >= 2 && aopIsOp16_1 (left->aop, size - 2))) // Use tst(w)
     {
       if (aopIsOp8_1 (left->aop, size - 1))
         {
@@ -4766,7 +4766,7 @@ genCmp (const iCode *ic, iCode *ifx)
       emitLabel (tlbl);
       goto release;
     }
-  else if (!ifx && right->aop->type == AOP_LIT && sign && aopIsLitVal (right->aop, 0, size, 0))
+  else if (!ifx && sign && aopIsLitVal (right->aop, 0, size, 0))
     {
       if (aopRS (left->aop) && left->aop->aopu.bytes[size - 1].in_reg && regDead (left->aop->aopu.bytes[size - 1].byteu.reg->rIdx, ic) && !aopInReg (left->aop, size - 1, YH_IDX))
         emit3_o (A_SLL, left->aop, size - 1, 0, 0);
@@ -6603,16 +6603,23 @@ init_stackop (asmop *stackop, int size, long int stk_off)
 // Sign-extending of top bit-field or _BitInt byte), directly after an and which set z flag according to value.
 static void extend_bit_sign (int blen)
 {
-   if (optimize.nosidechannels)
+  if (blen == 7) // 2B
     {
-      if (blen == 1)
+      emit3 (A_SLL, ASMOP_XL, 0);
+      emit3 (A_SRA, ASMOP_XL, 0);
+      return;
+    }
+
+  if (optimize.nosidechannels)
+    {
+      if (blen == 1) // 6B
         {
           emit3 (A_SRL, ASMOP_XL, 0);
           emit3 (A_CLR, ASMOP_XL, 0);
           emit3 (A_ADC, ASMOP_XL, ASMOP_MONE);
           emit3 (A_XOR, ASMOP_XL, ASMOP_MONE);
         }
-      else
+      else // 11B
         {
           push (ASMOP_XL, 0, 1);
           emit2 ("ld", "xl, #0x%02x", 0xff >> (9 - blen));
@@ -6629,13 +6636,13 @@ static void extend_bit_sign (int blen)
     }
 
   symbol *const tlbl = (regalloc_dry_run ? 0 : newiTempLabel (0));
-  if (blen == 1) // The and above already set the z flag.
+  if (blen == 1) // 4B. The and before calling this function already set the z flag.
     {
       if (tlbl)
         emit2 ("jrz", "#!tlabel", labelKey2num (tlbl->key));
       cost (2, 0);
     }
-  else if (blen != 1) 
+  else if (blen != 1) // 6B
     {
       emit2 ("cp", "xl, #0x%02x", 0x80 >> (8 - blen));
       cost (2, 1);

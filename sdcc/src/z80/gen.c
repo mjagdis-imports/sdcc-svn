@@ -16367,40 +16367,47 @@ unpackMaskA (bool sign, int len, bool c_dead)
   if (!(len % 8))
     return;
 
-  if (sign && len == 1)
+  if (sign && len == 1) // 3B
     {
       emit3(A_RRA, 0, 0);
       emit3(A_SBC, ASMOP_A, ASMOP_A);
     }
-
-  emit2 ("and a, !immedbyte", ((unsigned)-1 & 0xffu) >> (8 - len));
-  cost2 (2, 2, 2, 2, 7, 6, 4, 4, 8, 4, 2, 2, 2, 2, 2);
-
-  if (sign)
+  else if (sign && len == 7) // 3B
     {
-      if (optimize.nosidechannels)
+      emit3(A_RLA, 0, 0);
+      emit3(A_SRA, ASMOP_A, 0);
+    }
+  else
+    {
+      emit2 ("and a, !immedbyte", 0xff >> (8 - len));
+      cost2 (2, 2, 2, 2, 7, 6, 4, 4, 8, 4, 2, 2, 2, 2, 2);
+    
+      if (sign)
         {
-          if (!c_dead)
-            _push (PAIR_BC);
-          emit3 (A_LD, ASMOP_C, ASMOP_A);
-          emit2 ("ld a, !immedbyte",  0xff >> (9 - len));
-          cost2 (2, 2, 2, 2, 7, 6, 4, 4, 8, 4, 2, 2, 2, 2, 2);
-          emit3 (A_SUB, ASMOP_A, ASMOP_C);
-          emit2 ("and a, !immedbyte", (0xff00 >> (8 - len)) & 0xff);
-          cost2 (2, 2, 2, 2, 7, 6, 4, 4, 8, 4, 2, 2, 2, 2, 2);
-          emit3 (A_OR, ASMOP_A, ASMOP_C);
-          if (!c_dead)
-            _pop (PAIR_BC);
-        }
-      else
-        {
-          emit2 ("bit %d, a", len - 1);
-          cost2 (2, 2, 2, 2, 8, 6, 4, 4, 8, 4, 2, 2, 2, 2, 2);
-          symbol *tlbl = regalloc_dry_run ? NULL : newiTempLabel (NULL);
-          emitJP (tlbl, "z", 1.0f, true); // Assume nonnegative, jp optimzed to jr.
-          emit2 ("or a, !immedbyte", ((0xffu << len) & 0xffu));
-          cost (2, 0);
-          emitLabel (tlbl);
+          if (optimize.nosidechannels) // 7B (if c free)
+            {
+              if (!c_dead)
+                _push (PAIR_BC);
+              emit3 (A_LD, ASMOP_C, ASMOP_A);
+              emit2 ("ld a, !immedbyte",  0xff >> (9 - len));
+              cost2 (2, 2, 2, 2, 7, 6, 4, 4, 8, 4, 2, 2, 2, 2, 2);
+              emit3 (A_SUB, ASMOP_A, ASMOP_C);
+              emit2 ("and a, !immedbyte", (0xff00 >> (8 - len)) & 0xff);
+              cost2 (2, 2, 2, 2, 7, 6, 4, 4, 8, 4, 2, 2, 2, 2, 2);
+              emit3 (A_OR, ASMOP_A, ASMOP_C);
+              if (!c_dead)
+                _pop (PAIR_BC);
+            }
+          else // 6B
+            {
+              emit2 ("bit %d, a", len - 1);
+              cost2 (2, 2, 2, 2, 8, 6, 4, 4, 8, 4, 2, 2, 2, 2, 2);
+              symbol *tlbl = regalloc_dry_run ? NULL : newiTempLabel (NULL);
+              emitJP (tlbl, "z", 1.0f, true); // Assume nonnegative, jp optimized to jr.
+              emit2 ("or a, !immedbyte", ((0xffu << len) & 0xffu));
+              cost (2, 0);
+              emitLabel (tlbl);
+            }
         }
     }
 }
