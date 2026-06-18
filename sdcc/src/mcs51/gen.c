@@ -10781,6 +10781,38 @@ emitPtrByteSet (const char *rname, int p_type, const char *src)
 }
 
 /*-----------------------------------------------------------------*/
+/* genMaskExtendSign - generate masking code for masking top       */
+/* byte of bit-field and extending sign for signed bitfield        */
+/*-----------------------------------------------------------------*/
+static void
+genMaskExtendSign (bool sign, int len)
+{
+  if (!(len % 8))
+    return;
+
+  emitcode ("anl", "a,#!constbyte", 0xff >> (8 - len));
+
+  if (sign && len == 1)
+    {
+      emitcode ("rrc", "a");
+      emitcode ("subb", "a,acc");
+    }
+  else if (sign && (len >= 7 || optimize.nosidechannels))
+    {
+      emitcode ("mov", "c,acc.%d", len - 1);
+      for (int i = len; i < 8; i++)
+        emitcode ("mov", "acc.%d,c", i);
+    }
+  else if (sign)
+    {
+      symbol *tlbl = newiTempLabel (NULL);
+      emitcode ("jnb", "acc.%d,!tlabel", len - 1, labelKey2num (tlbl->key));
+      emitcode ("orl", "a,#0x%02x", (0xff << len) & 0xff);
+      emitLabel (tlbl);
+    }
+}
+
+/*-----------------------------------------------------------------*/
 /* genUnpackBits - generates code for unpacking bits               */
 /*-----------------------------------------------------------------*/
 static char *
@@ -10808,7 +10840,7 @@ genUnpackBits (operand * result, const char *rname, int ptype, iCode * ifx)
       emitPtrByteGet (rname, ptype, FALSE);
       if (blen == 1)
         {
-          return accBits[bstr];;
+          return accBits[bstr];
         }
       else
         {
@@ -10824,16 +10856,7 @@ genUnpackBits (operand * result, const char *rname, int ptype, iCode * ifx)
     {
       emitPtrByteGet (rname, ptype, FALSE);
       AccRol (8 - bstr);
-      emitcode ("anl", "a,#!constbyte", (unsigned)(((unsigned char)-1) >> (8 - blen)));
-      if (!SPEC_USIGN (etype) && !IS_BOOLEAN (etype))
-        {
-          /* signed bitfield */
-          symbol *tlbl = newiTempLabel (NULL);
-
-          emitcode ("jnb", "acc.%d,!tlabel", blen - 1, labelKey2num (tlbl->key));
-          emitcode ("orl", "a,#0x%02x", 0xffu << blen);
-          emitLabel (tlbl);
-        }
+      genMaskExtendSign (!SPEC_USIGN (etype) && !IS_BOOLEAN (etype), blen);
       opPut(result, "a", offset++);
       goto finish;
     }
@@ -10851,16 +10874,7 @@ genUnpackBits (operand * result, const char *rname, int ptype, iCode * ifx)
   if (rlen)
     {
       emitPtrByteGet (rname, ptype, FALSE);
-      emitcode ("anl", "a,#!constbyte", (unsigned)(((unsigned char)-1) >> (8 - rlen)));
-      if (!SPEC_USIGN (etype))
-        {
-          /* signed bitfield */
-          symbol *tlbl = newiTempLabel (NULL);
-
-          emitcode ("jnb", "acc.%d,!tlabel", rlen - 1, labelKey2num (tlbl->key));
-          emitcode ("orl", "a,#0x%02x", 0xffu << rlen);
-          emitLabel (tlbl);
-        }
+      genMaskExtendSign (!SPEC_USIGN (etype), rlen);
       opPut(result, "a", offset++);
     }
 
@@ -12476,9 +12490,6 @@ genCast (iCode * ic)
   aopOp (right, ic, FALSE);
   aopOp (result, ic, TRUE);
 
-  unsigned topbytemask = (IS_BITINT (ctype) && (SPEC_BITINTWIDTH (ctype) % 8)) ?
-    (0xff >> (8 - SPEC_BITINTWIDTH (ctype) % 8)) : 0xff;
-
   right_boolean = IS_BOOLEAN (rtype) || IS_BITFIELD (rtype) &&  SPEC_BLEN (getSpec (rtype)) == 1;
 
   /* if the result is a bit (and not a bitfield) */
@@ -12505,14 +12516,7 @@ genCast (iCode * ic)
           if (!size && masktopbyte)
             {
               MOVA (opGet (right, offset, FALSE, FALSE));
-              emitcode ("anl", "a,#!constbyte", topbytemask);
-              if (!SPEC_USIGN (ctype)) // Sign-extend
-                {
-                  symbol *tlbl = newiTempLabel (0);
-                  emitcode ("jnb", "acc.%d,!tlabel", (int)(SPEC_BITINTWIDTH (ctype) % 8 - 1), labelKey2num (tlbl->key));
-                  emitcode ("orl", "a,#!constbyte", ~topbytemask & 0xffu);
-                  emitLabel (tlbl);
-                }
+              genMaskExtendSign (!SPEC_USIGN (ctype), SPEC_BITINTWIDTH (ctype) % 8);
               opPut(result, "a", offset);
             }
           else
@@ -12630,6 +12634,8 @@ genCast (iCode * ic)
     }
   else
     {
+      unsigned topbytemask = (IS_BITINT (ctype) && (SPEC_BITINTWIDTH (ctype) % 8)) ?
+        (0xff >> (8 - SPEC_BITINTWIDTH (ctype) % 8)) : 0xff;
       bool masktopbyte = IS_BITINT (ctype) && (SPEC_BITINTWIDTH (ctype) % 8) && SPEC_USIGN (ctype);
 
       /* we need to extend the sign :{ */
