@@ -29,6 +29,8 @@
 #define DD(x)
 //#define DD(x) x
 
+#define UNIMPLEMENTED do {wassertl (regalloc_dry_run, "Unimplemented"); regalloc_dry_run_cost += 100;} while(0)
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6091,7 +6093,7 @@ genCmp (iCode * ic, iCode * ifx)
 /* genCmpEQorNE - equal or not equal comparison                    */
 /*-----------------------------------------------------------------*/
 static void
-genCmpEQorNE (iCode * ic, iCode * ifx)
+genCmpEQorNE (iCode *ic, iCode *ifx)
 {
   operand *left, *right, *result;
   int opcode;
@@ -6123,6 +6125,57 @@ genCmpEQorNE (iCode * ic, iCode * ifx)
       opcode = exchangedCmp (opcode);
     }
 
+  size = max (AOP_SIZE (left), AOP_SIZE (right));
+
+  if (!ifx && optimize.nosidechannels || size == 1)
+    {
+      if (IS_AOP_AX (left->aop) || IS_AOP_AX (right->aop) || right->aop->type == AOP_REG && left->aop->aopu.aop_reg[0]->rIdx == A_IDX)
+        UNIMPLEMENTED;
+      needpulla = pushRegIfSurv (hc08_reg_a);
+
+      loadRegFromAop (hc08_reg_a, left->aop, 0);
+      if (!aopIsLitVal (right->aop, 0, 1, 0x00))
+        accopWithAop ("sub", right->aop, 0);
+
+      if (size > 1)
+        {
+          pushReg (hc08_reg_a, true);
+          for (int i = 1; i < size; i++)
+            {
+              if (right->aop->type == AOP_LIT && aopIsLitVal (left->aop, i, 1, byteOfVal (right->aop->aopu.aop_lit, i)))
+                continue;
+              loadRegFromAop (hc08_reg_a, left->aop, i);
+              if (aopIsLitVal (right->aop, i, 1, 0x00))
+                ;
+              else
+                accopWithAop ("sub", right->aop, i);
+              emitcode ("ora", "1,s");
+              regalloc_dry_run_cost += 2;
+              if (i + 1 < size)
+                {
+                  emitcode ("sta", "1,s");
+                  regalloc_dry_run_cost += 2;
+                }
+            }
+          adjustStack (1);
+        }
+
+      rmwWithReg ("neg", hc08_reg_a);
+      loadRegFromConst (hc08_reg_a, 0);
+      rmwWithReg ("rol", hc08_reg_a);
+      if (ic->op == EQ_OP)
+        {
+          emitcode ("eor", one);
+          regalloc_dry_run_cost += 2;
+        }
+      storeRegToFullAop (hc08_reg_a, result->aop, false);
+      pullOrFreeReg (hc08_reg_a, needpulla);
+      freeAsmop (right, NULL, ic, false);
+      freeAsmop (left, NULL, ic, false);
+      freeAsmop (result, NULL, ic, true);
+      return;
+    }
+
   if (ifx)
     {
       if (IC_TRUE (ifx))
@@ -6136,8 +6189,6 @@ genCmpEQorNE (iCode * ic, iCode * ifx)
           jlbl = IC_FALSE (ifx);
         }
     }
-
-  size = max (AOP_SIZE (left), AOP_SIZE (right));
 
   if ((size == 2)
       && ((AOP_TYPE (left) == AOP_DIR || IS_AOP_HX (AOP (left))) && (AOP_SIZE (left) == 2))

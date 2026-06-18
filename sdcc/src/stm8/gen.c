@@ -6187,7 +6187,6 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
 {
   operand *left, *right, *result;
   int opcode;
-  int size, i;
   symbol *tlbl_NE_pop = (regalloc_dry_run ? 0 : newiTempLabel (NULL));
   symbol *tlbl_NE = (regalloc_dry_run ? 0 : newiTempLabel (NULL));
   symbol *tlbl = (regalloc_dry_run ? 0 : newiTempLabel (NULL));
@@ -6210,7 +6209,7 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
   aopOp (right, ic, false);
   aopOp (result, ic, true);
 
-  size = max (left->aop->size, right->aop->size);
+  int size = max (left->aop->size, right->aop->size);
 
   if (!ifx && size == 2 && (optimize.nosidechannels || regDead (A_IDX, ic)) &&
     (aopInReg (left->aop, 0, X_IDX) && regDead (X_IDX, ic) && (aopOnStackNotExt (right->aop, 0, 2) || right->aop->type == AOP_DIR || right->aop->type == AOP_LIT || right->aop->type == AOP_IMMD)))
@@ -6250,7 +6249,7 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
       if (size > 1)
         {
           push (ASMOP_A, 0, 1);
-          for (i = 1; i < size; i++)
+          for (int i = 1; i < size; i++)
             {
               if (right->aop->type == AOP_LIT && aopIsLitVal (left->aop, i, 1, byteOfVal (right->aop->aopu.aop_lit, i)))
                 continue;
@@ -6284,7 +6283,7 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
       goto compared;
     }
 
-  for (i = 0; i < size;)
+  for (int i = 0; i < size;)
     {
       /* Prefer literal operand on right */
       if (left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD ||
