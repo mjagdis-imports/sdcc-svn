@@ -5384,7 +5384,8 @@ genPlusIncr (iCode * ic)
   D (emitcode (";", "genPlusIncr"));
 
   /* if increment >=16 bits in register or direct space */
-  if ((AOP_TYPE (IC_LEFT (ic)) == AOP_REG ||
+  if (!optimize.nosidechannels &&
+    (AOP_TYPE (IC_LEFT (ic)) == AOP_REG ||
        AOP_TYPE (IC_LEFT (ic)) == AOP_DIR || AOP_TYPE (IC_LEFT (ic)) == AOP_SFR ||
        (IS_AOP_PREG (IC_LEFT (ic)) && !AOP_NEEDSACC (IC_LEFT (ic)))) &&
       sameRegs (AOP (IC_LEFT (ic)), AOP (IC_RESULT (ic))) &&
@@ -5775,7 +5776,8 @@ genMinusDec (iCode * ic)
   D (emitcode (";", "genMinusDec"));
 
   /* if decrement >=16 bits in register or direct space */
-  if ((AOP_TYPE (IC_LEFT (ic)) == AOP_REG ||
+  if (!optimize.nosidechannels &&
+    (AOP_TYPE (IC_LEFT (ic)) == AOP_REG ||
        AOP_TYPE (IC_LEFT (ic)) == AOP_DIR || AOP_TYPE (IC_LEFT (ic)) == AOP_SFR ||
        (IS_AOP_PREG (IC_LEFT (ic)) && !AOP_NEEDSACC (IC_LEFT (ic)))) &&
       sameRegs (AOP (IC_LEFT (ic)), AOP (IC_RESULT (ic))) && (size > 1) && (icount == 1))
@@ -9346,18 +9348,12 @@ AccSRsh (int shCount)
   symbol *tlbl;
   if (shCount != 0)
     {
-      if (shCount == 1)
-        {
-          emitcode ("mov", "c,acc.7");
-          emitcode ("rrc", "a");
-        }
-      else if (shCount == 2)
-        {
-          emitcode ("mov", "c,acc.7");
-          emitcode ("rrc", "a");
-          emitcode ("mov", "c,acc.7");
-          emitcode ("rrc", "a");
-        }
+      if (shCount <= 2 || optimize.nosidechannels)
+        while (shCount --> 0)
+          {
+            emitcode ("mov", "c,acc.7");
+            emitcode ("rrc", "a");
+          }
       else
         {
           tlbl = newiTempLabel (NULL);
@@ -9595,19 +9591,21 @@ AccAXRshS (const char *x, int shCount)
   symbol *tlbl;
   unsigned int mask = SRMask[shCount];
 
+  if (optimize.nosidechannels && shCount != 7)
+    goto nosidechannels;
+
   switch (shCount)
     {
     case 0:
       break;
     case 1:
-      emitcode ("mov", "c,acc.7");
-      AccAXRrl1 (x);            // s->a:x
-      break;
     case 2:
-      emitcode ("mov", "c,acc.7");
-      AccAXRrl1 (x);            // s->a:x
-      emitcode ("mov", "c,acc.7");
-      AccAXRrl1 (x);            // s->a:x
+nosidechannels:
+      while (shCount --> 0)
+        {
+          emitcode ("mov", "c,acc.7");
+          AccAXRrl1 (x);            // s->a:x
+        }
       break;
     case 3:
     case 4:
@@ -9641,16 +9639,11 @@ AccAXRshS (const char *x, int shCount)
       emitcode ("orl", "a,#!constbyte", mask);  // 111111AA:BBBBBBCC
       emitLabel (tlbl);
       break;
-    case 7:                    // ABBBBBBB:CDDDDDDD
-      tlbl = newiTempLabel (NULL);
-      emitcode ("mov", "c,acc.7");      // c = A
-      AccAXLrl1 (x);            // BBBBBBBC:DDDDDDDA
-      emitcode ("xch", "a,%s", x);      // DDDDDDDA:BBBBBBCC
-      emitcode ("anl", "a,#!constbyte", mask);  // 0000000A:BBBBBBBC
-      emitcode ("jnb", "acc.%d,!tlabel", 7 - shCount, labelKey2num (tlbl->key));
-      mask = ~SRMask[shCount];
-      emitcode ("orl", "a,#!constbyte", mask);  // 1111111A:BBBBBBBC
-      emitLabel (tlbl);
+    case 7:                        // ABBBBBBB:CDDDDDDD
+      emitcode ("mov", "c,acc.7"); // c = A
+      AccAXLrl1 (x);               // BBBBBBBC:DDDDDDDA
+      emitcode ("xch", "a,%s", x); // DDDDDDDA:BBBBBBBC
+      emitcode ("subb", "a,acc");  // AAAAAAAA:BBBBBBBC
       break;
     default:
       break;

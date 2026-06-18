@@ -1,6 +1,12 @@
 2026-06-18 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* doc/sdccman.lyx,
+	  src/mcs51/gen.c:
+	  Control mcs51 codegen aspects by --nosidechannels: addition, subtraction, right shift.
+
+2026-06-18 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx,
 	  src/f8/gen.c,
 	  src/hc08/gen.c,
 	  src/z80/gen.c:
