@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------
   cpu2.v - multi-cycle f8 core
 
-  Copyright (c) 2024-2025, Philipp Klaus Krause philipp@colecovision.eu)
+  Copyright (c) 2024-2026, Philipp Klaus Krause philipp@colecovision.eu)
 
   This program is free software; you can redistribute it and/or modify it
   under the terms of the GNU General Public License as published by the
@@ -22,20 +22,9 @@
 
 `include "opcode.v"
 `include "alu2.v"
+`include "flags.v"
 
 //`define F8L // Enable for simplified f8l core.
-
-typedef enum logic [2:0]
-{
-	FLAG_H,	// Half-carry
-	FLAG_C,	// Carry
-	FLAG_N,	// Negative
-	FLAG_Z,	// Zero
-	FLAG_O,	// Overflow
-	FLAG_5,
-	FLAG_6,
-	FLAG_7
-} flagname_t;
 
 // Could be written nicer using unpacked structs, but icarus does not yet support those.
 module registers(output logic [15:0] x, y, z, input logic [1:0] addr_in, input logic [15:0] data_in, input logic [1:0] write_en,

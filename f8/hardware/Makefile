@@ -34,8 +34,8 @@ clean:
 	cd benchmarks && $(MAKE) clean
 	rm -f boards/*_nosv.v
 
-CPUSOURCES = cpu.v alu.v opcodemap.v opcode.v
-CPU2SOURCES = cpu2.v alu2.v opcodemap.v opcode.v
+CPUSOURCES = cpu.v alu.v opcodemap.v opcode.v flags.v
+CPU2SOURCES = cpu2.v alu2.v opcodemap.v opcode.v flags.v
 IOSOURCES = io.v gpio.v interruptcontroller.v timer.v watchdog.v
 IO2SOURCES = io2.v interruptcontroller.v timer.v watchdog2.v
 SYSTEM_1_SOURCES = clkdiv.v system_1.v memory.v rom.v ram.v dualportram.v $(CPUSOURCES) $(IOSOURCES)
@@ -77,10 +77,10 @@ GMSYNTHTESTLOGS_1 = $(TESTDIRS:=/gmsynthtest_1.log)
 ICESYNTHTESTLOGS_2 = $(TESTDIRS:=/icesynthtest_2.log)
 GMSYNTHTESTLOGS_2 = $(TESTDIRS:=/gmsynthtest_2.log)
 
-system_1_nosv.v: $(SYSTEMSOURCES)
+system_1_nosv.v: $(SYSTEM_1_SOURCES)
 	$(SV2V) --exclude=always --exclude=logic system_1.v > $@
 
-system_2_nosv.v: $(SYSTEM2SOURCES)
+system_2_nosv.v: $(SYSTEM_2_SOURCES)
 	$(SV2V) --exclude=always --exclude=logic system_2.v > $@
 
 %/system_1_icesynth.v: system_1_nosv.v %/test.vmem
@@ -169,7 +169,7 @@ alltests: tests_1 tests_2 icesynthtests_1 gmsynthtests_1 icesynthtests_2 gmsynth
 sdcctests_2: f8-testsystem_2-long
 	cd sdcctests; $(MAKE) SDCC="$(SDCC)" tests2
 
-sdccicesynthtests_2: system2_nosv.v icesynthtestsystem.v
+sdccicesynthtests_2: system_2_nosv.v icesynthtestsystem.v
 	cd sdcctests; $(MAKE) SDCC="$(SDCC)" YOSYS="$(YOSYS)" YOSYS_CONFIG="$(YOSYS_CONFIG)" icesynthtests2
 
 benchmarks_2: icebreaker2_nosv.v icesynthtest2system.v system_2_nosv.v

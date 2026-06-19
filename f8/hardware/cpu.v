@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------
   cpu.v - single-cycle f8 core
 
-  Copyright (c) 2024, Philipp Klaus Krause philipp@colecovision.eu)
+  Copyright (c) 2024-2026, Philipp Klaus Krause philipp@colecovision.eu)
 
   This program is free software; you can redistribute it and/or modify it
   under the terms of the GNU General Public License as published by the
@@ -22,6 +22,7 @@
 
 `include "alu.v"
 `include "opcode.v"
+`include "flags.v"
 
 module regfile(output logic [15:0] x, y, z, output logic [15:0] next_x, next_y, next_z, input logic [1:0] addr_in, input logic [15:0] data_in, input logic [1:0] write_en, input logic clk);
 	logic [15:0] regs[3];
@@ -128,13 +129,13 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 		else if(next_opcode == OPCODE_JP_Y || next_opcode == OPCODE_CALL_Y)
 			next_pc_noint = (next_accsel_in == ACCSEL_ZL_X) ? next_x : (next_accsel_in == ACCSEL_YL_Z) ? next_z : next_y;
 		else if(next_opcode == OPCODE_JR_D ||
-			next_opcode == OPCODE_JRZ_D && next_flags[3] || next_opcode == OPCODE_JRNZ_D && !next_flags[3] ||
-			next_opcode == OPCODE_JRC_D && next_flags[1] || next_opcode == OPCODE_JRNC_D && !next_flags[1] ||
-			next_opcode == OPCODE_JRN_D && next_flags[2] || next_opcode == OPCODE_JRNN_D && !next_flags[2] ||
+			next_opcode == OPCODE_JRZ_D && next_flags[FLAG_Z] || next_opcode == OPCODE_JRNZ_D && !next_flags[FLAG_Z] ||
+			next_opcode == OPCODE_JRC_D && next_flags[FLAG_C] || next_opcode == OPCODE_JRNC_D && !next_flags[FLAG_C] ||
+			next_opcode == OPCODE_JRN_D && next_flags[FLAG_N] || next_opcode == OPCODE_JRNN_D && !next_flags[FLAG_N] ||
 			next_opcode == OPCODE_JRNO_D && ((next_accsel_in == ACCSEL_SWAPOP) ^ !next_flags[4]) ||
-			next_opcode == OPCODE_JRSGE_D && !(next_flags[2] ^ next_flags[4]) || next_opcode == OPCODE_JRSLT_D && (next_flags[2] ^ next_flags[4]) ||
-			next_opcode == OPCODE_JRSLE_D && ((next_accsel_in == ACCSEL_SWAPOP) ^ (next_flags[3] || (next_flags[2] ^ next_flags[4]))) ||
-			next_opcode == OPCODE_JRLE_D && ((next_accsel_in == ACCSEL_SWAPOP) ^ (!next_flags[1] || next_flags[3])) ||
+			next_opcode == OPCODE_JRSGE_D && !(next_flags[FLAG_N] ^ next_flags[FLAG_O]) || next_opcode == OPCODE_JRSLT_D && (next_flags[FLAG_N] ^ next_flags[FLAG_O]) ||
+			next_opcode == OPCODE_JRSLE_D && ((next_accsel_in == ACCSEL_SWAPOP) ^ (next_flags[FLAG_Z] || (next_flags[FLAG_N] ^ next_flags[FLAG_O]))) ||
+			next_opcode == OPCODE_JRLE_D && ((next_accsel_in == ACCSEL_SWAPOP) ^ (!next_flags[FLAG_C] || next_flags[FLAG_Z])) ||
 			next_opcode == OPCODE_DNJNZ_YH_D && ((next_accsel_in == ACCSEL_ZL_X) ? next_x[15:8] : (next_accsel_in == ACCSEL_YL_Z) ? next_z[15:8] : next_y[15:8]) != 8'h01)
 			next_pc_noint = signed'(pc) + signed'(next_inst[15:8]);
 		else if(next_opcode == OPCODE_RET && next_flags[7:5] == ACCSEL_SWAPOP || next_opcode == OPCODE_RETI && opcode == OPCODE_RETI) // Second cycle of ret / reti.
@@ -200,8 +201,8 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 	assign accsel_in = accsel_t'(flags[7:5]);
 	assign swapop_in = (accsel_in == ACCSEL_SWAPOP);
 	assign next_accsel_in = accsel_t'(next_flags[7:5]);
-	assign h_in = flags[0];
-	assign c_in = flags[1];
+	assign h_in = flags[FLAG_H];
+	assign c_in = flags[FLAG_C];
 
 	always_comb
 	begin 
@@ -444,21 +445,21 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 		begin
 			// h flag
 			if (opcode_is_sub(opcode) || opcode_is_sbc(opcode) || opcode_is_add(opcode) || opcode_is_adc(opcode) || opcode_is_cp(opcode) || opcode_is_inc(opcode) || opcode_is_dec(opcode))
-				next_flags[0] = h_out;
+				next_flags[FLAG_H] = h_out;
 			else
-				next_flags[0] = flags[0];
+				next_flags[FLAG_H] = flags[FLAG_H];
 			// c flag
 			if (opcode_is_tst(opcode))
-				next_flags[1] = 0;
+				next_flags[FLAG_C] = 0;
 			else if (opcode_is_tstw(opcode))
-				next_flags[1] = 1;
+				next_flags[FLAG_C] = 1;
 			else if (opcode_is_sub(opcode) || opcode_is_sbc(opcode) || opcode_is_add(opcode) || opcode_is_adc(opcode) || opcode_is_cp(opcode) ||
 				opcode_is_srl(opcode) || opcode_is_sll(opcode) || opcode_is_rrc(opcode) || opcode_is_rlc(opcode) || opcode == OPCODE_SRA_XL || opcode_is_inc(opcode) || opcode_is_dec(opcode) || opcode == OPCODE_DA_XL ||
 				opcode_is_16_2(opcode) || opcode_is_16_1(opcode) && !opcode_is_pushw(opcode) && !opcode_is_clrw(opcode) && opcode != OPCODE_BOOLW_Y && opcode != OPCODE_XCH_YL_YH && opcode != OPCODE_INCNW_Y ||
 				opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_CPW_Y_IMMD)
-				next_flags[1] = c_out;
+				next_flags[FLAG_C] = c_out;
 			else
-				next_flags[1] = flags[1];
+				next_flags[FLAG_C] = flags[FLAG_C];
 			// n flag
 			if (opcode_is_ld_xl_mem(opcode) || opcode_is_ldw_y(opcode) || opcode == OPCODE_LDW_X_IY ||
 				opcode_is_8_2(opcode) || opcode_is_tst(opcode) || opcode_is_16_2(opcode) || opcode_is_16_1(opcode) && !opcode_is_pushw(opcode) && !opcode_is_clrw(opcode) && opcode != OPCODE_BOOLW_Y && opcode != OPCODE_XCH_YL_YH && opcode != OPCODE_INCNW_Y ||
@@ -469,9 +470,9 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 				opcode == OPCODE_SEX_Y_XL ||
 				opcode == OPCODE_DNJNZ_YH_D ||
 				opcode == OPCODE_LDI_YREL_IZ || opcode == OPCODE_LDWI_YREL_IZ)
-				next_flags[2] = n_out;
+				next_flags[FLAG_N] = n_out;
 			else
-				next_flags[2] = flags[2];
+				next_flags[FLAG_N] = flags[FLAG_N];
 			// z flag
 			if (opcode_is_ld_xl_mem(opcode) || opcode_is_ldw_y(opcode) || opcode == OPCODE_LDW_X_IY ||
 				opcode_is_8_2(opcode) ||
@@ -486,17 +487,17 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 				opcode == OPCODE_CAX_IY_ZL_XL || opcode == OPCODE_CAXW_IY_Z_X ||
 				opcode == OPCODE_DNJNZ_YH_D ||
 				opcode == OPCODE_LDI_YREL_IZ || opcode == OPCODE_LDWI_YREL_IZ) 
-				next_flags[3] = z_out;
+				next_flags[FLAG_Z] = z_out;
 			else
-				next_flags[3] = flags[3];
+				next_flags[FLAG_Z] = flags[FLAG_Z];
 			// o flag
 			if (opcode_is_sub(opcode) || opcode_is_sbc(opcode) || opcode_is_add(opcode) || opcode_is_adc(opcode) || opcode_is_cp(opcode) ||
 				opcode_is_inc(opcode) || opcode_is_dec(opcode) || opcode_is_tst(opcode) ||
 				opcode_is_16_2(opcode) ||
 				opcode_is_incw(opcode) && opcode != OPCODE_INCNW_Y || opcode == OPCODE_DECW_SPREL || opcode_is_adcw0(opcode) || opcode_is_sbcw0(opcode) || opcode == OPCODE_NEGW_Y || opcode_is_tstw(opcode))
-				next_flags[4] = o_out;
+				next_flags[FLAG_O] = o_out;
 			else
-				next_flags[4] = flags[4];
+				next_flags[FLAG_O] = flags[FLAG_O];
 
 			// hidden flags used internally
 			if (opcode == OPCODE_NOP || opcode == OPCODE_CALL_IMMD || opcode == OPCODE_JP_IMMD || opcode == OPCODE_JR_D || opcode == OPCODE_ADDW_SP_D || opcode == OPCODE_RETI && next_opcode != OPCODE_RET)
