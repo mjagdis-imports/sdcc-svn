@@ -49011,6 +49011,10 @@ Equality comparisons can leak operand data.
 \end_layout
 
 \begin_layout Itemize
+Reads and writes via pointers can leak which intrinsic named address spaces the pointers point into.
+\end_layout
+
+\begin_layout Itemize
 Floating-point operations (except unary minus) can leak operand data.
 \end_layout
 

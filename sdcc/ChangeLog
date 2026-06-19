@@ -1,7 +1,9 @@
-2026-06-18 Philipp Klaus Krause <philipp@colecovision.eu>
+2026-06-19 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/f8/gen.c:
 	  Control f8 codegen aspects by --nosidechannels: equality comparisons.
+	* doc/sdccman.lyx:
+	  Document which operations on mcs51 generic pointers might leak information.
 
 2026-06-18 Philipp Klaus Krause <philipp@colecovision.eu>
 
