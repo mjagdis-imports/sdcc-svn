@@ -6237,7 +6237,7 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
     }
   else if (!ifx && (optimize.nosidechannels || size == 1 && regDead (A_IDX, ic) && right->aop->regs[A_IDX] < 0))
     {
-      if (!regDead (A_IDX, ic) || left->aop->regs[A_IDX] >= 1 || right->aop->regs[A_IDX] >= 0 || right->aop->type == AOP_STL)
+      if (!regDead (A_IDX, ic) || left->aop->regs[A_IDX] >= 1 || right->aop->regs[A_IDX] >= 0)
         UNIMPLEMENTED;
       cheapMove (ASMOP_A, 0, left->aop, 0, false);
       if (aopIsLitVal (right->aop, 0, 1, 0x00))
@@ -6257,7 +6257,7 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
               if (aopIsLitVal (right->aop, i, 1, 0x00))
                 ;
               if (right->aop->regs[A_IDX] >= 0 || right->aop->type == AOP_STL) // Avoid null ptr deref below.
-                ;
+                UNIMPLEMENTED;
               else if (right->aop->type == AOP_REG || right->aop->type == AOP_REGSTK && !aopOnStack (right->aop, i, 1))
                 {
                   int stacked_offset;

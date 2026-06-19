@@ -4976,15 +4976,18 @@ genCmp (const iCode *ic, iCode *ifx)
       cost (2, 1);
       emit3 (A_SLL, ASMOP_XL, 0);
     }
+  else if (regDead (XL_IDX, ic) || pushed_xl)
+    {
+      emit3 (A_CLR, ASMOP_XL, 0);
+      emit3 (A_RLC, ASMOP_XL, 0);
+      G.c = 0;
+      emit3 (A_XOR, ASMOP_XL, ASMOP_ONE);
+      goto return_xl;
+    }
   else
     {
       emit3 (A_RLC, ASMOP_XL, 0);
       emit3 (A_XOR, ASMOP_XL, ASMOP_ONE);
-      if (regDead (XL_IDX, ic) || pushed_xl)
-        {
-          emit3 (A_AND, ASMOP_XL, ASMOP_ONE);
-          goto return_xl;
-        }
       emit3 (A_RRC, ASMOP_XL, 0);
     }
 
@@ -4997,6 +5000,7 @@ return_c:
   emit3 (A_CLR, ASMOP_XL, 0);
   emit3 (A_RLC, ASMOP_XL, 0);
   G.c = 0;
+
 return_xl:
   genMove (result->aop, ASMOP_XL, true, regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
       
@@ -5055,16 +5059,82 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
       bool xl_dead = regDead (XL_IDX, ic) && right->aop->regs[XL_IDX] < 0;
       genMove (ASMOP_Y, left->aop, xl_dead, false, true, false);
       emit3sub (A_SUBW, ASMOP_Y, right->aop);
-      if (ic->op == NE_OP)
-        emit3 (A_BOOLW, ASMOP_Y, 0);
-      else
+      emit3 (A_BOOLW, ASMOP_Y, NULL);
+      if (ic->op == EQ_OP)
+        emit3 (A_XOR, ASMOP_Y, ASMOP_ONE);
+      goto release;
+    }
+
+  if (!ifx && optimize.nosidechannels)
+    {
+      int size = max (left->aop->size, right->aop->size);
+      if (left->aop->regs[XL_IDX] > 0 || right->aop->regs[XL_IDX] > 0 || !regDead (XL_IDX, ic))
+        UNIMPLEMENTED;
+
+      bool started = false;
+      for (int i = 0; i < size; i++)
         {
-          emit3 (A_CLRW, ASMOP_Y, 0);
-          if (tlbl)
-            emit2 ("jrnz", "#!tlabel", labelKey2num (tlbl->key));
-          emit3 (A_INCW, ASMOP_Y, 0);
-          emitLabel (tlbl);
+          if (!started && aopIsLitVal (right->aop, i, 1, 0x00))
+            {
+              genMove (ASMOP_XL, left->aop, true, false, false, false);
+              started = true;
+            }
+          else if (!started && aopIsLitVal (left->aop, i, 1, 0x00))
+            {
+              genMove (ASMOP_XL, right->aop, true, false, false, false);
+              started = true;
+            }
+          else if (started && aopIsLitVal (right->aop, i, 1, 0) && aopIsOp8_2 (left->aop, i))
+            emit3_o (A_OR, ASMOP_XL, 0, left->aop, i);
+          else if (left->aop->type == AOP_STL && i < 2)
+            {
+              bool y_dead = regDead (Y_IDX, ic) && right->aop->regs[YL_IDX] <= i && right->aop->regs[YH_IDX] <= i;
+              if (right->aop->regs[YL_IDX] == i || right->aop->regs[YH_IDX] == i)
+                UNIMPLEMENTED;
+              if (!y_dead)
+                push (ASMOP_Y, 0, 2);
+              genMove_o (ASMOP_XL, 0, right->aop, i, 1, true, false, true, false, true);
+              genMove (ASMOP_Y, left->aop, false, false, true, false);
+              emit3_o (A_SUB, ASMOP_XL, 0, ASMOP_Y, i);
+              if (!y_dead)
+                pop (ASMOP_Y, 0, 2);
+            }
+          else if (right->aop->type == AOP_STL && i < 2)
+            {
+              bool y_dead = regDead (Y_IDX, ic) && left->aop->regs[YL_IDX] <= i && left->aop->regs[YH_IDX] <= i;
+              if (left->aop->regs[YL_IDX] == i || left->aop->regs[YH_IDX] == i)
+                UNIMPLEMENTED;
+              if (!y_dead)
+                push (ASMOP_Y, 0, 2);
+              genMove_o (ASMOP_XL, 0, left->aop, i, 1, true, false, true, false, true);
+              genMove (ASMOP_Y, right->aop, false, false, true, false);
+              emit3_o (A_SUB, ASMOP_XL, 0, ASMOP_Y, i);
+              if (!y_dead)
+                pop (ASMOP_Y, 0, 2);
+            }
+          else
+            {
+              bool inv = aopInReg (right->aop, i, XL_IDX);
+              if (started)
+                {
+                  if (!regDead (XH_IDX, ic) || left->aop->regs[XH_IDX] >= i || left->aop->regs[XH_IDX] >= i)
+                    UNIMPLEMENTED;
+                  emit3 (A_LD, ASMOP_XH, ASMOP_XL);
+                }
+              genMove_o (ASMOP_XL, 0, inv ? right->aop : left->aop, i, 1, true, false, false, false, true);
+              if (!aopIsOp8_2 (inv ? left->aop : right->aop, i))
+                UNIMPLEMENTED;
+              else
+                emit3sub_o (A_SUB, ASMOP_XL, 0, inv ? left->aop : right->aop, i);
+              if (started)
+                emit3 (A_OR, ASMOP_XL, ASMOP_XH);
+              started = true;
+            }
         }
+      emit3 (A_BOOL, ASMOP_XL, NULL);
+      if (ic->op == EQ_OP)
+        emit3 (A_XOR, ASMOP_XL, ASMOP_ONE);
+      genMove (result->aop, ASMOP_XL, true, regDead (XH_IDX, ic), regDead (Y_IDX, ic), false);
       goto release;
     }
 

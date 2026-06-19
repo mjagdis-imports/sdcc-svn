@@ -13374,7 +13374,7 @@ genCmpEq (iCode *ic, iCode *ifx)
               started = true;
             }
           else if (started && aopIsLitVal (right->aop, i, 1, 0))
-            emit3_o (A_OR, ASMOP_A, 0, right->aop, i);
+            emit3_o (A_OR, ASMOP_A, 0, left->aop, i);
           else if (right->aop->type == AOP_STL && i < 2)
             {
               bool hl_dead = isRegDead (HL_IDX, ic) && left->aop->regs[L_IDX] <= i && left->aop->regs[H_IDX] <= i;
@@ -13407,7 +13407,7 @@ genCmpEq (iCode *ic, iCode *ifx)
       emit3 (A_SUB, ASMOP_A, ASMOP_ONE);
       emit3 (A_LD, ASMOP_A, ASMOP_ZERO);
       emit3 (A_RLA, NULL, NULL);
-      genMove (result->aop, ASMOP_A, true, isPairDead (PAIR_HL, ic), isPairDead (PAIR_DE, ic), isPairDead (PAIR_IY, ic));
+      genMove (result->aop, ASMOP_A, true, isRegDead (PAIR_HL, ic), isRegDead (PAIR_DE, ic), isRegDead (PAIR_IY, ic));
       goto release;
     }
 
