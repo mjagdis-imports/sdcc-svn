@@ -1,3 +1,11 @@
+2026-06-20 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/hc08/gen.c,
+	  src/z80/gen.c:
+	  Fixes for --nosidechannel codegen.
+	  src/z80/peeph-r2k.def:
+	  Fix a peephole optimizer rule bug triggered by --nosidechannel Rabbit codegen.
+
 2026-06-19 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/f8/gen.c:
@@ -141,7 +149,7 @@
 
 	* doc/sdccman.lyx,
 	  src/stm8/gen.c:
-	  Control some stm8 codegen aspects by --nosidechannels: Addition, subtraction, div hw bug woraround, right shift (leaking left operand). Document remaining stm8 side-channels.
+	  Control some stm8 codegen aspects by --nosidechannels: Addition, subtraction, div hw bug workaround, right shift (leaking left operand). Document remaining stm8 side-channels.
 
 2026-06-04 Philipp Klaus Krause <philipp@colecovision.eu>
 

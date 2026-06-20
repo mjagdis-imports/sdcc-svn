@@ -6661,7 +6661,7 @@ _castBoolean (const operand *right)
       if (IS_Z80 || IS_TLCS870 || IS_TLCS870C || IS_TLCS870C1) // Only for the original Z80 is the addition faster than neg. TLCS-870(C)(C1) don't have neg.
         emit3 (A_ADD, ASMOP_A, ASMOP_MONE);
       else
-        emit3 (A_NEG, ASMOP_A, NULL);
+        emit3 (A_NEG, /*ASMOP_A*/0, 0); // Todo: Make eZ80 assembler support "neg a" instead of just "neg"!
       emit3 (A_LD, ASMOP_A, ASMOP_ZERO);
     }
   emit3 (A_RLA, 0, 0);
@@ -13393,7 +13393,7 @@ genCmpEq (iCode *ic, iCode *ifx)
               bool inv = aopInReg (right->aop, i, A_IDX);
               if (started)
                 {
-                  if (!isRegDead (BC_IDX, ic) || left->aop->regs[B_IDX] >= i || left->aop->regs[C_IDX] >= i || right->aop->regs[B_IDX] >= i || right->aop->regs[C_IDX] >= i)
+                  if (!isRegDead (C_IDX, ic) || left->aop->regs[C_IDX] >= i || right->aop->regs[C_IDX] >= i)
                     UNIMPLEMENTED;
                   emit3 (A_LD, ASMOP_C, ASMOP_A);
                 }

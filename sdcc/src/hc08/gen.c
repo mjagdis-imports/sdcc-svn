@@ -6046,11 +6046,11 @@ genCmp (iCode * ic, iCode * ifx)
           emitcode ("tpa", "");
           regalloc_dry_run_cost++;
           pushReg (hc08_reg_a, true);
-          emitcode ("rora", "");
-          emitcode ("rora", "");
-          emitcode ("rora", "");
-          emitcode ("ora", "1,s");
+          emitcode ("nsa", "");
           emitcode ("rola", "");
+          emitcode ("eor", "1,s");
+          emitcode ("rola", "");
+          regalloc_dry_run_cost += 5;
           adjustStack (1);
           branchinst = strcmp (branchinst, "blt") ? "bcs" : "bcc";
         }
@@ -6127,7 +6127,7 @@ genCmpEQorNE (iCode *ic, iCode *ifx)
 
   size = max (AOP_SIZE (left), AOP_SIZE (right));
 
-  if (!ifx && optimize.nosidechannels || size == 1)
+  if (!ifx && (optimize.nosidechannels || size == 1))
     {
       if (IS_AOP_AX (left->aop) || IS_AOP_AX (right->aop) || right->aop->type == AOP_REG && left->aop->aopu.aop_reg[0]->rIdx == A_IDX)
         UNIMPLEMENTED;
