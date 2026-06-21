@@ -10,6 +10,8 @@
 	  Fix bug #4015.
 	* src/f8/peep.c:
 	  Fix bug #4016.
+	* support/regression/tests/bug-2959.c:
+	  Don't use nop in test for targets that don't have it.
 
 2026-06-12 Philipp Klaus Krause <philipp@colecovision.eu>
 
