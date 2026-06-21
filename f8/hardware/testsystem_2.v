@@ -15,7 +15,7 @@ endmodule
 
 // 10 KB ROM, 8 KB RAM.
 module testsystem #(parameter ROMSIZE = 10240, RAMSIZE = 8192, SIMULATIONTIME = 8200) ();
-	logic [7:0] gpio0pins, gpio1pins, gpio2pins;
+	tri logic [7:0] gpio0pins, gpio1pins, gpio2pins;
 	logic clk;
 	logic trap;
 	logic power_on_reset;

@@ -67,10 +67,10 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 	output reg trap;
 
 	wire [23:0] next_inst;
-	wire [7:0] next_opcode;
+	wire opcode_t next_opcode;
 	wire nextinst_valid;
 	reg [23:0] inst;
-	wire [7:0] opcode;
+	wire opcode_t opcode;
 
 	logic [15:0] op0, op1, op2;
 	wire [15:0] result_reg, result_mem;
@@ -96,8 +96,8 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 
 	regfile regfile(.addr_in(regwrite_addr), .data_in(regwrite_data), .write_en(regwrite_en), .*);
 
-	assign next_opcode = next_inst[7:0];
-	assign opcode = interrupt_start ? OPCODE_NOP : inst[7:0];
+	assign next_opcode = opcode_t'(next_inst[7:0]);
+	assign opcode = opcode_t'(interrupt_start ? OPCODE_NOP : opcode_t'(inst[7:0])); // Icarus requires the extra cast. It assumes that the result of the ternary operator might be outside the range of the enum? (Icarus issue # 1048 on github)
 
 	// Handle program counter
 	always_ff @(posedge clk)

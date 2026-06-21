@@ -118,7 +118,7 @@ module cpu
 	logic [15:0] memwrite_data;
 	logic [15:0] memwrite_addr;
 	logic [1:0] memwrite_en;
-	logic [7:0] opcode;
+	opcode_t opcode;
 	logic [15:0] memop;
 	logic [15:0] memop_addr;
 	accsel_t accsel;
@@ -126,7 +126,7 @@ module cpu
 
 	registers registers(.addr_in(regwrite_addr), .data_in(regwrite_data), .write_en(regwrite_en), .*);
 
-	assign opcode = inst[7:0];
+	assign opcode = opcode_t'(inst[7:0]);
 	assign accsel = accsel_t'(f[7:5]);
 	assign acc16 = (accsel == ACCSEL_YL_Z) ? z :
 			(accsel == ACCSEL_ZL_X) ? x :

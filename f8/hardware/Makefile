@@ -1,4 +1,4 @@
-# Use installed SDCC. Requires at least 4.5.0.
+# Use installed SDCC. Requires at least SDCC 4.5.0.
 SDAS = sdasf8
 SDLD = sdldf8
 SDCC = sdcc -mf8
@@ -9,7 +9,7 @@ SDCC = sdcc -mf8
 
 # sv2v is not in Debian. Use custom build of sv2v 0.0.12 or later.
 SV2V = /home/philipp/sv2v-0.0.12/bin/sv2v
-# Debian has yosys 0.33, which is too old. A custom build of yosys 0.38 has been installed to /usr/local.
+# Requires yosys 0.38 or later.
 YOSYS = yosys
 YOSYS_CONFIG = yosys-config
 
