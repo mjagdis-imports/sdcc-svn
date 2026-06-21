@@ -6097,7 +6097,7 @@ genRot (const iCode *ic)
                       clrc ();
                       emit3_o (A_RLCW, shiftop, i, 0, 0);
                     }
-                 else
+                  else
                     emit3_o (i ? A_RLCW : A_SLLW, shiftop, i, 0, 0);
                   i += 2;
                 }
@@ -6328,7 +6328,7 @@ genLeftShift (const iCode *ic)
       if (!premoved_count)
         genMove (ASMOP_XL, right->aop, true, regDead (XH_IDX, ic) && shiftop->regs[XH_IDX] < 0, false, false);
 
-      if (!IS_F8L && size == 2 && aopInReg (shiftop, 0, Y_IDX) || size == 1 && aopInReg (shiftop, 0, YL_IDX) && regDead (YH_IDX, ic))
+      if (!IS_F8L && (size == 2 && aopInReg (shiftop, 0, Y_IDX) || size == 1 && aopInReg (shiftop, 0, YL_IDX) && regDead (YH_IDX, ic)))
         {
           emit2 ("sllw", "y, xl");
           cost (2, 1);

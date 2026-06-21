@@ -12,6 +12,8 @@
 	  Fix bug #4016.
 	* support/regression/tests/bug-2959.c:
 	  Don't use nop in test for targets that don't have it.
+	* src/f8/gen.c:
+	  Fix use of non-f8l f8 instruction sllw in f8l port.
 
 2026-06-12 Philipp Klaus Krause <philipp@colecovision.eu>
 
