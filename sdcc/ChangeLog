@@ -1,3 +1,16 @@
+2026-06-21 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCast.c,
+	  src/SDCCicode.c,
+	  src/SDCCopt.c,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h:
+	  Fix RFE #1029.
+	* src/z80/peep.c:
+	  Fix bug #4015.
+	* src/f8/peep.c:
+	  Fix bug #4016.
+
 2026-06-12 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/stm8/peeph.def:
