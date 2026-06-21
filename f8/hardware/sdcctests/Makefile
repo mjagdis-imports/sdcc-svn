@@ -5,7 +5,7 @@
 SDCCREGTESTPATH = /home/philipp/sdcc-trunk/sdcc/support/regression
 TESTSOURCES = $(wildcard  /home/philipp/sdcc-trunk/sdcc/support/regression/cases/tst_*.c) $(wildcard /home/philipp/sdcc-trunk/sdcc/support/regression/cases/*/*.c)
 TESTCASES = $(TESTSOURCES:/home/philipp/sdcc-trunk/sdcc/support/regression/cases/%.c=%)
-TEST2LOGS = $(TESTCASES:%=gen/%/test2.log)
+TEST2LOGS = $(TESTCASES:%=gen/%/test_2.log)
 ICESYNTHTEST2LOGS = gen/tst_printf_d/icesynthtest2.log
 
 all: tests2
@@ -19,8 +19,8 @@ FWKLIB = testfwk.rel statics.rel extern1.rel extern2.rel
 clean:
 	rm -rf $(FWKLIB) *.rst *.lst *.sym *.asm gen/* 
 
-%/test2.vcd %/test2.log &: ../f8-testsystem2-long %/test.even.vmem %/test.odd.vmem
-	cd $*; $(CURDIR)/../f8-testsystem2-long > test2.log
+%/test_2.vcd %/test_2.log &: ../f8-testsystem_2-long %/test.even.vmem %/test.odd.vmem
+	cd $*; $(CURDIR)/../f8-testsystem_2-long > test_2.log
 
 %.vmem: %.ihx
 	objcopy --change-addresses -0x4000 --input-target ihex --output-target verilog $< $@
@@ -49,12 +49,12 @@ extern2.rel: $(SDCCREGTESTPATH)/fwk/lib/extern2.c
 %.ihx: $(FWKLIB) %.rel
 	$(SDCC) --data-loc 0x2800 $^ -o $@
 
-%/icesynthtest2.vcd %/icesynthtest2.log &: %/f8-icesynthtest2system
-	cd $*; ./f8-icesynthtest2system > icesynthtest2.log
+%/icesynthtest_2.vcd %/icesynthtest_2.log &: %/f8-icesynthtest2system
+	cd $*; ./f8-icesynthtest2system > icesynthtest_2.log
 
-%/system2_icesynth.v: ../system2_nosv.v %/test.even.vmem %/test.odd.vmem
-	cd $*; $(YOSYS) -p "read_verilog -sv $(CURDIR)/../system2_nosv.v; synth_ice40 -noflatten -top system; write_verilog system2_icesynth.v"
+%/system_2_icesynth.v: ../system_2_nosv.v %/test.even.vmem %/test.odd.vmem
+	cd $*; $(YOSYS) -p "read_verilog -sv $(CURDIR)/../system_2_nosv.v; synth_ice40 -noflatten -top system; write_verilog system_2_icesynth.v"
 
-%/f8-icesynthtest2system: ../icesynthtest2system.v %/system2_icesynth.v
+%/f8-icesynthtest2system: ../icesynthtest2system.v %/system_2_icesynth.v
 	cd $*; iverilog -g2009 -Wall -Ptestsystem.SIMULATIONTIME=30000 -o f8-icesynthtest2system $(CURDIR)/../icesynthtest2system.v `$(YOSYS_CONFIG) --datdir/ice40/cells_sim.v`
 
