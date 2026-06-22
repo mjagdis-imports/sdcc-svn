@@ -49,6 +49,7 @@ enum asminst
   A_ADD,
   A_AND,
   A_BCP,
+  A_CCF,
   A_CLR,
   A_CLRW,
   A_CP,
@@ -93,6 +94,7 @@ static const char *asminstnames[] =
   "add",
   "and",
   "bcp",
+  "ccf",
   "clr",
   "clrw",
   "cp",
@@ -788,6 +790,9 @@ emit3cost (enum asminst inst, const asmop *op1, int offset1, const asmop *op2, i
   case A_BCP:
     op8_cost (op2, offset2);
     break;
+  case A_CCF:
+    cost (1, 1);
+    break;
   case A_CLR:
     op_cost (op1, offset1);
     break;
@@ -910,8 +915,10 @@ emit3_o (enum asminst inst, asmop *op1, int offset1, asmop *op2, int offset2)
       emit2 (asminstnames[inst], "%s, %s", l, aopGet (op2, offset2));
       Safe_free (l);
     }
-  else
+  else if (op1)
     emit2 (asminstnames[inst], "%s", aopGet (op1, offset1));
+  else
+    emit2 (asminstnames[inst], "");
 }
 
 static void
@@ -2834,10 +2841,9 @@ genNot (const iCode *ic)
     }
   else if (IS_BOOL (operandType (left)) && aopOnStack (left->aop, 0, 1) && aopSame (left->aop, 0, result->aop, 0, 1))
     {
-      emit2 ("srl", "%s", aopGet (left->aop, 0));
-      emit2 ("ccf", "");
-      emit2 ("rlc", "%s", aopGet (left->aop, 0));
-      cost (5, 3);
+      emit3 (A_SRL,  left->aop, NULL);
+      emit3 (A_CCF,  NULL, NULL);
+      emit3 (A_RLC,  left->aop, NULL);
       goto release;
     }
 
@@ -3229,7 +3235,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           i += 2;
          }
       // In some cases we gain so much by using decw that it is worth handling the carry explicitly.
-      else if (started && !maskedword && i == size - 2 && (aopInReg (result_aop, i, X_IDX) || aopInReg (result_aop, i, Y_IDX)) && aopIsLitVal (left_aop, i, 2, 0x0000) &&
+      else if (!optimize.nosidechannels && started && !maskedword && i == size - 2 && (aopInReg (result_aop, i, X_IDX) || aopInReg (result_aop, i, Y_IDX)) && aopIsLitVal (left_aop, i, 2, 0x0000) &&
         (aopOnStack (right_aop, i, 2) || right_aop->type == AOP_DIR))
         {
           bool x = aopInReg (result_aop, i, X_IDX);
@@ -3244,7 +3250,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           i += 2;
          }
        // In some cases we gain so much by using decw that it is worth handling the carry explicitly.
-      else if (started && !maskedword && i == size - 2 && aopIsLitVal (right_aop, i, 2, 0x0000) &&
+      else if (!optimize.nosidechannels && started && !maskedword && i == size - 2 && aopIsLitVal (right_aop, i, 2, 0x0000) &&
         (aopInReg (result_aop, i, X_IDX) || aopInReg (result_aop, i, Y_IDX) || x_free && (aopOnStack (result_aop, i, 2) || result_aop->type == AOP_DIR)))
         {
           bool x = !aopInReg (result_aop, i, Y_IDX);
@@ -4302,7 +4308,7 @@ genFunction (iCode *ic)
       cost (6, 5);
 #else
       // The workaround obtained by further investigation of RFE #449. Experiments on STM8S208MB and STM8L152C6 show that div resets bit 6 of cc.
-      if (!optimize.codeSize)
+      if (!optimize.codeSize || optimize.nosidechannels)
         emit3 (A_CLR, ASMOP_A, 0); // Zero accumulator to reduce cycle cost in following division.
       emit2 ("div", "x, a");       // According to measurements on the STM8S208MB and STM8L152C6, div takes 2-3 cycles for divisions by zero and 2-17 cycles in general.
       cost (1, 3);
@@ -4985,7 +4991,7 @@ genPlus (const iCode *ic)
           started = TRUE;
           i++;
         }
-      else if (started && !maskedword && i == size - 2 && (aopInReg (result->aop, i, X_IDX) || aopInReg (result->aop, i, Y_IDX)) &&
+      else if (!optimize.nosidechannels && started && !maskedword && i == size - 2 && (aopInReg (result->aop, i, X_IDX) || aopInReg (result->aop, i, Y_IDX)) &&
         (aopOnStackNotExt (leftop, i, 2) || leftop->type == AOP_DIR) &&
         (aopOnStackNotExt (rightop, i, 2) || rightop->type == AOP_LIT || rightop->type == AOP_IMMD || rightop->type == AOP_DIR))
         {
@@ -5864,18 +5870,42 @@ genCmp (const iCode *ic, iCode *ifx)
 
   size = max (left->aop->size, right->aop->size);
 
+  // Maybe this is just about getting the sign bit.
+  if (!ifx && sign && aopIsLitVal (right->aop, 0, size, 0) && (opcode == '<' || opcode == GE_OP))
+    {
+      if (!regDead (A_IDX, ic))
+        push (ASMOP_A, 0, 1);
+      if (aopInReg (left->aop, size - 1, XH_IDX) && regDead (X_IDX, ic))
+        emit3w (A_SLLW, ASMOP_X, NULL);
+      else if (aopInReg (left->aop, size - 1, YH_IDX) && regDead (Y_IDX, ic))
+        emit3w (A_SLLW, ASMOP_Y, NULL);
+      else
+        {
+          cheapMove (ASMOP_A, 0, left->aop, size - 1, false);
+          emit3 (A_SLL, ASMOP_A, NULL);
+        }
+      if (opcode == GE_OP)
+        emit3 (A_CCF, NULL, NULL);
+      emit3 (A_CLR, ASMOP_A, NULL);
+      emit3 (A_RLC, ASMOP_A, NULL);
+      cheapMove (result->aop, 0, ASMOP_A, 0, false);
+      if (!regDead (A_IDX, ic))
+        pop (ASMOP_A, 0, 1);
+      goto release;
+    }
+
   /* Prefer literal operand on right */
   if (left->aop->type == AOP_LIT ||
     right->aop->type != AOP_LIT && left->aop->type == AOP_DIR ||
     (aopInReg (right->aop, 0, A_IDX) || aopInReg (right->aop, 0, X_IDX) || aopInReg (right->aop, 0, Y_IDX)) && left->aop->type == AOP_STK)
-    exchange = TRUE;
+    exchange = true;
 
   /* Right operand is a special literal */
-  if ((special = genCmpTnz(left, right, result, ic)) > 0)
+  if (!optimize.nosidechannels && (special = genCmpTnz(left, right, result, ic)) > 0)
     goto _genCmp_1;
 
   /* Cannot do multibyte signed comparison, except for 2-byte using cpw */
-  if (size > 1 && !(size == 2 && (right->aop->type == AOP_LIT || right->aop->type == AOP_DIR || right->aop->type == AOP_STK)))
+  if (size > 1 && (!(size == 2 && (right->aop->type == AOP_LIT || right->aop->type == AOP_DIR || right->aop->type == AOP_STK))) || optimize.nosidechannels)
     {
       if (exchange && (opcode ==  '<' || opcode == GE_OP))
         exchange = FALSE;
@@ -6056,16 +6086,50 @@ genCmp (const iCode *ic, iCode *ifx)
     }
 
 _genCmp_1:
-  if (!special && !strcmp(branchInstCmp (opcode, sign, FALSE), "jrc") && !ifx && (aopInReg (result->aop, 0, A_IDX) || regDead (A_IDX, ic)))
+  if (!special && !ifx && (!strcmp (branchInstCmp (opcode, sign, false), "jrc") || !strcmp (branchInstCmp (opcode, sign, false), "jrnc")))
     {
-      emit3 (A_CLR, ASMOP_A, 0);
-      emit3 (A_RLC, ASMOP_A, 0);
-      cheapMove (result->aop, 0, ASMOP_A, 0, FALSE);
+      if (!regDead (A_IDX, ic))
+        push (ASMOP_A, 0, 1);
+      if (!strcmp (branchInstCmp (opcode, sign, false), "jrnc"))
+        emit3 (A_CCF, NULL, NULL);
+      emit3 (A_CLR, ASMOP_A, NULL);
+      emit3 (A_RLC, ASMOP_A, NULL);
+      cheapMove (result->aop, 0, ASMOP_A, 0, false);
+      if (!regDead (A_IDX, ic))
+        pop (ASMOP_A, 0, 1);
+    }
+  else if (!ifx && optimize.nosidechannels)
+    {//fprintf(stderr, "%s\n", branchInstCmp (opcode, sign, false));
+      wassert (!strcmp (branchInstCmp (opcode, sign, false), "jrslt"));
+
+      if (!regDead (A_IDX, ic))
+        push (ASMOP_A, 0, 1);
+
+      // Calculate n ^ v in topmost bit of a.
+      emit2 ("push", "cc");
+      cost (1, 1);
+      G.stack.pushed++;
+      emit2 ("ld", "a, (1, sp)");
+      emit2 ("swap", "a");
+      emit2 ("sll", "a");
+      emit2 ("xor", "a, (1, sp)");
+      cost (6, 4);
+
+      emit3 (A_SLL, ASMOP_A, NULL);
+      emit3 (A_CLR, ASMOP_A, NULL);
+      emit3 (A_RLC, ASMOP_A, NULL);
+
+      cheapMove (result->aop, 0, ASMOP_A, 0, false);
+
+      adjustStack (1, result->aop->regs[A_IDX] < 0, false, false);
+
+      if (!regDead (A_IDX, ic))
+        pop (ASMOP_A, 0, 1);
     }
   else if (!ifx)
     {
-      symbol *tlbl1 = (regalloc_dry_run ? 0 : newiTempLabel (NULL));
-      symbol *tlbl2 = (regalloc_dry_run ? 0 : newiTempLabel (NULL));
+      symbol *tlbl1 = (regalloc_dry_run ? NULL : newiTempLabel (NULL));
+      symbol *tlbl2 = (regalloc_dry_run ? NULL : newiTempLabel (NULL));
       if (tlbl1)
         switch (special)
           {
@@ -6109,6 +6173,7 @@ _genCmp_1:
         ifx->generated = 1;
     }
 
+release:
   freeAsmop (right);
   freeAsmop (left);
   freeAsmop (result);
@@ -6122,12 +6187,12 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
 {
   operand *left, *right, *result;
   int opcode;
-  int size, i;
   symbol *tlbl_NE_pop = (regalloc_dry_run ? 0 : newiTempLabel (NULL));
   symbol *tlbl_NE = (regalloc_dry_run ? 0 : newiTempLabel (NULL));
   symbol *tlbl = (regalloc_dry_run ? 0 : newiTempLabel (NULL));
   bool pushed_a = FALSE, pop_a = FALSE;
   int pushed;
+  bool result_in_c = false;
 
   D (emit2 ("; genCmpEQorNE", ""));
 
@@ -6144,9 +6209,81 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
   aopOp (right, ic, false);
   aopOp (result, ic, true);
 
-  size = max (left->aop->size, right->aop->size);
+  int size = max (left->aop->size, right->aop->size);
 
-  for (i = 0; i < size;)
+  if (!ifx && size == 2 && (optimize.nosidechannels || regDead (A_IDX, ic)) &&
+    (aopInReg (left->aop, 0, X_IDX) && regDead (X_IDX, ic) && (aopOnStackNotExt (right->aop, 0, 2) || right->aop->type == AOP_DIR || right->aop->type == AOP_LIT || right->aop->type == AOP_IMMD)))
+    {
+      emit2 ("subw", "x, %s", aopGet2 (right->aop, 0));
+      cost (3 - aopOnStackNotExt (right->aop, 0, 2), 2);
+      emit2 ("subw", "x, #1");
+      cost (3, 1);
+      result_in_c = true;
+      goto compared;
+    }
+  else if (!ifx && optimize.nosidechannels && size == 2 && right->aop->type == AOP_STL)
+    {
+      if (!regDead (X_IDX, ic) || left->aop->regs[XL_IDX] >= 0 || left->aop->regs[XH_IDX] >= 0)
+        UNIMPLEMENTED;
+      genMove (ASMOP_X, right->aop, false, true, false);
+      push (ASMOP_X, 0, 2);
+      genMove (ASMOP_X, left->aop, regDead (A_IDX, ic), true, regDead (Y_IDX, ic));
+      emit2 ("subw", "x, (1, sp)");
+      emit2 ("subw", "x, #1");
+      cost (5, 3);
+      pop (ASMOP_X, 0, 2);
+      result_in_c = true;
+      goto compared;
+    }
+  else if (!ifx && (optimize.nosidechannels || size == 1 && regDead (A_IDX, ic) && right->aop->regs[A_IDX] < 0))
+    {
+      if (!regDead (A_IDX, ic) || left->aop->regs[A_IDX] >= 1 || right->aop->regs[A_IDX] >= 0)
+        UNIMPLEMENTED;
+      cheapMove (ASMOP_A, 0, left->aop, 0, false);
+      if (aopIsLitVal (right->aop, 0, 1, 0x00))
+        ;
+      else if (right->aop->type == AOP_REG || right->aop->type == AOP_REGSTK && !aopOnStack (right->aop, 0, 1) || right->aop->type == AOP_STL)
+        UNIMPLEMENTED;
+      else
+        emit3 (A_SUB, ASMOP_A, right->aop);
+      if (size > 1)
+        {
+          push (ASMOP_A, 0, 1);
+          for (int i = 1; i < size; i++)
+            {
+              if (right->aop->type == AOP_LIT && aopIsLitVal (left->aop, i, 1, byteOfVal (right->aop->aopu.aop_lit, i)))
+                continue;
+              cheapMove (ASMOP_A, 0, left->aop, i, false);
+              if (aopIsLitVal (right->aop, i, 1, 0x00))
+                ;
+              if (right->aop->regs[A_IDX] >= 0 || right->aop->type == AOP_STL) // Avoid null ptr deref below.
+                UNIMPLEMENTED;
+              else if (right->aop->type == AOP_REG || right->aop->type == AOP_REGSTK && !aopOnStack (right->aop, i, 1))
+                {
+                  int stacked_offset;
+                  const asmop *stacked_aop = stack_aop (right->aop, i, &stacked_offset);
+                  emit2 ("sub", "a, (%d, sp)", stacked_offset);
+                  cost (2, 1);
+                  pop (stacked_aop, 0, 2);
+                }
+              else
+                emit3_o (A_SUB, ASMOP_A, 0, right->aop, i);
+              emit2 ("or", "a, (1, sp)");
+              cost (2, 1);
+              if (i + 1 < size)
+                {
+                  emit2 ("ld", "(1, sp), a");
+                  cost (2, 1);
+                }
+            }
+          adjustStack (1, false, false, false);
+        }
+      emit3 (A_SUB, ASMOP_A, ASMOP_ONE);
+      result_in_c = true;
+      goto compared;
+    }
+
+  for (int i = 0; i < size;)
     {
       /* Prefer literal operand on right */
       if (left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD ||
@@ -6162,7 +6299,7 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
       bool x_dead2 = regDead (X_IDX, ic) && left->aop->regs[XL_IDX] <= i + 1 && left->aop->regs[XH_IDX] <= i + 1 && right->aop->regs[XL_IDX] <= i + 1 && right->aop->regs[XH_IDX] <= i + 1;
       bool y_dead2 = regDead (Y_IDX, ic) && left->aop->regs[YL_IDX] <= i + 1 && left->aop->regs[YH_IDX] <= i + 1 && right->aop->regs[YL_IDX] <= i + 1 && right->aop->regs[YH_IDX] <= i + 1;
 
-      if (i <= size - 2 && (right->aop->type == AOP_LIT || right->aop->type == AOP_IMMD || right->aop->type == AOP_DIR || aopOnStack (right->aop, i, 2)) && !((aopInReg(left->aop, i, A_IDX) || aopInReg(left->aop, i + 1, A_IDX))&& pushed_a))
+      if (i <= size - 2 && (right->aop->type == AOP_LIT || right->aop->type == AOP_IMMD || right->aop->type == AOP_DIR || aopOnStack (right->aop, i, 2)) && !((aopInReg(left->aop, i, A_IDX) || aopInReg(left->aop, i + 1, A_IDX)) && pushed_a))
         {
           /* Try to use flag setting from ldw */
           if((aopOnStackNotExt (left->aop, i, 2) || left->aop->type == AOP_DIR) &&
@@ -6225,7 +6362,9 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
 
           cheapMove (ASMOP_A, 0, left->aop, i, FALSE);
 
-          if (!(aopInReg (left->aop, i, A_IDX) && !regDead (A_IDX, ic)) &&
+          if (aopIsLitVal (right->aop, i, 1, 0x00))
+            emit3 (A_TNZ, ASMOP_A, NULL);
+          else if (!(aopInReg (left->aop, i, A_IDX) && !regDead (A_IDX, ic)) &&
             (aopIsLitVal (right->aop, i, 1, 0x01) || aopIsLitVal (right->aop, i, 1, 0xff)))
             emit3 (aopIsLitVal (right->aop, i, 1, 0x01) ? A_DEC : A_INC, ASMOP_A, 0);
           else
@@ -6290,15 +6429,37 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
       cost (2, 2); // Cycle cost is an estimate.
     }
 
+compared:
   if (pushed_a)
     pop (ASMOP_A, 0, 1);
 
   wassertl (result->aop->size == 1 || ifx, "Unimplemented result size.");
 
-  if (!ifx)
+  if (result_in_c)
+    {
+      wassert (!ifx);
+      if (opcode == NE_OP)
+        emit3 (A_CCF, NULL, NULL);
+      if (aopInReg (result->aop, 0, XL_IDX) && regDead (XH_IDX, ic))
+        {
+          emit3w (A_CLRW, ASMOP_X, NULL);
+          emit3w (A_RLCW, ASMOP_X, NULL);
+        }
+      else
+        {
+          if (!regDead (A_IDX, ic))
+            push (ASMOP_A, 0, 1);
+          emit3 (A_CLR, ASMOP_A, NULL);
+          emit3 (A_RLC, ASMOP_A, NULL);
+          cheapMove (result->aop, 0, ASMOP_A, 0, false);
+          if (!regDead (A_IDX, ic))
+            pop (ASMOP_A, 0, 1);
+        }
+    }
+  else if (!ifx)
     {
       cheapMove (result->aop, 0, opcode == EQ_OP ? ASMOP_ONE : ASMOP_ZERO, 0, !regDead (A_IDX, ic));
-      emitJP(tlbl, 0.0f);
+      emitJP (tlbl, 0.0f);
       if (pop_a)
         {
           emitLabel (tlbl_NE_pop);
@@ -7056,7 +7217,8 @@ genRot1 (iCode *ic)
       emit2 ("bccm", (s == 1) ? "%s, #0" : "%s, #7", aopGet (left->aop, 0));
       cost (4, 1);
     }
-  else if (s == 1 && aopSame (result->aop, 0, left->aop, 0, 1) && aopOnStack (left->aop, 0, 1))
+  else if (!optimize.nosidechannels &&
+    s == 1 && aopSame (result->aop, 0, left->aop, 0, 1) && aopOnStack (left->aop, 0, 1))
     {
       emit3 (A_SLL, left->aop, 0);
       symbol *tlbl = (regalloc_dry_run ? 0 : newiTempLabel (0));
@@ -7124,14 +7286,14 @@ genRot1 (iCode *ic)
             }
           else if (s == 7)
             {
-              if (optimize.codeSpeed) // 5 bytes, 3 cycles
+              if (!optimize.nosidechannels && optimize.codeSpeed) // 5 bytes, 3 cycles
                 {
                   emit3 (A_SRL, ASMOP_A, 0);
                   symbol *tlbl = (regalloc_dry_run ? 0 : newiTempLabel (0));
                   if (!regalloc_dry_run)
                     emit2 ("jrnc", "!tlabel", labelKey2num (tlbl->key));
                   emit2 ("or", "a, #0x80");
-                  cost (4, 2);
+                  cost (4, 2); // jrnc takes 2 cycles if jumping, 1 if not, the or takes 1 cycle. So it's always two cycles, and there is no timing sidechannel leaking the sign.
                   emitLabel (tlbl);
                 }
               else // 4 bytes, 4 cycles.
@@ -7222,6 +7384,17 @@ genRot2 (const iCode *ic)
             }
           emit3w (rlc ? A_SLLW : A_SRLW, use_y ? ASMOP_X : ASMOP_Y, 0);
           emit3w (rlc ? A_RLCW : A_RRCW, rotaop, 0);
+        }
+      else if (!rlc && (optimize.nosidechannels || regDead (A_IDX, ic) && aopInReg (rotaop, 0, X_IDX)))
+        {
+          if (!regDead (A_IDX, ic))
+            push (ASMOP_A, 0, 1);
+          emit3w (rlc ? A_SLLW : A_SRLW, rotaop, 0);
+          emit3 (A_LD, ASMOP_A, ASMOP_X);
+          emit3 (A_ADC, ASMOP_A, ASMOP_ZERO);
+          emit3 (A_LD, ASMOP_X, ASMOP_A);
+          if (!regDead (A_IDX, ic))
+            pop (ASMOP_A, 0, 1);
         }
       else
         {
@@ -8313,7 +8486,8 @@ genRightShiftLiteral (operand *left, operand *right, operand *result, const iCod
     }
 
   // div can be cheaper than a sequence of shifts. Keep the decision here consistent with handling of funcDivFlagSafe in SDCCralloc.hpp!
-  if (!sign && shCount < 8 &&
+  if (!optimize.nosidechannels && // div execution time depends on operands
+    !sign && shCount < 8 &&
     (shCount > 3 + !a_free * 2 && (size == 2 && aopInReg (shiftop, 0, X_IDX) || size == 1 && aopInReg (shiftop, 0, XL_IDX) && xh_zero) ||
     shCount * 2 > 4 + !a_free * 2 && (size == 2 && aopInReg (shiftop, 0, Y_IDX) || size == 1 && aopInReg (shiftop, 0, YL_IDX) && yh_zero)))
     {
@@ -8330,7 +8504,8 @@ genRightShiftLiteral (operand *left, operand *right, operand *result, const iCod
     }
 
   // divw can be cheaper than a sequence of shifts. Keep the decision here consistent with handling of funcDivFlagSafe in SDCCralloc.hpp!
-  if (!sign && size == 2 && shCount > 5 && regDead (Y_IDX, ic) && aopInReg (shiftop, 0, X_IDX))
+  if (!optimize.nosidechannels && // div execution time depends on operands
+    !sign && size == 2 && shCount > 5 && regDead (Y_IDX, ic) && aopInReg (shiftop, 0, X_IDX))
     {
       emit2 ("ldw", "y, #0x%04x", 1 << shCount);
       cost (4, 2);
@@ -8340,7 +8515,8 @@ genRightShiftLiteral (operand *left, operand *right, operand *result, const iCod
     }
 
   // Testing and rlwa is cheaper than 8 times sraw
-  if (sign && shCount >= (7 - regDead (A_IDX, ic)) && size >= 2 && (aopInReg (shiftop, size - 2, X_IDX) || aopInReg (shiftop, size - 2, Y_IDX)) &&
+  if (!optimize.nosidechannels &&
+    sign && shCount >= (7 - regDead (A_IDX, ic)) && size >= 2 && (aopInReg (shiftop, size - 2, X_IDX) || aopInReg (shiftop, size - 2, Y_IDX)) &&
     (size == 2 || size == 3 && shCount >= 8 && aopInReg (shiftop, 0, A_IDX) || size == 4 && (aopInReg (shiftop, 0, X_IDX) || aopInReg (shiftop, 0, Y_IDX))))
     {
       bool pushed_sign = false;
@@ -8868,7 +9044,7 @@ genPointerGet (const iCode *ic)
             emit2 ("jreq", "!tlabel", labelKey2num (tlbl->key));
           cost (2, 0);
           emit2 ("or", "a, #0x%02x", (0xff00 >> (8 - blen)) & 0xff);
-          cost (2, 1);
+          cost (2, 1); // jreq takes 2 cycles if jumping, 1 if not, the or takes 1 cycle. So it's always two cycles, and there is no timing sidechannel leaking the sign.
           emitLabel (tlbl);
         }
 
@@ -9590,7 +9766,7 @@ genCast (const iCode *ic)
           if (!regalloc_dry_run)
             emit2 ("jreq", "!tlabel", labelKey2num (tlbl->key));
           emit2 ("or", "a, #0x%02x", ~topbytemask & 0xff);
-          cost (6, 3);
+          cost (6, 3); // jreq takes 2 cycles if jumping, 1 if not, the or takes 1 cycle. So it's always two cycles, and there is no timing sidechannel leaking the sign.
           emitLabel (tlbl);
         }
       cheapMove (result->aop, result->aop->size - 1, ASMOP_A, 0, false);
@@ -9733,7 +9909,7 @@ genCast (const iCode *ic)
 
           if (!regalloc_dry_run)
             emit2 ("jrpl", "!tlabel", labelKey2num (tlbl->key));
-          cost (2, 2); // 2 for cycle cost is just an estimate; it also ignores pipelining.
+          cost (2, 1); // We choose cycle cost 1 for the jump: jrpl takes 2 cycles if jumping, 1 if not, the decw takes 1 cycle. So it's always two cycles, and there is no timing sidechannel leaking the sign.
           emit3w_o (A_DECW, result->aop, offset, 0, 0);
           emitLabel (tlbl);
           
@@ -9755,7 +9931,7 @@ genCast (const iCode *ic)
           emit3w_o (A_CLRW, result->aop, offset, 0, 0);
           if (!regalloc_dry_run)
             emit2 ("jrnc", "!tlabel", labelKey2num (tlbl->key));
-          cost (2, 2); // 2 for cycle cost is just an estimate; it also ignores pipelining.
+          cost (2, 1); // We choose cycle cost 1 for the jump: jrnc takes 2 cycles if jumping, 1 if not, the decw takes 1 cycle. So it's always two cycles, and there is no timing sidechannel leaking the sign.
           emit3w_o (A_DECW, result->aop, offset, 0, 0);
           emitLabel (tlbl);
 

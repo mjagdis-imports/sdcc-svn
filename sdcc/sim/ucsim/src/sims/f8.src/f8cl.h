@@ -65,9 +65,10 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 
 enum {
+
   flagO	 = 0x01,
-  flagZ	 = 0x02,
-  flagN	 = 0x04,
+  flagN	 = 0x02,
+  flagZ	 = 0x04,
   flagC	 = 0x08,
   flagH	 = 0x10,
 

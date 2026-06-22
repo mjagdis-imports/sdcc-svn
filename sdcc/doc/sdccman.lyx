@@ -15987,6 +15987,68 @@ status collapsed
  Disable the optimization of calls to the standard library.
 \end_layout
 
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-nosidechannels
+\begin_inset Index idx
+range none
+pageformat default
+status open
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-nosidechannels
+\end_layout
+
+\end_inset
+
+
+\series default
+ Disable optimizations that are likely to introduce side-channels,
+ which could leak information about the data being processed (in particular timing and energy-use side-channels).
+ While SDCC can try to avoid introducing side-channels,
+ the option cannot remove side-channels introduced by the programmer.
+ Machine-independent code transformations affected by this option include:
+\end_layout
+
+\begin_layout Itemize
+The optimization of divisions of signed operands by powers of two into shifts is disabled.
+\end_layout
+
+\begin_layout Itemize
+When a switch statement has more than two cases,
+ jump tables are preferred over match-and-jump sequences.
+\end_layout
+
+\begin_layout Standard
+Also see the documentation for the individual ports for port-specific details on side-channels.
+\end_layout
+
 \begin_layout Subsection
 Other Options
 \begin_inset Index idx
@@ -40509,6 +40571,38 @@ pragma nooverlay
 \begin_layout Itemize
 
 \series bold
+nosidechannels
+\series default
+
+\begin_inset Index idx
+range none
+pageformat default
+status open
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+#
+\end_layout
+
+\end_inset
+
+pragma nosidechannels
+\end_layout
+
+\end_inset
+
+ - the compiler will avoid introducing side channels that could leak information on the processed data (e.g.
+ timing or energy side-channels).
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
 max_allocs_per_node
 \series default
  <value>
@@ -48892,6 +48986,38 @@ The compiling and linking procedure remains the same,
  _bp is the stack frame pointer and is used to compute the offset into the stack for parameters and local variables.
 \end_layout
 
+\begin_layout Subsection
+Side channels
+\end_layout
+
+\begin_layout Standard
+The command line option and pragma to avoid the introduction of side channels are supported in the backend.
+ However,
+ some side channels remain even when using it;
+ these include:
+\end_layout
+
+\begin_layout Itemize
+Division,
+ modulo and multiplication operations can leak operand data.
+\end_layout
+
+\begin_layout Itemize
+Shift operations can leak right operand data.
+\end_layout
+
+\begin_layout Itemize
+Equality comparisons can leak operand data.
+\end_layout
+
+\begin_layout Itemize
+Reads and writes via pointers can leak which intrinsic named address spaces the pointers point into.
+\end_layout
+
+\begin_layout Itemize
+Floating-point operations (except unary minus) can leak operand data.
+\end_layout
+
 \begin_layout Section
 DS400 port
 \end_layout
@@ -52574,6 +52700,35 @@ For banked functions,
  all parameters are passed on the stack.
 \end_layout
 
+\begin_layout Subsection
+Side channels
+\end_layout
+
+\begin_layout Standard
+The command line option and pragma to avoid the introduction of side channels are supported in the backend.
+ However,
+ some side channels remain even when using it;
+ these include:
+\end_layout
+
+\begin_layout Itemize
+Division,
+ modulo,
+ and multiplication operations can leak operand data.
+\end_layout
+
+\begin_layout Itemize
+Shift operations can leak right operand data.
+\end_layout
+
+\begin_layout Itemize
+Comparisons can leak operand data in the sm83 backend.
+\end_layout
+
+\begin_layout Itemize
+Floating-point operations (except unary minus) can leak operand data.
+\end_layout
+
 \begin_layout Section
 The HC08 and S08 ports
 \end_layout
@@ -52623,6 +52778,30 @@ HC08
 \end_inset
 
  startup code follows the same scheme as the MCS51 startup code.
+\end_layout
+
+\begin_layout Subsection
+Side channels
+\end_layout
+
+\begin_layout Standard
+The command line option and pragma to avoid the introduction of side channels are supported in the backend.
+ However,
+ some side channels remain even when using it;
+ these include:
+\end_layout
+
+\begin_layout Itemize
+Division,
+ modulo and multiplication operations can leak operand data.
+\end_layout
+
+\begin_layout Itemize
+Shift operations can leak right operand data.
+\end_layout
+
+\begin_layout Itemize
+Floating-point operations (except unary minus) can leak operand data.
 \end_layout
 
 \begin_layout Section
@@ -52772,6 +52951,29 @@ For compatibility with the Cosmic STM8 compiler,
  and are called using callf.
 \end_layout
 
+\begin_layout Subsection
+Side channels
+\end_layout
+
+\begin_layout Standard
+The command line option and pragma to avoid the introduction of side channels are supported in the backend.
+ However,
+ some side channels remain even when using it;
+ these include:
+\end_layout
+
+\begin_layout Itemize
+Division and modulo operations can leak operand data
+\end_layout
+
+\begin_layout Itemize
+Shift operations can leak right operand data
+\end_layout
+
+\begin_layout Itemize
+Floating-point operations (except unary minus) can leak operand data
+\end_layout
+
 \begin_layout Section
 The f8 port
 \end_layout
@@ -52791,6 +52993,33 @@ If the the function does not have variable arguments,
  yx (32 bit) or use a hidden extra pointer parameter pointing to the location (anything wider than 32 bit,
  and all struct / union).
  The stack is not adjusted for the parameters by the callee (thus the caller has to do this instead).
+\end_layout
+
+\begin_layout Subsection
+Side channels
+\end_layout
+
+\begin_layout Standard
+The command line option and pragma to avoid the introduction of side channels are supported in the backend.
+ However,
+ some side channels remain even when using it;
+ these include:
+\end_layout
+
+\begin_layout Itemize
+Division and modulo operations can leak operand data.
+\end_layout
+
+\begin_layout Itemize
+Shift operations can leak right operand data.
+\end_layout
+
+\begin_layout Itemize
+Comparisons can leak operand data.
+\end_layout
+
+\begin_layout Itemize
+Floating-point operations (except unary minus) can leak operand data.
 \end_layout
 
 \begin_layout Section
@@ -52929,6 +53158,48 @@ The compiler can pass segment location to the linker.
 \begin_layout Standard
 –xram-loc:
  start address of the data segment
+\end_layout
+
+\begin_layout Section
+The PDK13,
+ PDK14,
+ PDK15 ports
+\end_layout
+
+\begin_layout Subsection
+Side channels
+\end_layout
+
+\begin_layout Standard
+The command line option and pragma to avoid the introduction of side channels are supported in the backend.
+ However,
+ some side channels remain even when using it;
+ these include:
+\end_layout
+
+\begin_layout Itemize
+Division,
+ modulo and multiplication operations can leak operand data.
+\end_layout
+
+\begin_layout Itemize
+Shift operations can leak right operand data.
+\end_layout
+
+\begin_layout Itemize
+Reads from signed bit-fields can leak the sign bit.
+\end_layout
+
+\begin_layout Itemize
+Signed casts can leak the sign of the operand.
+\end_layout
+
+\begin_layout Itemize
+Comparisons can leak operand data.
+\end_layout
+
+\begin_layout Itemize
+Floating-point operations (except unary minus) can leak operand data.
 \end_layout
 
 \begin_layout Section

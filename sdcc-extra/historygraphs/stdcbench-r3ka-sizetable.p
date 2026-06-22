@@ -13,5 +13,7 @@ set arrow from 14648, 24991 to 14648, 24891
 set label "4.4.0" at 14648, 24991
 set arrow from 15246, 24536 to 15246, 24436
 set label "4.5.0" at 15246, 24536
+set arrow from 16640, 23049 to 16640, 22949
+set label "4.6.0" at 16640, 23049
 plot "stdcbench-r3ka-sizetable" using 1:4 title "default", "stdcbench-r3ka-sizetable" using 1:2 title "size", "stdcbench-r3ka-sizetable" using 1:3 title "speed"
 
