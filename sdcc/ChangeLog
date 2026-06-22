@@ -1,5 +1,10 @@
 2026-06-22 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* sim/ucsim/src/sims/f8.src/f8cl.h:
+	  Fix f8 flag bit order.
+
+2026-06-22 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* support/scripts/sdcc.nsi:
 	  Fix for Windows uninstaller leaving a few files.
 
