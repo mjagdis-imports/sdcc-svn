@@ -23,5 +23,7 @@ set arrow from 14648, 13702 to 14648, 13602
 set label "4.4.0" at 14648, 13702
 set arrow from 15246, 13444 to 15246, 13344
 set label "4.5.0" at 15246, 13444
+set arrow from 16640, 13265 to 16640, 13165
+set label "4.6.0" at 16640, 13265
 plot "whetstone-z80-sizetable" using 1:4 title "default", "whetstone-z80-sizetable" using 1:2 title "size", "whetstone-z80-sizetable" using 1:3 title "speed"
 
