@@ -39,18 +39,5 @@ typedef enum logic [2:0]
 	FLAG_7
 } flagname_t;
 
-// Old flag bit order (up to SDCC 4.6.0)
-// typedef enum logic [2:0]
-// {
-//	FLAG_H,	// Half-carry
-//	FLAG_C,	// Carry
-//	FLAG_N,	// Negative
-//	FLAG_Z,	// Zero
-//	FLAG_O,	// Overflow
-//	FLAG_5,
-//	FLAG_6,
-//	FLAG_7
-//} flagname_t;
-
 `end_keywords
 

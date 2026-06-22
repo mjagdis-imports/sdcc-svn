@@ -132,7 +132,7 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 			next_opcode == OPCODE_JRZ_D && next_flags[FLAG_Z] || next_opcode == OPCODE_JRNZ_D && !next_flags[FLAG_Z] ||
 			next_opcode == OPCODE_JRC_D && next_flags[FLAG_C] || next_opcode == OPCODE_JRNC_D && !next_flags[FLAG_C] ||
 			next_opcode == OPCODE_JRN_D && next_flags[FLAG_N] || next_opcode == OPCODE_JRNN_D && !next_flags[FLAG_N] ||
-			next_opcode == OPCODE_JRNO_D && ((next_accsel_in == ACCSEL_SWAPOP) ^ !next_flags[4]) ||
+			next_opcode == OPCODE_JRNO_D && ((next_accsel_in == ACCSEL_SWAPOP) ^ !next_flags[FLAG_O]) ||
 			next_opcode == OPCODE_JRSGE_D && !(next_flags[FLAG_N] ^ next_flags[FLAG_O]) || next_opcode == OPCODE_JRSLT_D && (next_flags[FLAG_N] ^ next_flags[FLAG_O]) ||
 			next_opcode == OPCODE_JRSLE_D && ((next_accsel_in == ACCSEL_SWAPOP) ^ (next_flags[FLAG_Z] || (next_flags[FLAG_N] ^ next_flags[FLAG_O]))) ||
 			next_opcode == OPCODE_JRLE_D && ((next_accsel_in == ACCSEL_SWAPOP) ^ (!next_flags[FLAG_C] || next_flags[FLAG_Z])) ||
@@ -261,7 +261,7 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 			op0 = x;
 		else if(opcode == OPCODE_LDW_IY_X || opcode == OPCODE_XCHW_X_IY)
 			op0 =
-				(accsel_in == ACCSEL_ZL_X) ? z :
+				(accsel_in == ACCSEL_ZL_X || accsel_in == ACCSEL_ZH_Y) ? z :
 				(accsel_in == ACCSEL_YL_Z) ? y :
 				x;
 		else if (opcode == OPCODE_DNJNZ_YH_D)
@@ -531,7 +531,7 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 		(opcode == OPCODE_LD_XL_XH && swapop_in) ? 0:
 		((opcode == OPCODE_LD_XL_YL || opcode == OPCODE_LD_XL_YH) && swapop_in) ? 1 :
 		((opcode == OPCODE_LD_XL_ZL || opcode == OPCODE_LD_XL_ZH) && swapop_in) ? 2 :
-		(opcode == OPCODE_LDW_X_Y && !accsel_in) ? 0 :
+		(opcode == OPCODE_LDW_X_Y) ? 0 :
 		(opcode == OPCODE_LDW_Z_Y || opcode == OPCODE_CAX_IY_ZL_XL || opcode == OPCODE_CAXW_IY_Z_X) ?
 			2 :
 		(opcode_is_16_2_x(opcode) && swapop_in) ? 0 :

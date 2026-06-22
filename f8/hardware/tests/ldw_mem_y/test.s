@@ -50,6 +50,31 @@ l1:
 l2trap:
 	trap
 l2:
+	pushw	#0xa55a
+	ldw	y, sp
+	ldw	x, #0x0102
+	ldw	(y), x
+	popw	y
+	cpw	y, #0x0102
+	jrnz	l3trap
+	pushw	#0xa55a
+	ldw	y, sp
+	ldw	z, #0x0304
+	ldw	(y), z
+	popw	y
+	cpw	y, #0x0304
+	jrnz	l3trap
+	pushw	#0xa55a
+	ldw	x, sp
+	ldw	z, #0x0506
+	ldw	(x), z
+	popw	y
+	cpw	y, #0x0506
+	jrz	l3
+	
+l3trap:
+	trap
+l3:	
 
 loop:
 	jp	#loop	; An endless loop, so we never fail until we reach the time limit.

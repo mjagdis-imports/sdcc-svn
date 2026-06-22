@@ -92,6 +92,15 @@ l9trap:
 	trap
 l9:
 
+	ldw	z, #0x1112
+	ldw	y, #0x2224
+	orw	y, z
+	cpw	y, #0x3336
+	jrz	la
+latrap:
+	trap
+la:
+
 loop:
 	jp	#loop	; An endless loop, so we never fail until we reach the time limit.
 
