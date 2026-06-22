@@ -148,7 +148,7 @@ void
 cl_f8::print_regs(class cl_console_base *con)
 {
   con->dd_color("answer");
-  con->dd_printf("---HCNZO  Flags= 0x%02x\n", rF);
+  con->dd_printf("---HCZNO  Flags= 0x%02x\n", rF);
   con->dd_printf("%s\n", cbin(rF, 8).c_str());
   con->dd_printf("X= 0x%04x [X]= 0x%02x %3d %c\n",
                  rX, rom->get(rX), rom->get(rX),
