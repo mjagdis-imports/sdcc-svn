@@ -20,7 +20,7 @@ else
   AS = $(WINE) $(top_builddir)/bin/sdasrab$(EXEEXT)
 
 ifndef CROSSCOMPILING
-  SDCCFLAGS += --nostdinc -I$(top_srcdir)
+  SDCCFLAGS += --nostdinc -I$(top_srcdir)  --nosidechannels
   LINKFLAGS += --nostdlib -L$(top_builddir)/device/lib/build/r4k
 endif
 endif

@@ -1273,7 +1273,7 @@ replace restart {
 } by {
 	ld	a, %1
 	; peephole 600a removed unneeded %2 a, #%3
-} if same(%2 'cp' 'sub'), operandsLiteral(%3), immdInRange(0 0 '+' 0 %3 %4), notUsed('v' 'c')
+} if same(%2 'cp' 'sub'), operandsLiteral(%3), immdInRange(0 0 '+' 0 %3 %4), notUsed('v' 'c'), notSame(%1 'xl' 'xh' 'yl' 'yh')
 
 replace restart {
 	ld	%1, a
@@ -1281,7 +1281,7 @@ replace restart {
 } by {
 	ld	%1, a
 	; peephole 600b removed unneeded %2 a, #%3
-} if same(%2 'cp' 'sub'), operandsLiteral(%3), immdInRange(0 0 '+' 0 %3 %4), notUsed('v' 'c')
+} if same(%2 'cp' 'sub'), operandsLiteral(%3), immdInRange(0 0 '+' 0 %3 %4), notUsed('v' 'c'), notSame(%1 'xl' 'xh' 'yl' 'yh')
 
 // Do operations directly on stack, leave 'a' as it was, load into 'a' may be removed by dead load optimizations
 replace restart {
