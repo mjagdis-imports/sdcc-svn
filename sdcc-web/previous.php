@@ -18,6 +18,21 @@
 
       <h2>Previous NEWS</h2>
 
+            <p><i><b>January 28th, 2025: SDCC 4.5.0 released.</b></i></p>
+            <p>A new release of SDCC, the portable optimizing compiler for STM8, MCS-51, DS390, HC08, S08, Z80, Z180, Rabbit, R800, SM83, eZ80 in Z80 mode, Z80N, TLCS-90, MOS 6502, WDC 65C02, Padauk and PIC microprocessors is now available.
+              (<a href="http://sdcc.sourceforge.net" target="_new">http://sdcc.sourceforge.net</a>).
+              Sources, documentation and binaries for GNU/Linux amd64, Windows x86 and amd64, macOS amd64 are available.</p>
+            <p>SDCC 4.5.0 New Feature List:</p>
+            <ul>
+              <li>Full atomic_flag support for msc51 and ds390 ports</li>
+              <li>Experimental f8 port</li>
+              <li>ISO C2y case range expressions</li>
+              <li>ISO C2y _Generic selection expression with a type operand</li>
+              <li>K&R-style function syntax (preliminarily with the semantics of non-K&R ISO-style functions)</li>
+              <li>ISO C23 enums with user-specified underlying type</li>
+              <li>struct / union in initializers</li>
+            </ul>
+
             <p><i><b>January 25th, 2025: SDCC 4.5.0 RC3.</b></i></p>
             <p>SDCC 4.5.0 Release Candidate 3 source, doc and binary packages for amd64 GNU/Linux, amd64 Windows, x86 Windows, and amd64 macOS are available in corresponding folders at:
               <a href="http://sourceforge.net/projects/sdcc/files/">
