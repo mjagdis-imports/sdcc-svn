@@ -144,7 +144,7 @@
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
 </g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-	<path stroke='black'  d='M72.53,18.01 L72.53,422.40 L614.82,422.40 L614.82,18.01 L72.53,18.01 Z  '/>	<g transform="translate(89.88,376.29)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="start">
+	<path stroke='black'  d='M72.53,18.01 L72.53,422.40 L614.82,422.40 L614.82,18.01 L72.53,18.01 Z  '/>	<g transform="translate(89.88,364.15)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="start">
 		<text><tspan font-family="Arial" >3.5.0</tspan></text>
 	</g>
 	<g transform="translate(114.42,377.43)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="start">
@@ -177,9 +177,12 @@
 	<g transform="translate(495.92,42.46)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="start">
 		<text><tspan font-family="Arial" >4.5.0</tspan></text>
 	</g>
+	<g transform="translate(590.42,40.87)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="start">
+		<text><tspan font-family="Arial" >4.6.0</tspan></text>
+	</g>
 </g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-	<path stroke='black'  d='M88.95,376.95 L89.89,380.46 L90.83,376.95 M89.89,368.33 L89.89,380.46  '/></g>
+	<path stroke='black'  d='M88.32,374.61 L89.89,380.46 L91.46,374.61 M89.89,360.24 L89.89,380.46  '/></g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
 	<path stroke='black'  d='M113.49,378.10 L114.43,381.61 L115.37,378.10 M114.43,369.48 L114.43,381.61  '/></g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
@@ -200,6 +203,8 @@
 	<path stroke='black'  d='M453.83,53.24 L455.40,59.09 L456.97,53.24 M455.40,38.87 L455.40,59.09  '/></g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
 	<path stroke='black'  d='M494.36,52.92 L495.93,58.77 L497.50,52.92 M495.93,38.55 L495.93,58.77  '/></g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<path stroke='black'  d='M588.86,51.33 L590.43,57.18 L592.00,51.33 M590.43,36.96 L590.43,57.18  '/></g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
 </g>
 	<g id="gnuplot_plot_1" ><title>default</title>
@@ -241,7 +246,7 @@
 		L524.60,58.62 L528.32,58.62 L528.39,58.62 L531.31,58.62 L539.58,58.62 L539.65,58.62 L543.24,58.62 L543.31,57.35
 		L544.12,57.35 L548.12,57.35 L550.63,57.11 L557.41,57.11 L558.96,57.11 L561.95,57.11 L562.83,57.11 L567.71,57.11
 		L568.12,57.11 L570.08,57.11 L570.83,57.11 L571.03,57.11 L572.72,57.11 L574.15,57.11 L579.16,57.35 L583.10,57.35
-		 '/></g>
+		L590.42,57.35 L590.55,57.27  '/></g>
 	</g>
 	<g id="gnuplot_plot_2" ><title>size</title>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
@@ -282,7 +287,7 @@
 		L524.60,59.25 L528.32,59.25 L528.39,59.25 L531.31,59.25 L539.58,59.25 L539.65,59.25 L543.24,59.25 L543.31,57.99
 		L544.12,57.99 L548.12,57.99 L550.63,57.83 L557.41,57.83 L558.96,57.83 L561.95,57.83 L562.83,57.83 L567.71,57.83
 		L568.12,57.83 L570.08,57.83 L570.83,57.83 L571.03,57.83 L572.72,57.83 L574.15,57.83 L579.16,57.99 L583.10,57.99
-		 '/></g>
+		L590.42,57.99 L590.55,57.99  '/></g>
 	</g>
 	<g id="gnuplot_plot_3" ><title>speed</title>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
@@ -323,7 +328,7 @@
 		L524.60,58.46 L528.32,58.46 L528.39,58.46 L531.31,58.46 L539.58,58.46 L539.65,58.46 L543.24,58.46 L543.31,57.27
 		L544.12,57.27 L548.12,57.27 L550.63,57.03 L557.41,57.03 L558.96,57.03 L561.95,57.03 L562.83,57.03 L567.71,57.03
 		L568.12,57.03 L570.08,57.03 L570.83,57.03 L571.03,57.03 L572.72,57.03 L574.15,57.03 L579.16,57.27 L583.10,57.27
-		 '/></g>
+		L590.42,57.27 L590.55,57.19  '/></g>
 	</g>
 <g fill="none" color="white" stroke="rgb( 86, 180, 233)" stroke-width="2.00" stroke-linecap="butt" stroke-linejoin="miter">
 </g>

@@ -1,8 +1,10 @@
+# Configure for SDCC target
 set output "whetstone-z80-size.svg"
-set terminal svg size 640,480
-set style data lines
-set xlabel "revision"
-set ylabel "size [B]"
+datafile = "whetstone-z80-sizetable"
+
+# Configure arrow length (to make the plot look nice)
+arrowlength = 100
+
 set arrow from 9256, 17844 to 9256, 17744
 set label "3.5.0" at 9256, 17844
 set arrow from 9618, 17621 to 9618, 17521
@@ -25,5 +27,4 @@ set arrow from 15246, 13444 to 15246, 13344
 set label "4.5.0" at 15246, 13444
 set arrow from 16640, 13265 to 16640, 13165
 set label "4.6.0" at 16640, 13265
-plot "whetstone-z80-sizetable" using 1:4 title "default", "whetstone-z80-sizetable" using 1:2 title "size", "whetstone-z80-sizetable" using 1:3 title "speed"
 

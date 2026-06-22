@@ -1,8 +1,10 @@
+# Configure for SDCC target
 set output "whetstone-mcs51-size.svg"
-set terminal svg size 640,480
-set style data lines
-set xlabel "revision"
-set ylabel "size [B]"
+datafile = "whetstone-mcs51-sizetable"
+
+# Configure arrow length (to make the plot look nice)
+arrowlength = 50
+
 set arrow from 9618, 19980 to 9618, 19930
 set label "3.6.0" at 9618, 19980
 set arrow from 10233, 20094 to 10233, 20044
@@ -25,5 +27,4 @@ set arrow from 15246, 18551 to 15246, 18501
 set label "4.5.0" at 15246, 18551
 set arrow from 16640, 18632 to 16640, 18582
 set label "4.6.0" at 16640, 18632
-plot "whetstone-mcs51-sizetable" using 1:4 title "default", "whetstone-mcs51-sizetable" using 1:2 title "size", "whetstone-mcs51-sizetable" using 1:3 title "speed"
 
