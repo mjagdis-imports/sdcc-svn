@@ -424,7 +424,7 @@ module cpu
 					else
 `endif
 						addsub_result = addsub ({8'h00, acc8}, {8'h00, ~op8}, 1, 0);
-					next_f = {3'b000, addsub_result.o, addsub_result.z, addsub_result.n, addsub_result.c, addsub_result.h};
+					next_f = {3'b000, addsub_result.h, addsub_result.c, addsub_result.z, addsub_result.n, addsub_result.o};
 					result8 = addsub_result.result[7:0];
 				end
 				else if(opcode_is_sbc(opcode))
@@ -436,78 +436,89 @@ module cpu
 					else
 `endif
 						addsub_result = addsub ({8'h00, acc8}, {8'h00, ~op8}, f[FLAG_C], 0);
-					next_f = {3'b000, addsub_result.o, addsub_result.z, addsub_result.n, addsub_result.c, addsub_result.h};
+					next_f = {3'b000, addsub_result.h, addsub_result.c, addsub_result.z, addsub_result.n, addsub_result.o};
 					result8 = addsub_result.result[7:0];
 				end
 				else if(opcode_is_add(opcode))
 				begin
 					//addsub_result_t addsub_result;
 					addsub_result = addsub ({8'h00, acc8}, {8'h00, op8}, 0, 0);
-					next_f = {3'b000, addsub_result.o, addsub_result.z, addsub_result.n, addsub_result.c, addsub_result.h};
+					next_f = {3'b000, addsub_result.h, addsub_result.c, addsub_result.z, addsub_result.n, addsub_result.o};
 					result8 = addsub_result.result[7:0];
 				end
 				else if(opcode_is_adc(opcode))
 				begin
 					//addsub_result_t addsub_result;
 					addsub_result = addsub ({8'h00, acc8}, {8'h00, op8}, f[FLAG_C], 0);
-					next_f = {3'b000, addsub_result.o, addsub_result.z, addsub_result.n, addsub_result.c, addsub_result.h};
+					next_f = {3'b000, addsub_result.h, addsub_result.c, addsub_result.z, addsub_result.n, addsub_result.o};
 					result8 = addsub_result.result[7:0];
 				end
 				else if(opcode_is_or(opcode))
 				begin
 					result8 = acc8 | op8;
-					next_f = {3'b000, f[FLAG_O], !(|result8), result8[7], f[FLAG_C], f[FLAG_H]};
+					next_f[FLAG_N] = result8[7];
+					next_f[FLAG_Z] = !(|result8);
 				end
 				else if(opcode_is_and(opcode))
 				begin
 					result8 = acc8 & op8;
-					next_f = {3'b000, f[FLAG_O], !(|result8), result8[7], f[FLAG_C], f[FLAG_H]};
+					next_f[FLAG_N] = result8[7];
+					next_f[FLAG_Z] = !(|result8);
 				end
 				else if(opcode_is_xor(opcode))
 				begin
 					result8 = acc8 ^ op8;
-					next_f = {3'b000, f[FLAG_O], !(|result8), result8[7], f[FLAG_C], f[FLAG_H]};
+					next_f[FLAG_N] = result8[7];
+					next_f[FLAG_Z] = !(|result8);
 				end
 				else if(opcode_is_srl(opcode))
 				begin
 					//logic[8:0] result9;
 					result9 = {1'b0, op8};
 					result8 = result9[8:1];
-					next_f = {3'b000, f[FLAG_O], !(|result8), result8[7], result9[0], f[FLAG_H]};
+					next_f[FLAG_N] = result8[7];
+					next_f[FLAG_Z] = !(|result8);
+					next_f[FLAG_C] = result9[0];
 				end
 				else if(opcode_is_sll(opcode))
 				begin
 					//logic[8:0] result9;
 					result9 = {op8, 1'b0};
 					result8 = result9[7:0];
-					next_f = {3'b000, f[FLAG_O], !(|result8), result8[7], result9[8], f[FLAG_H]};
+					next_f[FLAG_N] = result8[7];
+					next_f[FLAG_Z] = !(|result8);
+					next_f[FLAG_C] = result9[8];
 				end
 				else if(opcode_is_rrc(opcode))
 				begin
 					//logic[8:0] result9;
 					result9 = {f[FLAG_C], op8};
 					result8 = result9[8:1];
-					next_f = {3'b000, f[FLAG_O], !(|result8), result8[7], result9[0], f[FLAG_H]};
+					next_f[FLAG_N] = result8[7];
+					next_f[FLAG_Z] = !(|result8);
+					next_f[FLAG_C] = result9[0];
 				end
 				else if(opcode_is_rlc(opcode))
 				begin
 					//logic[8:0] result9;
 					result9 = {op8, f[FLAG_C]};
 					result8 = result9[7:0];
-					next_f = {3'b000, f[FLAG_O], !(|result8), result8[7], result9[8], f[FLAG_H]};
+					next_f[FLAG_N] = result8[7];
+					next_f[FLAG_Z] = !(|result8);
+					next_f[FLAG_C] = result9[8];
 				end
 				else if(opcode_is_inc(opcode))
 				begin
 					//addsub_result_t addsub_result;
 					addsub_result = addsub ({8'h00, op8}, 16'h0001, 0, 0);
-					next_f = {3'b000, addsub_result.o, addsub_result.z, addsub_result.n, addsub_result.c, addsub_result.h};
+					next_f = {3'b000, addsub_result.h, addsub_result.c, addsub_result.z, addsub_result.n, addsub_result.o};
 					result8 = addsub_result.result[7:0];
 				end
 				else if(opcode_is_dec(opcode))
 				begin
 					//addsub_result_t addsub_result;
 					addsub_result = addsub ({8'h00, op8}, 16'h00fe, 1, 0);
-					next_f = {3'b000, addsub_result.o, addsub_result.z, addsub_result.n, addsub_result.c, addsub_result.h};
+					next_f = {3'b000, addsub_result.h, addsub_result.c, addsub_result.z, addsub_result.n, addsub_result.o};
 					result8 = addsub_result.result[7:0];
 				end
 				else if(opcode_is_clr(opcode))
@@ -516,7 +527,10 @@ module cpu
 				end
 				else if(opcode_is_tst(opcode))
 				begin
-					next_f = {3'b000, ^op8, !(|op8), op8[7], 1'b0, f[FLAG_H]};
+					next_f[FLAG_O] = ^op8;
+					next_f[FLAG_N] = op8[7];
+					next_f[FLAG_Z] = !(|op8);
+					next_f[FLAG_C] = 1'b0;
 				end
 				else if(opcode == OPCODE_SRA_XL)
 				begin
@@ -529,7 +543,7 @@ module cpu
 				begin
 					//addsub_result_t addsub_result;
 					addsub_result = addsub ({8'h00, op8}, {8'h00, dadjust(op8, f[FLAG_C], f[FLAG_H])}, 0, 0);
-					next_f = {3'b000, addsub_result.o, addsub_result.z, addsub_result.n, addsub_result.c, addsub_result.h};
+					next_f = {3'b000, addsub_result.h, addsub_result.c, addsub_result.z, addsub_result.n, addsub_result.o};
 					result8 = addsub_result.result[7:0];
 				end
 				else if(opcode == OPCODE_BOOL_XL)
@@ -613,7 +627,8 @@ module cpu
 				regwrite_data = {mem8, mem8};
 				regwrite_addr = acc8_addr;
 				regwrite_en = acc8_en;
-				next_f = {3'b000, f[FLAG_O], !(|mem8), mem8[7], f[FLAG_C], f[FLAG_H]};
+				next_f[FLAG_N] = mem8[7];
+				next_f[FLAG_Z] = !(|mem8);
 			end
 			else if(opcode == OPCODE_LD_XL_XH)
 			begin
@@ -809,7 +824,7 @@ module cpu
 						addsub_result = addsub (~acc16, op16, 1, 1);
 					else
 						addsub_result = addsub (acc16, ~op16, 1, 1);
-					next_f = {3'b000, addsub_result.o, addsub_result.z, addsub_result.n, addsub_result.c, f[FLAG_H]};
+					next_f = {3'b000, f[FLAG_H], addsub_result.c, addsub_result.z, addsub_result.n, addsub_result.o};
 					result16 = addsub_result.result;
 				end
 				if(opcode_is_sbcw(opcode))
@@ -819,32 +834,34 @@ module cpu
 						addsub_result = addsub (~acc16, op16, f[FLAG_C], 1);
 					else
 						addsub_result = addsub (acc16, ~op16, f[FLAG_C], 1);
-					next_f = {3'b000, addsub_result.o, addsub_result.z, addsub_result.n, addsub_result.c, f[FLAG_H]};
+					next_f = {3'b000, f[FLAG_H], addsub_result.c, addsub_result.z, addsub_result.n, addsub_result.o};
 					result16 = addsub_result.result;
 				end
 				else if(opcode_is_addw(opcode))
 				begin
 					//addsub_result_t addsub_result;
 					addsub_result = addsub (acc16, op16, 0, 1);
-					next_f = {3'b000, addsub_result.o, addsub_result.z, addsub_result.n, addsub_result.c, f[FLAG_H]};
+					next_f = {3'b000, f[FLAG_H], addsub_result.c, addsub_result.z, addsub_result.n, addsub_result.o};
 					result16 = addsub_result.result;
 				end
 				else if(opcode_is_adcw(opcode))
 				begin
 					//addsub_result_t addsub_result;
 					addsub_result = addsub (acc16, op16, f[FLAG_C], 1);
-					next_f = {3'b000, addsub_result.o, addsub_result.z, addsub_result.n, addsub_result.c, f[FLAG_H]};
+					next_f = {3'b000, f[FLAG_H], addsub_result.c, addsub_result.z, addsub_result.n, addsub_result.o};
 					result16 = addsub_result.result;
 				end
 				else if(opcode_is_orw(opcode))
 				begin
 					result16 = acc16 | op16;
-					next_f = {3'b000, ^result16, !(|result16), result16[15], f[FLAG_C], f[FLAG_H]};
+					next_f[FLAG_N] = result16[15];
+					next_f[FLAG_Z] = !(|result16);
 				end
 				else if(opcode_is_xorw(opcode))
 				begin
 					result16 = acc16 ^ op16;
-					next_f = {3'b000, ^result16, !(|result16), result16[15], f[FLAG_C], f[FLAG_H]};
+					next_f[FLAG_N] = result16[15];
+					next_f[FLAG_Z] = !(|result16);
 				end
 				else
 `endif
@@ -854,7 +871,10 @@ module cpu
 				end
 				else if(opcode_is_tstw(opcode))
 				begin
-					next_f = {3'b000, ^op16, !(|op16), op16[15], 1'b1, f[FLAG_H]};
+					next_f[FLAG_O] = ^op16;
+					next_f[FLAG_N] = op16[15];
+					next_f[FLAG_Z] = !(|op16);
+					next_f[FLAG_C] = 1'b1;
 				end
 				else if(opcode_is_incw(opcode))
 				begin
@@ -863,7 +883,7 @@ module cpu
 `ifndef F8L
 					if (opcode != OPCODE_INCNW_Y)
 `endif
-						next_f = {3'b000, addsub_result.o, addsub_result.z, addsub_result.n, addsub_result.c, f[FLAG_H]};
+						next_f = {3'b000, f[FLAG_H], addsub_result.c, addsub_result.z, addsub_result.n, addsub_result.o};
 					result16 = addsub_result.result;
 				end
 `ifndef F8L
@@ -871,14 +891,14 @@ module cpu
 				begin
 					//addsub_result_t addsub_result;
 					addsub_result = addsub (op16, 16'h0000, f[FLAG_C], 1);
-					next_f = {3'b000, addsub_result.o, addsub_result.z, addsub_result.n, addsub_result.c, f[FLAG_H]};
+					next_f = {3'b000, f[FLAG_H], addsub_result.c, addsub_result.z, addsub_result.n, addsub_result.o};
 					result16 = addsub_result.result;
 				end
 				else if(opcode_is_sbcw0(opcode))
 				begin
 					//addsub_result_t addsub_result;
 					addsub_result = addsub (op16, 16'hffff, f[FLAG_C], 1);
-					next_f = {3'b000, addsub_result.o, addsub_result.z, addsub_result.n, addsub_result.c, f[FLAG_H]};
+					next_f = {3'b000, f[FLAG_H], addsub_result.c, addsub_result.z, addsub_result.n, addsub_result.o};
 					result16 = addsub_result.result;
 				end
 				else if(opcode == OPCODE_SRLW_Y)
@@ -915,14 +935,14 @@ module cpu
 				begin
 					//addsub_result_t addsub_result;
 					addsub_result = addsub (op16, 16'hfffe, 1, 1);
-					next_f = {3'b000, addsub_result.o, addsub_result.z, addsub_result.n, addsub_result.c, f[FLAG_H]};
+					next_f = {3'b000, f[FLAG_H], addsub_result.c, addsub_result.z, addsub_result.n, addsub_result.o};
 					result16 = addsub_result.result;
 				end
 				else if(opcode == OPCODE_NEGW_Y)
 				begin
 					//addsub_result_t addsub_result;
 					addsub_result = addsub (16'h0000, ~op16, 1, 1);
-					next_f = {3'b000, addsub_result.o, addsub_result.z, addsub_result.n, addsub_result.c, f[FLAG_H]};
+					next_f = {3'b000, f[FLAG_H], addsub_result.c, addsub_result.z, addsub_result.n, addsub_result.o};
 					result16 = addsub_result.result;
 				end
 				else if(opcode == OPCODE_BOOLW_Y)
@@ -1128,7 +1148,7 @@ module cpu
 			begin
 				//addsub_result_t addsub_result;
 				addsub_result = addsub (acc16, {{8{imm8[7]}}, imm8}, 0, 1);
-				next_f = {3'b000, addsub_result.o, addsub_result.z, addsub_result.n, addsub_result.c, f[FLAG_H]};
+				next_f = {3'b000, f[FLAG_H], addsub_result.c, addsub_result.z, addsub_result.n, addsub_result.o};
 				regwrite_data = addsub_result.result;
 				regwrite_addr = acc16_addr;
 				regwrite_en = 2'b11;
@@ -1181,7 +1201,7 @@ module cpu
 					addsub_result = addsub (acc16, ~imm16, 1, 1);
 				else
 					addsub_result = addsub (~acc16, imm16, 1, 1);
-				next_f = {3'b000, addsub_result.o, addsub_result.z, addsub_result.n, addsub_result.c, f[FLAG_H]};
+				next_f = {3'b000, f[FLAG_H], addsub_result.c, addsub_result.z, addsub_result.n, addsub_result.o};
 			end
 `endif
 			else if(opcode == OPCODE_CAXW_IY_Z_X)
@@ -1210,7 +1230,8 @@ module cpu
 				regwrite_data = z + 1;
 				memwrite_data = mem8;
 				memwrite_en = 2'b01;
-				next_f = {3'b000, f[FLAG_O], !(|mem8), mem8[7], f[FLAG_C], f[FLAG_H]};
+				next_f[FLAG_N] = mem8[7];
+				next_f[FLAG_Z] = !(|mem8);
 			end
 			else if(opcode == OPCODE_LDWI_YREL_IZ)
 			begin
@@ -1220,7 +1241,8 @@ module cpu
 				regwrite_data = z + 2;
 				memwrite_data = mem16;
 				memwrite_en = 2'b11;
-				next_f = {3'b000, f[FLAG_O], !(|mem16), mem16[15], f[FLAG_C], f[FLAG_H]};
+				next_f[FLAG_N] = mem16[15];
+				next_f[FLAG_Z] = !(|mem16);
 			end
 `endif
 		end

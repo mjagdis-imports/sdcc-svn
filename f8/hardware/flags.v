@@ -20,17 +20,37 @@
 
 `begin_keywords "1800-2009"
 
+// Flag bit order chosen to facilitate efficient constant-time comparisons
+// (ie. comparisons where the execution time does not depend on the compared values -
+// which helps prevent timing side-channels).
+// For this, we want the n and o flags next to each other, the c and z flags next to each other,
+// the z flag next to to the n or o flag. Having the o flag as least significant bit
+// facilitate efficient constant-time C23 checked integer arithmetic.
+// Combined, these conditions fix the order.
 typedef enum logic [2:0]
 {
-	FLAG_H,	// Half-carry
-	FLAG_C,	// Carry
+	FLAG_O,	// Overflow
 	FLAG_N,	// Negative
 	FLAG_Z,	// Zero
-	FLAG_O,	// Overflow
+	FLAG_C,	// Carry
+	FLAG_H,	// Half-carry
 	FLAG_5,
 	FLAG_6,
 	FLAG_7
 } flagname_t;
+
+// Old flag bit order (up to SDCC 4.6.0)
+// typedef enum logic [2:0]
+// {
+//	FLAG_H,	// Half-carry
+//	FLAG_C,	// Carry
+//	FLAG_N,	// Negative
+//	FLAG_Z,	// Zero
+//	FLAG_O,	// Overflow
+//	FLAG_5,
+//	FLAG_6,
+//	FLAG_7
+//} flagname_t;
 
 `end_keywords
 

@@ -16,7 +16,7 @@
 	jrnz	l1trap
 	xch	f, (0, sp)
 	pop	xl
-	cp	xl, #0x08
+	cp	xl, #0x04
 	jrnz	l1trap
 	pop	xl
 	cp	xl, #0xaa
@@ -35,7 +35,7 @@ l1:
 	jrnz	l2trap
 	xch	f, (0, sp)
 	pop	xl
-	cp	xl, #0x08
+	cp	xl, #0x04
 	jrnz	l2trap
 	pop	xl
 	cp	xl, #0xaa

@@ -18,7 +18,7 @@
 	jro	l1trap
 	ld	xl, (0, sp)
 	and	xl, #0x0e	; mask out everything except for c, n, z.
-	cp	xl, #0x08
+	cp	xl, #0x04
 	jrz	l1
 l1trap:
 	trap

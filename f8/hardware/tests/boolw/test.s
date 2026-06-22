@@ -7,7 +7,7 @@
 	ldw	sp, y
 	
 	ldw	y, #0
-	push	#0x17
+	push	#0x1b
 	xch	f, (0, sp)
 	boolw	y
 	xch	f, (0, sp)
@@ -30,7 +30,7 @@ l1:
 	jrnz	l2trap
 	ld	xl, (0, sp)
 	and	xl, #0x1f	; Mask out hidden flag bits
-	cp	xl, #0x17
+	cp	xl, #0x1b
 	jrz	l2
 l2trap:
 	trap
@@ -39,7 +39,7 @@ l2:
 	ldw	y, #0xaa55
 
 	ldw	x, #0
-	push	#0x17
+	push	#0x1b
 	xch	f, (0, sp)
 	boolw	x
 	xch	f, (0, sp)
@@ -62,7 +62,7 @@ l3:
 	jrnz	l4trap
 	ld	xl, (0, sp)
 	and	xl, #0x1f	; Mask out hidden flag bits
-	cp	xl, #0x17
+	cp	xl, #0x1b
 	jrz	l4
 l4trap:
 	trap

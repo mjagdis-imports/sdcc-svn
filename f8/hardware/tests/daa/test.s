@@ -14,8 +14,8 @@
 	cp	xl, #0x00
 	jrnz	#l1trap
 	ld	xl, (0, sp)
-	and	xl, #0x0a	; clear irrelevant flag bits
-	cp	xl, #0x08
+	and	xl, #0x0c	; clear irrelevant flag bits
+	cp	xl, #0x04
 	jrz	#l1
 l1trap:
 	trap
@@ -29,7 +29,7 @@ l1:
 	cp	xl, #0x90
 	jrnz	l2trap
 	ld	xl, (0, sp)
-	and	xl, #0x0a	; clear irrelevant flag bits
+	and	xl, #0x0c	; clear irrelevant flag bits
 	cp	xl, #0x00
 	jrz	#l2
 l2trap:
@@ -44,8 +44,8 @@ l2:
 	cp	xh, #0x00
 	jrnz	l3trap
 	ld	xl, (0, sp)
-	and	xl, #0x0a	; clear irrelevant flag bits
-	cp	xl, #0x0a
+	and	xl, #0x0c	; clear irrelevant flag bits
+	cp	xl, #0x0c
 	jrz	#l3
 l3trap:
 	trap
@@ -59,8 +59,8 @@ l3:
 	cp	yl, #0x00
 	jrnz	l4trap
 	ld	xl, (0, sp)
-	and	xl, #0x0a	; clear irrelevant flag bits
-	cp	xl, #0x0a
+	and	xl, #0x0c	; clear irrelevant flag bits
+	cp	xl, #0x0c
 	jrz	#l4
 l4trap:
 	trap
@@ -74,7 +74,7 @@ l4:
 	cp	zl, #0x18
 	jrnz	l5trap
 	ld	xl, (0, sp)
-	and	xl, #0x0a	; clear irrelevant flag bits
+	and	xl, #0x0c	; clear irrelevant flag bits
 	cp	xl, #0x00
 	jrz	#l5
 l5trap:

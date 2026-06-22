@@ -15,7 +15,7 @@
 	jrnz	l1trap
 	ld	xl, (0, sp)
 	and	xl, #0x1f	; mask hidden flags
-	cp	xl, #0x02
+	cp	xl, #0x08
 	jrnz	l1trap
 	clr	(0, sp)
 	ldw	y, #0
@@ -26,7 +26,7 @@
 	jrnz	l1trap
 	ld	xl, (0, sp)
 	and	xl, #0x1f
-	cp	xl, #0x08
+	cp	xl, #0x04
 	jrz	l1
 l1trap:
 	trap
@@ -41,7 +41,7 @@ l1:
 	jrnz	l2trap
 	ld	xl, (0, sp)
 	and	xl, #0x1f	; mask hidden flags
-	cp	xl, #0x02
+	cp	xl, #0x08
 	jrnz	l2trap
 	clr	(0, sp)
 	ldw	x, #0
@@ -52,7 +52,7 @@ l1:
 	jrnz	l2trap
 	ld	xl, (0, sp)
 	and	xl, #0x1f
-	cp	xl, #0x08
+	cp	xl, #0x04
 	jrz	l2
 l2trap:
 	trap

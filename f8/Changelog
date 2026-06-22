@@ -1,5 +1,20 @@
 2026-06-22 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* hardware/cpu2.v,
+	  hardware/flags.v,
+	  hardware/tests/adc/test.s,
+	  hardware/tests/boolw/test.s,
+	  hardware/tests/cax/test.s,
+	  hardware/tests/daa/test.s,
+	  hardware/tests/jr/test.s,
+	  hardware/tests/sllw/test.s,
+	  hardware/tests/sra/test.s,
+	  hardware/tests/xch_f_sprel/test.s,
+	  hardware/tests/xorw/test.s:
+	  Switch to revised flag order.
+
+2026-06-22 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* hardware/Makefile,
 	  opcodemaptest/Makefile:
 	  State yosys minimum version requirements.

@@ -16,7 +16,7 @@
 	jrnz	l1trap
 	ld	xl, (0, sp)
 	and	xl, #0x1f	; clear hidden flags
-	cp	xl, #0x08	; Check: h reset, c reset, n reset, z set, o reset.
+	cp	xl, #0x04	; Check: h reset, c reset, n reset, z set, o reset.
 	jrz	l1
 l1trap:
 	trap
@@ -46,7 +46,7 @@ l2:
 	jrnz	l3trap
 	ld	xl, (0, sp)
 	and	xl, #0x1f	; clear hidden flags
-	cp	xl, #0x15	; Check: h reset, c reset, n set, z reset, o set.
+	cp	xl, #0x13	; Check: h set, c reset, n set, z reset, o set.
 	jrz	l3
 l3trap:
 	trap
@@ -61,7 +61,7 @@ l3:
 	jrnz	l4trap
 	ld	xl, (0, sp)
 	and	xl, #0x1f	; clear hidden flags
-	cp	xl, #0x0b	; Check: h reset, c set, n reset, z set, o reset.
+	cp	xl, #0x1c	; Check: h set, c set, n reset, z set, o reset.
 	jrz	l4
 l4trap:
 	trap
@@ -77,7 +77,7 @@ l4:
 	jrnz	l5trap
 	ld	xl, (1, sp)
 	and	xl, #0x1f	; clear hidden flags
-	cp	xl, #0x01	; Check: h set, c reset, n reset, z reset, o reset.
+	cp	xl, #0x10	; Check: h set, c reset, n reset, z reset, o reset.
 	jrz	l5
 l5trap:
 	trap
@@ -93,7 +93,7 @@ l5:
 	jrnz	l6trap
 	ld	xl, (1, sp)
 	and	xl, #0x1f	; clear hidden flags
-	cp	xl, #0x0b	; Check: h set, c set, n reset, z set, o reset.
+	cp	xl, #0x1c	; Check: h set, c set, n reset, z set, o reset.
 	jrz	l6
 l6trap:
 	trap
@@ -109,7 +109,7 @@ l6:
 	jrnz	l7trap
 	ld	xl, (1, sp)
 	and	xl, #0x1f	; clear hidden flags
-	cp	xl, #0x14	; Check: h reset, c reset, n set, z reset, o set.
+	cp	xl, #0x03	; Check: h reset, c reset, n set, z reset, o set.
 	jrz	l7
 l7trap:
 	trap
@@ -152,7 +152,7 @@ l9:
 	jrnz	latrap
 	ld	xl, (1, sp)
 	and	xl, #0x1f	; clear hidden flags
-	cp	xl, #0x01	; Check: h set, c reset, n reset, z reset, o reset.
+	cp	xl, #0x10	; Check: h set, c reset, n reset, z reset, o reset.
 	jrz	#la
 latrap:
 	trap
@@ -170,7 +170,7 @@ la:
 	jrnz	lbtrap
 	ld	xl, (1, sp)
 	and	xl, #0x1f	; clear hidden flags
-	cp	xl, #0x01	; Check: h set, c reset, n reset, z reset, o reset.
+	cp	xl, #0x10	; Check: h set, c reset, n reset, z reset, o reset.
 	jrz	#lb
 lbtrap:
 	trap
@@ -188,7 +188,7 @@ lb:
 	jrnz	lctrap
 	ld	xl, (1, sp)
 	and	xl, #0x1f	; clear hidden flags
-	cp	xl, #0x13	; Check: h set, c set, n reset, z reset, o set.
+	cp	xl, #0x19	; Check: h set, c set, n reset, z reset, o set.
 	jrz	#lc
 lctrap:
 	trap
@@ -206,7 +206,7 @@ lc:
 	jrnz	ldtrap
 	ld	xl, (1, sp)
 	and	xl, #0x1f	; clear hidden flags
-	cp	xl, #0x0b	; Check: h set, c set, n reset, z set, o reset.
+	cp	xl, #0x1c	; Check: h set, c set, n reset, z set, o reset.
 	jrz	#ld
 ldtrap:
 	trap

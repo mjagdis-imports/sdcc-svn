@@ -29,7 +29,7 @@ l2:
 l2_:
 
 	; h flag set.
-	push #0x01
+	push #0x10
 	xch	f, (0,sp)
 	jrc	l3trap
 	jrz	l3trap
@@ -65,7 +65,7 @@ l4:
 l4_:
 
 	; c flag set.
-	push #0x02
+	push #0x08
 	xch	f, (0,sp)
 	jrnc	l5trap
 	jrz	l5trap
@@ -83,7 +83,7 @@ l5:
 l5_:
 
 	; z and n flags set.
-	push #0x0c
+	push #0x06
 	xch	f, (0,sp)
 	jrc	l6trap
 	jrnz	l6trap

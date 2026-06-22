@@ -15,7 +15,7 @@
 	jrnz	#l1trap
 	ld	xl, (0, sp)
 	and	xl, #0x1f
-	cp	xl, #0x08
+	cp	xl, #0x04
 	jrnz	#l1trap
 	ld	xl, #0x81
 	push	#0x00
@@ -26,7 +26,7 @@
 	jrnz	#l1trap
 	ld	xl, (0, sp)
 	and	xl, #0x1f
-	cp	xl, #0x06
+	cp	xl, #0x0a
 	jrz	#l1
 l1trap:
 	trap
@@ -41,7 +41,7 @@ l1:
 	jrnz	#l2trap
 	ld	xl, (0, sp)
 	and	xl, #0x1f
-	cp	xl, #0x0a
+	cp	xl, #0x0c
 	jrnz	#l2trap
 	ldw	y, #0xa581
 	push	#0x00
@@ -52,7 +52,7 @@ l1:
 	jrnz	#l2trap
 	ld	xl, (0, sp)
 	and	xl, #0x1f
-	cp	xl, #0x06
+	cp	xl, #0x0a
 	jrz	#l2
 l2trap:
 	trap
