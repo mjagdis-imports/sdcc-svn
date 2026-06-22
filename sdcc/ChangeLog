@@ -1,9 +1,103 @@
 2026-06-22 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* Merge nosidechannels branch.
+
+2026-06-22 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* Merge next branch.
+
+2026-06-22 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdcc/.version:
+	  Bump version for --nosidechannels (and corresponding #pragma) functionality.
+
+2026-06-22 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* sdcc/.version:
 	  Bump version for post -4.6.0 development.
 	* sdcc/support/scripts/repack_release.sh:
 	  Disable 32-bit Windows deliverables processing.
+
+2026-06-22 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sim/ucsim/src/sims/f8.src/f8cl.h:
+	  Fix f8 flag bit order.
+
+2026-06-22 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/scripts/sdcc.nsi:
+	  Fix for Windows uninstaller leaving a few files.
+
+2026-06-21 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCast.c,
+	  src/SDCCicode.c,
+	  src/SDCCopt.c,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h:
+	  Fix RFE #1029.
+	* src/z80/peep.c:
+	  Fix bug #4015.
+	* src/f8/peep.c:
+	  Fix bug #4016.
+	* support/regression/tests/bug-2959.c:
+	  Don't use nop in test for targets that don't have it.
+	* src/f8/gen.c:
+	  Fix use of non-f8l f8 instruction sllw in f8l port.
+
+2026-06-20 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/hc08/gen.c,
+	  src/z80/gen.c:
+	  Fixes for --nosidechannel codegen.
+	  src/z80/peeph-r2k.def:
+	  Fix a peephole optimizer rule bug triggered by --nosidechannel Rabbit codegen.
+
+2026-06-19 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/gen.c:
+	  Control f8 codegen aspects by --nosidechannels: equality comparisons.
+	* doc/sdccman.lyx:
+	  Document which operations on mcs51 generic pointers might leak information.
+
+2026-06-18 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx,
+	  src/mcs51/gen.c:
+	  Control mcs51 codegen aspects by --nosidechannels: addition, subtraction, right shift, casts, bit-field reads, comparisons.
+
+2026-06-18 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx,
+	  src/f8/gen.c,
+	  src/hc08/gen.c,
+	  src/z80/gen.c:
+	  Control hc08, s08, f8, z80-related, codegen aspects by --nosidechannels: reads of signed bit-fields, signed casts, comparisons.
+
+2026-06-14 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/stm8/gen.c,
+	  doc/sdccman.lyx:
+	  Control z80-related codegen aspects by --nosidechannels: Comparisons.
+
+2026-06-13 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/stm8/gen.c,
+	  src/stm8/peeph.def,
+	  doc/sdccman.lyx:
+	  Control stm8 codegen aspects by --nosidechannels: Comparisons.
+
+2026-06-12 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/stm8/gen.c:
+	  Control stm8 codegen aspects by --nosidechannels: Equality comparisons.
+
+2026-06-12 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/stm8/peeph.def:
+	  Optimize some push / pop cases.
+	* src/z80/gen.c:
+	  Optimize some pointer reads.
 
 2026-06-12 Philipp Klaus Krause <philipp@colecovision.eu>
 
@@ -47,6 +141,25 @@
 	* device/lib/mcs51/__sdcc_atomic_maybe_rollback.asm: Fix nested interrupt bug mentioned
 	  in RFE #624 by applying modified patch from Oleg Endo, thanks!
 
+2026-06-08 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/gen.c,
+	  src/z80/gen.c,
+	  doc/sdccman.lyx:
+	  Control f8, f8l, z80-related codegen aspects by --nosidechannels: Reads of signed bit-fields, signed casts.
+
+2026-06-07 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/stm8/gen.c,
+	  doc/sdccman.lyx:
+	  Check more details of stm8 codegen for side channels, document results.
+
+2026-06-06 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/stm8/gen.c,
+	  doc/sdccman.lyx:
+	  Control stm8 codegen aspects by --nosidechannels: Rotation.
+
 2026-06-06 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCopt.c,
@@ -55,7 +168,54 @@
 
 2026-06-05 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* doc/sdccman.lyx:
+	  Document pdk side-channels.
+
+2026-06-05 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx:
+	  Document hc08/s08 side-channels.
+
+2026-06-05 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCmain.c:
+	  Fix --nosidechannels command-line option handling.
+	* doc/sdccman.lyx,
+	  src/z80/gen.c:
+	  Control some mcs51 codegen aspects by --nosidechannels: Negation. Document remaining mcs51 side-channels.
+
+2026-06-05 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* Merge next branch.
+
+2026-06-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx:
+	  Document f8(l) side-channels.
+
+2026-06-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx,
+	  src/z80/gen.c:
+	  Control some z80 codegen aspects by --nosidechannels: Addition, right shift (leaking left operand). Document remaining z80 side-channels.
+
+2026-06-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx,
+	  src/stm8/gen.c:
+	  Control some stm8 codegen aspects by --nosidechannels: Addition, subtraction, div hw bug workaround, right shift (leaking left operand). Document remaining stm8 side-channels.
+
+2026-06-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx,
+	  src/SDCC.lex,
+	  src/SDCCglobl.h,
+	  src/SDCCmain.c:
+	  Infrastructure for command-line-option and #pragma to avoid introducing side-channels.
+	* src/SDCCicode.c:
+	  Disable some optimizations of divisions by powers of two for --nosidechannels.
+	* src/SDCCicode.c:
+	  Mostly use jump tables to implement switch statements for --nosidechannels.
 
 2026-06-04 Philipp Klaus Krause <philipp@colecovision.eu>
 

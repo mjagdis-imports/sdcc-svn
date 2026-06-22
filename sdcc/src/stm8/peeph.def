@@ -146,12 +146,46 @@ replace restart {
 } if notUsed(%1)
 
 replace restart {
-	sub	sp, #2
-	ldw	(0x01, sp), %1
+	sub	sp, #%1
+	ld	(0x01, sp), a
 } by {
-	pushw	%1
-	; peephole 7 simplified pushw.
-} if notUsed('n' 'z')
+	sub	sp, #%2
+	push	a
+	; peephole 7a simplified push.
+} if notUsed('n' 'z'), immdInRange(0 255 '-' %1 1 %2)
+
+replace restart {
+	sub	sp, #%1
+	ldw	(0x01, sp), %3
+} by {
+	sub	sp, #%2
+	pushw	%3
+	; peephole 7b simplified pushw.
+} if notUsed('n' 'z'), immdInRange(0 255 '-' %1 2 %2)
+
+replace restart {
+	ld	a, (0x01, sp)
+	addw	sp, #%1
+} by {
+	pop	a
+	addw	sp, #%2
+	; peephole 7c simplified pop.
+} if notUsed('n' 'z'), immdInRange(0 255 '-' %1 1 %2)
+
+replace restart {
+	ldw	%3, (0x01, sp)
+	addw	sp, #%1
+} by {
+	popw	%3
+	addw	sp, #%2
+	; peephole 7d simplified pop.
+} if notUsed('n' 'z'), immdInRange(0 255 '-' %1 2 %2)
+
+replace restart {
+	%1	sp, #0
+} by {
+	; peephole 7e removed addw/sub sp, #0.
+}
 
 replace restart {
 	addw	%1, #%2
@@ -1239,7 +1273,7 @@ replace restart {
 } by {
 	ld	a, %1
 	; peephole 600a removed unneeded %2 a, #%3
-} if same(%2 'cp' 'sub'), operandsLiteral(%3), immdInRange(0 0 '+' 0 %3 %4), notUsed('v' 'c')
+} if same(%2 'cp' 'sub'), operandsLiteral(%3), immdInRange(0 0 '+' 0 %3 %4), notUsed('v' 'c'), notSame(%1 'xl' 'xh' 'yl' 'yh')
 
 replace restart {
 	ld	%1, a
@@ -1247,7 +1281,7 @@ replace restart {
 } by {
 	ld	%1, a
 	; peephole 600b removed unneeded %2 a, #%3
-} if same(%2 'cp' 'sub'), operandsLiteral(%3), immdInRange(0 0 '+' 0 %3 %4), notUsed('v' 'c')
+} if same(%2 'cp' 'sub'), operandsLiteral(%3), immdInRange(0 0 '+' 0 %3 %4), notUsed('v' 'c'), notSame(%1 'xl' 'xh' 'yl' 'yh')
 
 // Do operations directly on stack, leave 'a' as it was, load into 'a' may be removed by dead load optimizations
 replace restart {

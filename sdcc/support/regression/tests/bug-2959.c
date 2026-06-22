@@ -19,7 +19,12 @@ void f(void)
 {
   if( 0x10 == (_pa & 0x10) ) // Code generation crash here.
   { 
+#if defined(__SDCC_f8) || defined(__SDCC_f8l) // Neither f8 nor f8l have nop
+    __asm__("xch f, (0,sp)\n");
+    __asm__("xch f, (0,sp)\n");
+#else
     __asm__("nop\n");
+#endif
   }
 }
 

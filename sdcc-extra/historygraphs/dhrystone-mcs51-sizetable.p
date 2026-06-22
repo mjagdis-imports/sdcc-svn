@@ -23,5 +23,7 @@ set arrow from 14648, 13591 to 14648, 13491
 set label "4.4.0" at 14648, 13591
 set arrow from 15246, 13047 to 15246, 12947
 set label "4.5.0" at 15246, 13047
+set arrow from 16640, 13139 to 16640, 13039
+set label "4.6.0" at 16640, 13139
 plot "dhrystone-mcs51-sizetable" using 1:4 title "default", "dhrystone-mcs51-sizetable" using 1:2 title "size", "dhrystone-mcs51-sizetable" using 1:3 title "speed"
 

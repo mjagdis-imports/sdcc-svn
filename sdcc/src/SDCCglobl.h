@@ -208,6 +208,7 @@ struct optimize
     int codeSpeed;
     int codeSize;
     bool purity;
+    bool nosidechannels;
     int lospre;
     int genconstprop;
     int allow_unsafe_read;

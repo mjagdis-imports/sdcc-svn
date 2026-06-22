@@ -20,7 +20,7 @@ else
   AS = $(WINE) $(top_builddir)/bin/sdas6808$(EXEEXT)
 
 ifndef CROSSCOMPILING
-  SDCCFLAGS += --nostdinc -I$(top_srcdir)
+  SDCCFLAGS += --nostdinc -I$(top_srcdir)  --nosidechannels
   LINKFLAGS += --nostdlib -L$(top_builddir)/device/lib/build/s08-stack-auto
 endif
 endif

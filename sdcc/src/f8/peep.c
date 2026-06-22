@@ -239,10 +239,14 @@ f8instructionSize (lineNode *pl)
         return 3;
     }
 
-  if (larg && lineIsInst (pl, "xch") && larg[0] == 'f' && isSprel (rarg))
+  if (lineIsInst (pl, "xch") && larg && larg[0] == 'f' && rarg && isSprel (rarg))
     return 1;
   else if (larg && lineIsInst (pl, "xch"))
     return 1 + (larg[0] != 'y');
+  else if(lineIsInst (pl, "xchw") && larg && rarg && isSprel (rarg))
+    return 2 + (larg[0] != 'y');
+  else if(lineIsInst (pl, "xchw") && larg && rarg)
+    return 1 + (larg[0] != 'x');
   
   if (lineIsInst (pl, "addw") && !strncmp (larg, "sp", 2) && rarg[0] == '#')
     return 2;
@@ -255,7 +259,7 @@ f8instructionSize (lineNode *pl)
         return 3;
     }
 
-  if (!IS_F8L && larg && (lineIsInst (pl, "addw") || lineIsInst (pl, "cpw") || lineIsInst (pl, "orw") || lineIsInst (pl, "sbcw") ||
+  if (!IS_F8L && larg && rarg && (lineIsInst (pl, "addw") || lineIsInst (pl, "cpw") || lineIsInst (pl, "orw") || lineIsInst (pl, "sbcw") ||
     lineIsInst (pl, "subw") || lineIsInst (pl, "xorw")))
     {
       if (larg[0] == 'y' && rarg[0] == 'x')
@@ -335,7 +339,7 @@ f8instructionSize (lineNode *pl)
         return 4;
     }
 
-  if (!IS_F8L && larg && lineIsInst (pl, "rot"))
+  if (larg && (lineIsInst (pl, "msk") || !IS_F8L && lineIsInst (pl, "rot")))
     {
       if (!strncmp (larg, "xl", 2))
         return 2;
@@ -403,7 +407,7 @@ f8MightReadFlag (const lineNode *pl, const char *what)
     return false;
   if (lineIsInst (pl, "rlc") || lineIsInst (pl, "rrc"))
     return !strcmp (what, "cf");
-  if (lineIsInst (pl, "addw") || lineIsInst (pl, "orw") || lineIsInst (pl, "subw"))
+  if (lineIsInst (pl, "addw") || lineIsInst (pl, "orw") || lineIsInst (pl, "subw") || lineIsInst (pl, "xorw"))
     return false;
   if (lineIsInst (pl, "adcw") || lineIsInst (pl, "rlcw") || lineIsInst (pl, "rrcw") || lineIsInst (pl, "sbcw"))
     return !strcmp (what, "cf");
@@ -549,7 +553,7 @@ f8MightRead (const lineNode *pl, const char *what)
   // 16-bit 2/1-op inst, and some others.
   if (lineIsInst (pl, "clrw") || lineIsInst (pl, "popw"))
     return false;
-  if (lineIsInst (pl, "adcw") || lineIsInst (pl, "addw") || lineIsInst (pl, "boolw") || lineIsInst (pl, "cpw") || lineIsInst (pl, "decw") || lineIsInst (pl, "incw") || lineIsInst (pl, "mul") || lineIsInst (pl, "negw") || lineIsInst (pl, "orw") || lineIsInst (pl, "pushw") || lineIsInst (pl, "rlcw") || lineIsInst (pl, "rrcw") || lineIsInst (pl, "sllw") || lineIsInst (pl, "sraw") || lineIsInst (pl, "srlw") || lineIsInst (pl, "subw") || lineIsInst (pl, "sbcw") || lineIsInst (pl, "tstw") || lineIsInst (pl, "incnw") || lineIsInst (pl, "xorw"))
+  if (lineIsInst (pl, "adcw") || lineIsInst (pl, "addw") || lineIsInst (pl, "boolw") || lineIsInst (pl, "cpw") || lineIsInst (pl, "decw") || lineIsInst (pl, "incw") || lineIsInst (pl, "mul") || lineIsInst (pl, "negw") || lineIsInst (pl, "orw") || lineIsInst (pl, "pushw") || lineIsInst (pl, "rlcw") || lineIsInst (pl, "rrcw") || lineIsInst (pl, "sllw") || lineIsInst (pl, "sraw") || lineIsInst (pl, "srlw") || lineIsInst (pl, "subw") || lineIsInst (pl, "sbcw") || lineIsInst (pl, "tstw") || lineIsInst (pl, "incnw") || lineIsInst (pl, "xchw") || lineIsInst (pl, "xorw"))
     {
       const char *larg = lineArg (pl, 0);
       const char *rarg = lineArg (pl, 1);
@@ -589,6 +593,14 @@ f8MightRead (const lineNode *pl, const char *what)
       if (argCont (larg + 1, extra))
         return true;
       return false;
+    }
+  if (lineIsInst (pl, "msk"))
+    {
+      const char *larg = lineArg (pl, 0);
+      const char *rarg = lineArg (pl, 1);
+
+      if (larg && rarg)
+        return (argCont (larg + 1, extra) || rarg[0] == what[0] && rarg[1] == what[1]);
     }
   if (lineIsInst (pl, "sex") || lineIsInst (pl, "zex"))
     {
@@ -671,7 +683,7 @@ f8SurelyWritesFlag (const lineNode *pl, const char *what)
     }
   if (lineIsInst (pl, "clrw") || lineIsInst (pl, "pushw"))
     return false;
-  if (lineIsInst (pl, "orw"))
+  if (lineIsInst (pl, "orw") || lineIsInst (pl, "xorw"))
     return (!strcmp (what, "of") || !strcmp (what, "zf") || !strcmp (what, "nf"));
   if (lineIsInst (pl, "tstw"))
     return strcmp (what, "hf");

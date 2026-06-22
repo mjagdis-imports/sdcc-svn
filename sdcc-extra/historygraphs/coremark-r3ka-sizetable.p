@@ -13,5 +13,7 @@ set arrow from 14648, 14987 to 14648, 14887
 set label "4.4.0" at 14648, 14987
 set arrow from 15246, 14312 to 15246, 14212
 set label "4.5.0" at 15246, 14312
+set arrow from 16640, 13110 to 16640, 13010
+set label "4.6.0" at 16640, 13110
 plot "coremark-r3ka-sizetable" using 1:4 title "default", "coremark-r3ka-sizetable" using 1:2 title "size", "coremark-r3ka-sizetable" using 1:3 title "speed"
 

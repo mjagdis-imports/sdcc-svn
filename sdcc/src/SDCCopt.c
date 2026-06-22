@@ -1218,6 +1218,7 @@ convbuiltin (iCode *const ic, eBBlock *ebp)
       /* TODO: Eliminate it, convert any SEND of volatile into DUMMY_READ_VOLATILE. */
       /* For now just convert back to call to make sure any volatiles are read. */
 
+      // memcpy is special, we might get an builtin memcpy here, even if string.h was never included, and no memcpy is visible, so we need to convert to __memcpy instead.
       strcpy (OP_SYMBOL (IC_LEFT (icc))->rname, !strcmp (bif->name, "__builtin_memcpy") ? "___memcpy" : (!strcmp (bif->name, "__builtin_strncpy") ? "_strncpy" : "_memset"));
       goto convert;
     }
@@ -1238,6 +1239,8 @@ convert:
   /* Convert parameter passings from SEND to PUSH. */
   stack = 0;
   struct value *args;
+  symbol *nonbuiltin_memcpy = findSym (SymbolTab, NULL, "__memcpy");
+  wassert (nonbuiltin_memcpy);
   for (icc = ic, args = FUNC_ARGS (nonbuiltin_memcpy->type); icc->op != CALL; icc = icc->next, args = args->next)
     {
       wassert (args);

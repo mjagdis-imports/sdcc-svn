@@ -5,5 +5,7 @@ set xlabel "revision"
 set ylabel "size [B]"
 set arrow from 15246, 10815 to 15246, 10715
 set label "4.5.0" at 15246, 10815
+set arrow from 16640, 10095 to 16640, 9595
+set label "4.6.0" at 16640, 10095
 plot "whetstone-r4k-sizetable" using 1:4 title "default", "whetstone-r4k-sizetable" using 1:2 title "size", "whetstone-r4k-sizetable" using 1:3 title "speed"
 

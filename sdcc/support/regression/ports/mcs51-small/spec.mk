@@ -2,7 +2,7 @@
 #
 # model small
 
-SDCCFLAGS +=--model-small
+SDCCFLAGS +=--model-small --nosidechannels
 
 include $(PORTS_DIR)/mcs51-common/spec.mk
 

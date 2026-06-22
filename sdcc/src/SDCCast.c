@@ -3530,7 +3530,7 @@ optStdLibCall (ast *tree, RESULT_TYPE resulttype)
 
       symbol *memcpy_sym = findSym (SymbolTab, NULL, !strcmp(funcname, "__builtin_strcpy") ? "__builtin_memcpy" : "__memcpy");
 
-      if(!memcpy_sym)
+      if (!memcpy_sym)
         return;
 
       ast *lengthparm = newAst_VALUE (valCastLiteral (newIntLink(), strlength, strlength));
@@ -3621,6 +3621,7 @@ rewriteStructAssignment (ast *tree)
   copyAstLoc (params, tree);
 
   /* create call to the appropriate memcpy function */
+  symbol *builtin_memcpy = findSym (SymbolTab, NULL, "__builtin_memcpy") ? findSym (SymbolTab, NULL, "__builtin_memcpy") : findSym (SymbolTab, NULL, "__memcpy");
   ast *ast_memcpy = newAst_VALUE (symbolVal (builtin_memcpy));
   copyAstLoc (ast_memcpy, tree);
   ast *call = newNode (CALL, ast_memcpy, params);

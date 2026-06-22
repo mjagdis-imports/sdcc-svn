@@ -2642,10 +2642,18 @@ genNot (iCode * ic)
   toBoolean (IC_LEFT (ic));
 
   /* set C, if a == 0 */
-  tlbl = newiTempLabel (NULL);
-  emitcode ("cjne", "a,#0x01,!tlabel", labelKey2num (tlbl->key));
-  emitLabel (tlbl);
-  outBitC (IC_RESULT (ic));
+  if (optimize.nosidechannels)
+    {
+      emitcode ("add", "a, #0xff");
+      emitcode ("cpl", "c");
+    }
+  else
+    {
+      tlbl = newiTempLabel (NULL);
+      emitcode ("cjne", "a,#0x01,!tlabel", labelKey2num (tlbl->key));
+      emitLabel (tlbl);
+    }
+  outBitC (ic->result);
 
 release:
   /* release the aops */
@@ -5376,7 +5384,8 @@ genPlusIncr (iCode * ic)
   D (emitcode (";", "genPlusIncr"));
 
   /* if increment >=16 bits in register or direct space */
-  if ((AOP_TYPE (IC_LEFT (ic)) == AOP_REG ||
+  if (!optimize.nosidechannels &&
+    (AOP_TYPE (IC_LEFT (ic)) == AOP_REG ||
        AOP_TYPE (IC_LEFT (ic)) == AOP_DIR || AOP_TYPE (IC_LEFT (ic)) == AOP_SFR ||
        (IS_AOP_PREG (IC_LEFT (ic)) && !AOP_NEEDSACC (IC_LEFT (ic)))) &&
       sameRegs (AOP (IC_LEFT (ic)), AOP (IC_RESULT (ic))) &&
@@ -5767,7 +5776,8 @@ genMinusDec (iCode * ic)
   D (emitcode (";", "genMinusDec"));
 
   /* if decrement >=16 bits in register or direct space */
-  if ((AOP_TYPE (IC_LEFT (ic)) == AOP_REG ||
+  if (!optimize.nosidechannels &&
+    (AOP_TYPE (IC_LEFT (ic)) == AOP_REG ||
        AOP_TYPE (IC_LEFT (ic)) == AOP_DIR || AOP_TYPE (IC_LEFT (ic)) == AOP_SFR ||
        (IS_AOP_PREG (IC_LEFT (ic)) && !AOP_NEEDSACC (IC_LEFT (ic)))) &&
       sameRegs (AOP (IC_LEFT (ic)), AOP (IC_RESULT (ic))) && (size > 1) && (icount == 1))
@@ -6933,7 +6943,7 @@ genCmp (operand * left, operand * right, operand * result, iCode * ifx, int sign
       size = max (AOP_SIZE (left), AOP_SIZE (right));
 
       /* if unsigned char cmp with lit, do cjne left,#right,zz */
-      if (size == 1 && !sign && AOP_TYPE (right) == AOP_LIT && AOP_TYPE (left) != AOP_DIR && AOP_TYPE (left) != AOP_SFR && AOP_TYPE (left) != AOP_STR)
+      if (size == 1 && !sign && !optimize.nosidechannels && AOP_TYPE (right) == AOP_LIT && AOP_TYPE (left) != AOP_DIR && AOP_TYPE (left) != AOP_SFR && AOP_TYPE (left) != AOP_STR)
         {
           char *l = Safe_strdup (opGet (left, offset, FALSE, FALSE));
           symbol *lbl = newiTempLabel (NULL);
@@ -7088,7 +7098,7 @@ genCmpGt (iCode * ic, iCode * ifx)
   aopOp (right, ic, FALSE);
   aopOp (left, ic, FALSE);
   
-  genCmp (right, left, result, ifx, sign, ic);emitcode(";","free result");
+  genCmp (right, left, result, ifx, sign, ic);
 
   freeAsmop (result, NULL, ic, TRUE);
 }
@@ -9338,18 +9348,12 @@ AccSRsh (int shCount)
   symbol *tlbl;
   if (shCount != 0)
     {
-      if (shCount == 1)
-        {
-          emitcode ("mov", "c,acc.7");
-          emitcode ("rrc", "a");
-        }
-      else if (shCount == 2)
-        {
-          emitcode ("mov", "c,acc.7");
-          emitcode ("rrc", "a");
-          emitcode ("mov", "c,acc.7");
-          emitcode ("rrc", "a");
-        }
+      if (shCount <= 2 || optimize.nosidechannels)
+        while (shCount --> 0)
+          {
+            emitcode ("mov", "c,acc.7");
+            emitcode ("rrc", "a");
+          }
       else
         {
           tlbl = newiTempLabel (NULL);
@@ -9587,19 +9591,21 @@ AccAXRshS (const char *x, int shCount)
   symbol *tlbl;
   unsigned int mask = SRMask[shCount];
 
+  if (optimize.nosidechannels && shCount != 7)
+    goto nosidechannels;
+
   switch (shCount)
     {
     case 0:
       break;
     case 1:
-      emitcode ("mov", "c,acc.7");
-      AccAXRrl1 (x);            // s->a:x
-      break;
     case 2:
-      emitcode ("mov", "c,acc.7");
-      AccAXRrl1 (x);            // s->a:x
-      emitcode ("mov", "c,acc.7");
-      AccAXRrl1 (x);            // s->a:x
+nosidechannels:
+      while (shCount --> 0)
+        {
+          emitcode ("mov", "c,acc.7");
+          AccAXRrl1 (x);            // s->a:x
+        }
       break;
     case 3:
     case 4:
@@ -9633,16 +9639,11 @@ AccAXRshS (const char *x, int shCount)
       emitcode ("orl", "a,#!constbyte", mask);  // 111111AA:BBBBBBCC
       emitLabel (tlbl);
       break;
-    case 7:                    // ABBBBBBB:CDDDDDDD
-      tlbl = newiTempLabel (NULL);
-      emitcode ("mov", "c,acc.7");      // c = A
-      AccAXLrl1 (x);            // BBBBBBBC:DDDDDDDA
-      emitcode ("xch", "a,%s", x);      // DDDDDDDA:BBBBBBCC
-      emitcode ("anl", "a,#!constbyte", mask);  // 0000000A:BBBBBBBC
-      emitcode ("jnb", "acc.%d,!tlabel", 7 - shCount, labelKey2num (tlbl->key));
-      mask = ~SRMask[shCount];
-      emitcode ("orl", "a,#!constbyte", mask);  // 1111111A:BBBBBBBC
-      emitLabel (tlbl);
+    case 7:                        // ABBBBBBB:CDDDDDDD
+      emitcode ("mov", "c,acc.7"); // c = A
+      AccAXLrl1 (x);               // BBBBBBBC:DDDDDDDA
+      emitcode ("xch", "a,%s", x); // DDDDDDDA:BBBBBBBC
+      emitcode ("subb", "a,acc");  // AAAAAAAA:BBBBBBBC
       break;
     default:
       break;
@@ -10780,6 +10781,38 @@ emitPtrByteSet (const char *rname, int p_type, const char *src)
 }
 
 /*-----------------------------------------------------------------*/
+/* genMaskExtendSign - generate masking code for masking top       */
+/* byte of bit-field and extending sign for signed bitfield        */
+/*-----------------------------------------------------------------*/
+static void
+genMaskExtendSign (bool sign, int len)
+{
+  if (!(len % 8))
+    return;
+
+  emitcode ("anl", "a,#!constbyte", 0xff >> (8 - len));
+
+  if (sign && len == 1)
+    {
+      emitcode ("rrc", "a");
+      emitcode ("subb", "a,acc");
+    }
+  else if (sign && (len >= 7 || optimize.nosidechannels))
+    {
+      emitcode ("mov", "c,acc.%d", len - 1);
+      for (int i = len; i < 8; i++)
+        emitcode ("mov", "acc.%d,c", i);
+    }
+  else if (sign)
+    {
+      symbol *tlbl = newiTempLabel (NULL);
+      emitcode ("jnb", "acc.%d,!tlabel", len - 1, labelKey2num (tlbl->key));
+      emitcode ("orl", "a,#0x%02x", (0xff << len) & 0xff);
+      emitLabel (tlbl);
+    }
+}
+
+/*-----------------------------------------------------------------*/
 /* genUnpackBits - generates code for unpacking bits               */
 /*-----------------------------------------------------------------*/
 static char *
@@ -10807,7 +10840,7 @@ genUnpackBits (operand * result, const char *rname, int ptype, iCode * ifx)
       emitPtrByteGet (rname, ptype, FALSE);
       if (blen == 1)
         {
-          return accBits[bstr];;
+          return accBits[bstr];
         }
       else
         {
@@ -10823,16 +10856,7 @@ genUnpackBits (operand * result, const char *rname, int ptype, iCode * ifx)
     {
       emitPtrByteGet (rname, ptype, FALSE);
       AccRol (8 - bstr);
-      emitcode ("anl", "a,#!constbyte", (unsigned)(((unsigned char)-1) >> (8 - blen)));
-      if (!SPEC_USIGN (etype) && !IS_BOOLEAN (etype))
-        {
-          /* signed bitfield */
-          symbol *tlbl = newiTempLabel (NULL);
-
-          emitcode ("jnb", "acc.%d,!tlabel", blen - 1, labelKey2num (tlbl->key));
-          emitcode ("orl", "a,#0x%02x", 0xffu << blen);
-          emitLabel (tlbl);
-        }
+      genMaskExtendSign (!SPEC_USIGN (etype) && !IS_BOOLEAN (etype), blen);
       opPut(result, "a", offset++);
       goto finish;
     }
@@ -10850,16 +10874,7 @@ genUnpackBits (operand * result, const char *rname, int ptype, iCode * ifx)
   if (rlen)
     {
       emitPtrByteGet (rname, ptype, FALSE);
-      emitcode ("anl", "a,#!constbyte", (unsigned)(((unsigned char)-1) >> (8 - rlen)));
-      if (!SPEC_USIGN (etype))
-        {
-          /* signed bitfield */
-          symbol *tlbl = newiTempLabel (NULL);
-
-          emitcode ("jnb", "acc.%d,!tlabel", rlen - 1, labelKey2num (tlbl->key));
-          emitcode ("orl", "a,#0x%02x", 0xffu << rlen);
-          emitLabel (tlbl);
-        }
+      genMaskExtendSign (!SPEC_USIGN (etype), rlen);
       opPut(result, "a", offset++);
     }
 
@@ -12475,9 +12490,6 @@ genCast (iCode * ic)
   aopOp (right, ic, FALSE);
   aopOp (result, ic, TRUE);
 
-  unsigned topbytemask = (IS_BITINT (ctype) && (SPEC_BITINTWIDTH (ctype) % 8)) ?
-    (0xff >> (8 - SPEC_BITINTWIDTH (ctype) % 8)) : 0xff;
-
   right_boolean = IS_BOOLEAN (rtype) || IS_BITFIELD (rtype) &&  SPEC_BLEN (getSpec (rtype)) == 1;
 
   /* if the result is a bit (and not a bitfield) */
@@ -12504,14 +12516,7 @@ genCast (iCode * ic)
           if (!size && masktopbyte)
             {
               MOVA (opGet (right, offset, FALSE, FALSE));
-              emitcode ("anl", "a,#!constbyte", topbytemask);
-              if (!SPEC_USIGN (ctype)) // Sign-extend
-                {
-                  symbol *tlbl = newiTempLabel (0);
-                  emitcode ("jnb", "acc.%d,!tlabel", (int)(SPEC_BITINTWIDTH (ctype) % 8 - 1), labelKey2num (tlbl->key));
-                  emitcode ("orl", "a,#!constbyte", ~topbytemask & 0xffu);
-                  emitLabel (tlbl);
-                }
+              genMaskExtendSign (!SPEC_USIGN (ctype), SPEC_BITINTWIDTH (ctype) % 8);
               opPut(result, "a", offset);
             }
           else
@@ -12629,6 +12634,8 @@ genCast (iCode * ic)
     }
   else
     {
+      unsigned topbytemask = (IS_BITINT (ctype) && (SPEC_BITINTWIDTH (ctype) % 8)) ?
+        (0xff >> (8 - SPEC_BITINTWIDTH (ctype) % 8)) : 0xff;
       bool masktopbyte = IS_BITINT (ctype) && (SPEC_BITINTWIDTH (ctype) % 8) && SPEC_USIGN (ctype);
 
       /* we need to extend the sign :{ */

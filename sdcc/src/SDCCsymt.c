@@ -5227,21 +5227,16 @@ initCSupport (void)
 /* initBuiltIns - create prototypes for builtin functions          */
 /*-----------------------------------------------------------------*/
 void
-initBuiltIns ()
+initBuiltIns (void)
 {
-  /* initialize memcpy symbol for struct assignment */
-  builtin_memcpy = findSym (SymbolTab, NULL, "__builtin_memcpy");
-  nonbuiltin_memcpy = findSym (SymbolTab, NULL, "__memcpy");
-
+  // Initialize (non-builtin) memcpy symbol to make it available to compiler stages.
+  symbol *nonbuiltin_memcpy = findSym (SymbolTab, NULL, "__memcpy");
   if (!nonbuiltin_memcpy)
     {
       nonbuiltin_memcpy = funcOfTypeVarg ("__memcpy", "vg*", 3, (const char * []){"vg*", "Cvg*", "Ui"});
       FUNC_ISBUILTIN (nonbuiltin_memcpy->type) = 0;
       FUNC_ISREENT (nonbuiltin_memcpy->type) = options.stackAuto;
     }
-  /* if there is no __builtin_memcpy, use __memcpy instead of an actual builtin */
-  if (!builtin_memcpy)
-    builtin_memcpy = nonbuiltin_memcpy;
 
   builtin_unreachable = funcOfTypeVarg ("__builtin_unreachable", "v", 0, 0);
 }
