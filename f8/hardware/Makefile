@@ -9,7 +9,7 @@ SDCC = sdcc -mf8
 
 # sv2v is not in Debian. Use custom build of sv2v 0.0.12 or later.
 SV2V = /home/philipp/sv2v-0.0.12/bin/sv2v
-# Requires yosys 0.38 or later.
+# Requires yosys 0.40 or later.
 YOSYS = yosys
 YOSYS_CONFIG = yosys-config
 
