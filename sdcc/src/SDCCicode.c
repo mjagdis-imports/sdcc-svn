@@ -2375,7 +2375,8 @@ geniCodeDivision (operand *left, operand *right, RESULT_TYPE resultType, bool pt
   /* if the right is a literal & power of 2
      and left is signed then make it a conditional addition
      followed by right shift */
-  else if (IS_LITERAL (retype) &&
+  else if (!optimize.nosidechannels && // The optimization results in differnet execution time depending on the sign of the left operand, and thus introduces a timing side-channel.
+      IS_LITERAL (retype) &&
       !IS_FLOAT (letype) &&
       !IS_FIXED (letype) && !IS_UNSIGNED (letype) &&
       floatFromVal (OP_VALUE (right)) >= 0 &&
@@ -3697,6 +3698,10 @@ send:
           if (is_structparm) // Passing the parameter requires a memcpy.
             {
               iCode *dstic, *srcic, *nic, *callic, *iic_end;
+
+              symbol *builtin_memcpy = findSym (SymbolTab, NULL, "__builtin_memcpy") ? findSym (SymbolTab, NULL, "__builtin_memcpy") : findSym (SymbolTab, NULL, "__memcpy");
+              wassert (builtin_memcpy);
+ 
               // Keep this one in mind in so we can move it later.
               operand *dstop = geniCodeCast (FUNC_ARGS(builtin_memcpy->type)->type, operandFromValue (argVals, true), false);
               castic_end = iCodeChainEnd;
@@ -4212,6 +4217,11 @@ geniCodeJumpTable (operand * cond, value * caseVals, ast * tree)
 
   /* Compute the total size cost of a match & jump sequence */
   sizeofMatchJump = cnt * port->jumptableCost.sizeofMatchJump[sizeIndex];
+
+  // The match & jump sequence results in the instruction sequence being executed depending far more on the condition value,
+  // and thus introduces worse timing and energy side channels, and they get worse the more cases there are.
+  if (cnt > 2 && optimize.nosidechannels)
+    sizeofMatchJump = INT_MAX;
 
   /* If the size cost of the jump table is uneconomical then exit */
   if (sizeofMatchJump < sizeofJumpTable)

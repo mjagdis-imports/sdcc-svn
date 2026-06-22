@@ -5,5 +5,7 @@ set xlabel "revision"
 set ylabel "size [B]"
 set arrow from 15246, 8296 to 15246, 8196
 set label "4.5.0" at 15246, 8296
+set arrow from 16640, 7644 to 16640, 7544
+set label "4.6.0" at 16640, 7644
 plot "dhrystone-r4k-sizetable" using 1:4 title "default", "dhrystone-r4k-sizetable" using 1:2 title "size", "dhrystone-r4k-sizetable" using 1:3 title "speed"
 
