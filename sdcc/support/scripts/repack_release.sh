@@ -76,7 +76,7 @@ function download()
     wget https://sourceforge.net/projects/sdcc/files/snapshot_builds/docs/sdcc-doc-${date}-${revision}.zip && \
 #    wget http://sourceforge.net/projects/sdcc/files/snapshot_builds/i386-unknown-linux2.5/sdcc-snapshot-i386-unknown-linux2.5-${date}-${revision}.tar.bz2 && \
     wget https://sourceforge.net/projects/sdcc/files/snapshot_builds/amd64-unknown-linux2.5/sdcc-snapshot-amd64-unknown-linux2.5-${date}-${revision}.tar.bz2 && \
-    wget https://sourceforge.net/projects/sdcc/files/snapshot_builds/i586-mingw32msvc/sdcc-snapshot-i586-mingw32msvc-${date}-${revision}.zip && \
+#    wget https://sourceforge.net/projects/sdcc/files/snapshot_builds/i586-mingw32msvc/sdcc-snapshot-i586-mingw32msvc-${date}-${revision}.zip && \
     wget https://sourceforge.net/projects/sdcc/files/snapshot_builds/x86_64-w64-mingw32/sdcc-snapshot-x86_64-w64-mingw32-${date}-${revision}.zip && \
     wget https://sourceforge.net/projects/sdcc/files/snapshot_builds/x86_64-apple-macosx/sdcc-snapshot-x86_64-apple-macosx-${date}-${revision}.tar.bz2 \
     ) || fatal_error "Cannot download snapshot build packages!"
@@ -288,7 +288,7 @@ function upload()
     done
 
     # repack the windows binaries
-    repack_win ${date} ${revision} ${ver} i586-mingw32msvc
+#    repack_win ${date} ${revision} ${ver} i586-mingw32msvc
     repack_win ${date} ${revision} ${ver} x86_64-w64-mingw32
   fi
 

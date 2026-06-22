@@ -69,6 +69,49 @@
             
             <h2><a name="News"></a>News</h2> 
 
+            <p><i><b>2026-06-22: SDCC 4.6.0 released.</b></i></p>
+            <p>A new release of SDCC, the portable optimizing compiler for STM8, MCS-51, DS390, HC08, S08, Z80, Z180, Rabbit, R800, SM83, eZ80 in Z80 mode, Z80N, TLCS-90, MOS 6502, WDC 65C02, Padauk and PIC microprocessors is now available.
+              (<a href="http://sdcc.sourceforge.net" target="_new">http://sdcc.sourceforge.net</a>).
+              Sources, documentation and binaries for GNU/Linux amd64, Windows x86 and amd64, macOS amd64 are available.</p>
+            <p>SDCC 4.6.0 New Feature List:</p>
+            <ul>
+              <li>C2y _Countof operator
+              <li>C2y octal</li>
+              <li>C2y if-declaration</li>
+              <li>C2y Conditional operator with omitted second operand (originally a GNU extension)</li>
+              <li>C99 compound literals</li>
+              <li>C23 compound literals with storage class specifiers</li>
+              <li>Experimental f8l port</li>
+              <li>C2y signed bit-precise integer type of width 1</li>
+              <li>C2y bit-precise integer types as fixed underlying type for enum</li>
+              <li>C2y umaxabs</li>
+              <li>C2y bit utilities</li>
+              <li>realloc(ptr, 0) now follows C99 semantics instead of C90 semantics</li>
+              <li>r4k port for Rabbit 4000</li>
+              <li>Experimental r5k and r6k ports for Rabbit 5000 and 6000</li>
+              <li>Support for Dynamic C calling convention in z80-related ports</li>
+              <li>Substantially improved code generation for z80-related ports</li>
+              <li>ez80 port replaces ez80_z80 port</li>
+              <li>C2y functions uabs, ulabs, ullabs</li>
+              <li>Improved diagnostics on invalid C2y (some of which was UB up to C23)</li>
+              <li>C23 constexpr (mostly)</li>
+              <li>C2y containerof macro</li>
+              <li>Diagnostics based on [static assignment-expression] array parameter syntax</li>
+              <li>Warnings for array parameters where accesses fall outside the bounds</li>
+              <li>Basic parameter forward declarations (GNU extension)</li>
+              <li>C23 va_start and variadic functions</li>
+              <li>_Optional qualifier</li>
+              <li>Plain int bit-fields are signed</li>
+              <li>strsep</li>
+              <li>TLCS-870C(1) support in uCsim</li>
+              <li>__far support in Rabbit ports for using a 1 MB address space for data</li>
+            </ul>
+
+            <p><i><b>2026-06-14: SDCC 4.6.0 RC2 released.</b></i></p>
+            <p>SDCC 4.6.0 Release Candidate 2 source, doc and binary packages for amd64 GNU/Linux, amd64 Windows, and amd64 macOS are available in corresponding folders at:
+              <a href="http://sourceforge.net/projects/sdcc/files/">
+              http://sourceforge.net/projects/sdcc/files/</a>.</p>
+
             <p><i><b>2026-05-28: SDCC 4.6.0 RC1 released.</b></i></p>
             <p>SDCC 4.6.0 Release Candidate 1 source, doc and binary packages for amd64 GNU/Linux, amd64 Windows, and amd64 macOS are available in corresponding folders at:
               <a href="http://sourceforge.net/projects/sdcc/files/">
