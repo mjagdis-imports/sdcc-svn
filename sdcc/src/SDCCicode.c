@@ -3698,6 +3698,10 @@ send:
           if (is_structparm) // Passing the parameter requires a memcpy.
             {
               iCode *dstic, *srcic, *nic, *callic, *iic_end;
+
+              symbol *builtin_memcpy = findSym (SymbolTab, NULL, "__builtin_memcpy") ? findSym (SymbolTab, NULL, "__builtin_memcpy") : findSym (SymbolTab, NULL, "__memcpy");
+              wassert (builtin_memcpy);
+ 
               // Keep this one in mind in so we can move it later.
               operand *dstop = geniCodeCast (FUNC_ARGS(builtin_memcpy->type)->type, operandFromValue (argVals, true), false);
               castic_end = iCodeChainEnd;

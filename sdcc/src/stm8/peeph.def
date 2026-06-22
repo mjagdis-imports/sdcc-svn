@@ -146,12 +146,46 @@ replace restart {
 } if notUsed(%1)
 
 replace restart {
-	sub	sp, #2
-	ldw	(0x01, sp), %1
+	sub	sp, #%1
+	ld	(0x01, sp), a
 } by {
-	pushw	%1
-	; peephole 7 simplified pushw.
-} if notUsed('n' 'z')
+	sub	sp, #%2
+	push	a
+	; peephole 7a simplified push.
+} if notUsed('n' 'z'), immdInRange(0 255 '-' %1 1 %2)
+
+replace restart {
+	sub	sp, #%1
+	ldw	(0x01, sp), %3
+} by {
+	sub	sp, #%2
+	pushw	%3
+	; peephole 7b simplified pushw.
+} if notUsed('n' 'z'), immdInRange(0 255 '-' %1 2 %2)
+
+replace restart {
+	ld	a, (0x01, sp)
+	addw	sp, #%1
+} by {
+	pop	a
+	addw	sp, #%2
+	; peephole 7c simplified pop.
+} if notUsed('n' 'z'), immdInRange(0 255 '-' %1 1 %2)
+
+replace restart {
+	ldw	%3, (0x01, sp)
+	addw	sp, #%1
+} by {
+	popw	%3
+	addw	sp, #%2
+	; peephole 7d simplified pop.
+} if notUsed('n' 'z'), immdInRange(0 255 '-' %1 2 %2)
+
+replace restart {
+	%1	sp, #0
+} by {
+	; peephole 7e removed addw/sub sp, #0.
+}
 
 replace restart {
 	addw	%1, #%2

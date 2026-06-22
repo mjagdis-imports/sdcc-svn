@@ -13,5 +13,7 @@ set arrow from 14648, 10987 to 14648, 10887
 set label "4.4.0" at 14648, 10987
 set arrow from 15246, 10815 to 15246, 10715
 set label "4.5.0" at 15246, 10815
+set arrow from 16640, 10023 to 16640, 9923
+set label "4.6.0" at 16640, 10023
 plot "whetstone-r3ka-sizetable" using 1:4 title "default", "whetstone-r3ka-sizetable" using 1:2 title "size", "whetstone-r3ka-sizetable" using 1:3 title "speed"
 
