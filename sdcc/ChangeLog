@@ -1,5 +1,12 @@
 2026-06-22 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* sdcc/.version:
+	  Bump version for post -4.6.0 development.
+	* sdcc/support/scripts/repack_release.sh:
+	  Disable 32-bit Windows deliverables processing.
+
+2026-06-22 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* sim/ucsim/src/sims/f8.src/f8cl.h:
 	  Fix f8 flag bit order.
 
