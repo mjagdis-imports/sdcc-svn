@@ -10,7 +10,8 @@
 	  hardware/tests/sllw/test.s,
 	  hardware/tests/sra/test.s,
 	  hardware/tests/xch_f_sprel/test.s,
-	  hardware/tests/xorw/test.s:
+	  hardware/tests/xorw/test.s,
+	  opcodemaptest/Makefile:
 	  Switch to revised flag order.
 
 2026-06-22 Philipp Klaus Krause <philipp@colecovision.eu>

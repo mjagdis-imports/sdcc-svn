@@ -39,8 +39,8 @@ OLDICESYNTH2SIZES = $(OLDCASES:testdata_%=testdata_%/icesynth2.size)
 %/cpu_nosv.v: ../hardware/cpu.v ../hardware/alu.v ../hardware/opcode.v
 	cd $*; cp $(CURDIR)/../hardware/cpu.v ./; cp $(CURDIR)/../hardware/alu.v ./; cp $(CURDIR)/../hardware/opcode.v ./; $(SV2V) --exclude=always --exclude=logic cpu.v > cpu_nosv.v
 
-%/cpu2_nosv.v: ../hardware/cpu2.v ../hardware/alu2.v ../hardware/opcode.v
-	cd $*; cp $(CURDIR)/../hardware/cpu2.v ./; cp $(CURDIR)/../hardware/alu2.v ./; cp $(CURDIR)/../hardware/opcode.v ./; $(SV2V) --exclude=always --exclude=logic cpu2.v > cpu2_nosv.v
+%/cpu2_nosv.v: ../hardware/cpu2.v ../hardware/flags.v ../hardware/alu2.v ../hardware/opcode.v
+	cd $*; cp $(CURDIR)/../hardware/cpu2.v ./; cp $(CURDIR)/../hardware/flags.v ./; cp $(CURDIR)/../hardware/alu2.v ./; cp $(CURDIR)/../hardware/opcode.v ./; $(SV2V) --exclude=always --exclude=logic cpu2.v > cpu2_nosv.v
 
 %/icesynth.yosyslog: %/cpu_nosv.v %/opcodemap.v
 	cd $*; $(YOSYS) -l icesynth.yosyslog -p "read_verilog -sv cpu_nosv.v; synth_ice40 -top cpu -json icesynth.json"
