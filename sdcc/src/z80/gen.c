@@ -17099,7 +17099,10 @@ genPointerGet (const iCode *ic)
       goto release;
     }
 
-  offsetPair (pair, extrapair, !isPairDead (extrapair, ic), rightval);
+  bool noadjustptr = pair == PAIR_IY && rightval >= 0 && rightval + size < 128;
+
+  if (!noadjustptr)
+    offsetPair (pair, extrapair, !isPairDead (extrapair, ic), rightval);
 
   if (!bit_field && (pair == PAIR_HL
            || (!IS_SM83 && (getPairId (left->aop) == PAIR_BC || getPairId (left->aop) == PAIR_DE)
@@ -17291,14 +17294,22 @@ genPointerGet (const iCode *ic)
             (result->aop->regs[L_IDX] >= 0 && result->aop->regs[L_IDX] < offset || result->aop->regs[H_IDX] >= 0 && result->aop->regs[H_IDX] < offset))
             UNIMPLEMENTED;
 
-          if ((IS_EZ80 || IS_TLCS) && pair == PAIR_HL && (!bit_field || blen > 16) && getPairId_o (result->aop, offset) != PAIR_INVALID)
+          if ((IS_EZ80 || IS_TLCS) && (pair == PAIR_HL || pair == PAIR_IY) && (!bit_field || blen > 16) && getPairId_o (result->aop, offset) != PAIR_INVALID)
             {
-              emit2 ("ld %s, (hl)", _pairs[getPairId_o (result->aop, offset)].name);
-              cost2 (2, 2, 2, 2, -1, -1, -1, -1, -1, 8, 4, 4, 4, 4, -1);
+              if (noadjustptr)
+                {
+                  emit2 ("ld %s, %d(iy)", _pairs[getPairId_o (result->aop, offset)].name, rightval + offset);
+                  cost2 (3, 3, -1, 3, -1, -1, -1, -1, -1, 12, -1, 6, 6, 5, -1);
+                }
+              else
+                {
+                  emit2 ("ld %s, (hl)", _pairs[getPairId_o (result->aop, offset)].name);
+                  cost2 (2, 2, 2, 2, -1, -1, -1, -1, -1, 8, 4, 4, 4, 4, -1);
+                }
               offset++;
               blen -= 8;
             }
-          else if ((pair == PAIR_HL) && result->aop->type == AOP_REG && (!bit_field || blen > 8))
+          else if (pair == PAIR_HL && result->aop->type == AOP_REG && (!bit_field || blen > 8))
             {
               if (!regalloc_dry_run)
                 aopPut (result->aop, "!*hl", offset);
@@ -17309,11 +17320,19 @@ genPointerGet (const iCode *ic)
             }
           else
             {
-              emit2 ("ld a, !mems", _pairs[pair].name);
-              if (pair == PAIR_HL)
-                cost2 (1, 2, 1, 1, 7, 6, 5, 5, 8, 6, 2, 2, 2, 2, 2);
+              if (noadjustptr)
+                {
+                  emit2 ("ld a, %d(iy)", rightval + offset);
+                  cost2 (3, 3, -1, 3, 19, 14, 9, 10, -1, 10, -1, 5, 5, 4, 5);
+                }
               else
-                cost2 (1, 2, -1, -1, 7, 6, 6, 6, 8, 6, -1, -1, -1, 2, 2);
+                {
+                  emit2 ("ld a, !mems", _pairs[pair].name);
+                  if (pair == PAIR_HL)
+                    cost2 (1, 2, 1, 1, 7, 6, 5, 5, 8, 6, 2, 2, 2, 2, 2);
+                  else
+                    cost2 (1, 2, -1, -1, 7, 6, 6, 6, 8, 6, -1, -1, -1, 2, 2);
+                }
               if (bit_field && blen <= 8)
                 {
                   genUnpackBits (result, offset, blen, bstr);
@@ -17322,14 +17341,14 @@ genPointerGet (const iCode *ic)
               else
                 cheapMove (result->aop, offset, ASMOP_A, 0, true);
             }
-          if (offset + 1 < size)
+          if (offset + 1 < size && !noadjustptr)
             {
               emit2 ("inc %s", _pairs[pair].name);
               cost2 (1, 1, 1, 1 , 6, 4, 2, 2, 8, 4, 2, 2, 2, 1, 1);
               _G.pairs[pair].offset++;
             }
         }
-      if (!isPairDead (pair, ic))
+      if (!isPairDead (pair, ic) && !noadjustptr)
         offsetPair (pair, extrapair, true, -(rightval + last_offset));
       else if (rightval + last_offset)
         spillPair (pair);

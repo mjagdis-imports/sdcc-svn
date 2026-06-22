@@ -676,9 +676,6 @@ extern symbol *fp16x16conv[2][5][2];
 /* Dims: shift left/shift right, BYTE/WORD/DWORD/QWORD, SIGNED/UNSIGNED */
 extern symbol *rlrr[2][4][2];
 
-extern symbol *builtin_memcpy;
-extern symbol *nonbuiltin_memcpy;
-
 #define SCHARTYPE       multypes[0][1]
 #define UCHARTYPE       multypes[0][0]
 #define INTTYPE         multypes[1][1]
