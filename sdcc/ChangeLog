@@ -3,6 +3,8 @@
 	* support/regression/tests/asconaead128.c.in,
 	  support/regression/tests/asconhash256.c.in:
 	  Disable test parts that fail due to known bug #4018.
+	* src/z80/gen.c:
+	  Fix use of neg instruction in sm83 port.
 
 2026-06-22 Philipp Klaus Krause <philipp@colecovision.eu>
 
