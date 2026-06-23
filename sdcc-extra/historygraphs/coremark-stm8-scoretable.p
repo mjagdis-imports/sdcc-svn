@@ -1,11 +1,12 @@
+# Configure for SDCC target
 set output "coremark-stm8-score.svg"
-set terminal svg size 640,480
-set style data lines
-set key bottom right
-set xlabel "revision"
-set ylabel "Coremark iterations / s"
-set arrow from 9256, 3.257 to 9256, 2.957
-set label "3.5.0" at 9256, 3.257
+datafile = "coremark-stm8-scoretable"
+
+# Configure arrow length (to make the plot look nice)
+arrowlength = 0.3
+
+set arrow from 9256, 2.957+arrowlength to 9256, 2.957
+set label "3.5.0" at 9256, 2.957+arrowlength
 set arrow from 9618, 3.384 to 9618, 2.984
 set label "3.6.0" at 9618, 3.384
 set arrow from 10233, 6.324 to 10233, 6.024
@@ -26,5 +27,6 @@ set arrow from 14648, 6.938 to 14648, 6.638
 set label "4.4.0" at 14648, 6.938
 set arrow from 15246, 6.859 to 15246, 6.559
 set label "4.5.0" at 15246, 6.859
-plot "coremark-stm8-scoretable" using 1:4 title "default", "coremark-stm8-scoretable" using 1:2 title "size", "coremark-stm8-scoretable" using 1:3 title "speed"
+set arrow from 16640, 6.494+arrowlength to 16640, 6.494
+set label "4.6.0" at 16640, 6.494+arrowlength
 
