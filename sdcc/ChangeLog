@@ -1,5 +1,10 @@
 2026-06-23 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/stm8/gen.c:
+	  Fix bug #4019.
+
+2026-06-23 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/SDCCBBlock.c,
 	  src/SDCCglobl.h,
 	  src/SDCClabel.c,
