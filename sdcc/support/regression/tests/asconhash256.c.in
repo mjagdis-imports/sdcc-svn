@@ -50,6 +50,14 @@
 #endif
 #endif
 
+// Bug #4018
+#if defined(__SDCC_z80)
+#if defined(IMPL_opt8) || defined(IMPL_opt8_lowsize)
+#undef IMPL_{impl}
+#define NOTEST
+#endif
+#endif
+
 // Bug #3920 - fails test
 #if defined(IMPL_opt32_lowsize) && __STDC_ENDIAN_NATIVE__ == __STDC_ENDIAN_BIG__
 #define NOTEST

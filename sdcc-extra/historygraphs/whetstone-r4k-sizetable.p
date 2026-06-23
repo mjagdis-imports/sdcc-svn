@@ -1,11 +1,11 @@
+# Configure for SDCC target
 set output "whetstone-r4k-size.svg"
-set terminal svg size 640,480
-set style data lines
-set xlabel "revision"
-set ylabel "size [B]"
-set arrow from 15246, 10815 to 15246, 10715
-set label "4.5.0" at 15246, 10815
-set arrow from 16640, 10095 to 16640, 9595
-set label "4.6.0" at 16640, 10095
-plot "whetstone-r4k-sizetable" using 1:4 title "default", "whetstone-r4k-sizetable" using 1:2 title "size", "whetstone-r4k-sizetable" using 1:3 title "speed"
+datafile = "whetstone-r4k-sizetable"
+
+# Configure arrow length (to make the plot look nice)
+arrowlength = 100
+
+# Arrows for SDCC releases
+set arrow from 16640, 9595+arrowlength to 16640, 9595
+set label "4.6.0" at 16640, 9595+arrowlength
 

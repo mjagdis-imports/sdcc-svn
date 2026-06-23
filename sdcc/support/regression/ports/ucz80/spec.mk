@@ -18,7 +18,7 @@ else
   AS = $(WINE) $(top_builddir)/bin/sdasz80$(EXEEXT)
 
 ifndef CROSSCOMPILING
-  SDCCFLAGS += --nostdinc -I$(top_srcdir)  --nosidechannels
+  SDCCFLAGS += --nostdinc -I$(top_srcdir)
   LINKFLAGS += --nostdlib -L$(top_builddir)/device/lib/build/z80
 endif
 endif

@@ -196,14 +196,29 @@ stdcbench-z80: stdcbench-0.8 stdcbench-0.8-z80.patch
 	cp -r stdcbench-0.8 stdcbench-z80
 	cd stdcbench-z80 && cp examples/Makefile.SDCC-Z80 Makefile && cat ../stdcbench-0.8-z80.patch | patch -p1
 
-%-size.svg: %-sizetable %-sizetable.p
-	gnuplot $*-sizetable.p
+%-size.svg: %-sizetable %-sizetable.p plot-size.p
+	gnuplot $*-sizetable.p plot-size.p
+
+# stdcbench special cases don't use generic plot.p overwrite generic rule above.
+stdcbench-stm8-size.svg: stdcbench-stm8-sizetable stdcbench-stm8-sizetable.p
+	gnuplot stdcbench-stm8-sizetable.p
+stdcbench-z80-size.svg: stdcbench-z80-sizetable stdcbench-z80-sizetable.p
+	gnuplot stdcbench-z80-sizetable.p
+
+whetstone-%-score.svg: whetstone-%-scoretable whetstone-%-scoretable.p plot-whetstone-score.p
+	gnuplot whetstone-$*-scoretable.p plot-whetstone-score.p
+
+dhrystone-%-score.svg: dhrystone-%-scoretable dhrystone-%-scoretable.p plot-dhrystone-score.p
+	gnuplot dhrystone-$*-scoretable.p plot-dhrystone-score.p
+
+coremark-%-score.svg: coremark-%-scoretable coremark-%-scoretable.p plot-coremark-score.p
+	gnuplot coremark-$*-scoretable.p plot-coremark-score.p
 	
-%-score.svg: %-scoretable %-scoretable.p
-	gnuplot $*-scoretable.p
+stdcbench-%-score.svg: stdcbench-%-scoretable stdcbench-%-scoretable.p
+	gnuplot stdcbench-$*-scoretable.p
 
 whetstone-stm8-sizetable: $(BENCHMARKS_WHETSTONE_STM8_SIZES)
-	echo "#Revision size speed default" > $@
+	echo "Revision size speed default" > $@
 	for r in $(REVISIONS); do \
 		SIZE_SIZE=`cat whetstone-stm8-size-$$r/size`; \
 		SIZE_SPEED=`cat whetstone-stm8-speed-$$r/size`; \
@@ -212,7 +227,7 @@ whetstone-stm8-sizetable: $(BENCHMARKS_WHETSTONE_STM8_SIZES)
 	done
 
 whetstone-mcs51-sizetable: $(BENCHMARKS_WHETSTONE_MCS51_SIZES)
-	echo "#Revision size speed default" > $@
+	echo "Revision size speed default" > $@
 	for r in $(REVISIONS_MCS51); do \
 		SIZE_SIZE=`cat whetstone-mcs51-size-$$r/size`; \
 		SIZE_SPEED=`cat whetstone-mcs51-speed-$$r/size`; \
@@ -221,7 +236,7 @@ whetstone-mcs51-sizetable: $(BENCHMARKS_WHETSTONE_MCS51_SIZES)
 	done
 
 whetstone-r3ka-sizetable: $(BENCHMARKS_WHETSTONE_R3KA_SIZES)
-	echo "#Revision size speed default" > $@
+	echo "Revision size speed default" > $@
 	for r in $(REVISIONS_R3KA); do \
 		SIZE_SIZE=`cat whetstone-r3ka-size-$$r/size`; \
 		SIZE_SPEED=`cat whetstone-r3ka-speed-$$r/size`; \
@@ -230,7 +245,7 @@ whetstone-r3ka-sizetable: $(BENCHMARKS_WHETSTONE_R3KA_SIZES)
 	done
 
 whetstone-r4k-sizetable: $(BENCHMARKS_WHETSTONE_R4K_SIZES)
-	echo "#Revision size speed default" > $@
+	echo "Revision size speed default" > $@
 	for r in $(REVISIONS_R4K); do \
 		SIZE_SIZE=`cat whetstone-r4k-size-$$r/size`; \
 		SIZE_SPEED=`cat whetstone-r4k-speed-$$r/size`; \
@@ -248,7 +263,7 @@ whetstone-z80-sizetable: $(BENCHMARKS_WHETSTONE_Z80_SIZES)
 	done
 
 dhrystone-stm8-sizetable: $(BENCHMARKS_DHRYSTONE_STM8_SIZES)
-	echo "#Revision size speed default" > $@
+	echo "Revision size speed default" > $@
 	for r in $(REVISIONS); do \
 		SIZE_SIZE=`cat dhrystone-stm8-size-$$r/size`; \
 		SIZE_SPEED=`cat dhrystone-stm8-speed-$$r/size`; \
@@ -257,7 +272,7 @@ dhrystone-stm8-sizetable: $(BENCHMARKS_DHRYSTONE_STM8_SIZES)
 	done
 
 dhrystone-mcs51-sizetable: $(BENCHMARKS_DHRYSTONE_MCS51_SIZES)
-	echo "#Revision size speed default" > $@
+	echo "Revision size speed default" > $@
 	for r in $(REVISIONS_MCS51); do \
 		SIZE_SIZE=`cat dhrystone-mcs51-size-$$r/size`; \
 		SIZE_SPEED=`cat dhrystone-mcs51-speed-$$r/size`; \
@@ -266,7 +281,7 @@ dhrystone-mcs51-sizetable: $(BENCHMARKS_DHRYSTONE_MCS51_SIZES)
 	done
 
 dhrystone-r3ka-sizetable: $(BENCHMARKS_DHRYSTONE_R3KA_SIZES)
-	echo "#Revision size speed default" > $@
+	echo "Revision size speed default" > $@
 	for r in $(REVISIONS_R3KA); do \
 		SIZE_SIZE=`cat dhrystone-r3ka-size-$$r/size`; \
 		SIZE_SPEED=`cat dhrystone-r3ka-speed-$$r/size`; \
@@ -275,7 +290,7 @@ dhrystone-r3ka-sizetable: $(BENCHMARKS_DHRYSTONE_R3KA_SIZES)
 	done
 
 dhrystone-r4k-sizetable: $(BENCHMARKS_DHRYSTONE_R4K_SIZES)
-	echo "#Revision size speed default" > $@
+	echo "Revision size speed default" > $@
 	for r in $(REVISIONS_R4K); do \
 		SIZE_SIZE=`cat dhrystone-r4k-size-$$r/size`; \
 		SIZE_SPEED=`cat dhrystone-r4k-speed-$$r/size`; \
@@ -284,7 +299,7 @@ dhrystone-r4k-sizetable: $(BENCHMARKS_DHRYSTONE_R4K_SIZES)
 	done
 
 dhrystone-z80-sizetable: $(BENCHMARKS_DHRYSTONE_Z80_SIZES)
-	echo "#Revision size speed default" > $@
+	echo "Revision size speed default" > $@
 	for r in $(REVISIONS); do \
 		SIZE_SIZE=`cat dhrystone-z80-size-$$r/size`; \
 		SIZE_SPEED=`cat dhrystone-z80-speed-$$r/size`; \
@@ -293,7 +308,7 @@ dhrystone-z80-sizetable: $(BENCHMARKS_DHRYSTONE_Z80_SIZES)
 	done
 
 coremark-stm8-sizetable: $(BENCHMARKS_COREMARK_STM8_SIZES)
-	echo "#Revision size speed default" > $@
+	echo "Revision size speed default" > $@
 	for r in $(REVISIONS); do \
 		SIZE_SIZE=`cat coremark-stm8-size-$$r/size`; \
 		SIZE_SPEED=`cat coremark-stm8-speed-$$r/size`; \
@@ -302,7 +317,7 @@ coremark-stm8-sizetable: $(BENCHMARKS_COREMARK_STM8_SIZES)
 	done
 
 coremark-r3ka-sizetable: $(BENCHMARKS_COREMARK_R3KA_SIZES)
-	echo "#Revision size speed default" > $@
+	echo "Revision size speed default" > $@
 	for r in $(REVISIONS_R3KA); do \
 		SIZE_SIZE=`cat coremark-r3ka-size-$$r/size`; \
 		SIZE_SPEED=`cat coremark-r3ka-speed-$$r/size`; \
@@ -311,7 +326,7 @@ coremark-r3ka-sizetable: $(BENCHMARKS_COREMARK_R3KA_SIZES)
 	done
 
 coremark-r4k-sizetable: $(BENCHMARKS_COREMARK_R4K_SIZES)
-	echo "#Revision size speed default" > $@
+	echo "Revision size speed default" > $@
 	for r in $(REVISIONS_R4K); do \
 		SIZE_SIZE=`cat coremark-r4k-size-$$r/size`; \
 		SIZE_SPEED=`cat coremark-r4k-speed-$$r/size`; \
@@ -320,7 +335,7 @@ coremark-r4k-sizetable: $(BENCHMARKS_COREMARK_R4K_SIZES)
 	done
 
 coremark-z80-sizetable: $(BENCHMARKS_COREMARK_Z80_SIZES)
-	echo "#Revision size speed default" > $@
+	echo "Revision size speed default" > $@
 	for r in $(REVISIONS); do \
 		SIZE_SIZE=`cat coremark-z80-size-$$r/size`; \
 		SIZE_SPEED=`cat coremark-z80-speed-$$r/size`; \
@@ -329,7 +344,7 @@ coremark-z80-sizetable: $(BENCHMARKS_COREMARK_Z80_SIZES)
 	done
 
 stdcbench-stm8-sizetable: $(BENCHMARKS_STDCBENCH_STM8_SIZES)
-	echo "#Revision size speed default" > $@
+	echo "Revision size speed default" > $@
 	for r in $(REVISIONS); do \
 		SIZE_SIZE=`cat stdcbench-stm8-size-$$r/size`; \
 		SIZE_SPEED=`cat stdcbench-stm8-speed-$$r/size`; \
@@ -338,7 +353,7 @@ stdcbench-stm8-sizetable: $(BENCHMARKS_STDCBENCH_STM8_SIZES)
 	done
 
 stdcbench-mcs51-sizetable: $(BENCHMARKS_STDCBENCH_MCS51_SIZES)
-	echo "#Revision size speed default" > $@
+	echo "Revision size speed default" > $@
 	for r in $(REVISIONS_MCS51); do \
 		SIZE_SIZE=`cat stdcbench-mcs51-size-$$r/size`; \
 		SIZE_SPEED=`cat stdcbench-mcs51-speed-$$r/size`; \
@@ -347,7 +362,7 @@ stdcbench-mcs51-sizetable: $(BENCHMARKS_STDCBENCH_MCS51_SIZES)
 	done
 
 stdcbench-r3ka-sizetable: $(BENCHMARKS_STDCBENCH_R3KA_SIZES)
-	echo "#Revision size speed default" > $@
+	echo "Revision size speed default" > $@
 	for r in $(REVISIONS_R3KA_STDCBENCH); do \
 		SIZE_SIZE=`cat stdcbench-r3ka-size-$$r/size`; \
 		SIZE_SPEED=`cat stdcbench-r3ka-speed-$$r/size`; \
@@ -356,7 +371,7 @@ stdcbench-r3ka-sizetable: $(BENCHMARKS_STDCBENCH_R3KA_SIZES)
 	done
 
 stdcbench-r4k-sizetable: $(BENCHMARKS_STDCBENCH_R4K_SIZES)
-	echo "#Revision size speed default" > $@
+	echo "Revision size speed default" > $@
 	for r in $(REVISIONS_R4K); do \
 		SIZE_SIZE=`cat stdcbench-r4k-size-$$r/size`; \
 		SIZE_SPEED=`cat stdcbench-r4k-speed-$$r/size`; \
@@ -365,7 +380,7 @@ stdcbench-r4k-sizetable: $(BENCHMARKS_STDCBENCH_R4K_SIZES)
 	done
 
 stdcbench-z80-sizetable: $(BENCHMARKS_STDCBENCH_Z80_SIZES)
-	echo "#Revision size speed default" > $@
+	echo "Revision size speed default" > $@
 	for r in $(REVISIONS); do \
 		SIZE_SIZE=`cat stdcbench-z80-size-$$r/size`; \
 		SIZE_SPEED=`cat stdcbench-z80-speed-$$r/size`; \
@@ -374,7 +389,7 @@ stdcbench-z80-sizetable: $(BENCHMARKS_STDCBENCH_Z80_SIZES)
 	done
 
 whetstone-stm8-scoretable: $(BENCHMARKS_WHETSTONE_STM8_SCORES)
-	echo "#Revision size speed default" > $@
+	echo "Revision size speed default" > $@
 	for r in $(REVISIONS); do \
 		SIZE_SIZE=`cat whetstone-stm8-size-$$r/score`; \
 		SIZE_SPEED=`cat whetstone-stm8-speed-$$r/score`; \
@@ -383,7 +398,7 @@ whetstone-stm8-scoretable: $(BENCHMARKS_WHETSTONE_STM8_SCORES)
 	done
 
 whetstone-mcs51-scoretable: $(BENCHMARKS_WHETSTONE_MCS51_SCORES)
-	echo "#Revision size speed default" > $@
+	echo "Revision size speed default" > $@
 	for r in $(REVISIONS_MCS51); do \
 		SIZE_SIZE=`cat whetstone-mcs51-size-$$r/score`; \
 		SIZE_SPEED=`cat whetstone-mcs51-speed-$$r/score`; \
@@ -392,7 +407,7 @@ whetstone-mcs51-scoretable: $(BENCHMARKS_WHETSTONE_MCS51_SCORES)
 	done
 
 whetstone-r3ka-scoretable: $(BENCHMARKS_WHETSTONE_R3KA_SCORES)
-	echo "#Revision size speed default" > $@
+	echo "Revision size speed default" > $@
 	for r in $(REVISIONS_R3KA_WHETSTONE); do \
 		SIZE_SIZE=`cat whetstone-r3ka-size-$$r/score`; \
 		SIZE_SPEED=`cat whetstone-r3ka-speed-$$r/score`; \
@@ -401,7 +416,7 @@ whetstone-r3ka-scoretable: $(BENCHMARKS_WHETSTONE_R3KA_SCORES)
 	done
 
 whetstone-r4k-scoretable: $(BENCHMARKS_WHETSTONE_R4K_SCORES)
-	echo "#Revision size speed default" > $@
+	echo "Revision size speed default" > $@
 	for r in $(REVISIONS_R4K); do \
 		SIZE_SIZE=`cat whetstone-r4k-size-$$r/score`; \
 		SIZE_SPEED=`cat whetstone-r4k-speed-$$r/score`; \
@@ -410,7 +425,7 @@ whetstone-r4k-scoretable: $(BENCHMARKS_WHETSTONE_R4K_SCORES)
 	done
 
 dhrystone-stm8-scoretable: $(BENCHMARKS_DHRYSTONE_STM8_SCORES)
-	echo "#Revision size speed default" > $@
+	echo "Revision size speed default" > $@
 	for r in $(REVISIONS); do \
 		SIZE_SIZE=`cat dhrystone-stm8-size-$$r/score`; \
 		SIZE_SPEED=`cat dhrystone-stm8-speed-$$r/score`; \
@@ -419,7 +434,7 @@ dhrystone-stm8-scoretable: $(BENCHMARKS_DHRYSTONE_STM8_SCORES)
 	done
 
 dhrystone-mcs51-scoretable: $(BENCHMARKS_DHRYSTONE_MCS51_SCORES)
-	echo "#Revision size speed default" > $@
+	echo "Revision size speed default" > $@
 	for r in $(REVISIONS_MCS51); do \
 		SIZE_SIZE=`cat dhrystone-mcs51-size-$$r/score`; \
 		SIZE_SPEED=`cat dhrystone-mcs51-speed-$$r/score`; \
@@ -428,7 +443,7 @@ dhrystone-mcs51-scoretable: $(BENCHMARKS_DHRYSTONE_MCS51_SCORES)
 	done
 
 dhrystone-r3ka-scoretable: $(BENCHMARKS_DHRYSTONE_R3KA_SCORES)
-	echo "#Revision size speed default" > $@
+	echo "Revision size speed default" > $@
 	for r in $(REVISIONS_R3KA); do \
 		SIZE_SIZE=`cat dhrystone-r3ka-size-$$r/score`; \
 		SIZE_SPEED=`cat dhrystone-r3ka-speed-$$r/score`; \
@@ -437,7 +452,7 @@ dhrystone-r3ka-scoretable: $(BENCHMARKS_DHRYSTONE_R3KA_SCORES)
 	done
 
 dhrystone-r4k-scoretable: $(BENCHMARKS_DHRYSTONE_R4K_SCORES)
-	echo "#Revision size speed default" > $@
+	echo "Revision size speed default" > $@
 	for r in $(REVISIONS_R4K); do \
 		SIZE_SIZE=`cat dhrystone-r4k-size-$$r/score`; \
 		SIZE_SPEED=`cat dhrystone-r4k-speed-$$r/score`; \
@@ -446,7 +461,7 @@ dhrystone-r4k-scoretable: $(BENCHMARKS_DHRYSTONE_R4K_SCORES)
 	done
 
 coremark-stm8-scoretable: $(BENCHMARKS_COREMARK_STM8_SCORES)
-	echo "#Revision size speed default" > $@
+	echo "Revision size speed default" > $@
 	for r in $(REVISIONS); do \
 		SIZE_SIZE=`cat coremark-stm8-size-$$r/score`; \
 		SIZE_SPEED=`cat coremark-stm8-speed-$$r/score`; \
@@ -455,7 +470,7 @@ coremark-stm8-scoretable: $(BENCHMARKS_COREMARK_STM8_SCORES)
 	done
 
 coremark-r3ka-scoretable: $(BENCHMARKS_COREMARK_R3KA_SCORES)
-	echo "#Revision size speed default" > $@
+	echo "Revision size speed default" > $@
 	for r in $(REVISIONS_R3KA); do \
 		SIZE_SIZE=`cat coremark-r3ka-size-$$r/score`; \
 		SIZE_SPEED=`cat coremark-r3ka-speed-$$r/score`; \
@@ -464,7 +479,7 @@ coremark-r3ka-scoretable: $(BENCHMARKS_COREMARK_R3KA_SCORES)
 	done
 
 coremark-r4k-scoretable: $(BENCHMARKS_COREMARK_R4K_SCORES)
-	echo "#Revision size speed default" > $@
+	echo "Revision size speed default" > $@
 	for r in $(REVISIONS_R4K); do \
 		SIZE_SIZE=`cat coremark-r4k-size-$$r/score`; \
 		SIZE_SPEED=`cat coremark-r4k-speed-$$r/score`; \
@@ -473,7 +488,7 @@ coremark-r4k-scoretable: $(BENCHMARKS_COREMARK_R4K_SCORES)
 	done
 
 stdcbench-stm8-scoretable: $(BENCHMARKS_STDCBENCH_STM8_SCORES)
-	echo "#Revision size speed default" > $@
+	echo "Revision size speed default" > $@
 	for r in $(REVISIONS); do \
 		SIZE_SIZE=`cat stdcbench-stm8-size-$$r/score`; \
 		SIZE_SPEED=`cat stdcbench-stm8-speed-$$r/score`; \
@@ -482,7 +497,7 @@ stdcbench-stm8-scoretable: $(BENCHMARKS_STDCBENCH_STM8_SCORES)
 	done
 
 stdcbench-mcs51-scoretable: $(BENCHMARKS_STDCBENCH_MCS51_SCORES)
-	echo "#Revision size speed default" > $@
+	echo "Revision size speed default" > $@
 	for r in $(REVISIONS_MCS51); do \
 		SIZE_SIZE=`cat stdcbench-mcs51-size-$$r/score`; \
 		SIZE_SPEED=`cat stdcbench-mcs51-speed-$$r/score`; \
@@ -491,7 +506,7 @@ stdcbench-mcs51-scoretable: $(BENCHMARKS_STDCBENCH_MCS51_SCORES)
 	done
 
 stdcbench-r3ka-scoretable: $(BENCHMARKS_STDCBENCH_R3KA_SCORES)
-	echo "#Revision size speed default" > $@
+	echo "Revision size speed default" > $@
 	for r in $(REVISIONS_R3KA_STDCBENCH); do \
 		SIZE_SIZE=`cat stdcbench-r3ka-size-$$r/score`; \
 		SIZE_SPEED=`cat stdcbench-r3ka-speed-$$r/score`; \
@@ -500,7 +515,7 @@ stdcbench-r3ka-scoretable: $(BENCHMARKS_STDCBENCH_R3KA_SCORES)
 	done
 
 stdcbench-r4k-scoretable: $(BENCHMARKS_STDCBENCH_R4K_SCORES)
-	echo "#Revision size speed default" > $@
+	echo "Revision size speed default" > $@
 	for r in $(REVISIONS_R4K); do \
 		SIZE_SIZE=`cat stdcbench-r4k-size-$$r/score`; \
 		SIZE_SPEED=`cat stdcbench-r4k-speed-$$r/score`; \

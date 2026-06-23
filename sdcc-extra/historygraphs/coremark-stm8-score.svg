@@ -172,6 +172,9 @@
 	<g transform="translate(495.92,34.58)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="start">
 		<text><tspan font-family="Arial" >4.5.0</tspan></text>
 	</g>
+	<g transform="translate(590.42,40.42)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="start">
+		<text><tspan font-family="Arial" >4.6.0</tspan></text>
+	</g>
 </g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
 	<path stroke='black'  d='M87.80,373.51 L89.89,381.32 L91.98,373.51 M89.89,354.36 L89.89,381.32  '/></g>
@@ -195,6 +198,8 @@
 	<path stroke='black'  d='M453.31,42.72 L455.40,50.53 L457.49,42.72 M455.40,23.57 L455.40,50.53  '/></g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
 	<path stroke='black'  d='M493.84,49.82 L495.93,57.63 L498.02,49.82 M495.93,30.67 L495.93,57.63  '/></g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+	<path stroke='black'  d='M588.34,55.66 L590.43,63.47 L592.52,55.66 M590.43,36.51 L590.43,63.47  '/></g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
 </g>
 	<g id="gnuplot_plot_1" ><title>default</title>
@@ -236,7 +241,7 @@
 		L524.60,97.00 L528.32,97.00 L528.39,97.00 L531.31,97.00 L539.58,97.00 L539.65,97.00 L543.24,97.00 L543.31,97.00
 		L544.12,97.00 L548.12,97.00 L550.63,97.00 L557.41,97.00 L558.96,97.00 L561.95,97.00 L562.83,97.00 L567.71,97.00
 		L568.12,97.00 L570.08,97.00 L570.83,97.00 L571.03,97.00 L572.72,97.00 L574.15,97.00 L579.16,97.00 L583.10,97.00
-		 '/></g>
+		L590.42,97.00 L590.55,92.78  '/></g>
 	</g>
 	<g id="gnuplot_plot_2" ><title>size</title>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
@@ -277,7 +282,7 @@
 		L524.60,90.26 L528.32,90.26 L528.39,90.26 L531.31,90.26 L539.58,90.26 L539.65,90.26 L543.24,90.26 L543.31,90.26
 		L544.12,90.26 L548.12,90.26 L550.63,90.17 L557.41,90.17 L558.96,92.69 L561.95,92.69 L562.83,92.69 L567.71,92.69
 		L568.12,92.69 L570.08,92.69 L570.83,92.69 L571.03,92.69 L572.72,92.69 L574.15,92.69 L579.16,92.78 L583.10,92.78
-		 '/></g>
+		L590.42,92.78 L590.55,91.70  '/></g>
 	</g>
 	<g id="gnuplot_plot_3" ><title>speed</title>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
@@ -318,7 +323,7 @@
 		L524.60,56.47 L528.32,56.47 L528.39,56.47 L531.31,56.47 L539.58,56.47 L539.65,56.47 L543.24,56.47 L543.31,56.47
 		L544.12,56.47 L548.12,56.47 L550.63,56.38 L557.41,56.38 L558.96,61.95 L561.95,61.95 L562.83,61.95 L567.71,61.95
 		L568.12,61.95 L570.08,61.95 L570.83,61.95 L571.03,61.95 L572.72,61.95 L574.15,61.95 L579.16,61.95 L583.10,61.95
-		 '/></g>
+		L590.42,61.95 L590.55,63.48  '/></g>
 	</g>
 <g fill="none" color="white" stroke="rgb( 86, 180, 233)" stroke-width="2.00" stroke-linecap="butt" stroke-linejoin="miter">
 </g>
