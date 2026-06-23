@@ -2,7 +2,7 @@
 #
 # model large stack-auto
 
-SDCCFLAGS +=--model-large --stack-auto --nosidechannels
+SDCCFLAGS +=--model-large --stack-auto
 
 include $(PORTS_DIR)/mcs51-common/spec.mk
 

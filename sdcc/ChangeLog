@@ -1,5 +1,15 @@
 2026-06-23 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/SDCCBBlock.c,
+	  src/SDCCglobl.h,
+	  src/SDCClabel.c,
+	  src/SDCCmain.c:
+	  Remove effect of --nolabelopt on unreachable labels. Too much of SDCC can't really handle unreachable basic blocks.
+	*  support/regression/ports/*/spec.mk:
+	  Fix default enable of --nosidechannels in some regressiont st targets.
+
+2026-06-23 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* support/regression/tests/asconaead128.c.in,
 	  support/regression/tests/asconhash256.c.in:
 	  Disable test parts that fail due to known bug #4018.
