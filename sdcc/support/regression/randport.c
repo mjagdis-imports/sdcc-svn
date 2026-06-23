@@ -21,8 +21,8 @@ const bool lowmemport[NUM_BASEPORTS] = {
   false, false, false, false, false, false, false, false,
   false, false, false, false, false};
 
-#define NUM_OPTIONS 6
-const char *options[NUM_OPTIONS] = {"--nopurity", "--nolospre", "--nogenconstprop", "--nolabelopt", "--noloopreverse", "--no-peep"};
+#define NUM_OPTIONS 7
+const char *options[NUM_OPTIONS] = {"--nopurity", "--nolospre", "--nogenconstprop", "--nolabelopt", "--noloopreverse", "--no-peep", "--nosidechannels"};
 
 #define BUFFERLEN 256
 
@@ -60,7 +60,7 @@ int main (int argc, const char *argv[])
   randbits_remaining -= baseportbits;
 
   printf ("Creating random-%llu based on %s with additional options: ", seed, baseport);
-  snprintf (buffer, BUFFERLEN - 1, "cp -r ports/%s ports/random-%llu\n", baseport, seed);
+  snprintf (buffer, BUFFERLEN - 1, "cp -rT ports/%s ports/random-%llu\n", baseport, seed);
   system (buffer);
 
   switch (randbits % 3)
