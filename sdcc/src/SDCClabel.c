@@ -584,8 +584,7 @@ iCodeLabelOptimize (iCode * ic)
 {
   if (!optimize.label1 &&
       !optimize.label2 &&
-      !optimize.label3 &&
-      !optimize.label4)
+      !optimize.label3)
     return ic;
 
   /* build labelreferences */
@@ -613,8 +612,7 @@ iCodeLabelOptimize (iCode * ic)
         change += labelGotoGoto (ic);
 
       /* remove unreference labels */
-      if (optimize.label4)
-        change += labelUnrefLabel (ic);
+      change += labelUnrefLabel (ic);
 
       /* remove unreachable code */
       change += labelUnreach (ic);

@@ -2,7 +2,7 @@
 #
 # model medium
 
-SDCCFLAGS +=--model-medium --nosidechannels
+SDCCFLAGS +=--model-medium
 
 include $(PORTS_DIR)/mcs51-common/spec.mk
 
