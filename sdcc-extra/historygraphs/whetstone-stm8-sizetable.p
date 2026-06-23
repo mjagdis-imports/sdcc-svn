@@ -1,8 +1,10 @@
+# Configure for SDCC target
 set output "whetstone-stm8-size.svg"
-set terminal svg size 640,480
-set style data lines
-set xlabel "revision"
-set ylabel "size [B]"
+datafile = "whetstone-stm8-sizetable"
+
+# Configure arrow length (to make the plot look nice)
+arrowlength = 100
+
 set arrow from 9256, 12058 to 9256, 11858
 set label "3.5.0" at 9256, 12058
 set arrow from 9618, 12076 to 9618, 11876
@@ -27,5 +29,4 @@ set arrow from 15246, 9401 to 15246, 9201
 set label "4.5.0" at 15246, 9401
 set arrow from 16640, 9131 to 16640, 9031
 set label "4.6.0" at 16640, 9131
-plot "whetstone-stm8-sizetable" using 1:4 title "default", "whetstone-stm8-sizetable" using 1:2 title "size", "whetstone-stm8-sizetable" using 1:3 title "speed"
 

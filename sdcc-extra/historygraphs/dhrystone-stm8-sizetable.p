@@ -1,8 +1,10 @@
+# Configure for SDCC target
 set output "dhrystone-stm8-size.svg"
-set terminal svg size 640,480
-set style data lines
-set xlabel "revision"
-set ylabel "size [B]"
+datafile = "dhrystone-stm8-sizetable"
+
+# Configure arrow length (to make the plot look nice)
+arrowlength = 100
+
 set arrow from 9256, 8223 to 9256, 8123
 set label "3.5.0" at 9256, 8223
 set arrow from 9618, 8240 to 9618, 8140
@@ -27,5 +29,4 @@ set arrow from 15246, 6714 to 15246, 6614
 set label "4.5.0" at 15246, 6714
 set arrow from 16640, 6620 to 16640, 6520
 set label "4.6.0" at 16640, 6620
-plot "dhrystone-stm8-sizetable" using 1:4 title "default", "dhrystone-stm8-sizetable" using 1:2 title "size", "dhrystone-stm8-sizetable" using 1:3 title "speed"
 

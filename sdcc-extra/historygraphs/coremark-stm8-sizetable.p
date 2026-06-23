@@ -1,8 +1,10 @@
+# Configure for SDCC target
 set output "coremark-stm8-size.svg"
-set terminal svg size 640,480
-set style data lines
-set xlabel "revision"
-set ylabel "size [B]"
+datafile = "coremark-stm8-sizetable"
+
+# Configure arrow length (to make the plot look nice)
+arrowlength = 200
+
 set arrow from 9256, 16246 to 9256, 16046
 set label "3.5.0" at 9256, 16246
 set arrow from 9618, 16316 to 9618, 16116
@@ -27,5 +29,4 @@ set arrow from 15246, 12701 to 15246, 12501
 set label "4.5.0" at 15246, 12701
 set arrow from 16640, 12636 to 16640, 12436
 set label "4.6.0" at 16640, 12636
-plot "coremark-stm8-sizetable" using 1:4 title "default", "coremark-stm8-sizetable" using 1:2 title "size", "coremark-stm8-sizetable" using 1:3 title "speed"
 

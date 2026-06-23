@@ -9851,7 +9851,7 @@ genCast (const iCode *ic)
           if (offset && aopInReg (right->aop, offset, A_IDX))
             {
               right_stacked = ASMOP_A;
-              right_offset = 0;
+              right_offset = 1;
             }   
 
           if (!offset && aopInReg (right->aop, offset, A_IDX))
