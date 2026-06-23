@@ -6658,7 +6658,7 @@ _castBoolean (const operand *right)
   else
     {
       _toBoolean (right, false);
-      if (IS_Z80 || IS_TLCS870 || IS_TLCS870C || IS_TLCS870C1) // Only for the original Z80 is the addition faster than neg. TLCS-870(C)(C1) don't have neg.
+      if (IS_Z80 || IS_SM83 || IS_TLCS870 || IS_TLCS870C || IS_TLCS870C1) // Only for the original Z80 is the addition faster than neg. SM83 and TLCS-870(C)(C1) don't have neg.
         emit3 (A_ADD, ASMOP_A, ASMOP_MONE);
       else
         emit3 (A_NEG, /*ASMOP_A*/0, 0); // Todo: Make eZ80 assembler support "neg a" instead of just "neg"!
