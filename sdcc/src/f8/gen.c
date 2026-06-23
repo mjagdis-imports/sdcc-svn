@@ -4965,16 +4965,41 @@ genCmp (const iCode *ic, iCode *ifx)
 
   if (sign)
     {
-      if (!regalloc_dry_run)
+      // Compute o ^ n. We use o from f, and n from the top-byte result.
+      if (optimize.nosidechannels)
         {
-          symbol *tlbl = newiTempLabel (0);
-          emit2 ("jrno", "#!tlabel", labelKey2num (tlbl->key));
-          emit2 ("xor", "xl, #0x80");
-          cost (4, 2);
-          emitLabel (tlbl);
+          push (ASMOP_XL, 0, 1);
+          emit2 ("xch", "f, (0, sp)");
+          cost (1, 1);
+          if (!IS_F8L)
+            {
+              emit2 ("rot", "xl, #1");
+              cost (2, 1);
+            }
+          else
+            {
+              emit3 (A_SLL, ASMOP_XL, 0);
+              emit3 (A_RLC, ASMOP_XL, 0);
+            }
+          emit2 ("xor", "xl, (0, sp)");
+          cost (1, 1);
+          adjustStack (1, false, regDead (Y_IDX, ic));
+          emit2 ("and", "xl, #0x01");
+          cost (1, 1);
+          goto return_xl;
         }
-      cost (2, 1);
-      emit3 (A_SLL, ASMOP_XL, 0);
+      else
+        {
+          if (!regalloc_dry_run)
+          {
+            symbol *tlbl = newiTempLabel (0);
+            emit2 ("jrno", "#!tlabel", labelKey2num (tlbl->key));
+            emit2 ("xor", "xl, #0x80");
+            emitLabel (tlbl);
+          }
+          cost (4, 2);
+          emit3 (A_SLL, ASMOP_XL, 0);
+        }
     }
   else if (regDead (XL_IDX, ic) || pushed_xl)
     {
