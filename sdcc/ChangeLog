@@ -1,3 +1,9 @@
+2026-06-23 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/asconaead128.c.in,
+	  support/regression/tests/asconhash256.c.in:
+	  Disable test parts that fail due to known bug #4018.
+
 2026-06-22 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* Merge nosidechannels branch.

@@ -45,6 +45,10 @@
 #undef IMPL_{impl}
 #endif
 
+// Bug #4018
+#if defined(__SDCC_z80)
+#undef OP_decrypt
+#endif
 
 // Bug #3919 - fails test
 #if defined(__SDCC_ds390) && defined(IMPL_ref) && defined(OP_encrypt)
