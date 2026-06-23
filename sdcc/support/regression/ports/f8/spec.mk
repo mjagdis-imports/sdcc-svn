@@ -29,7 +29,7 @@ ifdef CROSSCOMPILING
   SDCCFLAGS += -I$(top_srcdir)
 endif
 
-SDCCFLAGS += -mf8 --less-pedantic --out-fmt-ihx --nosidechannels
+SDCCFLAGS += -mf8 --less-pedantic --out-fmt-ihx
 LINKFLAGS += f8.lib
 
 OBJEXT = .rel

@@ -201,7 +201,6 @@ struct optimize
     int label1;
     int label2;
     int label3;
-    int label4;
     int loopInvariant;
     int loopInduction;
     int noLoopReverse;
@@ -209,9 +208,9 @@ struct optimize
     int codeSize;
     bool purity;
     bool nosidechannels;
-    int lospre;
-    int genconstprop;
-    int allow_unsafe_read;
+    bool lospre;
+    bool genconstprop;
+    bool allow_unsafe_read;
     int noStdLibCall;
   };
 

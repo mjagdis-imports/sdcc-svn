@@ -689,15 +689,16 @@ setDefaultOptions (void)
   optimize.label1 = 1;
   optimize.label2 = 1;
   optimize.label3 = 1;
-  optimize.label4 = 1;
   optimize.loopInvariant = 1;
   optimize.loopInduction = 1;
   options.max_allocs_per_node = 3000;
   optimize.purity = true;
   optimize.nosidechannels = false;
-  optimize.lospre = 1;
-  optimize.allow_unsafe_read = 0;
-  optimize.genconstprop = 1;
+  optimize.lospre = true;
+  optimize.genconstprop = true;
+
+  // Except unsafe reads.
+  optimize.allow_unsafe_read = false;
 
   /* now for the ports */
   port->setDefaultOptions ();
@@ -1223,7 +1224,6 @@ parseCmdLine (int argc, char **argv)
           if (strcmp (argv[i], OPTION_NO_LABEL_OPT) == 0)
             {
               optimize.label2 = 0;
-              optimize.label4 = 0;
               continue;
             }
 
@@ -1249,13 +1249,13 @@ parseCmdLine (int argc, char **argv)
 
           if (strcmp (argv[i], OPTION_NO_PURITY) == 0)
             {
-              optimize.purity = 0;
+              optimize.purity = false;
               continue;
             }
 
           if (strcmp (argv[i], OPTION_NO_LOSPRE) == 0)
             {
-              optimize.lospre = 0;
+              optimize.lospre = false;
               continue;
             }
 
@@ -1267,7 +1267,7 @@ parseCmdLine (int argc, char **argv)
 
           if (strcmp (argv[i], OPTION_ALLOW_UNSAFE_READ) == 0)
             {
-              optimize.allow_unsafe_read = 1;
+              optimize.allow_unsafe_read = true;
               continue;
             }
 
