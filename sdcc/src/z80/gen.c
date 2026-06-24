@@ -5976,6 +5976,8 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
         (source->type == AOP_LIT || source->type == AOP_IMMD || aopInReg (source, soffset + i, B_IDX) || aopInReg (source, soffset + i, C_IDX) || aopInReg (source, soffset + i, D_IDX) || aopInReg (source, soffset + i, E_IDX) || aopInReg (source, soffset + i, A_IDX) && de_dead))
         {
           // Need to do this bitfield-write-style. Can't honor volatile.
+          if (!a_dead)
+            _push (PAIR_AF);
           bool via_e = aopInReg (source, soffset + i, A_IDX);
           if (via_e)
             emit3 (A_LD, ASMOP_E, ASMOP_A);
@@ -5992,6 +5994,8 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
           emit2 ("ldp (%s + %d), hl", result->aopu.aop_dir, roffset + i);
           cost (4, 15);
           i++;
+          if (!a_dead)
+            _pop (PAIR_AF);
           continue;
         }
       else if (source->type == AOP_STL && (soffset + i) >= 2)

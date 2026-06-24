@@ -4,6 +4,8 @@
 	  Fix bug #4020.
 	* src/f8/gen.c:
 	  Fix bug #4022.
+	* src/z80/gen.c:
+	  Fix bug #4021.
 
 2026-06-23 Philipp Klaus Krause <philipp@colecovision.eu>
 
