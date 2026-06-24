@@ -3437,6 +3437,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
             {
               adjustStack (1, false, false, false);
               pushed_a = false;
+              result_in_a = true;
             }
           else
             {
@@ -3501,8 +3502,8 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           cheapMove (result_aop, i, ASMOP_A, 0, FALSE);
 
           if (aopInReg (result_aop, i, A_IDX))
-            result_in_a = TRUE;
-            
+            result_in_a = true;
+
           i++;
         }
     }
