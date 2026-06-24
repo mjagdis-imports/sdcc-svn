@@ -74,6 +74,8 @@ cl_app::cl_app(void)
   options= new cl_options();
   quiet= false;
   nowelcome= false;
+  hide_echo= false;
+  show_input= false;
   retmain= false;
   retval= 0;
   if (app_start_at == 0)
@@ -453,12 +455,20 @@ static const char *I_opts[]= {
 enum {
   DOPT_CPU_SPEED= 0,
   DOPT_NOWELCOME= 1,
+  DOPT_HIDEECHO = 2,
+  DOPT_SHOWINPUT= 3,
+  DOPT_HTML     = 4,
+  DOPT_WTML     = 5,
   DOPT_ERROR
 };
 
 static const char *D_opts[]= {
   /*DOPT_CPU_SPEED*/	"cpu_speed",
   /*DOPT_NOWELCOME*/    "nowelcome",
+  /*DOPT_HIDEECHO */    "hideecho",
+  /*DOPT_SHOWINPUT*/	"showinput",
+  /*DOPT_HTML     */	"html",
+  /*DOPT_WTML     */    "wtml",
   NULL
 };
 
@@ -714,6 +724,25 @@ cl_app::proc_arguments(int argc, char *argv[])
 		case DOPT_NOWELCOME:
 		  nowelcome= true;
 		  break;
+		case DOPT_HIDEECHO:
+		  hide_echo= true;
+		  break;
+		case DOPT_SHOWINPUT:
+		  show_input= true;
+		  break;
+		case DOPT_HTML:
+		  nowelcome= true;
+		  hide_echo= true;
+		  show_input= true;
+		  force_colors= true;
+		  options->set_value("force_colors", this, bool(true));
+		  break;
+		case DOPT_WTML:
+		  hide_echo= true;
+		  show_input= true;
+		  force_colors= true;
+		  options->set_value("force_colors", this, bool(true));
+		  break;
 		default:
 		  /* Unknown suboption. */
 		  fprintf(stderr, "Unknown suboption `%s' for -D\n", value);
@@ -961,6 +990,7 @@ cl_app::proc_arguments(int argc, char *argv[])
 	}
       case 'l':
 	set_option_s("color_bg", "bwhite");
+	set_option_s("color_fg", "black");
 	set_option_s("color_prompt", "green:bwhite");
 	set_option_s("color_prompt_console", "blue:bwhite");
 	set_option_s("color_command", "blue:bwhite");
@@ -1413,6 +1443,11 @@ cl_app::mk_options(void)
   o->init();
   o->set_value("black");
   
+  options->new_option(o= new cl_string_option(this, "color_fg",
+					      "Default foreground color"));
+  o->init();
+  o->set_value("white");
+  
   options->new_option(o= new cl_string_option(this, "color_prompt_console",
 					      "Color of console number in prompt"));
   o->init();
@@ -1598,6 +1633,21 @@ cl_app::debug(const char *format, ...)
 }
 
 
+chars
+cl_app::get_option(chars name)
+{
+  chars r;
+  class cl_option *o= options->get_option(name.cstr());
+  if (o)
+    {
+      char *s= NULL;
+      o->get_value(&s);
+      if (s && *s)
+	r= s;
+    }
+  return r;
+}
+
 void
 cl_app::set_option_s(const char *opt_name, const char *new_value)
 {
@@ -1607,5 +1657,30 @@ cl_app::set_option_s(const char *opt_name, const char *new_value)
       o->set_value(new_value);
     }
 }
+
+
+bool
+cl_app::get_option_fc(void)
+{
+  class cl_option *c= options->get_option("force_colors");
+  if (!c)
+    return false;
+  bool fc;
+  c->get_value(&fc);
+  return fc;
+}
+
+
+bool
+cl_app::get_option_bw(void)
+{
+  class cl_option *c= options->get_option("black_and_white");
+  if (!c)
+    return false;
+  bool bw;
+  c->get_value(&bw);
+  return bw;
+}
+
 
 /* End of utils.src/app.cc */

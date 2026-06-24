@@ -2259,52 +2259,52 @@ cl_uc::read_file(chars nam, class cl_console_base *con, bool check)
       if (con)
 	con->dd_printf("no loadable file found (%s)\n", is.get_file_name()->c_str());
       else
-	printf("no loadable file found (%s)\n", is.get_file_name()->c_str());
+	application->dd_printf("no loadable file found (%s)\n", is.get_file_name()->c_str());
       return 0;
     }
   if (!application->quiet)
-    printf("Loading from %s\n", f->get_file_name());
+    application->dd_printf("Loading from %s\n", f->get_file_name());
   if (f->is_p2h_file())
     {
       l= read_p2h_file(&is, f, check);
       if (!application->quiet)
-	printf("%ld words read from %s\n", l, f->get_fname());
+	application->dd_printf("%ld words read from %s\n", l, f->get_fname());
     }
   if (f->is_asc_file())
     {
       l= read_asc_file(&is, f, check);
       if (!application->quiet)
-	printf("%ld words read from %s\n", l, f->get_fname());
+	application->dd_printf("%ld words read from %s\n", l, f->get_fname());
     }
   if (f->is_hex_file())
     {
       l= read_hex_file(&is, f, check);
       if (!application->quiet)
-	printf("%ld words read from %s\n", l, f->get_fname());
+	application->dd_printf("%ld words read from %s\n", l, f->get_fname());
     }
   else if (f->is_s19_file())
     {
       l= read_s19_file(&is, f, check);
       if (!application->quiet)
-	printf("%ld words read from %s\n", l, f->get_fname());
+	application->dd_printf("%ld words read from %s\n", l, f->get_fname());
     }
   else if (f->is_omf_file())
     {
       l= read_omf_file(&is, f, check);
       if (!application->quiet)
-	printf("%ld words read from %s\n", l, f->get_fname());
+	application->dd_printf("%ld words read from %s\n", l, f->get_fname());
     }
   else if (!check && f->is_cdb_file())
     {
       l= read_cdb_file(f);
       if (!application->quiet)
-	printf("%ld symbols read from %s\n", l, f->get_fname());
+	application->dd_printf("%ld symbols read from %s\n", l, f->get_fname());
     }
   else if (!check && f->is_map_file())
     {
       l= read_map_file(f);
       if (!application->quiet)
-	printf("%ld symbols read from %s\n", l, f->get_fname());
+	application->dd_printf("%ld symbols read from %s\n", l, f->get_fname());
     }
   if (!check && (strcmp(nam, f->get_fname()) != 0))
     {
@@ -2315,7 +2315,7 @@ cl_uc::read_file(chars nam, class cl_console_base *con, bool check)
 	{
 	  l= read_cdb_file(c);
 	  if (!application->quiet)
-	    printf("%ld symbols read from %s\n", l, c->get_fname());
+	    application->dd_printf("%ld symbols read from %s\n", l, c->get_fname());
 	}
       delete c;
     }
@@ -2328,7 +2328,7 @@ cl_uc::read_file(chars nam, class cl_console_base *con, bool check)
 	{
 	  l= read_map_file(c);
 	  if (!application->quiet)
-	    printf("%ld symbols read from %s\n", l, c->get_fname());
+	    application->dd_printf("%ld symbols read from %s\n", l, c->get_fname());
 	}
       delete c;
     }
