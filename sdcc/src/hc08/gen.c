@@ -945,7 +945,7 @@ loadRegHXAfromAop(asmop * aopH, int ofsH, asmop * aopX, int ofsX, asmop * aopA, 
 /*                   be copied to the original aop location.                */
 /*--------------------------------------------------------------------------*/
 static asmop *
-forceStackedAop (asmop * aop, bool copyOrig)
+forceStackedAop (asmop *aop, bool copyOrig)
 {
   reg_info *reg;
   int loffset;
@@ -2416,7 +2416,7 @@ operandsEqu (operand *op1, operand *op2)
 /* sameRegs - two asmops have the same registers                   */
 /*-----------------------------------------------------------------*/
 static bool
-sameRegs (asmop *aop1, asmop *aop2)
+sameRegs (const asmop *aop1, const asmop *aop2)
 {
   int i;
 
@@ -8947,7 +8947,7 @@ genRightShift (iCode * ic)
     countreg = hc08_reg_a;
   needpullcountreg = (countreg && pushRegIfSurv (countreg));
   wassert (right->aop); // This can fail is left and right are the same, resulting in a segfault later (bug #3598).
-  if(countreg)
+  if (countreg)
     {
       countreg->isFree = false;
       loadRegFromAop (countreg, AOP (right), 0);

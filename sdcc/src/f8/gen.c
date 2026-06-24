@@ -5117,7 +5117,7 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
               bool inv = aopInReg (right->aop, i, XL_IDX);
               if (started)
                 {
-                  if (!regDead (XH_IDX, ic) || left->aop->regs[XH_IDX] >= i || left->aop->regs[XH_IDX] >= i)
+                  if (!regDead (XH_IDX, ic) || left->aop->regs[XH_IDX] >= i || right->aop->regs[XH_IDX] >= i)
                     UNIMPLEMENTED;
                   emit3 (A_LD, ASMOP_XH, ASMOP_XL);
                 }
