@@ -2478,7 +2478,7 @@ aopOp (operand *op, iCode * ic, bool result)
       aop->size = getSize (operandType (op));
       aop->op = op;
       if (!result)
-        aop->valinfo = getOperandValinfo (ic, op);
+        aop->valinfo = getOperandValinfo (ic, op, false);
       return;
     }
 
@@ -2512,7 +2512,7 @@ aopOp (operand *op, iCode * ic, bool result)
       op->aop = aop = aopForSym (ic, OP_SYMBOL (op), result);
       aop->op = op;
       if (!result)
-        aop->valinfo = getOperandValinfo (ic, op);
+        aop->valinfo = getOperandValinfo (ic, op, false);
       //printf ("new symbol %s\n", OP_SYMBOL (op)->name);
       //printf (" with size = %d\n", aop->size);
       return;
@@ -2538,7 +2538,7 @@ aopOp (operand *op, iCode * ic, bool result)
       aop->size = 0;
       aop->op = op;
       if (!result)
-        aop->valinfo = getOperandValinfo (ic, op);
+        aop->valinfo = getOperandValinfo (ic, op, false);
       return;
     }
 
@@ -2556,7 +2556,7 @@ aopOp (operand *op, iCode * ic, bool result)
           aop->size = getSize (sym->type);
           aop->op = op;
           if (!result)
-            aop->valinfo = getOperandValinfo (ic, op);
+            aop->valinfo = getOperandValinfo (ic, op, false);
           return;
         }
 
@@ -2574,7 +2574,7 @@ aopOp (operand *op, iCode * ic, bool result)
           aop->size = getSize (sym->type);
           aop->op = op;
           if (!result)
-            aop->valinfo = getOperandValinfo (ic, op);
+            aop->valinfo = getOperandValinfo (ic, op, false);
           return;
         }
 
@@ -2601,7 +2601,7 @@ aopOp (operand *op, iCode * ic, bool result)
           //printf ("spill symbol %s\n", OP_SYMBOL (op)->name);
           //printf (" with size = %d\n", aop->size);
           if (!result)
-            aop->valinfo = getOperandValinfo (ic, op);
+            aop->valinfo = getOperandValinfo (ic, op, false);
           return;
         }
 
@@ -2610,7 +2610,7 @@ aopOp (operand *op, iCode * ic, bool result)
       aop->size = getSize (sym->type);
       aop->op = op;
       if (!result)
-        aop->valinfo = getOperandValinfo (ic, op);
+        aop->valinfo = getOperandValinfo (ic, op, false);
       return;
     }
 
@@ -2630,7 +2630,7 @@ aopOp (operand *op, iCode * ic, bool result)
     aop->regmask |= HC08MASK_REV;
   aop->op = op;
   if (!result)
-    aop->valinfo = getOperandValinfo (ic, op);
+    aop->valinfo = getOperandValinfo (ic, op, false);
 }
 
 /*-----------------------------------------------------------------*/

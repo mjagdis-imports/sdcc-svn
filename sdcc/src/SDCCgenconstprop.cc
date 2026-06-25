@@ -211,7 +211,7 @@ getParamValinfo (const operand *op)
 }
 
 struct valinfo
-getOperandValinfo (const iCode *ic, const operand *op)
+getOperandValinfo (const iCode *ic, const operand *op, bool analysis_only)
 {
   wassert (ic);
 
@@ -267,7 +267,7 @@ getOperandValinfo (const iCode *ic, const operand *op)
         }
     }
 #endif
-  else if (IS_ITEMP (op))
+  else if (IS_ITEMP (op) && analysis_only) // Empty set of possible values as starting point for forward analysis.
     {
       v.nothing = true;
       v.anything = false;
@@ -341,7 +341,7 @@ valinfos_unions (iCode *ic, const struct valinfos &v)
 static void
 dump_op_info (std::ostream &os, const iCode *ic, operand *op)
 {
-  struct valinfo v = getOperandValinfo (ic, op);
+  struct valinfo v = getOperandValinfo (ic, op, true);
   os << "";
   if (v.nothing)
     os << "X";
@@ -797,8 +797,8 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
 
   operand *left = IC_LEFT (ic);
   operand *right = IC_RIGHT (ic);
-  struct valinfo oldleftvalinfo = getOperandValinfo (ic, left);
-  struct valinfo oldrightvalinfo = getOperandValinfo (ic, right);
+  struct valinfo oldleftvalinfo = getOperandValinfo (ic, left, true);
+  struct valinfo oldrightvalinfo = getOperandValinfo (ic, right, true);
 
   if (!ic->valinfos)
     ic->valinfos = new struct valinfos;
@@ -823,8 +823,8 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
     resultsym = 0;
   struct valinfo resultvalinfo;
 
-  struct valinfo leftvalinfo = getOperandValinfo (ic, left);
-  struct valinfo rightvalinfo = getOperandValinfo (ic, right);
+  struct valinfo leftvalinfo = getOperandValinfo (ic, left, true);
+  struct valinfo rightvalinfo = getOperandValinfo (ic, right, true);
 
   bool localchange = externchange || leftvalinfo != oldleftvalinfo || rightvalinfo != oldrightvalinfo;
 
@@ -847,7 +847,7 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
           int key_false = IC_FALSE (ic) ? eBBWithEntryLabel(ebbi, IC_FALSE(ic))->sch->key : ic->next->key;
           if (IS_SYMOP (ic->left) && !IS_OP_VOLATILE (ic->left))
             {
-              struct valinfo v = getOperandValinfo (ic, ic->left);
+              struct valinfo v = getOperandValinfo (ic, ic->left, true);
               struct valinfo v_true = v;
               struct valinfo v_false = v;
               if (v_true.min == 0)
@@ -879,7 +879,7 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
             {
               iCode *cic = (iCode *)hTabItemWithKey (iCodehTab, bitVectFirstBit (OP_DEFS (ic->left)));
               wassert (cic);
-              struct valinfo v = getOperandValinfo (ic, cic->left);
+              struct valinfo v = getOperandValinfo (ic, cic->left, true);
               if (cic->op == '>' && IS_ITEMP (cic->left) && !IS_OP_VOLATILE (cic->left) && IS_INTEGRAL (operandType (cic->left)) &&
                 IS_OP_LITERAL (cic->right) && !v.anything && !v.nothing && operandLitValueUll(cic->right) < +1000)
                 {
@@ -1174,19 +1174,19 @@ recomputeValinfos (iCode *sic, ebbIndex *ebbi, const char *suffix)
       if (G[i].ic->left && !IS_ITEMP(G[i].ic->left) && IS_SYMOP (G[i].ic->left) &&
         (!OP_SYMBOL_CONST (G[i].ic->left)->islocal && !OP_SYMBOL_CONST (G[i].ic->left)->ismyparm || OP_SYMBOL_CONST (G[i].ic->left)->addrtaken || IS_STATIC (OP_SYMBOL_CONST (G[i].ic->left)->etype)))
         {
-          global_operands.map[G[i].ic->left->key] = getOperandValinfo (G[i].ic, G[i].ic->left);
+          global_operands.map[G[i].ic->left->key] = getOperandValinfo (G[i].ic, G[i].ic->left, true);
           global_types[G[i].ic->left->key] = operandType (G[i].ic->left);
         }
       if (G[i].ic->right && !IS_ITEMP(G[i].ic->right) && IS_SYMOP (G[i].ic->right) &&
         (!OP_SYMBOL_CONST (G[i].ic->right)->islocal && !OP_SYMBOL_CONST (G[i].ic->right)->ismyparm || OP_SYMBOL_CONST (G[i].ic->right)->addrtaken || IS_STATIC (OP_SYMBOL_CONST (G[i].ic->right)->etype)))
         {
-          global_operands.map[G[i].ic->right->key] = getOperandValinfo (G[i].ic, G[i].ic->right);
+          global_operands.map[G[i].ic->right->key] = getOperandValinfo (G[i].ic, G[i].ic->right, true);
           global_types[G[i].ic->right->key] = operandType (G[i].ic->right);
         }
       if (G[i].ic->result && !IS_ITEMP(G[i].ic->result) && IS_SYMOP (G[i].ic->result) &&
         (!OP_SYMBOL_CONST (G[i].ic->result)->islocal && !OP_SYMBOL_CONST (G[i].ic->result)->ismyparm || OP_SYMBOL_CONST (G[i].ic->result)->addrtaken || IS_STATIC (OP_SYMBOL_CONST (G[i].ic->result)->etype)))
         {
-          global_operands.map[G[i].ic->result->key] = getOperandValinfo (G[i].ic, G[i].ic->result);
+          global_operands.map[G[i].ic->result->key] = getOperandValinfo (G[i].ic, G[i].ic->result, true);
           global_types[G[i].ic->result->key] = operandType (G[i].ic->result);
         }
     }
@@ -1231,8 +1231,8 @@ optimizeValinfoConst (iCode *sic)
           operand *left = IC_LEFT (ic);
           operand *right = IC_RIGHT (ic);
           operand *result = IC_RESULT (ic);
-          const valinfo vleft = getOperandValinfo (ic, left);
-          const valinfo vright = getOperandValinfo (ic, right);
+          const valinfo vleft = getOperandValinfo (ic, left, false);
+          const valinfo vright = getOperandValinfo (ic, right, false);
           if (ic->resultvalinfo && !ic->resultvalinfo->anything && ic->resultvalinfo->min == ic->resultvalinfo->max &&
             !(ic->op == '=' && IS_OP_LITERAL (right)) && !POINTER_SET (ic))
             {
@@ -1403,12 +1403,12 @@ optimizeNarrowOpNet (iCode *ic)
           if (!uic)
             bitVectUnSetBit (OP_USES (op), key); // Looks like some earlier optimization didn't clean up properly. Do it now. Shouldn't happen, see lines above.
           else if (uic->op == CAST && !IS_FLOAT (operandType (uic->result)))
-            valinfo_union (&v, getOperandValinfo (uic, uic->right));
+            valinfo_union (&v, getOperandValinfo (uic, uic->right, false));
           else if (uic->op == EQ_OP || uic->op == NE_OP || uic->op == '<' || uic->op == LE_OP || uic->op == '>' || uic->op == GE_OP)
             {
               if (isOperandEqual (uic->left, op) && !isOperandEqual (uic->right, op))
                 {
-                  valinfo_union (&v, getOperandValinfo (uic, uic->right));
+                  valinfo_union (&v, getOperandValinfo (uic, uic->right, false));
                   if (net.find(uic->right) == net.end())
                     {
                       net.insert (uic->right);
@@ -1417,7 +1417,7 @@ optimizeNarrowOpNet (iCode *ic)
                 }
               if (!isOperandEqual (uic->left, op) && isOperandEqual (uic->right, op))
                 {
-                  valinfo_union (&v, getOperandValinfo (uic, uic->left));
+                  valinfo_union (&v, getOperandValinfo (uic, uic->left, false));
                   if (net.find(uic->left) == net.end())
                     {
                       net.insert (uic->left);
@@ -1589,8 +1589,8 @@ optimizeMult (iCode *ic)
   sym_link *oldoptype = operandType (left);
   sym_link *oldresulttype = operandType (result);
 
-  struct valinfo leftv = getOperandValinfo (ic, left);
-  struct valinfo rightv = getOperandValinfo (ic, right);
+  struct valinfo leftv = getOperandValinfo (ic, left, false);
+  struct valinfo rightv = getOperandValinfo (ic, right, false);
   struct valinfo resultv = *ic->resultvalinfo;
 
   if (leftv.anything || rightv.anything || resultv.anything || leftv.min < 0 || rightv.min < 0 || leftv.max > 0xffff || rightv.max > 0xffff || resultv.max > 0xffff)

@@ -1087,7 +1087,7 @@ aopOp (operand *op, iCode *ic, bool result)
       aop->aop_lit_is_funcptr = IS_FUNCPTR (operandType (op));
       aop->aop_litimmd_is_gptr = opIsGptr (op);
       aop->aop_is_volatile = isOperandVolatile (op, false);
-      aop->valinfo = getOperandValinfo (ic, op);
+      aop->valinfo = getOperandValinfo (ic, op, false);
       return;
     }
 
@@ -1103,7 +1103,7 @@ aopOp (operand *op, iCode *ic, bool result)
     {
       op->aop = aopForSym (ic, OP_SYMBOL (op), result);
       if (!result)
-        op->aop->valinfo = getOperandValinfo (ic, op);
+        op->aop->valinfo = getOperandValinfo (ic, op, false);
       return;
     }
 
@@ -1176,7 +1176,7 @@ aopOp (operand *op, iCode *ic, bool result)
             }
           sym->aop = op->aop = aop = aopForSym (ic, sym->usl.spillLoc, result);
           if (!result)
-            aop->valinfo = getOperandValinfo (ic, op);
+            aop->valinfo = getOperandValinfo (ic, op, false);
           if (getSize (sym->type) != getSize (sym->usl.spillLoc->type))
             {
               /* Don't reuse the new aop, go with the last one */

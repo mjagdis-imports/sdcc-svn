@@ -1159,7 +1159,7 @@ aopOp (operand *op, const iCode *ic, bool result)
       asmop *aop = newAsmop (AOP_LIT);
       aop->aopu.aop_lit = OP_VALUE (op);
       aop->size = getSize (operandType (op));
-      aop->valinfo = getOperandValinfo (ic, op);
+      aop->valinfo = getOperandValinfo (ic, op, false);
       op->aop = aop;
       return;
     }
@@ -1171,7 +1171,7 @@ aopOp (operand *op, const iCode *ic, bool result)
     {
       op->aop = aopForSym (ic, sym);
       if (!result)
-        op->aop->valinfo = getOperandValinfo (ic, op);
+        op->aop->valinfo = getOperandValinfo (ic, op, false);
       return;
     }
 
@@ -1185,7 +1185,7 @@ aopOp (operand *op, const iCode *ic, bool result)
       if (completely_spilt)
         {
           op->aop = aopForRemat (sym);
-          op->aop->valinfo = getOperandValinfo (ic, op);
+          op->aop->valinfo = getOperandValinfo (ic, op, false);
           return;
         }
     }
@@ -1207,7 +1207,7 @@ aopOp (operand *op, const iCode *ic, bool result)
 
     aop->size = getSize (operandType (op));
     if (!result)
-      aop->valinfo = getOperandValinfo (ic, op);
+      aop->valinfo = getOperandValinfo (ic, op, false);
     op->aop = aop;
 
     for (i = 0; i < aop->size; i++)

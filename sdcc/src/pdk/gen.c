@@ -487,7 +487,7 @@ aopOp (operand *op, const iCode *ic)
       asmop *aop = newAsmop (AOP_LIT);
       aop->aopu.aop_lit = OP_VALUE (op);
       aop->size = getSize (operandType (op));
-      aop->valinfo = getOperandValinfo (ic, op);
+      aop->valinfo = getOperandValinfo (ic, op, false);
       op->aop = aop;
       return;
     }
@@ -498,7 +498,7 @@ aopOp (operand *op, const iCode *ic)
   if (IS_TRUE_SYMOP (op))
     {
       op->aop = aopForSym (ic, sym);
-      op->aop->valinfo = getOperandValinfo (ic, op);
+      op->aop->valinfo = getOperandValinfo (ic, op, false);
       return;
     }
 
@@ -512,7 +512,7 @@ aopOp (operand *op, const iCode *ic)
       if (completely_spilt)
         {
           op->aop = aopForRemat (sym);
-          op->aop->valinfo = getOperandValinfo (ic, op);
+          op->aop->valinfo = getOperandValinfo (ic, op, false);
           return;
         }
     }
@@ -531,7 +531,7 @@ aopOp (operand *op, const iCode *ic)
     {
       sym->aop = op->aop = aopForSym (ic, sym->usl.spillLoc);
       op->aop->size = getSize (sym->type);
-      op->aop->valinfo = getOperandValinfo (ic, op);
+      op->aop->valinfo = getOperandValinfo (ic, op, false);
       return;
     }
 
@@ -543,7 +543,7 @@ aopOp (operand *op, const iCode *ic)
 
     aop->size = getSize (operandType (op));
     op->aop = aop;
-    aop->valinfo = getOperandValinfo (ic, op);
+    aop->valinfo = getOperandValinfo (ic, op, false);
 
     for (int i = 0; i < aop->size; i++)
       {

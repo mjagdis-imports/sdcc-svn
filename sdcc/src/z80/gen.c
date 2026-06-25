@@ -2269,7 +2269,7 @@ aopOp (operand *op, const iCode *ic, bool result, bool requires_a)
       aop->aopu.aop_lit = OP_VALUE (op);
       aop->size = getSize (operandType (op));
       if (!result)
-        op->aop->valinfo = getOperandValinfo (ic, op);
+        op->aop->valinfo = getOperandValinfo (ic, op, false);
       else if(ic->resultvalinfo)
         op->aop->valinfo = *ic->resultvalinfo;
       return;
@@ -2305,7 +2305,7 @@ aopOp (operand *op, const iCode *ic, bool result, bool requires_a)
     {
       op->aop = aopForSym (ic, OP_SYMBOL (op), result, requires_a);
       if (!result)
-        op->aop->valinfo = getOperandValinfo (ic, op);
+        op->aop->valinfo = getOperandValinfo (ic, op, false);
       else if(ic->resultvalinfo)
         op->aop->valinfo = *ic->resultvalinfo;
       return;
@@ -2344,7 +2344,7 @@ aopOp (operand *op, const iCode *ic, bool result, bool requires_a)
           sym->aop = op->aop = aop = aopForRemat (sym);
           aop->size = getSize (sym->type);
           if (!result)
-            aop->valinfo = getOperandValinfo (ic, op);
+            aop->valinfo = getOperandValinfo (ic, op, false);
           else if(ic->resultvalinfo)
             aop->valinfo = *ic->resultvalinfo;
           return;
@@ -2356,7 +2356,7 @@ aopOp (operand *op, const iCode *ic, bool result, bool requires_a)
           sym->aop = op->aop = aop = newAsmop ((_G.omitFramePtr || IS_SM83 || IS_TLCS870) ? AOP_EXSTK : AOP_STK);
           aop->size = getSize (sym->type);
           if (!result)
-            aop->valinfo = getOperandValinfo (ic, op);
+            aop->valinfo = getOperandValinfo (ic, op, false);
           else if(ic->resultvalinfo)
             aop->valinfo = *ic->resultvalinfo;
           return;
@@ -2381,7 +2381,7 @@ aopOp (operand *op, const iCode *ic, bool result, bool requires_a)
             }
           aop->size = getSize (sym->type);
           if (!result)
-            aop->valinfo = getOperandValinfo (ic, op);
+            aop->valinfo = getOperandValinfo (ic, op, false);
           else if(ic->resultvalinfo)
             aop->valinfo = *ic->resultvalinfo;
           return;
@@ -2391,7 +2391,7 @@ aopOp (operand *op, const iCode *ic, bool result, bool requires_a)
       sym->aop = op->aop = aop = newAsmop (AOP_DUMMY);
       aop->size = getSize (sym->type);
       if (!result)
-        aop->valinfo = getOperandValinfo (ic, op);
+        aop->valinfo = getOperandValinfo (ic, op, false);
       else if(ic->resultvalinfo)
         aop->valinfo = *ic->resultvalinfo;
       return;
@@ -2401,7 +2401,7 @@ aopOp (operand *op, const iCode *ic, bool result, bool requires_a)
   sym->aop = op->aop = aop = newAsmop (AOP_REG);
   aop->size = sym->nRegs;
   if (!result)
-    aop->valinfo = getOperandValinfo (ic, op);
+    aop->valinfo = getOperandValinfo (ic, op, false);
   else if(ic->resultvalinfo)
     aop->valinfo = *ic->resultvalinfo;
   memset (aop->regs, -1, sizeof(aop->regs));

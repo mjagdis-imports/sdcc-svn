@@ -1,3 +1,11 @@
+2026-06-25 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCdflow.h,
+	  src/SDCCgenconstprop.cc,
+	  src/SDCCopt.c,
+	  src/*/gen.c:
+	  Fix bug #4025.
+
 2026-06-24 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/stm8/gen.c:
@@ -24,7 +32,7 @@
 	  src/SDCCmain.c:
 	  Remove effect of --nolabelopt on unreachable labels. Too much of SDCC can't really handle unreachable basic blocks.
 	*  support/regression/ports/*/spec.mk:
-	  Fix default enable of --nosidechannels in some regressiont st targets.
+	  Fix default enable of --nosidechannels in some regression test targets.
 
 2026-06-23 Philipp Klaus Krause <philipp@colecovision.eu>
 

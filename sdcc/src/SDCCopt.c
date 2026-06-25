@@ -2261,19 +2261,19 @@ checkStaticArrayParams (ebbIndex *ebbi)
       {
         if (ic->left && ic->left->isSemDeref)
           {
-            const struct valinfo v = getOperandValinfo (ic, ic->left);
+            const struct valinfo v = getOperandValinfo (ic, ic->left, false);
             if ((v.anything || !v.nonnull) && ic->left->isSemDeref)
               werrorfl (ic->filename, ic->lineno, W_OPTIONAL_PTR_DEREF);
           }
         if (ic->right && ic->right->isSemDeref)
           {
-            const struct valinfo v = getOperandValinfo (ic, ic->right);
+            const struct valinfo v = getOperandValinfo (ic, ic->right, false);
             if ((v.anything || !v.nonnull) && ic->right->isSemDeref)
               werrorfl (ic->filename, ic->lineno, W_OPTIONAL_PTR_DEREF);
           }
         if (ic->result && ic->result->isSemDeref)
           {
-            const struct valinfo v = getOperandValinfo (ic, ic->right);
+            const struct valinfo v = getOperandValinfo (ic, ic->right, false);
             if ((v.anything || !v.nonnull) && ic->result->isSemDeref)
               werrorfl (ic->filename, ic->lineno, W_OPTIONAL_PTR_DEREF);
           }
@@ -2372,7 +2372,7 @@ checkStaticArrayParams (ebbIndex *ebbi)
                       continue;
 
                     // Deduce bound
-                    const struct valinfo vi = getOperandValinfo (pic, pargop);
+                    const struct valinfo vi = getOperandValinfo (pic, pargop, false);
                     long long pargv = (vi.anything || vi.min < 0 || vi.min > ULONG_MAX) ? 0 : vi.min;
                     pargv *= pscale;
                     pargv += poffset;
@@ -2383,7 +2383,7 @@ checkStaticArrayParams (ebbIndex *ebbi)
                 else
                   continue;
 
-                const struct valinfo vi = getOperandValinfo (ic, argop);
+                const struct valinfo vi = getOperandValinfo (ic, argop, false);
                 if (!vi.anything && vi.maxsize < paramsize && DCL_STATIC_ARRAY_PARAM (paramtype))
                   werrorfl (ic->filename, ic->lineno, W_STATIC_ARRAY_PARAM_LENGTH);
                 else if (!vi.anything && vi.maybemaxsize < paramsize)
@@ -2392,7 +2392,7 @@ checkStaticArrayParams (ebbIndex *ebbi)
           }
         else if (ic->op == GET_VALUE_AT_ADDRESS)
           {
-            const struct valinfo v = getOperandValinfo (ic, ic->left);
+            const struct valinfo v = getOperandValinfo (ic, ic->left, false);
             wassert (IS_OP_LITERAL (ic->right));
             long long roff = operandLitValue (ic->right);
             int size = getSize (operandType (ic->result));
@@ -2406,7 +2406,7 @@ checkStaticArrayParams (ebbIndex *ebbi)
           }
         else if (POINTER_SET (ic))
           {
-            const struct valinfo v = getOperandValinfo (ic, ic->result);
+            const struct valinfo v = getOperandValinfo (ic, ic->result, false);
             int size = getSize (operandType (ic->right));
             if (!v.anything && size > (long long)v.maxsize)
               werrorfl (ic->filename, ic->lineno, W_INVALID_PTR_DEREF);
@@ -2421,16 +2421,16 @@ checkStaticArrayParams (ebbIndex *ebbi)
             bool left_optional_maybenull = false;
             bool right_optional_maybenull = false;
             if (IS_PTR (operandType (ic->left)) && isOptional (operandType (ic->left)->next) && !ic->left->isOptionalEliminated)
-              left_optional_maybenull = !getOperandValinfo (ic, ic->left).nonnull;
+              left_optional_maybenull = !getOperandValinfo (ic, ic->left, false).nonnull;
             if (IS_PTR (operandType (ic->right)) && isOptional (operandType (ic->right)->next) && !ic->right->isOptionalEliminated)
-              right_optional_maybenull = !getOperandValinfo (ic, ic->right).nonnull;
+              right_optional_maybenull = !getOperandValinfo (ic, ic->right, false).nonnull;
             if (left_optional_maybenull || right_optional_maybenull)
               werrorfl (ic->filename, ic->lineno, W_OPTIONAL_RELATIONAL);
           }
         else if (ic->op == '+' || ic->op == '-')
-          if (IS_PTR (operandType (ic->left)) && isOptional (operandType (ic->left)->next) && !ic->left->isOptionalEliminated && !getOperandValinfo (ic, ic->left).nonnull)
+          if (IS_PTR (operandType (ic->left)) && isOptional (operandType (ic->left)->next) && !ic->left->isOptionalEliminated && !getOperandValinfo (ic, ic->left, false).nonnull)
             werrorfl (ic->filename, ic->lineno, W_OPTIONAL_ARITHMETIC);
-          else if (IS_PTR (operandType (ic->right)) && isOptional (operandType (ic->right)->next) && !ic->left->isOptionalEliminated && !getOperandValinfo (ic, ic->right).nonnull)
+          else if (IS_PTR (operandType (ic->right)) && isOptional (operandType (ic->right)->next) && !ic->left->isOptionalEliminated && !getOperandValinfo (ic, ic->right, false).nonnull)
             werrorfl (ic->filename, ic->lineno, W_OPTIONAL_ARITHMETIC);
       }
 }
