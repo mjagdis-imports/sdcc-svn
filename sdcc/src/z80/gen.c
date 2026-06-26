@@ -14668,6 +14668,7 @@ shiftR2Left2Result (const iCode *ic, operand *left, int offl, operand *result, i
       if (!regalloc_dry_run)
         emit2 ("jr nc, !tlabel", labelKey2num (tlbl->key));
       emit2 ("dec h");
+      spillPair (PAIR_HL);
       emitLabel (tlbl);
       cost (3, 11.5f);
       genMove (result->aop, ASMOP_HL, isRegDead (A_IDX, ic), true, isRegDead (DE_IDX, ic), isRegDead (IY_IDX, ic));
@@ -14755,6 +14756,7 @@ shiftR2Left2Result (const iCode *ic, operand *left, int offl, operand *result, i
           emit3 (A_DEC, caop, 0);
           emitJP (tlbl, "nz", 1.0f, true);
         }
+      spillPairReg (regsZ80[caop->aopu.aop_reg[0]->rIdx].name);
 
       regalloc_dry_run_state_scale = 1.0f;
     }
@@ -16347,6 +16349,7 @@ genRightShift (const iCode * ic)
           cost2 (1, 1, 1, 1, 4, 4, 2, 2, 4, 2, 1, 1, 1, 1, 1);
           emitJP (tlbl, "nz", 1.0f, true);
         }
+      spillPairReg (regsZ80[countreg].name);
     }
 
 end:
