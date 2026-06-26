@@ -1,7 +1,7 @@
 2026-06-26 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/z80/gen.c:
-	  Fix part of bug #4026.
+	  Fix parts of bug #4026.
 
 2026-06-25 Philipp Klaus Krause <philipp@colecovision.eu>
 

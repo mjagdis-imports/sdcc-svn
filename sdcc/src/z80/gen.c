@@ -4169,7 +4169,7 @@ poppairwithsavedreg (PAIR_ID pair, short survivingreg, short tempreg)
 static void
 cheapMove (asmop *to, int to_offset, asmop *from, int from_offset, bool a_dead)
 {
-#if 0
+#if 1
   emitDebug ("; cheapMove a_dead %d", a_dead);
 #endif
 
@@ -4849,7 +4849,7 @@ genCopyStack (asmop *result, int roffset, asmop *source, int soffset, int n, boo
 /* genCopy - Copy the value from one reg/stk asmop to another      */
 /*-----------------------------------------------------------------*/
 static void
-genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool a_dead, bool hl_dead, bool de_dead, bool iy_dead, bool jk_dead)
+genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool a_dead, bool hl_dead, bool de_dead, bool iy_dead, bool jk_dead, bool f_dead)
 {
   int regsize, size, n = (sizex < source->size - soffset) ? sizex : (source->size - soffset);
   bool assigned[8] = {false, false, false, false, false, false, false, false};
@@ -4887,6 +4887,8 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
 
   // Move everything from registers to the stack.
   wassert (source->type != AOP_REG || source->size < 8);
+  bool pc = _G.preserveCarry;
+  _G.preserveCarry = !f_dead;
   for (int i = 0; i < n && source->type == AOP_REG;)
     {
       bool a_free = a_dead && (source->regs[A_IDX] < soffset || assigned[source->regs[A_IDX] - soffset] || i == source->regs[A_IDX] - soffset);
@@ -5013,7 +5015,7 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
             _push (PAIR_DE);
           emit3w (A_EX, ASMOP_DE, ASMOP_HL);
           spillPair (PAIR_HL);
-          genCopy (result, roffset + i, ASMOP_DE, 0, 2, a_free, true, true, iy_free, false);
+          genCopy (result, roffset + i, ASMOP_DE, 0, 2, a_free, true, true, iy_free, false, f_dead);
           if (!de_free)
             _pop (PAIR_DE);
           assigned[i] = true;
@@ -5063,6 +5065,7 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
       else // This byte is not a register-to-stack copy.
         i++;
     }
+  _G.preserveCarry = pc;
 
   // Copy (stack-to-stack) what we can with whatever free regs we have.
   a_free = a_dead;
@@ -5793,7 +5796,7 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
           emit3 (A_LD, ASMOP_L, ASMOP_H);
         }
       else
-        genCopy (result, roffset, source, soffset, csize, a_dead_global, hl_dead_global, de_dead_global, iy_dead_global, jk_dead_global);
+        genCopy (result, roffset, source, soffset, csize, a_dead_global, hl_dead_global, de_dead_global, iy_dead_global, jk_dead_global, f_dead);
       roffset += csize;
       size -= csize;
       bool a_dead = a_dead_global && result->regs[A_IDX] < roffset;
