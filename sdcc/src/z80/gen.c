@@ -10055,6 +10055,8 @@ genPlus (iCode * ic)
       bool maskedbyte = maskedtopbyte && (i + 1 == size);
       bool maskedword = maskedtopbyte && (i + 2 == size);
 
+      const bool a_dead = isRegDead (A_IDX, ic) && leftop->regs[A_IDX] <= i && rightop->regs[A_IDX] <= i &&
+        (ic->result->aop->regs[A_IDX] < 0 || ic->result->aop->regs[A_IDX] >= i);
       const bool b_dead = isRegDead (B_IDX, ic) && leftop->regs[B_IDX] <= i && rightop->regs[B_IDX] <= i &&
         (ic->result->aop->regs[B_IDX] < 0 || ic->result->aop->regs[B_IDX] >= i);
       const bool c_dead = isRegDead (C_IDX, ic) && leftop->regs[C_IDX] <= i && rightop->regs[C_IDX] <= i &&
@@ -10094,7 +10096,7 @@ genPlus (iCode * ic)
             pair = PAIR_DE;
           if (pair == PAIR_DE && !de_dead)
             _push (PAIR_DE);
-          genMove (pair == PAIR_BC ? ASMOP_BC : ASMOP_DE, rightop, true, true, de_dead, false);
+          genMove (pair == PAIR_BC ? ASMOP_BC : ASMOP_DE, rightop, a_dead, true, de_dead, false);
           genMove (ASMOP_HL, leftop, true, true, de_dead && pair != PAIR_DE, false);
           emit2 ("add hl, %s", _pairs[pair].name);
           cost2 (1, 2, -1, 2, 11, 7, 2, 2, 8, 8, -1, 4, 3 , 1, 1);
@@ -10102,7 +10104,7 @@ genPlus (iCode * ic)
           started = true;
           if (pair == PAIR_DE && !de_dead)
             _pop (PAIR_DE);
-          genMove_o (IC_RESULT (ic)->aop, 0, ASMOP_HL, 0, 2, true, true, de_dead, false, i + 2 == size);
+          genMove_o (IC_RESULT (ic)->aop, 0, ASMOP_HL, 0, 2, a_dead, true, de_dead, false, i + 2 == size);
           i += 2;
           continue;
         }
@@ -10167,22 +10169,22 @@ genPlus (iCode * ic)
         getPairId (rightop) != PAIR_HL && (IS_TLCS90 || getPairId (rightop) != PAIR_IY) &&
         isPairDead (PAIR_HL, ic))
         {
-          genMove_o (ASMOP_HL, 0, IC_LEFT (ic)->aop, i, 2, true, true, de_dead, true, true);
+          genMove_o (ASMOP_HL, 0, IC_LEFT (ic)->aop, i, 2, a_dead, true, de_dead, true, true);
           emit3w (A_ADD, ASMOP_HL, ic->right->aop);
           spillPair (PAIR_HL);
           started = true;
-          genMove_o (IC_RESULT (ic)->aop, i, ASMOP_HL, 0, 2, true, true, de_dead, true, true);
+          genMove_o (IC_RESULT (ic)->aop, i, ASMOP_HL, 0, 2, a_dead, true, de_dead, true, true);
           i += 2;
         }
      else  if (!maskedword && (!premoved || i) && !started && i == size - 2 && !i && isPair (leftop) && (rightop->type == AOP_LIT  || rightop->type == AOP_IMMD) &&
        getPairId (leftop) != PAIR_HL && (IS_TLCS90 || getPairId (leftop) != PAIR_IY) &&
        isPairDead (PAIR_HL, ic))
         {
-          genMove_o (ASMOP_HL, 0, IC_RIGHT (ic)->aop, i, 2, true, true, de_dead, true, true);
+          genMove_o (ASMOP_HL, 0, IC_RIGHT (ic)->aop, i, 2, a_dead, true, de_dead, true, true);
           emit3w (A_ADD, ASMOP_HL, ic->left->aop);
           spillPair (PAIR_HL);
           started = true;
-          genMove_o (IC_RESULT (ic)->aop, i, ASMOP_HL, 0, 2, true, true, de_dead, true, true);
+          genMove_o (IC_RESULT (ic)->aop, i, ASMOP_HL, 0, 2, a_dead, true, de_dead, true, true);
           i += 2;
         }
       else if (!maskedword && (!premoved || i) && !started && i == size - 2 && !i && aopInReg (leftop, i, HL_IDX) &&
@@ -10192,7 +10194,7 @@ genPlus (iCode * ic)
           emit3w (A_ADD, ASMOP_HL, ic->right->aop);
           spillPair (PAIR_HL);
           started = true;
-          genMove_o (IC_RESULT (ic)->aop, i, ASMOP_HL, 0, 2, true, true, de_dead, true, true);
+          genMove_o (IC_RESULT (ic)->aop, i, ASMOP_HL, 0, 2, a_dead, true, de_dead, true, true);
           i += 2;
         }
       else if (!maskedword && (!premoved || i) && !started && i == size - 2 && !i &&
@@ -10202,7 +10204,7 @@ genPlus (iCode * ic)
           emit3w (A_ADD, ASMOP_HL, ic->left->aop);
           spillPair (PAIR_HL);
           started = true;
-          genMove_o (IC_RESULT (ic)->aop, i, ASMOP_HL, 0, 2, true, true, de_dead, true, true);
+          genMove_o (IC_RESULT (ic)->aop, i, ASMOP_HL, 0, 2, a_dead, true, de_dead, true, true);
           i += 2;
         }
       else if (!maskedword && (!premoved || i) && !started && i == size - 2 && aopInReg (ic->result->aop, i, HL_IDX) &&
@@ -10212,7 +10214,7 @@ genPlus (iCode * ic)
           if (aopInReg (rightop, i + 1, H_IDX) || aopInReg (rightop, i + 1, L_IDX))
             {
               cheapMove (ASMOP_B, 0, rightop, i + 1, true);
-              genMove_o (ASMOP_HL, 0, leftop, i, 2, false, true, de_dead, false, !started);
+              genMove_o (ASMOP_HL, 0, leftop, i, 2, a_dead, true, de_dead, false, !started);
             }
           else
             {
@@ -10249,6 +10251,8 @@ genPlus (iCode * ic)
           aopInReg (leftop, i, E_IDX) && isRegDead (D_IDX, ic) && rightop->regs[D_IDX] <= i + 1 &&
           !((aopInReg (leftop, i + 1, H_IDX) || aopInReg (leftop, i + 1, L_IDX)) && rightop->regs[D_IDX] >= i))
         {
+          if (!a_dead)
+            UNIMPLEMENTED;
           if (aopInReg (leftop, i + 1, H_IDX) || aopInReg (leftop, i + 1, L_IDX))
             {
               cheapMove (ASMOP_D, 0, leftop, i + 1, true);
@@ -10266,12 +10270,12 @@ genPlus (iCode * ic)
         }
       else if (!maskedword && !started && i + 2 == size && hl_dead && leftop->type == AOP_STK && ic->result->aop->type == AOP_STK && (aopIsLitVal (rightop, i, 2, 1) || aopIsLitVal (rightop, i, 2, 2)))
         {
-          genMove_o (ASMOP_HL, 0, leftop, i, 2, false, true, false, false, false);
+          genMove_o (ASMOP_HL, 0, leftop, i, 2, a_dead, true, false, false, false);
           emit3w (A_INC, ASMOP_HL, 0);
           if (aopIsLitVal (rightop, i, 2, 2))
             emit3w (A_INC, ASMOP_HL, 0);
           spillPair (PAIR_HL);
-          genMove_o (ic->result->aop, i, ASMOP_HL, 0, 2, false, true, false, false, false);
+          genMove_o (ic->result->aop, i, ASMOP_HL, 0, 2, a_dead, true, false, false, false);
           started = true;
           i += 2;
         }
@@ -10293,10 +10297,9 @@ genPlus (iCode * ic)
               stk_aop = leftop;
               other_aop = rightop;
             }
-          bool a_free = isRegDead (A_IDX, ic) && leftop->regs[A_IDX] <= i && rightop->regs[A_IDX] <= i && (ic->result->aop->regs[A_IDX] < 0 || ic->result->aop->regs[A_IDX] >= i);
           int sp_offset = spOffset (stk_aop->aopu.aop_stk) + i;
           int fp_offset = fpOffset (stk_aop->aopu.aop_stk) + i;
-          genMove_o (ASMOP_HL, 0, other_aop, i, 2, a_free, true, false, false, true);
+          genMove_o (ASMOP_HL, 0, other_aop, i, 2, a_dead, true, false, false, true);
           if (sp_offset <= (IS_R6K ? 255 : 127))
             emit2 (started ? "adc hl, %d (sp)" : "add hl, %d (sp)", sp_offset);
           else if (-128 <= fp_offset && fp_offset <= 127)
@@ -10457,10 +10460,10 @@ genPlus (iCode * ic)
         {
           asmop *rightpairaop = de_dead ? ASMOP_DE : ASMOP_BC; // Prefer de due to efficient load from hl via ex de, hl.
           genMove_o (rightpairaop, 0, rightop, i, 2, false, true, false, false, !started);
-          genMove_o (ASMOP_HL, 0, leftop, i, 2, false, true, false, false, !started);
+          genMove_o (ASMOP_HL, 0, leftop, i, 2, a_dead, true, false, false, !started);
           emit3w (started ? A_ADC : A_ADD, ASMOP_HL, rightpairaop);
           spillPair (PAIR_HL);
-          genMove_o (ic->result->aop, i, ASMOP_HL, 0, 2, false, true, false, false, i + 2 < size);
+          genMove_o (ic->result->aop, i, ASMOP_HL, 0, 2, a_dead, true, false, false, i + 2 < size);
           started = true;
           i += 2;
         }
@@ -10468,11 +10471,11 @@ genPlus (iCode * ic)
         aopOnStack (leftop, i, 2) && (aopInReg (rightop, i, C_IDX) && b_dead || aopInReg (rightop, i, E_IDX) && d_dead) && aopOnStack (ic->result->aop, i, 2))
         {
           asmop *raop = aopInReg (rightop, i, C_IDX) ? ASMOP_BC : ASMOP_DE;
-          genMove_o (ASMOP_HL, 0, leftop, i, 2, false, true, false, false, !started);
+          genMove_o (ASMOP_HL, 0, leftop, i, 2, a_dead, true, false, false, !started);
           emit3_o (A_LD, raop, 1, ASMOP_ZERO, 0);
           emit3w (started ? A_ADC : A_ADD, ASMOP_HL, raop);
           spillPair (PAIR_HL);
-          genMove_o (ic->result->aop, i, ASMOP_HL, 0, 2, false, true, false, false, i + 2 < size);
+          genMove_o (ic->result->aop, i, ASMOP_HL, 0, 2, a_dead, true, false, false, i + 2 < size);
           started = true;
           i += 2;
         }
@@ -10480,10 +10483,10 @@ genPlus (iCode * ic)
         (!started || IS_RAB || IS_EZ80 || IS_TLCS90 || IS_TLCS870C || IS_TLCS870C1 || IS_R800) && // adc hl, rr is quite slow on Z80, Z80N, and Z180.
         aopOnStack (leftop, i, 2) && (aopInReg (rightop, i, BC_IDX) || aopInReg (rightop, i, DE_IDX)) && aopOnStack (ic->result->aop, i, 2))
         {
-          genMove_o (ASMOP_HL, 0, leftop, i, 2, false, true, false, false, !started);
+          genMove_o (ASMOP_HL, 0, leftop, i, 2, a_dead, true, false, false, !started);
           emit3w_o (started ? A_ADC : A_ADD, ASMOP_HL, 0, rightop, i);
           spillPair (PAIR_HL);
-          genMove_o (ic->result->aop, i, ASMOP_HL, 0, 2, false, true, false, false, i + 2 < size);
+          genMove_o (ic->result->aop, i, ASMOP_HL, 0, 2, a_dead, true, false, false, i + 2 < size);
           started = true;
           i += 2;
         }
@@ -10491,10 +10494,10 @@ genPlus (iCode * ic)
         (!started || IS_RAB || IS_EZ80 || IS_TLCS90 || IS_TLCS870C || IS_TLCS870C1 || IS_R800) && // adc hl, rr is quite slow on Z80, Z80N, and Z180.
         aopOnStack (rightop, i, 2) && (aopInReg (leftop, i, BC_IDX) || aopInReg (leftop, i, DE_IDX)) && aopOnStack (ic->result->aop, i, 2))
         {
-          genMove_o (ASMOP_HL, 0, rightop, i, 2, false, true, false, false, !started);
+          genMove_o (ASMOP_HL, 0, rightop, i, 2, a_dead, true, false, false, !started);
           emit3w_o (started ? A_ADC : A_ADD, ASMOP_HL, 0, leftop, i);
           spillPair (PAIR_HL);
-          genMove_o (ic->result->aop, i, ASMOP_HL, 0, 2, false, true, false, false, i + 2 < size);
+          genMove_o (ic->result->aop, i, ASMOP_HL, 0, 2, a_dead, true, false, false, i + 2 < size);
           started = true;
           i += 2;
         }
@@ -10520,7 +10523,9 @@ genPlus (iCode * ic)
               rightop = IC_RIGHT (ic)->aop;
             }
 
-          if (aopInReg (rightop, i, A_IDX) && !aopInReg (leftop, i, A_IDX)) // Make sure we don't overwrite the other operand.
+          if (!a_dead)
+            UNIMPLEMENTED;
+          else if (aopInReg (rightop, i, A_IDX) && !aopInReg (leftop, i, A_IDX)) // Make sure we don't overwrite the other operand.
             UNIMPLEMENTED;
           else if (!premoved)
             cheapMove (ASMOP_A, 0, leftop, i, true);
