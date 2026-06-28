@@ -161,7 +161,8 @@
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
 	<path stroke='rgb(148,   0, 211)'  d='M555.48,36.01 L598.04,36.01 M102.45,46.32 L125.04,46.32 L189.16,46.32 L189.68,46.32 L217.53,46.32 L218.06,53.39
 		L224.37,78.67 L255.37,78.67 L274.82,83.22 L327.37,83.22 L339.45,130.23 L362.58,130.23 L425.64,232.34 L431.42,358.20
-		L432.99,362.75 L446.13,370.84 L457.17,373.37 L496.05,369.32 L526.53,369.32 L583.29,369.32 L584.34,369.32  '/></g>
+		L432.99,362.75 L446.13,370.84 L457.17,373.37 L496.05,369.32 L526.53,369.32 L583.29,369.32 L584.34,369.32 L599.58,369.32
+		 '/></g>
 	</g>
 	<g id="gnuplot_plot_2" ><title>size</title>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
@@ -172,7 +173,8 @@
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
 	<path stroke='rgb(  0, 158, 115)'  d='M555.48,54.01 L598.04,54.01 M102.45,36.21 L125.04,36.21 L189.16,36.21 L189.68,36.21 L217.53,36.21 L218.06,43.28
 		L224.37,68.56 L255.37,68.56 L274.82,73.11 L327.37,73.11 L339.45,120.12 L362.58,120.12 L425.64,237.39 L431.42,363.26
-		L432.99,367.81 L446.13,375.90 L457.17,378.42 L496.05,374.38 L526.53,374.38 L583.29,374.38 L584.34,374.38  '/></g>
+		L432.99,367.81 L446.13,375.90 L457.17,378.42 L496.05,374.38 L526.53,374.38 L583.29,374.38 L584.34,374.38 L599.58,374.38
+		 '/></g>
 	</g>
 	<g id="gnuplot_plot_3" ><title>speed</title>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
@@ -183,7 +185,8 @@
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
 	<path stroke='rgb( 86, 180, 233)'  d='M555.48,72.01 L598.04,72.01 M102.45,44.80 L125.04,44.80 L189.16,44.80 L189.68,44.80 L217.53,44.80 L218.06,51.88
 		L224.37,74.62 L255.37,74.62 L274.82,78.67 L327.37,78.67 L339.45,125.68 L362.58,125.68 L425.64,205.04 L431.42,331.41
-		L432.99,335.96 L446.13,344.05 L457.17,346.58 L496.05,342.53 L526.53,342.53 L583.29,342.53 L584.34,342.53  '/></g>
+		L432.99,335.96 L446.13,344.05 L457.17,346.58 L496.05,342.53 L526.53,342.53 L583.29,342.53 L584.34,342.53 L599.58,342.53
+		 '/></g>
 	</g>
 <g fill="none" color="white" stroke="rgb( 86, 180, 233)" stroke-width="2.00" stroke-linecap="butt" stroke-linejoin="miter">
 </g>
