@@ -2,6 +2,8 @@
 set output "whetstone-r4k-score.svg"
 datafile = "whetstone-r4k-scoretable"
 
-set arrow from 15246, 40.758 to 15246, 40.558
-set label "4.5.0" at 15246, 40.758
+# Configure arrow length (to make the plot look nice)
+arrowlength = 2
 
+set arrow from 16640, 65.547+arrowlength to 16640, 65.547
+set label "4.6.0" at 16640, 65.547+arrowlength

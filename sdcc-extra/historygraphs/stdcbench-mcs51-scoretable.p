@@ -4,8 +4,12 @@ set style data lines
 set key bottom right
 set xlabel "revision"
 set ylabel "stdcbench score"
-set arrow from 9618, 151 to 9618, 150
-set label "3.6.0" at 9618, 151
+
+# Configure arrow length (to make the plot look nice)
+arrowlength = 1
+
+set arrow from 9618, 150+arrowlength to 9618, 150
+set label "3.6.0" at 9618, 150+arrowlength
 set arrow from 10233, 144 to 10233, 143
 set label "3.7.0" at 10233, 144
 set arrow from 10582, 145 to 10582, 144
@@ -22,7 +26,10 @@ set arrow from 14208, 157 to 14208, 156
 set label "4.3.0" at 14208, 157
 set arrow from 14648, 167 to 14648, 166
 set label "4.4.0" at 14648, 167
-set arrow from 15246, 153 to 15246, 152
-set label "4.5.0" at 15246, 153
+set arrow from 15246, 152+arrowlength to 15246, 152
+set label "4.5.0" at 15246, 152+arrowlength
+set arrow from 16640, 153+arrowlength to 16640, 153
+set label "4.6.0" at 16640, 153+arrowlength
+
 plot "stdcbench-mcs51-scoretable" using 1:4 title "default", "stdcbench-mcs51-scoretable" using 1:2 title "size", "stdcbench-mcs51-scoretable" using 1:3 title "speed"
 
