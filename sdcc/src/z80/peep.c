@@ -148,7 +148,7 @@ static bool argCont (const char *arg, const char *what)
      && !(IS_SM83 && (arg[3] == '-' || arg[3] == '+') && arg[4] == ')'))
     return false;
 
-  if(*arg == '(')
+  if(*arg == '(' && *what != '(')
     arg++;
 
   if (arg[0] == '#' || arg[0] == '_')
@@ -1809,7 +1809,7 @@ int z80instructionSize (lineNode *pl)
           werrorfl(pl->ic->filename, pl->ic->lineno, W_UNRECOGNIZED_ASM, __func__, 4, pl->line);
           return(4);
         }
-      if (argCont(op0start, "(sp)") && (IS_RAB || !STRNCASECMP(op1start, "ix", 2) || !STRNCASECMP(op1start, "iy", 2)))
+      if (argCont (op0start, "(sp)") && (IS_RAB || !STRNCASECMP(op1start, "ix", 2) || !STRNCASECMP(op1start, "iy", 2)))
         return(2);
       if ((IS_R4K || IS_R5K | IS_R6K) && (!STRNCASECMP (op0start, "bc", 2) || !STRNCASECMP (op0start, "jk", 2) || !STRNCASECMP (op0start, "bcde", 4)))
         return(2);
