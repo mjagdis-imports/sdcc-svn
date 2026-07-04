@@ -3853,12 +3853,17 @@ m6502_copy (operand * result, operand * source)
 
   if(srcsize==1 && AOP_TYPE(result) != AOP_SOF)
     {
-      reg_info *reg0=m6502_findRegAop(AOP(source), 0);
+      reg_info *reg0 = (AOP_TYPE(source)==AOP_REG) ?
+	AOP (source)->aopu.aop_reg[0] : m6502_findRegAop(AOP(source), 0);
+
       if(reg0)
         {
           int i;
           m6502_emitComment (TRACEGEN|VVDBG, "      %s (srcsize = 1)", __func__);
 	  m6502_storeRegToAop (reg0, AOP(result), 0);
+          if(AOP_TYPE(source)==AOP_REG && reg0->isDead)
+            m6502_freeReg(reg0);
+
           for(i=1;i<size;i++)
             m6502_storeConstToAop(0,AOP(result),i);
 
@@ -3884,32 +3889,28 @@ m6502_copy (operand * result, operand * source)
     {
       m6502_emitComment (TRACEGEN|VVDBG, "      %s (SOF)", __func__);
       bool save_a, save_x;
-      bool lsb_preload = false;
+      bool lsb_in_a = false;
       save_a = storeRegTempIfSurv(m6502_reg_a);
       save_x = storeRegTempIfSurv(m6502_reg_x);
 
       if(srcsize==1 && AOP_TYPE(source)==AOP_REG)
         {
           m6502_transferRegReg(AOP(source)->aopu.aop_reg[0], m6502_reg_a, true);
-          lsb_preload = true;
+          lsb_in_a = true;
         }
 
       for(offset=0; offset<size; offset++)
 	{
-	  if(offset >= srcsize)
+	  if(offset < srcsize)
 	    {
-	      m6502_loadRegFromConst (m6502_reg_a, 0);
-	      m6502_storeRegToAop (m6502_reg_a, AOP(result), offset);
-	      m6502_freeReg(m6502_reg_a);
-	    }
-	  else
-	    {
-	      if(offset!=0 || !lsb_preload)
+	      if(offset!=0 || !lsb_in_a)
                 m6502_loadRegFromAop (m6502_reg_a, AOP(source), offset);
 
 	      m6502_storeRegToAop (m6502_reg_a, AOP(result), offset);
 	      m6502_freeReg(m6502_reg_a);
 	    }
+          else
+            m6502_storeConstToAop (0, AOP (result), offset);
 	}
 
       m6502_loadOrFreeRegTemp(m6502_reg_x, save_x);
@@ -3926,6 +3927,7 @@ m6502_copy (operand * result, operand * source)
     {
       for(offset=0; offset<srcsize; offset++)
 	m6502_transferAopAop (AOP (source), offset, AOP (result), offset);
+
       for( ; offset<size; offset++)
 	m6502_storeConstToAop (0, AOP (result), offset);
     }
