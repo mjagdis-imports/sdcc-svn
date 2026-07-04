@@ -9,6 +9,8 @@
 	  Improve handling of AOP_LIT in m6502_accopWithAop. Use register tracking in genCmpEQorNE.
 	* src/mos6502/gen.c:
 	  Improve genPointerSet().
+	* src/mos6502/peep.c:
+      Cosmetic changes.
 
 2026-07-04 Philipp Klaus Krause <philipp@colecovision.eu>
 

@@ -1,3 +1,28 @@
+/*-------------------------------------------------------------------------
+  peep.c - source file for peephole optimizer helper functions
+
+  Copyright (C) 2011-2025, Philipp Klaus Krause pkk@spth.de, philipp@informatik.uni-frankfurt.de, philipp@colecovision.eu
+  Copyright (C) 2026, Gabriele Gorla
+
+  This program is free software; you can redistribute it and/or modify it
+  under the terms of the GNU General Public License as published by the
+  Free Software Foundation; either version 2, or (at your option) any
+  later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+  In other words, you are welcome to use, share and improve this program.
+  You are forbidden to forbid anyone else to use, share and improve
+  what you give them.   Help stamp out software-hoarding!
+  -------------------------------------------------------------------------*/
+
 #include "common.h"
 #include "SDCCgen.h"
 
@@ -7,19 +32,22 @@ extern const m6502opcodedata m6502opcodeDataTable[];
 
 #define NOTUSEDERROR() do {werror(E_INTERNAL_ERROR, __FILE__, __LINE__, "error in notUsed()");} while(0)
 
-// #define D(_s) { printf _s; fflush(stdout); }
+#if 0
+#define D(_s) { printf _s; fflush(stdout); }
+#else
 #define D(_s)
+#endif
 
 typedef enum
-{
-  S4O_CONDJMP,
-  S4O_WR_OP,
-  S4O_RD_OP,
-  S4O_TERM,
-  S4O_VISITED,
-  S4O_ABORT,
-  S4O_CONTINUE
-} S4O_RET;
+  {
+    S4O_CONDJMP,
+    S4O_WR_OP,
+    S4O_RD_OP,
+    S4O_TERM,
+    S4O_VISITED,
+    S4O_ABORT,
+    S4O_CONTINUE
+  } S4O_RET;
 
 static struct
 {
@@ -37,9 +65,9 @@ incLabelJmpToCount (const char *label)
 
   entry = getLabelRef (label, _G.head);
   if (!entry)
-    return FALSE;
+    return false;
   entry->jmpToCount++;
-  return TRUE;
+  return true;
 }
 
 /*-----------------------------------------------------------------*/
@@ -85,9 +113,9 @@ findLabel (const lineNode *pl)
   /* 3. search lineNode with label definition and return it */
   for (cpl = _G.head; cpl; cpl = cpl->next)
     if (cpl->isLabel &&
-      strncmp (p, cpl->line, strlen(p)) == 0 &&
-      cpl->line[strlen(p)] == ':')
-        return cpl;
+	strncmp (p, cpl->line, strlen(p)) == 0 &&
+	cpl->line[strlen(p)] == ':')
+      return cpl;
 
   return NULL;
 }
@@ -95,10 +123,8 @@ findLabel (const lineNode *pl)
 static bool
 mos6502MightReadFlag(const lineNode *pl, const char *what)
 {
-  if (lineIsInst (pl, "adc") ||
-    lineIsInst (pl, "rol") ||
-    lineIsInst (pl, "ror") ||
-    lineIsInst (pl, "sbc"))
+  if (lineIsInst (pl, "adc") || lineIsInst (pl, "sbc") ||
+      lineIsInst (pl, "rol") || lineIsInst (pl, "ror") )
     return (!strcmp(what, "c"));
 
   if (lineIsInst (pl, "bcc") || lineIsInst (pl, "bcs"))
@@ -143,7 +169,7 @@ mos6502SurelyWritesFlag(const lineNode *pl, const char *what)
   int ret = 0;
   int i;
 
- for(i=0; m6502opcodeDataTable[i].name[0]!='z'; i++)
+  for(i=0; m6502opcodeDataTable[i].name[0]!='z'; i++)
     {
       if(lineIsInst (pl, m6502opcodeDataTable[i].name ))
         {
@@ -191,9 +217,9 @@ static bool
 mos6502CondJump (const lineNode *pl)
 {
   return (lineIsInst (pl, "bpl") || lineIsInst (pl, "bmi") ||
-    lineIsInst (pl, "bvc") || lineIsInst (pl, "bvs") ||
-    lineIsInst (pl, "bcc") || lineIsInst (pl, "bcs") ||
-    lineIsInst (pl, "bne") || lineIsInst (pl, "beq"));
+	  lineIsInst (pl, "bvc") || lineIsInst (pl, "bvs") ||
+	  lineIsInst (pl, "bcc") || lineIsInst (pl, "bcs") ||
+	  lineIsInst (pl, "bne") || lineIsInst (pl, "beq"));
 }
 
 static bool
@@ -261,7 +287,7 @@ scan4op (lineNode **pl, const char *what, const char *untilOp,
           return S4O_VISITED;
         }
 
-      (*pl)->visited = TRUE;
+      (*pl)->visited = true;
 
       if (mos6502MightRead (*pl, what))
         {
@@ -269,7 +295,7 @@ scan4op (lineNode **pl, const char *what, const char *untilOp,
           return S4O_RD_OP;
         }
 
-      // Check writes before conditional jumps, some jumps (btjf, btjt) write 'c'
+      // Check writes before conditional jumps
       if (mos6502SurelyWrites (*pl, what))
         {
           D(("S4O_WR_OP\n"));
@@ -279,12 +305,13 @@ scan4op (lineNode **pl, const char *what, const char *untilOp,
       if (mos6502UncondJump (*pl))
         {
           *pl = findLabel (*pl);
-            if (!*pl)
-              {
-                D(("S4O_ABORT at unconditional jump\n"));
-                return S4O_ABORT;
-              }
+	  if (!*pl)
+	    {
+	      D(("S4O_ABORT at unconditional jump\n"));
+	      return S4O_ABORT;
+	    }
         }
+
       if (mos6502CondJump (*pl))
         {
           *plCond = (*pl)->next->next;
@@ -304,6 +331,7 @@ scan4op (lineNode **pl, const char *what, const char *untilOp,
           return S4O_TERM;
         }
     }
+
   D(("S4O_ABORT\n"));
   return S4O_ABORT;
 }
@@ -317,29 +345,30 @@ static bool
 doTermScan (lineNode **pl, const char *what)
 {
   lineNode *plConditional;
+
   for (;; *pl = (*pl)->next)
     {
       switch (scan4op (pl, what, NULL, &plConditional))
         {
-          case S4O_TERM:
-          case S4O_VISITED:
-          case S4O_WR_OP:
-            /* all these are terminating conditions */
-            return true;
-          case S4O_CONDJMP:
-            /* two possible destinations: recurse */
-              {
-                lineNode *pl2 = plConditional;
-                D(("CONDJMP trying other branch first\n"));
-                if (!doTermScan (&pl2, what))
-                  return false;
-                D(("Other branch OK.\n"));
-              }
-            continue;
-          case S4O_RD_OP:
-          default:
-            /* no go */
-            return false;
+	case S4O_TERM:
+	case S4O_VISITED:
+	case S4O_WR_OP:
+	  /* all these are terminating conditions */
+	  return true;
+	case S4O_CONDJMP:
+	  /* two possible destinations: recurse */
+	  {
+	    lineNode *pl2 = plConditional;
+	    D(("CONDJMP trying other branch first\n"));
+	    if (!doTermScan (&pl2, what))
+	      return false;
+	    D(("Other branch OK.\n"));
+	  }
+	  continue;
+	case S4O_RD_OP:
+	default:
+	  /* no go */
+	  return false;
         }
     }
 }
@@ -354,7 +383,8 @@ unvisitLines (lineNode *pl)
     pl->visited = false;
 }
 
-bool mos6502notUsed (const char *what, lineNode *endPl, lineNode *head)
+bool
+mos6502notUsed (const char *what, lineNode *endPl, lineNode *head)
 {
   lineNode *pl;
 
@@ -366,7 +396,8 @@ bool mos6502notUsed (const char *what, lineNode *endPl, lineNode *head)
   return (doTermScan (&pl, what));
 }
 
-bool mos6502notUsedFrom (const char *what, const char *label, lineNode *head)
+bool
+mos6502notUsedFrom (const char *what, const char *label, lineNode *head)
 {
   lineNode *cpl;
 
