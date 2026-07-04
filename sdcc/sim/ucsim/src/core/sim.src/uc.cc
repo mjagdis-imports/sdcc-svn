@@ -2280,7 +2280,12 @@ cl_uc::read_file(chars nam, class cl_console_base *con, bool check)
     {
       l= read_hex_file(&is, f, check);
       if (!application->quiet)
-	application->dd_printf("%ld words read from %s\n", l, f->get_fname());
+	{
+	  if (!application->opt_tml)
+	    printf("%ld words read from %s\n", l, f->get_fname());
+	  else
+	    application->dd_printf("%ld words read from %s\n", l, f->get_fname());
+	}
     }
   else if (f->is_s19_file())
     {

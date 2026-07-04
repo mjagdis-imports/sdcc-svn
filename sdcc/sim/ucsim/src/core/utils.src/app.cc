@@ -76,6 +76,7 @@ cl_app::cl_app(void)
   nowelcome= false;
   hide_echo= false;
   show_input= false;
+  opt_tml= false;
   retmain= false;
   retval= 0;
   if (app_start_at == 0)
@@ -735,12 +736,14 @@ cl_app::proc_arguments(int argc, char *argv[])
 		  hide_echo= true;
 		  show_input= true;
 		  force_colors= true;
+		  opt_tml= true;
 		  options->set_value("force_colors", this, bool(true));
 		  break;
 		case DOPT_WTML:
 		  hide_echo= true;
 		  show_input= true;
 		  force_colors= true;
+		  opt_tml= true;
 		  options->set_value("force_colors", this, bool(true));
 		  break;
 		default:

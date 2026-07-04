@@ -99,6 +99,7 @@ public:
   bool nowelcome; // -Dnowelcome
   bool hide_echo; // -Dhideecho
   bool show_input; // -Dshowinput
+  bool opt_tml; // either -Dhtml or -Dwtml used
   bool retmain; // -m
   int retval;
   class cl_console_stdout *ocon;
