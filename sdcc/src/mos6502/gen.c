@@ -2163,6 +2163,14 @@ m6502_accopWithAop (const char *accop, asmop *aop, int loffset)
 	{
 	  m6502_emitCmp(m6502_reg_a, v);
 	}
+      else if(strcmp(accop,"cpx")==0)
+	{
+	  m6502_emitCmp(m6502_reg_x, v);
+	}
+      else if(strcmp(accop,"cpy")==0)
+	{
+	  m6502_emitCmp(m6502_reg_y, v);
+	}
       else if (v==0)
 	m6502_emitOp (accop, "#0x00");
       else
@@ -5807,10 +5815,7 @@ genCmpEQorNE (iCode * ic, iCode * ifx)
               m6502_emitComment (TRACEGEN|VVDBG, "    %s - not a reg", __func__);
 
               m6502_loadRegFromAop (reg, AOP (left), offset);
-              if(AOP_TYPE(right)==AOP_LIT)
-                m6502_emitCmp(reg, (ullFromVal (AOP(right)->aopu.aop_lit))>>(offset*8) );
-              else
-	        m6502_accopWithAop (m6502_cmp[reg->rIdx], AOP (right), offset);
+	      m6502_accopWithAop (m6502_cmp[reg->rIdx], AOP (right), offset);
 	    }
 
 	  if(!early_result)
@@ -5845,7 +5850,7 @@ genCmpEQorNE (iCode * ic, iCode * ifx)
   else
     {
       if(size==1 
-	 && AOP_TYPE(right)==AOP_LIT && AOP_TYPE(left)!=AOP_SOF)
+	 && AOP_TYPE(left)!=AOP_SOF && AOP_TYPE(right)!=AOP_SOF)
 	{
 	  bool restore_a=false;
 	  reg_info *reg = NULL;
@@ -5853,6 +5858,14 @@ genCmpEQorNE (iCode * ic, iCode * ifx)
 	  if(AOP_TYPE(left)==AOP_REG)
 	    {
 	      reg=AOP(left)->aopu.aop_reg[0];
+	    }
+	  else if(m6502_reg_x->aop&&m6502_sameRegs(m6502_reg_x->aop, AOP(left))&&m6502_reg_x->aopofs==0)
+	    {
+              reg=m6502_reg_x;
+	    }
+	  else if(m6502_reg_y->aop&&m6502_sameRegs(m6502_reg_y->aop, AOP(left))&&m6502_reg_y->aopofs==0)
+	    {
+              reg=m6502_reg_y;
 	    }
 	  else
 	    {
@@ -5864,7 +5877,7 @@ genCmpEQorNE (iCode * ic, iCode * ifx)
 		}
 	      m6502_loadRegFromAop (reg, AOP(left), 0);
 	    }
-	  m6502_emitCmp(reg, ullFromVal (AOP(right)->aopu.aop_lit));
+          m6502_accopWithAop (m6502_cmp[reg->rIdx], AOP(right), 0);
 	  if(restore_a)
 	    m6502_loadRegTempNoFlags(m6502_reg_a, true);
 	}
@@ -5897,6 +5910,10 @@ genCmpEQorNE (iCode * ic, iCode * ifx)
 		  if(m6502_reg_x->aop&&m6502_sameRegs(m6502_reg_x->aop, AOP(left))&&m6502_reg_x->aopofs==offset)
 		    {
 		      m6502_accopWithAop ("cpx", AOP (right), offset);
+		    }
+		  else if(m6502_reg_y->aop&&m6502_sameRegs(m6502_reg_y->aop, AOP(left))&&m6502_reg_y->aopofs==offset)
+		    {
+		      m6502_accopWithAop ("cpy", AOP (right), offset);
 		    }
 		  else
 		    {
