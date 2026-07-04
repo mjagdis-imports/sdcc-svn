@@ -1,7 +1,12 @@
+2026-07-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Fix an invalid warning in z80-related codegen.
+
 2026-07-04 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/mos6502/gen.c,
-      src/mos6502/peeph.def:
+	  src/mos6502/peeph.def:
 	  Improve m6502_copy when srcsize==1. 
 
 2026-07-04 Philipp Klaus Krause <philipp@colecovision.eu>

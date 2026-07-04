@@ -18103,7 +18103,7 @@ genPointerSet (iCode *ic)
                     }
                   else
                     {
-                      asmop *eaop = ASMOP_A;
+                      asmop *eaop = ASMOP_L; // Just so we don'r pass a NULL pointer to emit3 below. Shouldn't be ASMOP_A to avoid ld a, a.
                       if (isRegDead (B_IDX, ic) && right->aop->regs[B_IDX] < i)
                         eaop = ASMOP_B;
                       else if (isRegDead (C_IDX, ic) && right->aop->regs[C_IDX] < i)
