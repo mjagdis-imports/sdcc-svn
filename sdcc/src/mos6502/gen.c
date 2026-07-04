@@ -4119,6 +4119,7 @@ static void
 saveRegisters (iCode *lic)
 {
   int i;
+  bool savea = false;
   iCode *ic;
 
   /* look for call */
@@ -4167,7 +4168,7 @@ saveRegisters (iCode *lic)
     && !bitVectBitValue(ic->rSurv, A_IDX);
 
   if (clobbers_a && _S.sendSet)
-    storeRegTemp (m6502_reg_a, true);
+    savea = storeRegTempIfUsed (m6502_reg_a);
 
   for (i = A_IDX; i <= Y_IDX; i++)
     {
@@ -4180,7 +4181,7 @@ saveRegisters (iCode *lic)
     }
 
   if (clobbers_a && _S.sendSet)
-    m6502_loadRegTemp (m6502_reg_a);
+    m6502_loadOrFreeRegTemp (m6502_reg_a, savea);
 }
 
 /**************************************************************************
@@ -4189,6 +4190,7 @@ saveRegisters (iCode *lic)
 static void unsaveRegisters (iCode *ic)
 {
   int i;
+  bool savea = false;
 
   m6502_emitComment (REGOPS, "%s", __func__);
 
@@ -4199,7 +4201,7 @@ static void unsaveRegisters (iCode *ic)
     && !bitVectBitValue(ic->rSurv, A_IDX);
 
   if (clobbers_a)
-    storeRegTemp (m6502_reg_a, true);
+    savea = storeRegTempIfUsed (m6502_reg_a);
 
   for (i = Y_IDX; i >= A_IDX; i--)
     {
@@ -4207,7 +4209,7 @@ static void unsaveRegisters (iCode *ic)
 	m6502_pullReg (m6502_regWithIdx (i));
     }
   if (clobbers_a)
-    m6502_loadRegTemp (m6502_reg_a);
+    m6502_loadOrFreeRegTemp (m6502_reg_a, savea);
 }
 
 /**************************************************************************
@@ -4511,6 +4513,7 @@ genCall (iCode * ic)
 {
   operand *left   = IC_LEFT (ic);
   operand *result = IC_RESULT (ic);
+  iCode *sendic;
 
   sym_link *dtype = operandType (left);
   sym_link *etype = getSpec (dtype);
@@ -4521,6 +4524,12 @@ genCall (iCode * ic)
 		     __func__, IFFUNC_ISREENT(dtype));
   m6502_printIC (ic);
 
+  /* Go through the send set and mark any registers used by iTemps as */
+  /* in use so we don't clobber them while setting up the return address */
+  for (sendic = setFirstItem (_S.sendSet); sendic; sendic = setNextItem (_S.sendSet))
+    {
+      updateiTempRegisterUse (IC_LEFT (sendic));
+    }
 
   /* if caller saves & we have not saved then */
   if (!ic->regsSaved)
@@ -4555,6 +4564,7 @@ genCall (iCode * ic)
     }
 
   m6502_dirtyAllRegs ();
+  m6502_freeAllRegs();
 
   _S.DPTRAttr[0].isLiteral=0;
   _S.DPTRAttr[1].isLiteral=0;
@@ -4568,12 +4578,14 @@ genCall (iCode * ic)
     saveBasePtr();
 
   /* if we need assign a result value */
+  // need to figure out if the return value is used
   if ((IS_ITEMP (result) &&
        (OP_SYMBOL (result)->nRegs || OP_SYMBOL (result)->spildir)) || IS_TRUE_SYMOP (result))
     {
       m6502_useReg (m6502_reg_a);
       if (operandSize (result) > 1)
 	m6502_useReg (m6502_reg_x);
+
       m6502_aopOp (result, ic);
 
       assignResultValue (result);
@@ -4609,16 +4621,16 @@ genPcall (iCode * ic)
   dtype = operandType (left)->next;
   etype = getSpec (dtype);
 
-  /* if caller saves & we have not saved then */
-  if (!ic->regsSaved)
-    saveRegisters (ic);
-
   /* Go through the send set and mark any registers used by iTemps as */
   /* in use so we don't clobber them while setting up the return address */
   for (sendic = setFirstItem (_S.sendSet); sendic; sendic = setNextItem (_S.sendSet))
     {
       updateiTempRegisterUse (IC_LEFT (sendic));
     }
+
+  /* if caller saves & we have not saved then */
+  if (!ic->regsSaved)
+    saveRegisters (ic);
 
   // TODO: handle DIR/EXT with jmp [aa] or jmp [aaaa]
 

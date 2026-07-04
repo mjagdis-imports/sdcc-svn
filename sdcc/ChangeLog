@@ -1,3 +1,8 @@
+2026-07-03 Gabriele Gorla <gorlik@yahoo.com>
+
+    * src/mos6502/gen.c:
+      Only preserve used registers before a call. 
+
 2026-07-02 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/z80/peep.c:
