@@ -157,7 +157,7 @@ do_teststrspn (void)
 static void
 do_teststrtok (void)
 {
-#if !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) // Lack of memory
+#if !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) && !(defined (__SDCC_mcs51) && defined(__SDCC_MODEL_SMALL)) // Lack of memory
   static char str[] = "?a???b,,,#c";
   char str2[] = "axaaba";
   char *token = strtok (str, "?"); // 'token' points to the token "a"
@@ -259,7 +259,7 @@ do_utf_16 (void)
 static void
 do_utf_32_c95 (void)
 {
-#ifndef __SDCC_pdk14 // Lack of memory
+#if !defined(__SDCC_pdk14) && !(defined (__SDCC_mcs51) && defined(__SDCC_MODEL_SMALL)) // Lack of memory
 #if !(defined (__SDCC_pdk15) && defined(__SDCC_STACK_AUTO)) // Lack of code memory
 #ifdef __STDC_ISO_10646__
   const wchar_t *str1 = L"Ä ä";

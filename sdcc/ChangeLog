@@ -4,6 +4,8 @@
 	  Remove peephole rule 130, which should not be necessaryy if codgen works correctly.
 	* support/regression/tests/far_arithmetic.c.in:
 	  Disable part of a test for pdk15, where it fails due to lack of code memory.
+	* support/regression/tests/string.c:
+	  Disable part of a test for mcs51 small model, where it fails due to lack of data memory.
 
 2026-07-03 Gabriele Gorla <gorlik@yahoo.com>
 
