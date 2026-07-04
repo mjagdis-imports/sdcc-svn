@@ -1,9 +1,14 @@
+2026-07-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/stm8/gen.c:
+	  Fix bug #4032.
+
 2026-07-04 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/mos6502/gen.c:
-      Improve handling of AOP_LIT in m6502_accopWithAop. Use register tracking in genCmpEQorNE.
+	  Improve handling of AOP_LIT in m6502_accopWithAop. Use register tracking in genCmpEQorNE.
 	* src/mos6502/gen.c:
-      Improve genPointerSet().
+	  Improve genPointerSet().
 
 2026-07-04 Philipp Klaus Krause <philipp@colecovision.eu>
 
