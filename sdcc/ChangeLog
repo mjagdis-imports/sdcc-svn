@@ -1,7 +1,12 @@
+2026-07-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/mcs51/peeph.def:
+	  Remove peephole rule 130, which should not be necessaryy if codgen works correctly.
+
 2026-07-03 Gabriele Gorla <gorlik@yahoo.com>
 
-    * src/mos6502/gen.c:
-      Only preserve used registers before a call. 
+	* src/mos6502/gen.c:
+	  Only preserve used registers before a call. 
 
 2026-07-02 Philipp Klaus Krause <philipp@colecovision.eu>
 
