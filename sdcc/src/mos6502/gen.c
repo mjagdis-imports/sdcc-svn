@@ -4132,6 +4132,8 @@ saveRegisters (iCode *lic)
   bool savea = false;
   iCode *ic;
 
+  m6502_emitComment (TRACEGEN|VVDBG, "%s", __func__);
+
   /* look for call */
   for (ic = lic; ic; ic = ic->next)
     if (ic->op == CALL || ic->op == PCALL)
@@ -4202,7 +4204,7 @@ static void unsaveRegisters (iCode *ic)
   int i;
   bool savea = false;
 
-  m6502_emitComment (REGOPS, "%s", __func__);
+  m6502_emitComment (TRACEGEN|VVDBG, "%s", __func__);
 
   // TODO: only clobbered if m6502_reg_a->isFree
 
@@ -4362,7 +4364,6 @@ genIpush (iCode * ic)
   /* this is a parameter push: in this case we call
      the routine to find the call and save those
      registers that need to be saved */
-  if (!regalloc_dry_run) /* Cost for saving registers is counted at CALL or PCALL */
     saveRegisters (ic);
 
   /* then do the push */
@@ -4670,7 +4671,8 @@ genPcall (iCode * ic)
       m6502_emitOp ("jsr", "0x%04X", ulFromVal (OP_VALUE (left)));
     }
 
-  m6502_dirtyAllRegs ();
+  m6502_dirtyAllRegs();
+  m6502_freeAllRegs();
 
   _S.DPTRAttr[0].isLiteral=0;
   _S.DPTRAttr[1].isLiteral=0;
@@ -5849,6 +5851,7 @@ genCmpEQorNE (iCode * ic, iCode * ifx)
     }
   else
     {
+      // ifx==true
       if(size==1 
 	 && AOP_TYPE(left)!=AOP_SOF && AOP_TYPE(right)!=AOP_SOF)
 	{
@@ -5891,7 +5894,7 @@ genCmpEQorNE (iCode * ic, iCode * ifx)
 		m6502_accopWithAop (m6502_cmp[AOP (left)->aopu.aop_reg[offset]->rIdx], AOP (right), offset);
 	      else 
 		{
-                  m6502_emitComment (TRACEGEN|VVDBG, "    %s - not a reg", __func__);
+                  m6502_emitComment (TRACEGEN|VVDBG, "    %s - left not a reg or right SOF", __func__);
 
 		  // TODO? why do we push when we could cpx?
 		  if (!(AOP_TYPE (left) == AOP_REG && AOP (left)->aopu.aop_reg[offset]->rIdx == A_IDX))
@@ -7619,6 +7622,11 @@ genPointerSet (iCode * ic)
 
       if(idx_reg==m6502_reg_a && !m6502_reg_a->isDead)
 	restore_a_from_idx=true;
+      else if(idx_reg!=m6502_reg_a && IS_AOP_A(AOP(right)) )
+        {
+          // do nothing
+          // no need to save A if we are just storing A
+        }
       else
 	pa=pushRegIfSurv(m6502_reg_a);
         
@@ -7786,6 +7794,20 @@ genPointerSet (iCode * ic)
 	m6502_loadRegTempAt(m6502_reg_a, xloc);
       else
 	m6502_loadRegFromAop (m6502_reg_a, AOP (right), 1);
+
+      m6502_loadRegFromConst(m6502_reg_y, yoff + 1);
+      m6502_emitOp("sta", INDFMT_IY, ptr_str);
+    }
+  else if(IS_AOP_XY (AOP(right)) && m6502_reg_x->isDead)
+    {
+      m6502_transferRegReg (m6502_reg_y, m6502_reg_a, true);
+      m6502_loadRegFromConst(m6502_reg_y, yoff);
+      m6502_emitOp("sta", INDFMT_IY, ptr_str);
+
+      if(needloadx)
+	m6502_loadRegTempAt(m6502_reg_a, xloc);
+      else
+        m6502_transferRegReg (m6502_reg_x, m6502_reg_a, true);
 
       m6502_loadRegFromConst(m6502_reg_y, yoff + 1);
       m6502_emitOp("sta", INDFMT_IY, ptr_str);
