@@ -1,3 +1,8 @@
+2026-07-04 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/main.c:
+	  Always do CSE.
+
 2026-07-04 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/stm8/gen.c:

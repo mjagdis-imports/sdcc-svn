@@ -266,6 +266,8 @@ static void m6502_genXINIT (FILE * of)
 /* Do CSE estimation */
 static bool cseCostEstimation (iCode *ic, iCode *pdic)
 {
+  // always do CSE
+#if 0
   operand *result = IC_RESULT(ic);
   sym_link *result_type = operandType(result);
 
@@ -286,8 +288,8 @@ static bool cseCostEstimation (iCode *ic, iCode *pdic)
       else
         return 0;
     }
+#endif
 
-  /* for others it is cheaper to do the cse */
   return 1;
 }
 
