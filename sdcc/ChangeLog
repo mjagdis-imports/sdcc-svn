@@ -1,3 +1,14 @@
+2026-07-04 Gabriele Gorla <gorlik@yahoo.com>
+
+    * src/mos6502/genbuiltin.c,
+      device/include/math.h,
+      device/lib/fabsf.c,
+      src/mos6502/gen.c,
+      src/mos6502/gen.h,
+      src/mos6502/main.c,
+      src/mos6502/ralloc2.cc:
+      Implement __builtin_fabsf
+
 2026-07-05 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/f8/gen.c:

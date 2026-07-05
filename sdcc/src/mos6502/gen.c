@@ -2345,8 +2345,8 @@ loadRegFromDPTR(reg_info *reg, int dofs)
 /**************************************************************************
  * stores reg in DPTR at offset dofs
  *************************************************************************/
-static void
-storeRegToDPTR(reg_info *reg, int dofs)
+void
+m6502_storeRegToDPTR(reg_info *reg, int dofs)
 {
   int regidx=reg->rIdx;
 
@@ -2439,8 +2439,8 @@ setupDPTR(operand *op, int offset, char * rematOfs, bool savea)
       else if(AOP_TYPE(op) == AOP_REG)
 	{
 	  m6502_emitComment (TRACEGEN|VVDBG, "    %s: AOP_REG", __func__);
-	  storeRegToDPTR(AOP(op)->aopu.aop_reg[0], 0);
-	  storeRegToDPTR(AOP(op)->aopu.aop_reg[1], 1);
+	  m6502_storeRegToDPTR(AOP(op)->aopu.aop_reg[0], 0);
+	  m6502_storeRegToDPTR(AOP(op)->aopu.aop_reg[1], 1);
 	}
       else
         {
@@ -2449,9 +2449,9 @@ setupDPTR(operand *op, int offset, char * rematOfs, bool savea)
           m6502_emitComment (TRACEGEN|VVDBG, "    %s: not AOP_REG", __func__);
 
           if(reg0)
-            storeRegToDPTR(reg0, 0);
+            m6502_storeRegToDPTR(reg0, 0);
           if(reg1)
-            storeRegToDPTR(reg1, 1);
+            m6502_storeRegToDPTR(reg1, 1);
           if(reg0&&reg1)
             return offset;
 
@@ -2473,13 +2473,13 @@ setupDPTR(operand *op, int offset, char * rematOfs, bool savea)
 	  if(!reg0)
 	    {
 	      m6502_loadRegFromAop(reg, AOP(op), 0);
-	      storeRegToDPTR(reg, 0);
+	      m6502_storeRegToDPTR(reg, 0);
 	    }
 
 	  if(!reg1)
 	    {
 	      m6502_loadRegFromAop(reg, AOP(op), 1);
-	      storeRegToDPTR(reg, 1);
+	      m6502_storeRegToDPTR(reg, 1);
             }
 
           if(savea && reg==m6502_reg_a)
@@ -2503,10 +2503,10 @@ setupDPTR(operand *op, int offset, char * rematOfs, bool savea)
       m6502_emitSetCarry(0);
       m6502_loadRegFromAop(m6502_reg_a, AOP(op), 0);
       m6502_emitOp ("adc", "#<(%s+%d)", rematOfs, offset);
-      storeRegToDPTR(m6502_reg_a, 0);
+      m6502_storeRegToDPTR(m6502_reg_a, 0);
       m6502_loadRegFromAop(m6502_reg_a, AOP(op), 1);
       m6502_emitOp ("adc", "#>(%s+%d)", rematOfs, offset);
-      storeRegToDPTR(m6502_reg_a, 1);
+      m6502_storeRegToDPTR(m6502_reg_a, 1);
       if(savea)
         m6502_transferRegReg(savereg, m6502_reg_a, true);
       else
@@ -4241,8 +4241,8 @@ storeOperToDPTR (operand *oper, int size, iCode *ic)
   if (AOP_TYPE (oper) == AOP_REG)
     {
       /* The operand is in registers; we can save them directly */
-      storeRegToDPTR (AOP (oper)->aopu.aop_reg[0], 0);
-      storeRegToDPTR (AOP (oper)->aopu.aop_reg[1], 1);
+      m6502_storeRegToDPTR (AOP (oper)->aopu.aop_reg[0], 0);
+      m6502_storeRegToDPTR (AOP (oper)->aopu.aop_reg[1], 1);
     }
   else
     {
@@ -4263,7 +4263,7 @@ storeOperToDPTR (operand *oper, int size, iCode *ic)
       for (offset=0; offset<size; offset++)
 	{
 	  m6502_loadRegFromAop (reg, AOP (oper), offset);
-          storeRegToDPTR (reg, offset);
+          m6502_storeRegToDPTR (reg, offset);
 	}
 
       pullOrFreeReg (m6502_reg_x, needloadx);
@@ -8126,9 +8126,9 @@ static void genJumpTab (iCode * ic)
     m6502_freeAsmop (IC_JTCOND (ic), NULL);
 
     m6502_emitOp ("lda", "%05d$,%s", m6502_safeLabelNum (jtablo), indreg->name);
-    storeRegToDPTR(m6502_reg_a, 0);
+    m6502_storeRegToDPTR(m6502_reg_a, 0);
     m6502_emitOp ("lda", "%05d$,%s", m6502_safeLabelNum (jtabhi), indreg->name);
-    storeRegToDPTR(m6502_reg_a, 1);
+    m6502_storeRegToDPTR(m6502_reg_a, 1);
 
     if (needpullind)
       m6502_pullReg(indreg);
@@ -8507,6 +8507,13 @@ genm6502iCode (iCode *ic)
     printf ("ic %d op %d stack pushed %d\n", ic->key, ic->op, G.stack.pushed);
 #endif
 
+  if(ic->op==SEND && ic->builtinSEND)
+      {
+        // FIXME: the send is marked generated
+        // workaround to mark the send as not generated
+        ic->generated=0;
+      }
+
   if (resultRemat (ic))
     {
       m6502_emitComment(TRACEGEN, "skipping iCode since result will be rematerialized");
@@ -8717,14 +8724,21 @@ genm6502iCode (iCode *ic)
       break;
 
     case SEND:
-      if (!regalloc_dry_run)
-        addSet (&_S.sendSet, ic);
+      if (ic->builtinSEND)
+        {
+          m6502_genBuiltIn (ic);
+        }
       else
         {
-	  set * sendSet = NULL;
-	  addSet (&sendSet, ic);
-	  genSend (sendSet);
-	  deleteSet (&sendSet);
+          if (!regalloc_dry_run)
+            addSet (&_S.sendSet, ic);
+          else
+            {
+              set * sendSet = NULL;
+              addSet (&sendSet, ic);
+              genSend (sendSet);
+              deleteSet (&sendSet);
+            }
         }
       break;
 
