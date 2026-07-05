@@ -12,6 +12,9 @@
       Fix bug #4030.
     * src/mos6502/gen.c:
       Don't unecessarily dirty double registers in m6502_transferRegReg().
+    * src/mos6502/peep.c,
+      src/mos6502/peeph.def:
+      Implement notUsed() for registers and update peephole rules to match.
 
 2026-07-05 Philipp Klaus Krause <philipp@colecovision.eu>
 
