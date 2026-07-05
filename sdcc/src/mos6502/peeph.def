@@ -2,6 +2,47 @@
 // Rules for common codegen patterns
 ////////////////////////////////////////////////////////
 
+// this optimization should be done at the icode level
+// last copy should be directly into ret instead of a temp
+replace restart {
+	sta	%1
+	stx	%2
+	ldy	#0x00
+	sty	%3
+	sty	%4
+	sty	%6
+	lda	%3
+	sta	%5
+	lda	%1
+        rts
+} by {
+	; Peephole copyret 1 - eliminated useless copy
+	ldy	#0x00
+	sty	%6
+	sty	%5
+        rts
+}
+
+replace restart {
+	sty	%1
+	stx	%2
+	lda	#0x00
+	sta	%3
+	sta	%4
+	sta	%6
+	lda	%3
+	sta	%5
+	tya
+        rts
+} by {
+	; Peephole copyret 2 - eliminated useless copy
+	lda	#0x00
+	sta	%6
+	sta	%5
+	tya
+        rts
+}
+
 replace restart {
 	lda	%1
 	ldx	%2

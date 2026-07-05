@@ -2,6 +2,9 @@
 
 	* src/mos6502/main.c:
 	  Always do CSE.
+	* src/mos6502/gen.c,
+	  src/mos6502/peeph.def:
+      Improve m6502_genCopy().
 
 2026-07-04 Philipp Klaus Krause <philipp@colecovision.eu>
 

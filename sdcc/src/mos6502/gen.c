@@ -3847,15 +3847,15 @@ m6502_copy (operand * result, operand * source)
       return;
     }
 
-  if (IS_AOP_XA (AOP (source)) && size <= 2  )
+  if(IS_AOP_XA (AOP (source)) )
     {
-      m6502_storeRegToAop (m6502_reg_xa, AOP (result), 0);
+      m6502_storeRegToFullAop (m6502_reg_xa, AOP (result), 0);
       return;
     }
 
-  if (IS_AOP_XY (AOP (source)) && size <= 2  )
+  if( IS_AOP_XY(AOP(source)) )
     {
-      m6502_storeRegToAop (m6502_reg_xy, AOP (result), 0);
+      m6502_storeRegToFullAop (m6502_reg_xy, AOP (result), 0);
       return;
     }
 
