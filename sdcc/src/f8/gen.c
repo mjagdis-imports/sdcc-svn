@@ -2095,12 +2095,15 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
             if (result->aopu.bytes[roffset + j].byteu.stk != source->aopu.bytes[soffset + i].byteu.stk)
               continue;
 
+            // We need to assign [i] before assigning [j].
+
             if (result->aopu.bytes[roffset + i].in_reg) // stack-to-register
               {
                 int rIdx = result->aopu.bytes[roffset + i].byteu.reg->rIdx;
-                if (source->regs[rIdx] > soffset && source->regs[rIdx] < soffset + n)
+                int k = source->regs[rIdx] - soffset;
+                if (k >= 0 && k < n && !assigned[k])
                   {
-                    if (source->regs[rIdx] == soffset + j)
+                    if (k == j) // We can just swap the register and stack location.
                       {
                         if (!IS_F8L)
                           emit3_o (A_XCH, result, roffset + i, source, soffset + i);
@@ -2115,7 +2118,46 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
                         size -= 2;;
                       }
                     else
-                      UNIMPLEMENTED;
+                      {
+                        if (result->aopu.bytes[roffset + k].in_reg)
+                          {
+                            int rIdx2 = result->aopu.bytes[roffset + k].byteu.reg->rIdx;
+                            int l = source->regs[rIdx2] - soffset;
+                            if (l >= 0 && l < n && !assigned[l])
+                              {
+                                if (result->aopu.bytes[roffset + l].in_reg)
+                                  UNIMPLEMENTED;
+                                else
+                                  {
+                                    for (int m = 0; m < n; m++)
+                                      if (!assigned[m] && aopOnStack (source, soffset + m, 1) && source->aopu.bytes[soffset + m].byteu.stk == result->aopu.bytes[roffset + l].byteu.stk)
+                                        UNIMPLEMENTED;
+                                    emit3_o (A_LD, result, roffset + l, source, soffset + l);
+                                    assigned[l] = true;
+                                    size--;
+                                    emit3_o (A_LD, result, roffset + k, source, soffset + k);
+                                    assigned[k] = true;
+                                    size--;
+                                    regsize--;
+                                    emit3_o (A_LD, result, roffset + i, source, soffset + i);
+                                    assigned[i] = true;
+                                    size--;
+                                  }
+                              }
+                            else // Free reg first, then do the stack byte.
+                              {
+                                emit3_o (A_LD, result, roffset + k, source, soffset + k);
+                                assigned[k] = true;
+                                size--;
+                                regsize--;
+                                emit3_o (A_LD, result, roffset + i, source, soffset + i);
+                                assigned[i] = true;
+                                size--;
+                              }
+                          }
+                        else
+                          UNIMPLEMENTED;
+                      }
                   }
                 else
                   {
@@ -3196,6 +3238,7 @@ genEor (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
        else
          UNIMPLEMENTED;
        genMove_o (result_aop, i, ASMOP_XL, 0, 1, true, xh_free, y_free, false, true);
+
        if (!xl_free)
          pop (ASMOP_XL, 0, 1);
 
@@ -5625,7 +5668,7 @@ genAnd (const iCode *ic, iCode *ifx)
          }
 
        if (!xl_free)
-         UNIMPLEMENTED;
+         push (ASMOP_XL, 0, 1);
 
        if (aopIsOp8_2 (right->aop, i))
          {
@@ -5650,6 +5693,9 @@ genAnd (const iCode *ic, iCode *ifx)
            genMove_o (result->aop, i, ASMOP_XL, 0, 1, true, xh_free, y_free, false, true);
            i++;
          }
+
+       if (!xl_free)
+         pop (ASMOP_XL, 0, 1);
     }
 
 release:

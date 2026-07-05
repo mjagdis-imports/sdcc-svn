@@ -1,10 +1,15 @@
+2026-07-05 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/gen.c:
+	  Fix bug #4035.
+
 2026-07-04 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/mos6502/main.c:
 	  Always do CSE.
 	* src/mos6502/gen.c,
 	  src/mos6502/peeph.def:
-      Improve m6502_genCopy().
+	  Improve m6502_genCopy().
 	* src/mos6502/ralloc.c:
 	  Make all bitwise operation optimizable.
 
@@ -20,7 +25,7 @@
 	* src/mos6502/gen.c:
 	  Improve genPointerSet().
 	* src/mos6502/peep.c:
-      Cosmetic changes.
+	  Cosmetic changes.
 
 2026-07-04 Philipp Klaus Krause <philipp@colecovision.eu>
 
