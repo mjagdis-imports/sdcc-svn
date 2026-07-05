@@ -10,6 +10,8 @@
       Implement __builtin_fabsf
     * src/mos6502/stackops.c:
       Fix bug #4030.
+    * src/mos6502/gen.c:
+      Don't unecessarily dirty double registers in m6502_transferRegReg().
 
 2026-07-05 Philipp Klaus Krause <philipp@colecovision.eu>
 

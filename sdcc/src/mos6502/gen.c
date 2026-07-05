@@ -1068,21 +1068,24 @@ m6502_transferRegReg (reg_info *sreg, reg_info *dreg, bool freesrc)
   if(error)
     emitcode("ERROR", "bad combo in m6502_transferRegReg 0x%02x -> 0x%02x", srcidx, dstidx);
 
-  if (freesrc)
-    m6502_freeReg (sreg);
-
-  m6502_dirtyReg (dreg);
-  m6502_useReg (dreg);
-
-  if(sreg->isLitConst)
+  if(dreg!=m6502_reg_xa && dreg!=m6502_reg_xy)
     {
-      dreg->isLitConst = sreg->isLitConst;
-      dreg->litConst = sreg->litConst;
-    }
-  else
-    {
-      regTrackAop(dreg, sreg->aop, sreg->aopofs);
-      dreg->stackOffset = sreg->stackOffset;
+      if (freesrc)
+	m6502_freeReg (sreg);
+
+      m6502_dirtyReg (dreg);
+      m6502_useReg (dreg);
+
+      if(sreg->isLitConst)
+	{
+	  dreg->isLitConst = sreg->isLitConst;
+	  dreg->litConst = sreg->litConst;
+	}
+      else
+	{
+	  regTrackAop(dreg, sreg->aop, sreg->aopofs);
+	  dreg->stackOffset = sreg->stackOffset;
+	}
     }
 
   m6502_emitComment (REGOPS, "  %s %s", __func__, m6502_regInfoStr() );
@@ -4364,7 +4367,7 @@ genIpush (iCode * ic)
   /* this is a parameter push: in this case we call
      the routine to find the call and save those
      registers that need to be saved */
-    saveRegisters (ic);
+  saveRegisters (ic);
 
   /* then do the push */
   size = AOP_SIZE (left);
@@ -8508,11 +8511,11 @@ genm6502iCode (iCode *ic)
 #endif
 
   if(ic->op==SEND && ic->builtinSEND)
-      {
-        // FIXME: the send is marked generated
-        // workaround to mark the send as not generated
-        ic->generated=0;
-      }
+    {
+      // FIXME: the send is marked generated
+      // workaround to mark the send as not generated
+      ic->generated=0;
+    }
 
   if (resultRemat (ic))
     {
