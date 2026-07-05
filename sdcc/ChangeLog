@@ -8,6 +8,8 @@
       src/mos6502/main.c,
       src/mos6502/ralloc2.cc:
       Implement __builtin_fabsf
+    * src/mos6502/stackops.c:
+      Fix bug #4030.
 
 2026-07-05 Philipp Klaus Krause <philipp@colecovision.eu>
 
