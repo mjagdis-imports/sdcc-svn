@@ -5,6 +5,8 @@
 	* src/mos6502/gen.c,
 	  src/mos6502/peeph.def:
       Improve m6502_genCopy().
+	* src/mos6502/ralloc.c:
+	  Make all bitwise operation optimizable.
 
 2026-07-04 Philipp Klaus Krause <philipp@colecovision.eu>
 
