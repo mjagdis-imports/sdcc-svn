@@ -15,6 +15,8 @@
     * src/mos6502/peep.c,
       src/mos6502/peeph.def:
       Implement notUsed() for registers and update peephole rules to match.
+    * src/mos6502/peeph.def:
+      Add AND followed by AND rule.
 
 2026-07-05 Philipp Klaus Krause <philipp@colecovision.eu>
 
