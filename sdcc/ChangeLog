@@ -1,3 +1,10 @@
+2026-07-10 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCopt.c,
+	  support/regression/tests/bug-3998.c,
+	  support/valdiag/tests/_Optional.c:
+	  Fix bug #3998.
+
 2026-07-04 Gabriele Gorla <gorlik@yahoo.com>
 
     * src/mos6502/genbuiltin.c,

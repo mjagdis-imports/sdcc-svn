@@ -1,6 +1,6 @@
 /*
    bug-3997.c
-   Leftover operand use info from not-quite-correctly-eliminated dead code triggered an assertion failure int eh compiler.
+   Leftover operand use info from not-quite-correctly-eliminated dead code triggered an assertion failure in the compiler.
  */
 
 #include <testfwk.h>
