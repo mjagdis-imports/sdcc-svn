@@ -49,7 +49,6 @@ static const char *aopAdrStr (asmop * aop, int loffset, bool bit16);
 static void aopAdrUnprepare (asmop * aop, int loffset);
 static void updateiTempRegisterUse (operand * op);
 static char * aopName (asmop * aop);
-static bool keepTSX();
 static void genCmpEQorNE (iCode * ic, iCode * ifx);
 // TODO: add compareWithAop()
 // TODO: add genCmpZero 
@@ -1330,7 +1329,7 @@ m6502_getFreeIdxReg()
   //if (m6502_reg_y->isFree && !m6502_reg_y->isLitConst)
   //   return m6502_reg_y;
   //  else
-  if (m6502_reg_x->isFree && !keepTSX())
+  if (m6502_reg_x->isFree && !m6502_keepTSX())
     return m6502_reg_x;
   else if (m6502_reg_y->isFree)
     return m6502_reg_y;
@@ -1725,7 +1724,7 @@ m6502_storeConstToAop (int c, asmop * aop, int loffset)
           reg_info *reg = NULL;
 
           // prefer X if literal!=0 && X does not contain tsx offset 
-          if(c!=0 && m6502_reg_x->isFree && !keepTSX() )
+          if(c!=0 && m6502_reg_x->isFree && !m6502_keepTSX() )
             reg=m6502_reg_x;
           else if(m6502_reg_y->isFree)
 #if 0
@@ -1738,13 +1737,13 @@ m6502_storeConstToAop (int c, asmop * aop, int loffset)
 	      reg=m6502_reg_x;
 	    else if(m6502_reg_y->isFree && m6502_reg_y->isLitConst && (m6502_reg_y->litConst!=0))
 	      reg=m6502_reg_y;
-	    else if(m6502_reg_x->isFree && !keepTSX() && !m6502_reg_x->isLitConst)
+	    else if(m6502_reg_x->isFree && !m6502_keepTSX() && !m6502_reg_x->isLitConst)
 	      reg=m6502_reg_x;
 	    else if(m6502_reg_y->isFree && !m6502_reg_y->isLitConst)
 	      reg=m6502_reg_y;
-	    else if(m6502_reg_x->isFree && !keepTSX() && m6502_reg_x->isLitConst && (m6502_reg_x->litConst!=0))
+	    else if(m6502_reg_x->isFree && !m6502_keepTSX() && m6502_reg_x->isLitConst && (m6502_reg_x->litConst!=0))
 	      reg=m6502_reg_x;
-	    else if(m6502_reg_x->isFree && !keepTSX() && m6502_reg_x->isLitConst && (abs(m6502_reg_x->litConst-c) < 2))
+	    else if(m6502_reg_x->isFree && !m6502_keepTSX() && m6502_reg_x->isLitConst && (abs(m6502_reg_x->litConst-c) < 2))
 	      reg=m6502_reg_x;
 	    else if(m6502_reg_y->isFree && m6502_reg_y->isLitConst && !m6502_reg_a->isFree)
 #endif
@@ -2458,7 +2457,7 @@ setupDPTR(operand *op, int offset, char * rematOfs, bool savea)
           if(reg0&&reg1)
             return offset;
 
-	  if(m6502_reg_x->isFree && !keepTSX() )
+	  if(m6502_reg_x->isFree && !m6502_keepTSX() )
 	    reg=m6502_reg_x;
 	  else if(m6502_reg_a->isFree && !savea)
 	    reg=m6502_reg_a;
@@ -2580,6 +2579,7 @@ operandConflictsWithX (operand *op)
 
   return false;
 }
+#endif
 
 /**************************************************************************
  * operandOnStack - returns True if operand is on the stack
@@ -2607,9 +2607,10 @@ operandOnStack(operand *op)
  * tsxUseful - returns True if tsx could help at least one
  *             anticipated stack references
  *************************************************************************/
-static bool
-tsxUseful(const iCode *ic)
+bool
+m6502_tsxUseful(const iCode *ic)
 {
+return (currFunc && IFFUNC_ISREENT (currFunc->type));
   operand *right  = IC_RIGHT(ic);
   operand *left   = IC_LEFT(ic);
   operand *result = IC_RESULT(ic);
@@ -2649,8 +2650,8 @@ tsxUseful(const iCode *ic)
 	break;
       else
 	{
-	  if (operandConflictsWithXY (result))
-	    break;
+	//  if (operandConflictsWithXY (result))
+	 //   break;
 	  if (operandOnStack (left))
 	    uses += operandSize (left);
 	  if (operandOnStack (right))
@@ -2664,10 +2665,9 @@ tsxUseful(const iCode *ic)
 
   return uses >= 1;
 }
-#endif
 
 bool
-keepTSX()
+m6502_keepTSX()
 {
   if(m6502_reg_x->aop==&m6502_tsxaop)
     return options.stackAuto || (currFunc && IFFUNC_ISREENT (currFunc->type));

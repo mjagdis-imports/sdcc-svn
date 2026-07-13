@@ -1,3 +1,11 @@
+2026-07-12 Gabriele Gorla <gorlik@yahoo.com>
+
+    * src/mos6502/gen.h,
+      src/mos6502/gen.c,
+      src/mos6502/peeph.def,
+      src/mos6502/genlshift.c:
+      Refactor genlsh16().
+
 2026-07-10 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCopt.c,

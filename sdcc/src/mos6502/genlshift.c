@@ -116,6 +116,10 @@ genlsh8 (operand * result, operand * left, int shCount)
     (0xff >> (8 - SPEC_BITINTWIDTH (resulttype) % 8)) : 0xff;
   bool maskedbyte = (bytemask != 0xff);
   bool needpulla = false;
+  bool needpullx = false;
+
+  if(AOP_TYPE(left)==AOP_SOF || AOP_TYPE(result)==AOP_SOF)
+    needpullx=storeRegTempIfSurv(m6502_reg_x);
 
   m6502_emitComment (TRACEGEN, "  %s - shift=%d", __func__, shCount);
   if (shCount==0)
@@ -131,6 +135,7 @@ genlsh8 (operand * result, operand * left, int shCount)
     {
       if(!IS_AOP_A(AOP(result)))
 	needpulla = pushRegIfSurv (m6502_reg_a);
+
       m6502_loadRegFromAop (m6502_reg_a, AOP (left), 0);
       m6502_AccLsh (shCount);
       if (maskedbyte)
@@ -138,6 +143,8 @@ genlsh8 (operand * result, operand * left, int shCount)
       m6502_storeRegToAop (m6502_reg_a, AOP (result), 0);
       pullOrFreeReg (m6502_reg_a, needpulla);
     }
+
+  m6502_loadOrFreeRegTemp (m6502_reg_x, needpullx);
 }
 
 /**************************************************************************
@@ -154,10 +161,13 @@ genlsh16 (operand * result, operand * left, int shCount)
     (0xff >> (8 - SPEC_BITINTWIDTH (resulttype) % 8)) : 0xff;
   bool maskedtopbyte = (topbytemask != 0xff);
 
-  m6502_emitComment (TRACEGEN, "  %s - shift=%d", __func__, shCount);
+  m6502_emitComment (TRACEGEN, "  %s - shift=%d  mask:%c",
+                     __func__, shCount, maskedtopbyte?'y':'n');
 
   if (shCount >= 8)
     {
+      m6502_emitComment (TRACEGEN, "  %s - shCount>=8", __func__);
+
       shCount -= 8;
       // TODO
       needpulla = pushRegIfSurv (m6502_reg_a);
@@ -169,92 +179,190 @@ genlsh16 (operand * result, operand * left, int shCount)
       m6502_storeRegToAop (m6502_reg_a, AOP (result), 1);
       m6502_storeConstToAop (0, AOP (result), 0);
       pullOrFreeReg (m6502_reg_a, needpulla);
-      goto done; // Top byte is 0, doesn't need masking.
     }
-  else if(IS_AOP_XA(AOP(result)))
+  else if(AOP_TYPE(result)!=AOP_REG)
     {
-      if(shCount==1 && !IS_AOP_XA(AOP(left)))
+      //     m6502_emitComment (TRACEGEN, "  %s - non register path", __func__);
+
+      int countLimit = (AOP_TYPE(result)==AOP_DIR)
+	? 3: 2;
+      int xloc = -1;
+ 
+      if(AOP_TYPE(left)==AOP_SOF || AOP_TYPE(result)==AOP_SOF)
+        needpullx = storeRegTempIfSurv (m6502_reg_x);
+      //    if(AOP_TYPE(left)==AOP_REG && !needpullx)
+      //     storeRegTemp(m6502_reg_x, true);
+      xloc=m6502_getLastTempOfs();
+
+      if ( m6502_sameRegs (AOP (left), AOP (result))
+           && shCount<=countLimit  && !maskedtopbyte)
         {
-          m6502_loadRegFromAop (m6502_reg_a, AOP (left), 0);
-	  m6502_emitOp ("asl", "a");
-          m6502_dirtyReg(m6502_reg_a);
-	  m6502_fastSaveA();
-          m6502_loadRegFromAop (m6502_reg_a, AOP (left), 1);
-	  m6502_emitOp ("rol", "a");
-          m6502_transferRegReg(m6502_reg_a, m6502_reg_x, true);
-	  m6502_fastRestoreA();
-        }
-      else
-        {
-	  /*  1 <= shCount <= 7 */
-	  // TODO: count > 2 efficient?
-	  m6502_loadRegFromAop (m6502_reg_xa, AOP (left), 0);
-	  XAccLsh (m6502_reg_x, shCount);
-	}
-    }
-  else if(m6502_aopCanShift(AOP(result)) && shCount <= 4)
-    {
-      if( m6502_sameRegs (AOP (left), AOP (result)))
-	{
+	  //m6502_emitComment (TRACEGEN, "  %s - non register path in place shCount==%d", __func__, shCount);
+
 	  while (shCount--)
 	    {
 	      m6502_rmwWithAop ("asl", AOP (result), 0);
 	      m6502_rmwWithAop ("rol", AOP (result), 1);
 	    }
-	}
+        }
+      else if(shCount==7 && AOP_TYPE(left)!=AOP_REG)
+        {
+	  // m6502_emitComment (TRACEGEN, "  %s - non register path shCount==7", __func__);
+
+          needpulla = storeRegTempIfSurv (m6502_reg_a);
+          m6502_loadRegFromAop (m6502_reg_a, AOP (left), 1);
+	  m6502_emitOp ("lsr", "a");
+          m6502_loadRegFromAop (m6502_reg_a, AOP (left), 0);
+	  m6502_emitOp ("ror", "a");
+
+          if(maskedtopbyte)
+            m6502_emitOp ("and", IMMDFMT, topbytemask);
+
+	  m6502_storeRegToAop (m6502_reg_a, AOP (result), 1);
+          m6502_loadRegFromConst(m6502_reg_a, 0);
+	  m6502_emitOp ("ror", "a");
+	  m6502_storeRegToAop (m6502_reg_a, AOP (result), 0);
+    
+          m6502_loadOrFreeRegTemp (m6502_reg_a, needpulla);
+        }
       else
-	{
-	  needpulla = storeRegTempIfSurv (m6502_reg_a);
-          if(IS_AOP_WITH_X(AOP(left)) && AOP_TYPE(result)==AOP_SOF)
+        {
+	  //     m6502_emitComment (TRACEGEN, "  %s - non register path generic", __func__);
+
+	  if(IS_AOP_WITH_X(AOP(left)) && AOP_TYPE(result)==AOP_SOF && !needpullx)
             needpullx = storeRegTemp(m6502_reg_x, true);
 
-	  m6502_loadRegFromAop (m6502_reg_a, AOP (left), 0);
+          needpulla = storeRegTempIfSurv (m6502_reg_a);
+          m6502_loadRegFromAop (m6502_reg_a, AOP (left), 0);
 	  m6502_emitOp ("asl", "a");
 	  m6502_storeRegToAop (m6502_reg_a, AOP (result), 0);
-          if(needpullx)
-            m6502_loadRegTemp(m6502_reg_a);
+          if(AOP_TYPE(left)==AOP_REG && needpullx)
+            {
+	      // m6502_emitComment (TRACEGEN, "  %s - xloc=%d", __func__, xloc);
+
+              if(xloc==-1)
+		{
+		  m6502_loadRegTemp(m6502_reg_a);
+		  needpullx=false;
+		}
+	      else
+                m6502_loadRegTempAt(m6502_reg_a, xloc);
+
+            }
           else
-	    m6502_loadRegFromAop (m6502_reg_a, AOP (left), 1);
+            m6502_loadRegFromAop (m6502_reg_a, AOP (left), 1);
 
 	  m6502_emitOp ("rol", "a");
-	  while(--shCount)
+          shCount--;
+	  while (shCount--)
 	    {
 	      m6502_rmwWithAop ("asl", AOP (result), 0);
 	      m6502_emitOp ("rol", "a");
 	    }
+          if(maskedtopbyte)
+            m6502_emitOp ("and", IMMDFMT, topbytemask);
+
 	  m6502_storeRegToAop (m6502_reg_a, AOP (result), 1);
-	  m6502_loadOrFreeRegTemp (m6502_reg_a, needpulla);
+    
+          m6502_loadOrFreeRegTemp (m6502_reg_a, needpulla);
+        }
+      m6502_loadOrFreeRegTemp (m6502_reg_x, needpullx);
+    }
+  else if(shCount==1) // && result==AOP_REG
+    {
+      needpulla = storeRegTempIfSurv (m6502_reg_a);
+      if(!m6502_tsxUseful())
+	{
+	  m6502_loadRegFromAop (m6502_reg_a, AOP (left), 0);
+	  m6502_emitOp ("asl", "a");
+	  m6502_dirtyReg(m6502_reg_a);
+	  if(IS_AOP_XA(AOP(result)))
+	    m6502_fastSaveA();
+	  else
+	    m6502_transferRegReg(m6502_reg_a, m6502_reg_y, true);
+
+	  m6502_loadRegFromAop (m6502_reg_a, AOP (left), 1);
+	  m6502_emitOp ("rol", "a");
+	  if(maskedtopbyte)
+	    m6502_emitOp ("and", IMMDFMT, topbytemask);
+
+	  m6502_transferRegReg(m6502_reg_a, m6502_reg_x, true);
+	  if(IS_AOP_XA(AOP(result)))
+	    m6502_fastRestoreA();
 	}
+      else
+	{
+	  m6502_loadRegFromAop (m6502_reg_a, AOP (left), 0);
+	  m6502_emitOp ("asl", "a");
+
+	  if(IS_AOP_XA(AOP(left)) && !maskedtopbyte)
+	    {
+	      storeRegTempAlways(m6502_reg_x, true);
+	      m6502_emitRegTempOp("rol", m6502_getLastTempOfs());
+	      m6502_loadRegTemp(m6502_reg_x);
+	    }
+	  else //if(IS_AOP_XY(AOP(result)))
+	    {
+	      if(!IS_AOP_XY(AOP(result)))
+		m6502_fastSaveA();
+	      else
+		m6502_transferRegReg(m6502_reg_a, m6502_reg_y, true);
+
+	      m6502_loadRegFromAop (m6502_reg_a, AOP (left), 1);
+	      m6502_emitOp ("rol", "a");
+	      if(maskedtopbyte)
+		m6502_emitOp ("and", IMMDFMT, topbytemask);
+
+	      m6502_transferRegReg(m6502_reg_a, m6502_reg_x, true);
+	      if(!IS_AOP_XY(AOP(result)))
+		m6502_fastRestoreA();
+	    }
+	}
+
+      m6502_loadOrFreeRegTemp (m6502_reg_a, needpulla);
     }
   else
     {
+      //m6502_emitComment (TRACEGEN, "  %s - any to reg", __func__);
+
       needpulla = storeRegTempIfSurv (m6502_reg_a);
-      needpullx = storeRegTempIfSurv (m6502_reg_x);
-      m6502_loadRegFromAop (m6502_reg_xa, AOP (left), 0);
-      XAccLsh (m6502_reg_x, shCount);
-      m6502_storeRegToFullAop (m6502_reg_xa, AOP (result), 0);
-      m6502_loadOrFreeRegTemp (m6502_reg_x, needpullx);
+
+      if(IS_AOP_XA(AOP(result)) && !maskedtopbyte)
+	{
+	  // TODO: count > 2 efficient?
+	  m6502_loadRegFromAop (m6502_reg_xa, AOP (left), 0);
+	  XAccLsh (m6502_reg_x, shCount);
+	}
+      else
+	{
+	  int xloc;
+	  m6502_loadRegFromAop (m6502_reg_a, AOP (left), 0);
+	  m6502_emitOp ("asl", "a");
+	  m6502_dirtyReg(m6502_reg_a);
+	  storeRegTemp(m6502_reg_a, true);
+	  xloc=m6502_getLastTempOfs();
+
+	  m6502_loadRegFromAop (m6502_reg_a, AOP (left), 1);
+	  m6502_emitOp ("rol", "a");
+	  shCount--;
+
+	  while (shCount--)
+	    {
+	      m6502_emitRegTempOp("asl", xloc);
+	      m6502_emitOp ("rol", "a");
+	    }
+
+	  if(maskedtopbyte)
+	    m6502_emitOp ("and", IMMDFMT, topbytemask);
+
+	  m6502_transferRegReg(m6502_reg_a, m6502_reg_x, true);
+	  if(IS_AOP_XY(AOP(result)))
+	    m6502_loadRegTemp(m6502_reg_y);
+	  else
+	    m6502_loadRegTemp(m6502_reg_a);
+	}
       m6502_loadOrFreeRegTemp (m6502_reg_a, needpulla);
     }
-
-  if (maskedtopbyte)
-    {
-      bool in_a = (result->aop->type == AOP_REG && result->aop->aopu.aop_reg[1]->rIdx == A_IDX);
-      bool needpull = false;
-      if (!in_a)
-	{
-	  needpull = pushRegIfUsed (m6502_reg_a);
-	  m6502_loadRegFromAop (m6502_reg_a, result->aop, 1);
-	}
-      m6502_emitOp ("and", IMMDFMT, topbytemask);
-      if (!in_a)
-	{
-	  m6502_storeRegToAop (m6502_reg_a, result->aop, 1);
-	  pullOrFreeReg (m6502_reg_a, needpull);
-	}
-    }
- done:
-  ;
 }
 
 /**************************************************************************
@@ -646,11 +754,14 @@ static void
 genlsh32 (operand * result, operand * left, int shCount)
 {
   m6502_emitComment (TRACEGEN, "  %s - shift=%d", __func__, shCount);
+  bool needpullx = false;
 
   sym_link *resulttype = operandType (result);
   unsigned topbytemask = (IS_BITINT (resulttype) && SPEC_USIGN (resulttype) && (SPEC_BITINTWIDTH (resulttype) % 8)) ?
     (0xff >> (8 - SPEC_BITINTWIDTH (resulttype) % 8)) : 0xff;
   bool maskedtopbyte = (topbytemask != 0xff);
+  if(AOP_TYPE(left)==AOP_SOF || AOP_TYPE(result)==AOP_SOF)
+    needpullx=storeRegTempIfSurv(m6502_reg_x);
 
   wassertl(AOP_SIZE (result)==4, "genlsh32 - AOP_SIZE != 4");
 
@@ -688,6 +799,7 @@ genlsh32 (operand * result, operand * left, int shCount)
           pullOrFreeReg (m6502_reg_a, needpull);
         }
     }
+  m6502_loadOrFreeRegTemp (m6502_reg_x, needpullx);
 }
 
 /**************************************************************************
@@ -696,7 +808,6 @@ genlsh32 (operand * result, operand * left, int shCount)
 static void
 genLeftShiftLiteral (operand * left, operand * result, int shCount)
 {
-  bool restore_x = false;
   int size, offset;
 
   m6502_emitComment (TRACEGEN, __func__);
@@ -716,10 +827,6 @@ genLeftShiftLiteral (operand * left, operand * result, int shCount)
     } 
   else
     {
-      // FIXME: should move this to each genlsh
-      if(AOP_TYPE(left)==AOP_SOF || AOP_TYPE(result)==AOP_SOF)
-	restore_x=storeRegTempIfSurv(m6502_reg_x);
-
       switch (size)
 	{
 	case 1:
@@ -735,7 +842,6 @@ genLeftShiftLiteral (operand * left, operand * result, int shCount)
 	  emitcode("ERROR", "%s: Invalid operand size %d", __func__, size);
 	  break;
 	}
-      m6502_loadOrFreeRegTemp(m6502_reg_x, restore_x);
     }
 }
 

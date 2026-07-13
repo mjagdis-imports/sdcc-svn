@@ -427,6 +427,32 @@ replace restart {
 	; peephole gencopy 1 - removed redundant tsx
 }
 
+replace restart {
+	lda	%1
+	asl	a
+	sta	*(REGTEMP+0)
+	lda	%2
+	rol	a
+	tax
+	lda	*(REGTEMP+0)
+	%5	%3
+	sta	%1
+	txa
+	%5	%4
+	sta	%2
+} by {
+	; peephole lshift1 + logical op - reorder and remove REGTEMP reference
+	lda	%1
+	asl	a
+	%5	%3
+	sta	%1
+	lda	%2
+	rol	a
+;	tax
+	%5	%4
+	sta	%2
+} if same(%5 'and' 'ora' 'eor' )
+
 ////////////////////////////////////////////////////////
 // Reorder copy
 ////////////////////////////////////////////////////////
