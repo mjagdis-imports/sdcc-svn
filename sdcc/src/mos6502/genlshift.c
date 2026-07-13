@@ -167,18 +167,25 @@ genlsh16 (operand * result, operand * left, int shCount)
   if (shCount >= 8)
     {
       m6502_emitComment (TRACEGEN, "  %s - shCount>=8", __func__);
+      if (shCount != 8 || maskedtopbyte)
+	{
+	  shCount -= 8;
 
-      shCount -= 8;
-      // TODO
-      needpulla = pushRegIfSurv (m6502_reg_a);
-      m6502_loadRegFromAop (m6502_reg_a, AOP (left), 0);
-      m6502_AccLsh (shCount);
-      if (maskedtopbyte)
-	m6502_emitOp ("and", IMMDFMT, topbytemask);
+	  needpulla = pushRegIfSurv (m6502_reg_a);
+	  m6502_loadRegFromAop (m6502_reg_a, AOP (left), 0);
+	  m6502_AccLsh (shCount);
+	  if (maskedtopbyte)
+	    m6502_emitOp ("and", IMMDFMT, topbytemask);
 
-      m6502_storeRegToAop (m6502_reg_a, AOP (result), 1);
-      m6502_storeConstToAop (0, AOP (result), 0);
-      pullOrFreeReg (m6502_reg_a, needpulla);
+	  m6502_storeRegToAop (m6502_reg_a, AOP (result), 1);
+	  m6502_storeConstToAop (0, AOP (result), 0);
+	  pullOrFreeReg (m6502_reg_a, needpulla);
+	}
+      else
+	{
+	  m6502_transferAopAop (AOP (left), 0, AOP (result), 1);
+	  m6502_storeConstToAop (0, AOP (result), 0);
+	}
     }
   else if(AOP_TYPE(result)!=AOP_REG)
     {

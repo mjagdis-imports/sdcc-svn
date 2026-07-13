@@ -1,5 +1,10 @@
 2026-07-12 Gabriele Gorla <gorlik@yahoo.com>
 
+    * src/mos6502/genlshift.c:
+      Special case left shift by 8.
+
+2026-07-12 Gabriele Gorla <gorlik@yahoo.com>
+
     * src/mos6502/gen.h,
       src/mos6502/gen.c,
       src/mos6502/peeph.def,
