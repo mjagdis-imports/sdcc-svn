@@ -5,6 +5,8 @@
       src/mos6502/peeph.def,
       src/mos6502/genlshift.c:
       Refactor genlsh16().
+    * src/mos6502/genrshift.c:
+      Avoid double saving X.
 
 2026-07-10 Philipp Klaus Krause <philipp@colecovision.eu>
 

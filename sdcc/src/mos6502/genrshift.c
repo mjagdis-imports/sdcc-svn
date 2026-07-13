@@ -239,6 +239,10 @@ static void
 genrsh8 (operand * result, operand * left, int shCount, int sign)
 {
   bool needpulla = false;
+  bool needpullx = false;
+
+  if(AOP_TYPE(left)==AOP_SOF || AOP_TYPE(result)==AOP_SOF)
+    needpullx=storeRegTempIfSurv(m6502_reg_x);
 
   m6502_emitComment (TRACEGEN, "  %s - shift=%d", __func__, shCount);
   if (shCount==0)
@@ -260,6 +264,8 @@ genrsh8 (operand * result, operand * left, int shCount, int sign)
       m6502_storeRegToFullAop (m6502_reg_a, AOP (result), sign);
       pullOrFreeReg (m6502_reg_a, needpulla);
     }
+
+  m6502_loadOrFreeRegTemp (m6502_reg_x, needpullx);
 }
 
 /**************************************************************************
@@ -922,6 +928,10 @@ static void
 genrsh32 (operand * result, operand * left, int shCount, int sign)
 {
   m6502_emitComment (TRACEGEN, "  %s - shift=%d", __func__, shCount);
+  bool needpullx = false;
+
+  if(AOP_TYPE(left)==AOP_SOF || AOP_TYPE(result)==AOP_SOF)
+    needpullx=storeRegTempIfSurv(m6502_reg_x);
 
   if (shCount >= 24)
     {
@@ -939,6 +949,8 @@ genrsh32 (operand * result, operand * left, int shCount, int sign)
     {
       shiftRLong4(left, result, shCount, sign);
     }
+
+  m6502_loadOrFreeRegTemp (m6502_reg_x, needpullx);
 }
 
 /**************************************************************************
@@ -947,7 +959,6 @@ genrsh32 (operand * result, operand * left, int shCount, int sign)
 static void
 genRightShiftLiteral (operand * left, operand * result, int shCount, int sign)
 {
-  bool restore_x = false;
   int size, offset;
 
   m6502_emitComment (TRACEGEN, __func__);
@@ -1005,10 +1016,6 @@ genRightShiftLiteral (operand * left, operand * result, int shCount, int sign)
     }
   else
     {
-      // FIXME: should move this to each genrsh
-      if(AOP_TYPE(left)==AOP_SOF || AOP_TYPE(result)==AOP_SOF)
-	restore_x=storeRegTempIfSurv(m6502_reg_x);
-
       switch (size)
 	{
 	case 1:
@@ -1023,8 +1030,7 @@ genRightShiftLiteral (operand * left, operand * result, int shCount, int sign)
 	default:
 	  emitcode("ERROR", "%s: Invalid operand size %d", __func__, size);
 	  break;
-	}
-      m6502_loadOrFreeRegTemp(m6502_reg_x, restore_x);
+        }
     }
 }
 
