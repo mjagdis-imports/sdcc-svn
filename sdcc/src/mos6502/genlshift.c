@@ -169,17 +169,15 @@ genlsh16 (operand * result, operand * left, int shCount)
       m6502_emitComment (TRACEGEN, "  %s - shCount>=8", __func__);
       if (shCount != 8 || maskedtopbyte)
 	{
-	  shCount -= 8;
-
-	  needpulla = pushRegIfSurv (m6502_reg_a);
+	  needpulla = storeRegTempIfSurv (m6502_reg_a);
 	  m6502_loadRegFromAop (m6502_reg_a, AOP (left), 0);
-	  m6502_AccLsh (shCount);
+	  m6502_AccLsh (shCount - 8);
 	  if (maskedtopbyte)
 	    m6502_emitOp ("and", IMMDFMT, topbytemask);
 
 	  m6502_storeRegToAop (m6502_reg_a, AOP (result), 1);
 	  m6502_storeConstToAop (0, AOP (result), 0);
-	  pullOrFreeReg (m6502_reg_a, needpulla);
+	  m6502_loadOrFreeRegTemp (m6502_reg_a, needpulla);
 	}
       else
 	{
@@ -217,6 +215,7 @@ genlsh16 (operand * result, operand * left, int shCount)
 	  // m6502_emitComment (TRACEGEN, "  %s - non register path shCount==7", __func__);
 
           needpulla = storeRegTempIfSurv (m6502_reg_a);
+
           m6502_loadRegFromAop (m6502_reg_a, AOP (left), 1);
 	  m6502_emitOp ("lsr", "a");
           m6502_loadRegFromAop (m6502_reg_a, AOP (left), 0);
@@ -226,6 +225,7 @@ genlsh16 (operand * result, operand * left, int shCount)
             m6502_emitOp ("and", IMMDFMT, topbytemask);
 
 	  m6502_storeRegToAop (m6502_reg_a, AOP (result), 1);
+
           m6502_loadRegFromConst(m6502_reg_a, 0);
 	  m6502_emitOp ("ror", "a");
 	  m6502_storeRegToAop (m6502_reg_a, AOP (result), 0);
