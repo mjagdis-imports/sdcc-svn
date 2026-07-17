@@ -1,5 +1,10 @@
 2026-07-17 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/SDCCopt.c:
+	  Fix leftover debug iCode dump.
+
+2026-07-17 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* Merge nosidechannels branch.
 
 2026-07-15 Gabriele Gorla <gorlik@yahoo.com>
