@@ -2094,7 +2094,7 @@ killiCode (eBBlock **ebbs, int i, int count, iCode *ic)
 /* killDeadCode - eliminates dead assignments                      */
 /*-----------------------------------------------------------------*/
 int
-killDeadCode (ebbIndex *ebbi)
+killDeadCode (ebbIndex *ebbi, bool cleanblocks)
 {
   eBBlock **ebbs = ebbi->dfOrder;
   int count = ebbi->count;
@@ -2128,14 +2128,13 @@ killDeadCode (ebbIndex *ebbi)
               int j;
               bool kill = false;
 
-#if 0 // Fix for bug #3998, disabled for SDCC 4.6.0 RC2 since it causes regression in diagnostics.
-              // Get rid of computations in unreachable blocks early, so we don't leave dead defs/uses for iTemps, that might confuse other optimizations.
-              if (ebbs[i]->noPath && (IS_ITEMP (ic->result) || IS_ITEMP (ic->left) || IS_ITEMP (ic->right)))
-                {
-                  kill = true;
-                  goto kill;
-                }
-#endif
+              if (cleanblocks) // Fix for bug #3998, but don't do it too early, toa void a regression in diagnostics.
+                // Get rid of computations in unreachable blocks early, so we don't leave dead defs/uses for iTemps, that might confuse other optimizations.
+                if (ebbs[i]->noPath && (IS_ITEMP (ic->result) || IS_ITEMP (ic->left) || IS_ITEMP (ic->right)))
+                  {
+                    kill = true;
+                    goto kill;
+                  }
 
               if (SKIP_IC (ic) && ic->op != RECEIVE &&
                 !(ic->op == CALL && IS_SYMOP (ic->left) && OP_SYMBOL (ic->left)->funcPure && optimize.purity) ||
@@ -2261,19 +2260,19 @@ checkStaticArrayParams (ebbIndex *ebbi)
       {
         if (ic->left && ic->left->isSemDeref)
           {
-            const struct valinfo v = getOperandValinfo (ic, ic->left);
+            const struct valinfo v = getOperandValinfo (ic, ic->left, false);
             if ((v.anything || !v.nonnull) && ic->left->isSemDeref)
               werrorfl (ic->filename, ic->lineno, W_OPTIONAL_PTR_DEREF);
           }
         if (ic->right && ic->right->isSemDeref)
           {
-            const struct valinfo v = getOperandValinfo (ic, ic->right);
+            const struct valinfo v = getOperandValinfo (ic, ic->right, false);
             if ((v.anything || !v.nonnull) && ic->right->isSemDeref)
               werrorfl (ic->filename, ic->lineno, W_OPTIONAL_PTR_DEREF);
           }
         if (ic->result && ic->result->isSemDeref)
           {
-            const struct valinfo v = getOperandValinfo (ic, ic->right);
+            const struct valinfo v = getOperandValinfo (ic, ic->right, false);
             if ((v.anything || !v.nonnull) && ic->result->isSemDeref)
               werrorfl (ic->filename, ic->lineno, W_OPTIONAL_PTR_DEREF);
           }
@@ -2372,7 +2371,7 @@ checkStaticArrayParams (ebbIndex *ebbi)
                       continue;
 
                     // Deduce bound
-                    const struct valinfo vi = getOperandValinfo (pic, pargop);
+                    const struct valinfo vi = getOperandValinfo (pic, pargop, false);
                     long long pargv = (vi.anything || vi.min < 0 || vi.min > ULONG_MAX) ? 0 : vi.min;
                     pargv *= pscale;
                     pargv += poffset;
@@ -2383,7 +2382,7 @@ checkStaticArrayParams (ebbIndex *ebbi)
                 else
                   continue;
 
-                const struct valinfo vi = getOperandValinfo (ic, argop);
+                const struct valinfo vi = getOperandValinfo (ic, argop, false);
                 if (!vi.anything && vi.maxsize < paramsize && DCL_STATIC_ARRAY_PARAM (paramtype))
                   werrorfl (ic->filename, ic->lineno, W_STATIC_ARRAY_PARAM_LENGTH);
                 else if (!vi.anything && vi.maybemaxsize < paramsize)
@@ -2392,7 +2391,7 @@ checkStaticArrayParams (ebbIndex *ebbi)
           }
         else if (ic->op == GET_VALUE_AT_ADDRESS)
           {
-            const struct valinfo v = getOperandValinfo (ic, ic->left);
+            const struct valinfo v = getOperandValinfo (ic, ic->left, false);
             wassert (IS_OP_LITERAL (ic->right));
             long long roff = operandLitValue (ic->right);
             int size = getSize (operandType (ic->result));
@@ -2406,7 +2405,7 @@ checkStaticArrayParams (ebbIndex *ebbi)
           }
         else if (POINTER_SET (ic))
           {
-            const struct valinfo v = getOperandValinfo (ic, ic->result);
+            const struct valinfo v = getOperandValinfo (ic, ic->result, false);
             int size = getSize (operandType (ic->right));
             if (!v.anything && size > (long long)v.maxsize)
               werrorfl (ic->filename, ic->lineno, W_INVALID_PTR_DEREF);
@@ -2421,16 +2420,16 @@ checkStaticArrayParams (ebbIndex *ebbi)
             bool left_optional_maybenull = false;
             bool right_optional_maybenull = false;
             if (IS_PTR (operandType (ic->left)) && isOptional (operandType (ic->left)->next) && !ic->left->isOptionalEliminated)
-              left_optional_maybenull = !getOperandValinfo (ic, ic->left).nonnull;
+              left_optional_maybenull = !getOperandValinfo (ic, ic->left, false).nonnull;
             if (IS_PTR (operandType (ic->right)) && isOptional (operandType (ic->right)->next) && !ic->right->isOptionalEliminated)
-              right_optional_maybenull = !getOperandValinfo (ic, ic->right).nonnull;
+              right_optional_maybenull = !getOperandValinfo (ic, ic->right, false).nonnull;
             if (left_optional_maybenull || right_optional_maybenull)
               werrorfl (ic->filename, ic->lineno, W_OPTIONAL_RELATIONAL);
           }
         else if (ic->op == '+' || ic->op == '-')
-          if (IS_PTR (operandType (ic->left)) && isOptional (operandType (ic->left)->next) && !ic->left->isOptionalEliminated && !getOperandValinfo (ic, ic->left).nonnull)
+          if (IS_PTR (operandType (ic->left)) && isOptional (operandType (ic->left)->next) && !ic->left->isOptionalEliminated && !getOperandValinfo (ic, ic->left, false).nonnull)
             werrorfl (ic->filename, ic->lineno, W_OPTIONAL_ARITHMETIC);
-          else if (IS_PTR (operandType (ic->right)) && isOptional (operandType (ic->right)->next) && !ic->left->isOptionalEliminated && !getOperandValinfo (ic, ic->right).nonnull)
+          else if (IS_PTR (operandType (ic->right)) && isOptional (operandType (ic->right)->next) && !ic->left->isOptionalEliminated && !getOperandValinfo (ic, ic->right, false).nonnull)
             werrorfl (ic->filename, ic->lineno, W_OPTIONAL_ARITHMETIC);
       }
 }
@@ -3834,7 +3833,7 @@ eBBlockFromiCode (iCode *ic)
   /* Burn the corpses, so the dead may rest in peace,
      safe from cse necromancy */
   computeDataFlow (ebbi);
-  killDeadCode (ebbi);
+  killDeadCode (ebbi, false);
 
   /* do common subexpression elimination for each block */
   change = cseAllBlocks (ebbi, FALSE);
@@ -3866,7 +3865,7 @@ eBBlockFromiCode (iCode *ic)
     }
 
   /* kill dead code */
-  kchange = killDeadCode (ebbi);
+  kchange = killDeadCode (ebbi, false);
 
   if (options.dump_i_code)
     dumpEbbsToFileExt (DUMP_DEADCODE, ebbi);
@@ -3887,7 +3886,7 @@ eBBlockFromiCode (iCode *ic)
       computeControlFlow (ebbi);
       loops = createLoopRegions (ebbi);
       computeDataFlow (ebbi);
-      killDeadCode (ebbi);
+      killDeadCode (ebbi, false);
       // Check before loop optimizations, but after dead code elimination and generalized constant propagation, so we can avoid false positives in dead branches, and have the necessary information.
       checkStaticArrayParams (ebbi);
     }
@@ -3915,7 +3914,7 @@ eBBlockFromiCode (iCode *ic)
          dead code elimination once more : this will
          get rid of the extra assignments to the induction
          variables created during loop optimizations */
-      killDeadCode (ebbi);
+      killDeadCode (ebbi, false);
 
       if (options.dump_i_code)
         dumpEbbsToFileExt (DUMP_LOOPD, ebbi);
@@ -3932,7 +3931,7 @@ eBBlockFromiCode (iCode *ic)
       computeControlFlow (ebbi);
       loops = createLoopRegions (ebbi);
       computeDataFlow (ebbi);
-      killDeadCode (ebbi);
+      killDeadCode (ebbi, true);
       if (options.dump_i_code)
         dumpEbbsToFileExt (DUMP_GENCONSTPROP1, ebbi);
     }
@@ -3951,7 +3950,7 @@ eBBlockFromiCode (iCode *ic)
     optimizeCastCast (ebbi->bbOrder, ebbi->count);
   computeDataFlow (ebbi);                                  // Apparently needed here, since otherwise we get some cases of killDeadCode below killing code not actually dead.
   recomputeLiveRanges (ebbi->bbOrder, ebbi->count, false); // Recompute again before killing dead code, since dead code elimination needs updated ic->seq - the old ones might have been invalidated in optimizeOpWidth above.
-  killDeadCode (ebbi);                                     // Ensure lospre doesn't resurrect dead code.
+  killDeadCode (ebbi, false);                               // Ensure lospre doesn't resurrect dead code.
   adjustIChain (ebbi->bbOrder, ebbi->count);
   ic = iCodeLabelOptimize (iCodeFromeBBlock (ebbi->bbOrder, ebbi->count));
   checkPurity (ic);                                        // Check purity - dead code elimination had a chance to eliminate any calls to impure functions by now.
@@ -3983,9 +3982,9 @@ eBBlockFromiCode (iCode *ic)
   computeControlFlow (ebbi);
   loops = createLoopRegions (ebbi);
   computeDataFlow (ebbi);
-  killDeadCode (ebbi);
+  killDeadCode (ebbi, false);
   offsetFoldUse (ebbi->bbOrder, ebbi->count);
-  killDeadCode (ebbi);
+  killDeadCode (ebbi, true);
 
   /* sort it back by block number */
   //qsort (ebbs, saveCount, sizeof (eBBlock *), bbNumCompare);
@@ -4045,13 +4044,14 @@ eBBlockFromiCode (iCode *ic)
 
   /* miscellaneous optimizations */
   miscOpt (ebbi->bbOrder, ebbi->count);
-
+dumpEbbsToFileExt (DUMP_CUSTOM0, ebbi);
   // Generalized constant propagation - second time.
   if (optimize.genconstprop)
     {
       computeControlFlow (ebbi);
       loops = createLoopRegions (ebbi);
       computeDataFlow (ebbi);
+      killDeadCode (ebbi, true);
       recomputeLiveRanges (ebbi->bbOrder, ebbi->count, false);
       ic = iCodeLabelOptimize (iCodeFromeBBlock (ebbi->bbOrder, ebbi->count));
       recomputeValinfos (ic, ebbi, "_2");
@@ -4061,7 +4061,7 @@ eBBlockFromiCode (iCode *ic)
       computeControlFlow (ebbi);
       loops = createLoopRegions (ebbi);
       computeDataFlow (ebbi);
-      killDeadCode (ebbi);
+      killDeadCode (ebbi, true);
       if (options.dump_i_code)
         dumpEbbsToFileExt (DUMP_GENCONSTPROP2, ebbi);
     }
@@ -4082,7 +4082,7 @@ eBBlockFromiCode (iCode *ic)
     computeControlFlow (ebbi);
     loops = createLoopRegions (ebbi);
     computeDataFlow (ebbi);
-    killDeadCode (ebbi); /* iCodeLabelOptimize() above might result in dead code, when both branches of an ifx go to the same destination. */
+    killDeadCode (ebbi, true); // iCodeLabelOptimize() above might result in dead code, when both branches of an ifx go to the same destination.
   }
   while (change);
 

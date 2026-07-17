@@ -773,13 +773,6 @@ replace {
 } if notVolatile %1 %2 %3
 
 replace {
-	mov	r%1,@r%2
-} by {
-	;	Peephole 130	changed target address mode r%1 to ar%1
-	mov	ar%1,@r%2
-}
-
-replace {
 	mov	a,%1
 	subb	a,#0x01
 	mov	%2,a
