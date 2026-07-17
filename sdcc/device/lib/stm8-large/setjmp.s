@@ -1,7 +1,7 @@
 ;--------------------------------------------------------------------------
 ;  setjmp.s
 ;
-;  Copyright (C) 2014-2021, Philipp Klaus Krause
+;  Copyright (c) 2014-2026, Philipp Klaus Krause
 ;
 ;  This library is free software; you can redistribute it and/or modify it
 ;  under the terms of the GNU General Public License as published by the
@@ -30,6 +30,7 @@
 
 	.globl ___setjmp
 
+; int setjmp(jmp_buf env);
 ___setjmp:
 	; store return address
 	ldw	y, (1, sp)
@@ -48,20 +49,22 @@ ___setjmp:
 
 	.globl _longjmp
 
+; void longjmp(jmp_buf env, int val);
 _longjmp:
-	ldw	y, (4, sp)
-
-	; Restore stack pointer
-	pushw	x
+	; Restore stack pointer while saving val in jmp_buf.
+	ldw	y, x
 	ldw	x, (3, x)
-	ldw	(1, x), y
-	popw	y
+	ld	a, (4, sp)
+	ld	(3, y), a
+	ld	a, (5, sp)
+	ld	(4, y), a
 	ldw	sp, x
-
-	; Calculate return value
 	popw	x
 	pop	a
-	tnzw	x
+
+	; Calculate return value
+	ldw	x, y
+	ldw	x, (3, x)
 	jrne	jump
 	incw	x
 jump:

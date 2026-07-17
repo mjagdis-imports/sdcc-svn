@@ -1,3 +1,9 @@
+2026-07-18 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* device/lib/stm8/setjmp.s,
+	  device/lib/stm8-large/setjmp.s:
+	  Fix bug #4023.
+
 2026-07-17 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCopt.c:
