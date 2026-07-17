@@ -1159,7 +1159,7 @@ aopOp (operand *op, const iCode *ic, bool result)
       asmop *aop = newAsmop (AOP_LIT);
       aop->aopu.aop_lit = OP_VALUE (op);
       aop->size = getSize (operandType (op));
-      aop->valinfo = getOperandValinfo (ic, op);
+      aop->valinfo = getOperandValinfo (ic, op, false);
       op->aop = aop;
       return;
     }
@@ -1171,7 +1171,7 @@ aopOp (operand *op, const iCode *ic, bool result)
     {
       op->aop = aopForSym (ic, sym);
       if (!result)
-        op->aop->valinfo = getOperandValinfo (ic, op);
+        op->aop->valinfo = getOperandValinfo (ic, op, false);
       return;
     }
 
@@ -1185,7 +1185,7 @@ aopOp (operand *op, const iCode *ic, bool result)
       if (completely_spilt)
         {
           op->aop = aopForRemat (sym);
-          op->aop->valinfo = getOperandValinfo (ic, op);
+          op->aop->valinfo = getOperandValinfo (ic, op, false);
           return;
         }
     }
@@ -1207,7 +1207,7 @@ aopOp (operand *op, const iCode *ic, bool result)
 
     aop->size = getSize (operandType (op));
     if (!result)
-      aop->valinfo = getOperandValinfo (ic, op);
+      aop->valinfo = getOperandValinfo (ic, op, false);
     op->aop = aop;
 
     for (i = 0; i < aop->size; i++)
@@ -3437,6 +3437,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
             {
               adjustStack (1, false, false, false);
               pushed_a = false;
+              result_in_a = true;
             }
           else
             {
@@ -3501,8 +3502,8 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           cheapMove (result_aop, i, ASMOP_A, 0, FALSE);
 
           if (aopInReg (result_aop, i, A_IDX))
-            result_in_a = TRUE;
-            
+            result_in_a = true;
+
           i++;
         }
     }
@@ -8071,7 +8072,7 @@ genLeftShift (const iCode *ic)
     {
       skip_bytes = iterations / 16 * 2;
       genMove_o (shiftop, skip_bytes, left->aop, 0, shiftop->size - skip_bytes, right->aop->regs[A_IDX] < 0 && !premoved_count, regDead (X_IDX, ic) && right->aop->regs[XL_IDX] < 0 && right->aop->regs[XH_IDX] < 0, regDead (Y_IDX, ic) && right->aop->regs[YL_IDX] < 0 && right->aop->regs[YH_IDX] < 0);
-      genMove_o (shiftop, 0, ASMOP_ZERO, 0, skip_bytes, !premoved_count, regDead (X_IDX, ic) && shiftop->regs[XL_IDX] < 0 && shiftop->regs[XH_IDX] < 0, regDead (Y_IDX, ic) && shiftop->regs[YL_IDX] < 0 && shiftop->regs[YH_IDX] < 0);
+      genMove_o (shiftop, 0, ASMOP_ZERO, 0, skip_bytes, !premoved_count && shiftop->regs[A_IDX] < 0, regDead (X_IDX, ic) && shiftop->regs[XL_IDX] < 0 && shiftop->regs[XH_IDX] < 0, regDead (Y_IDX, ic) && shiftop->regs[YL_IDX] < 0 && shiftop->regs[YH_IDX] < 0);
       iterations %= 16;
     }
   else

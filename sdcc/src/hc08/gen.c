@@ -945,7 +945,7 @@ loadRegHXAfromAop(asmop * aopH, int ofsH, asmop * aopX, int ofsX, asmop * aopA, 
 /*                   be copied to the original aop location.                */
 /*--------------------------------------------------------------------------*/
 static asmop *
-forceStackedAop (asmop * aop, bool copyOrig)
+forceStackedAop (asmop *aop, bool copyOrig)
 {
   reg_info *reg;
   int loffset;
@@ -2416,7 +2416,7 @@ operandsEqu (operand *op1, operand *op2)
 /* sameRegs - two asmops have the same registers                   */
 /*-----------------------------------------------------------------*/
 static bool
-sameRegs (asmop *aop1, asmop *aop2)
+sameRegs (const asmop *aop1, const asmop *aop2)
 {
   int i;
 
@@ -2478,7 +2478,7 @@ aopOp (operand *op, iCode * ic, bool result)
       aop->size = getSize (operandType (op));
       aop->op = op;
       if (!result)
-        aop->valinfo = getOperandValinfo (ic, op);
+        aop->valinfo = getOperandValinfo (ic, op, false);
       return;
     }
 
@@ -2512,7 +2512,7 @@ aopOp (operand *op, iCode * ic, bool result)
       op->aop = aop = aopForSym (ic, OP_SYMBOL (op), result);
       aop->op = op;
       if (!result)
-        aop->valinfo = getOperandValinfo (ic, op);
+        aop->valinfo = getOperandValinfo (ic, op, false);
       //printf ("new symbol %s\n", OP_SYMBOL (op)->name);
       //printf (" with size = %d\n", aop->size);
       return;
@@ -2538,7 +2538,7 @@ aopOp (operand *op, iCode * ic, bool result)
       aop->size = 0;
       aop->op = op;
       if (!result)
-        aop->valinfo = getOperandValinfo (ic, op);
+        aop->valinfo = getOperandValinfo (ic, op, false);
       return;
     }
 
@@ -2556,7 +2556,7 @@ aopOp (operand *op, iCode * ic, bool result)
           aop->size = getSize (sym->type);
           aop->op = op;
           if (!result)
-            aop->valinfo = getOperandValinfo (ic, op);
+            aop->valinfo = getOperandValinfo (ic, op, false);
           return;
         }
 
@@ -2574,7 +2574,7 @@ aopOp (operand *op, iCode * ic, bool result)
           aop->size = getSize (sym->type);
           aop->op = op;
           if (!result)
-            aop->valinfo = getOperandValinfo (ic, op);
+            aop->valinfo = getOperandValinfo (ic, op, false);
           return;
         }
 
@@ -2601,7 +2601,7 @@ aopOp (operand *op, iCode * ic, bool result)
           //printf ("spill symbol %s\n", OP_SYMBOL (op)->name);
           //printf (" with size = %d\n", aop->size);
           if (!result)
-            aop->valinfo = getOperandValinfo (ic, op);
+            aop->valinfo = getOperandValinfo (ic, op, false);
           return;
         }
 
@@ -2610,7 +2610,7 @@ aopOp (operand *op, iCode * ic, bool result)
       aop->size = getSize (sym->type);
       aop->op = op;
       if (!result)
-        aop->valinfo = getOperandValinfo (ic, op);
+        aop->valinfo = getOperandValinfo (ic, op, false);
       return;
     }
 
@@ -2630,7 +2630,7 @@ aopOp (operand *op, iCode * ic, bool result)
     aop->regmask |= HC08MASK_REV;
   aop->op = op;
   if (!result)
-    aop->valinfo = getOperandValinfo (ic, op);
+    aop->valinfo = getOperandValinfo (ic, op, false);
 }
 
 /*-----------------------------------------------------------------*/
@@ -8947,7 +8947,7 @@ genRightShift (iCode * ic)
     countreg = hc08_reg_a;
   needpullcountreg = (countreg && pushRegIfSurv (countreg));
   wassert (right->aop); // This can fail is left and right are the same, resulting in a segfault later (bug #3598).
-  if(countreg)
+  if (countreg)
     {
       countreg->isFree = false;
       loadRegFromAop (countreg, AOP (right), 0);
