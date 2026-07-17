@@ -87,8 +87,8 @@ static char *m6502_keywords[] = {
   "reentrant",
   "code",
   "data",
-  "zp",
   "near",
+  "zp",
   "xdata",
   "far",
   //  "overlay",
@@ -261,34 +261,6 @@ static void m6502_genXINIT (FILE * of)
   // This is not called but it must be defined to avoid
   // SDCCmem.c line 445 from putting DATA into BSS and
   // then generating code to fill it in.
-}
-
-/* Do CSE estimation */
-static bool cseCostEstimation (iCode *ic, iCode *pdic)
-{
-  operand *result = IC_RESULT(ic);
-  sym_link *result_type = operandType(result);
-
-  /* if it is a pointer then return ok for now */
-  if (IC_RESULT(ic) && IS_PTR(result_type)) return 1;
-
-  if (ic->op == ADDRESS_OF)
-    return 0;
-
-  /* if bitwise | add & subtract then no since m6502 is pretty good at it
-     so we will cse only if they are local (i.e. both ic & pdic belong to
-     the same basic block */
-  if (IS_BITWISE_OP(ic) || ic->op == '+' || ic->op == '-')
-    {
-      /* then if they are the same Basic block then ok */
-      if (ic->eBBlockNum == pdic->eBBlockNum)
-        return 1;
-      else
-        return 0;
-    }
-
-  /* for others it is cheaper to do the cse */
-  return 1;
 }
 
 /* Indicate which extended bit operations this port supports */
@@ -823,8 +795,8 @@ PORT mos6502_port =
     1,                          /* transform != to !(a == b) */
     0,                          /* leave == */
     false,                      /* No array initializer support. */
-    cseCostEstimation,          /* CSE cost estimation */
-    NULL,                       /* no builtin functions */
+    NULL,          		/* CSE cost estimation */
+    m6502_builtins,             /* builtin functions */
     GPOINTER,                   /* treat unqualified pointers as "generic" pointers */
     true,
     false,
@@ -995,8 +967,8 @@ PORT mos65c02_port =
     1,                          /* transform != to !(a == b) */
     0,                          /* leave == */
     false,                      /* No array initializer support. */
-    cseCostEstimation,          /* CSE cost estimation */
-    NULL,                       /* no builtin functions */
+    NULL,		        /* CSE cost estimation */
+    m6502_builtins,             /* builtin functions */
     GPOINTER,                   /* treat unqualified pointers as "generic" pointers */
     true,
     false,

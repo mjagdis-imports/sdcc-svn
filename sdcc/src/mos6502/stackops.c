@@ -256,12 +256,13 @@ m6502_adjustStack (int n)
           m6502_emitSetCarry(0);
           m6502_emitOp ("adc", IMMDFMT, (unsigned int)(n & 0xff));
           m6502_transferRegReg (m6502_reg_a, m6502_reg_x, true);
+          m6502_loadOrFreeRegTemp(m6502_reg_a, restore_a);
         }
 
       _S.stackPushes -= n;
       m6502_emitOp ("txs", "");
-      m6502_loadOrFreeRegTemp(m6502_reg_a, restore_a);
       m6502_loadOrFreeRegTemp(m6502_reg_x, restore_x);
     }
+
   m6502_updateCFA ();
 }

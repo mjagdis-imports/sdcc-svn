@@ -1,3 +1,132 @@
+2026-07-15 Gabriele Gorla <gorlik@yahoo.com>
+
+    * src/mos6502/genlshift.c,
+      src/mos6502/genrshift.c:
+      Improve shifts with constant.
+
+2026-07-12 Gabriele Gorla <gorlik@yahoo.com>
+
+    * src/mos6502/genlshift.c:
+      Special case left shift by 8.
+
+2026-07-12 Gabriele Gorla <gorlik@yahoo.com>
+
+    * src/mos6502/gen.h,
+      src/mos6502/gen.c,
+      src/mos6502/peeph.def,
+      src/mos6502/genlshift.c:
+      Refactor genlsh16().
+    * src/mos6502/genrshift.c:
+      Avoid double saving X.
+
+2026-07-10 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCopt.c,
+	  support/regression/tests/bug-3998.c,
+	  support/valdiag/tests/_Optional.c:
+	  Fix bug #3998.
+
+2026-07-04 Gabriele Gorla <gorlik@yahoo.com>
+
+    * src/mos6502/genbuiltin.c,
+      device/include/math.h,
+      device/lib/fabsf.c,
+      src/mos6502/gen.c,
+      src/mos6502/gen.h,
+      src/mos6502/main.c,
+      src/mos6502/ralloc2.cc:
+      Implement __builtin_fabsf
+    * src/mos6502/stackops.c:
+      Fix bug #4030.
+    * src/mos6502/gen.c:
+      Don't unecessarily dirty double registers in m6502_transferRegReg().
+    * src/mos6502/peep.c,
+      src/mos6502/peeph.def:
+      Implement notUsed() for registers and update peephole rules to match.
+    * src/mos6502/peeph.def:
+      Add AND followed by AND rule.
+
+2026-07-05 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/gen.c:
+	  Fix bug #4035.
+
+2026-07-04 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/main.c:
+	  Always do CSE.
+	* src/mos6502/gen.c,
+	  src/mos6502/peeph.def:
+	  Improve m6502_genCopy().
+	* src/mos6502/ralloc.c:
+	  Make all bitwise operation optimizable.
+
+2026-07-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/stm8/gen.c:
+	  Fix bug #4032.
+
+2026-07-04 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c:
+	  Improve handling of AOP_LIT in m6502_accopWithAop. Use register tracking in genCmpEQorNE.
+	* src/mos6502/gen.c:
+	  Improve genPointerSet().
+	* src/mos6502/peep.c:
+	  Cosmetic changes.
+
+2026-07-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Fix an invalid warning in z80-related codegen.
+
+2026-07-04 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c,
+	  src/mos6502/peeph.def:
+	  Improve m6502_copy when srcsize==1. 
+
+2026-07-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/mcs51/peeph.def:
+	  Remove peephole rule 130, which should not be necessaryy if codgen works correctly.
+	* support/regression/tests/far_arithmetic.c.in:
+	  Disable part of a test for pdk15, where it fails due to lack of code memory.
+	* support/regression/tests/string.c:
+	  Disable part of a test for mcs51 small model, where it fails due to lack of data memory.
+
+2026-07-03 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c:
+	  Only preserve used registers before a call. 
+
+2026-07-02 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/peep.c:
+	  Fix bug #4028.
+
+2026-06-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Fix bug #4026.
+
+2026-06-25 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCdflow.h,
+	  src/SDCCgenconstprop.cc,
+	  src/SDCCopt.c,
+	  src/*/gen.c:
+	  Fix bug #4025.
+
+2026-06-24 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/stm8/gen.c:
+	  Fix bug #4020.
+	* src/f8/gen.c:
+	  Fix bug #4022.
+	* src/z80/gen.c:
+	  Fix bug #4021.
+
 2026-06-23 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* Merge fuzzing branch.
@@ -15,7 +144,7 @@
 	  src/SDCCmain.c:
 	  Remove effect of --nolabelopt on unreachable labels. Too much of SDCC can't really handle unreachable basic blocks.
 	*  support/regression/ports/*/spec.mk:
-	  Fix default enable of --nosidechannels in some regressiont st targets.
+	  Fix default enable of --nosidechannels in some regression test targets.
 
 2026-06-23 Philipp Klaus Krause <philipp@colecovision.eu>
 
