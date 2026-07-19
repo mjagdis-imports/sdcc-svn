@@ -4044,7 +4044,7 @@ eBBlockFromiCode (iCode *ic)
 
   /* miscellaneous optimizations */
   miscOpt (ebbi->bbOrder, ebbi->count);
-dumpEbbsToFileExt (DUMP_CUSTOM0, ebbi);
+
   // Generalized constant propagation - second time.
   if (optimize.genconstprop)
     {

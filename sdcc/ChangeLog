@@ -1,8 +1,23 @@
+2026-07-18 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* device/lib/stm8/setjmp.s,
+	  device/lib/stm8-large/setjmp.s:
+	  Fix bug #4023.
+
+2026-07-17 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCopt.c:
+	  Fix leftover debug iCode dump.
+
+2026-07-17 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* Merge nosidechannels branch.
+
 2026-07-15 Gabriele Gorla <gorlik@yahoo.com>
 
-    * src/mos6502/genlshift.c,
-      src/mos6502/genrshift.c:
-      Improve shifts with constant.
+	* src/mos6502/genlshift.c,
+	  src/mos6502/genrshift.c:
+	  Improve shifts with constant.
 
 2026-07-12 Gabriele Gorla <gorlik@yahoo.com>
 
@@ -158,6 +173,12 @@
 	  Disable test parts that fail due to known bug #4018.
 	* src/z80/gen.c:
 	  Fix use of neg instruction in sm83 port.
+
+2026-06-23 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx,
+	  src/mcs51/gen.c:
+	  Control f8 codegen aspects by --nosidechannels: comparisons.
 
 2026-06-22 Philipp Klaus Krause <philipp@colecovision.eu>
 
