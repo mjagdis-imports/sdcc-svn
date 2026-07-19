@@ -1095,7 +1095,7 @@ aopOp (operand * op, iCode * ic, bool result, bool useDP2)
       op->aop = aop = newAsmop (AOP_LIT);
       aop->aopu.aop_lit = OP_VALUE (op);
       aop->size = getSize (operandType (op));
-      aop->valinfo = getOperandValinfo (ic, op);
+      aop->valinfo = getOperandValinfo (ic, op, false);
       return;
     }
 
@@ -1129,7 +1129,7 @@ aopOp (operand * op, iCode * ic, bool result, bool useDP2)
     {
       op->aop = aopForSym (ic, OP_SYMBOL (op), result, useDP2);
       if (!result)
-        op->aop->valinfo = getOperandValinfo (ic, op);
+        op->aop->valinfo = getOperandValinfo (ic, op, false);
       return;
     }
 
@@ -1214,7 +1214,7 @@ aopOp (operand * op, iCode * ic, bool result, bool useDP2)
             }
           sym->aop = op->aop = aop = aopForSym (ic, sym->usl.spillLoc, result, useDP2);
           if (!result)
-            aop->valinfo = getOperandValinfo (ic, op);
+            aop->valinfo = getOperandValinfo (ic, op, false);
           if (getSize (sym->type) != getSize (sym->usl.spillLoc->type))
             {
               /* Don't reuse the new aop, go with the last one */

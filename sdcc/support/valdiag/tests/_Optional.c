@@ -175,7 +175,7 @@ void jim(_Optional int *i)
 	while (i) { /* IGNORE */
 		*i = 7; /* IGNORE */
 		foo(&*i);
-		foo(&i[15]);
+		foo(&i[15]); /* IGNORE */
 	}
 	if (!i) { /* IGNORE */
 	} else {

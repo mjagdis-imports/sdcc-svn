@@ -529,7 +529,7 @@ regTypeNum (void)
       if ((sym->liveTo - sym->liveFrom) == 0)
         continue;
 
-      D (D_ALLOC, ("regTypeNum: loop on sym %p\n", sym));
+      D (D_ALLOC, ("regTypeNum: loop on sym %p\n", (void *)sym));
 
       /* if the live range is a temporary */
       if (sym->isitmp)
@@ -575,7 +575,7 @@ regTypeNum (void)
           /* for the first run we don't provide */
           /* registers for true symbols we will */
           /* see how things go                  */
-          D (D_ALLOC, ("regTypeNum: #2 setting num of %p to 0\n", sym));
+          D (D_ALLOC, ("regTypeNum: #2 setting num of %p to 0\n", (void *)sym));
           sym->nRegs = 0;
         }
     }
@@ -650,7 +650,7 @@ packRegsForAssign (iCode * ic, eBBlock * ebp)
       /* We can pack across a function call only if it's a local */
       /* variable or our parameter. Never pack global variables */
       /* or parameters to a function we call. */
-      if ((dic->op == CALL || dic->op == PCALL))
+      if (dic->op == CALL || dic->op == PCALL)
         {
           if (!OP_SYMBOL (IC_RESULT (ic))->ismyparm
               && !OP_SYMBOL (IC_RESULT (ic))->islocal)
@@ -932,35 +932,6 @@ packRegsForSupport (iCode * ic, eBBlock * ebp)
     }
 
   return changes;
-}
-
-/*-----------------------------------------------------------------*/
-/* isBitwiseOptimizable - requirements of JEAN LOUIS VERN          */
-/*-----------------------------------------------------------------*/
-static bool
-isBitwiseOptimizable (iCode * ic)
-{
-  sym_link *ltype = getSpec (operandType (IC_LEFT (ic)));
-  sym_link *rtype = getSpec (operandType (IC_RIGHT (ic)));
-
-  /* bitwise operations are considered optimizable
-     under the following conditions (Jean-Louis VERN)
-
-     x & lit
-     bit & bit
-     bit & x
-     bit ^ bit
-     bit ^ x
-     x   ^ lit
-     x   | lit
-     bit | bit
-     bit | x
-  */
-  if (IS_LITERAL(rtype) ||
-      (IS_BITVAR (ltype) && IN_BITSPACE (SPEC_OCLS (ltype))))
-    return true;
-  else
-    return false;
 }
 
 /*-----------------------------------------------------------------*/
@@ -1336,8 +1307,7 @@ packRegisters (eBBlock ** ebpp, int count)
 	     is defined in the previous instruction and
 	     this is the only usage then
 	     mark the itemp as a conditional */
-	  if ((IS_CONDITIONAL (ic) ||
-	       (IS_BITWISE_OP(ic) && isBitwiseOptimizable (ic))) &&
+	  if ((IS_CONDITIONAL (ic) || IS_BITWISE_OP(ic) ) &&
 	      ic->next && ic->next->op == IFX &&
 	      bitVectnBitsOn (OP_USES(IC_RESULT(ic)))==1 &&
 	      isOperandEqual (IC_RESULT (ic), IC_COND (ic->next)) &&

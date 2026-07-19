@@ -31,6 +31,8 @@
 #include <math.h>
 #include <errno.h>
 
+#undef fabsf
+
 float fabsf(float x) _FLOAT_FUNC_REENTRANT
 {
     union float_long fl;

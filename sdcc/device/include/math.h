@@ -111,4 +111,9 @@ float modff(float x, float * y);
 
 int isnan(float f);
 int isinf(float f);
+
+#ifdef __SDCC_mos6502
+#define fabsf(x) __builtin_fabsf(x)
+#endif
+
 #endif  /* _INC_MATH */

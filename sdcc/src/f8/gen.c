@@ -1385,7 +1385,7 @@ aopOp (operand *op, const iCode *ic, bool result)
       asmop *aop = newAsmop (AOP_LIT);
       aop->aopu.aop_lit = OP_VALUE (op);
       aop->size = getSize (operandType (op));
-      aop->valinfo = getOperandValinfo (ic, op);
+      aop->valinfo = getOperandValinfo (ic, op, false);
       op->aop = aop;
       return;
     }
@@ -1397,7 +1397,7 @@ aopOp (operand *op, const iCode *ic, bool result)
     {
       op->aop = aopForSym (ic, sym);
       if (!result)
-        op->aop->valinfo = getOperandValinfo (ic, op);
+        op->aop->valinfo = getOperandValinfo (ic, op, false);
       return;
     }
 
@@ -1411,7 +1411,7 @@ aopOp (operand *op, const iCode *ic, bool result)
       if (completely_spilt)
         {
           op->aop = aopForRemat (sym);
-          op->aop->valinfo = getOperandValinfo (ic, op);
+          op->aop->valinfo = getOperandValinfo (ic, op, false);
           return;
         }
     }
@@ -1433,7 +1433,7 @@ aopOp (operand *op, const iCode *ic, bool result)
 
     aop->size = getSize (operandType (op));
     if (!result)
-      aop->valinfo = getOperandValinfo (ic, op);
+      aop->valinfo = getOperandValinfo (ic, op, false);
     op->aop = aop;
 
     for (int i = 0; i < aop->size; i++)
@@ -2095,12 +2095,15 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
             if (result->aopu.bytes[roffset + j].byteu.stk != source->aopu.bytes[soffset + i].byteu.stk)
               continue;
 
+            // We need to assign [i] before assigning [j].
+
             if (result->aopu.bytes[roffset + i].in_reg) // stack-to-register
               {
                 int rIdx = result->aopu.bytes[roffset + i].byteu.reg->rIdx;
-                if (source->regs[rIdx] > soffset && source->regs[rIdx] < soffset + n)
+                int k = source->regs[rIdx] - soffset;
+                if (k >= 0 && k < n && !assigned[k])
                   {
-                    if (source->regs[rIdx] == soffset + j)
+                    if (k == j) // We can just swap the register and stack location.
                       {
                         if (!IS_F8L)
                           emit3_o (A_XCH, result, roffset + i, source, soffset + i);
@@ -2115,7 +2118,46 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
                         size -= 2;;
                       }
                     else
-                      UNIMPLEMENTED;
+                      {
+                        if (result->aopu.bytes[roffset + k].in_reg)
+                          {
+                            int rIdx2 = result->aopu.bytes[roffset + k].byteu.reg->rIdx;
+                            int l = source->regs[rIdx2] - soffset;
+                            if (l >= 0 && l < n && !assigned[l])
+                              {
+                                if (result->aopu.bytes[roffset + l].in_reg)
+                                  UNIMPLEMENTED;
+                                else
+                                  {
+                                    for (int m = 0; m < n; m++)
+                                      if (!assigned[m] && aopOnStack (source, soffset + m, 1) && source->aopu.bytes[soffset + m].byteu.stk == result->aopu.bytes[roffset + l].byteu.stk)
+                                        UNIMPLEMENTED;
+                                    emit3_o (A_LD, result, roffset + l, source, soffset + l);
+                                    assigned[l] = true;
+                                    size--;
+                                    emit3_o (A_LD, result, roffset + k, source, soffset + k);
+                                    assigned[k] = true;
+                                    size--;
+                                    regsize--;
+                                    emit3_o (A_LD, result, roffset + i, source, soffset + i);
+                                    assigned[i] = true;
+                                    size--;
+                                  }
+                              }
+                            else // Free reg first, then do the stack byte.
+                              {
+                                emit3_o (A_LD, result, roffset + k, source, soffset + k);
+                                assigned[k] = true;
+                                size--;
+                                regsize--;
+                                emit3_o (A_LD, result, roffset + i, source, soffset + i);
+                                assigned[i] = true;
+                                size--;
+                              }
+                          }
+                        else
+                          UNIMPLEMENTED;
+                      }
                   }
                 else
                   {
@@ -2965,7 +3007,7 @@ genNot (const iCode *ic)
   aopOp (result, ic, true);
 
   bool result_in_y = false;
-
+emit2(";", "nothing %d anything %d min %d max %d", left->aop->valinfo.nothing, left->aop->valinfo.anything, (int)(left->aop->valinfo.min), (int)(left->aop->valinfo.max));
   if (left->aop->size == 1)
     {
       bool is_bool = !left->aop->valinfo.anything && left->aop->valinfo.min >= 0 && left->aop->valinfo.max <= 1;
@@ -3196,6 +3238,7 @@ genEor (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
        else
          UNIMPLEMENTED;
        genMove_o (result_aop, i, ASMOP_XL, 0, 1, true, xh_free, y_free, false, true);
+
        if (!xl_free)
          pop (ASMOP_XL, 0, 1);
 
@@ -4965,16 +5008,41 @@ genCmp (const iCode *ic, iCode *ifx)
 
   if (sign)
     {
-      if (!regalloc_dry_run)
+      // Compute o ^ n. We use o from f, and n from the top-byte result.
+      if (optimize.nosidechannels)
         {
-          symbol *tlbl = newiTempLabel (0);
-          emit2 ("jrno", "#!tlabel", labelKey2num (tlbl->key));
-          emit2 ("xor", "xl, #0x80");
-          cost (4, 2);
-          emitLabel (tlbl);
+          push (ASMOP_XL, 0, 1);
+          emit2 ("xch", "f, (0, sp)");
+          cost (1, 1);
+          if (!IS_F8L)
+            {
+              emit2 ("rot", "xl, #1");
+              cost (2, 1);
+            }
+          else
+            {
+              emit3 (A_SLL, ASMOP_XL, 0);
+              emit3 (A_RLC, ASMOP_XL, 0);
+            }
+          emit2 ("xor", "xl, (0, sp)");
+          cost (1, 1);
+          adjustStack (1, false, regDead (Y_IDX, ic));
+          emit2 ("and", "xl, #0x01");
+          cost (1, 1);
+          goto return_xl;
         }
-      cost (2, 1);
-      emit3 (A_SLL, ASMOP_XL, 0);
+      else
+        {
+          if (!regalloc_dry_run)
+          {
+            symbol *tlbl = newiTempLabel (0);
+            emit2 ("jrno", "#!tlabel", labelKey2num (tlbl->key));
+            emit2 ("xor", "xl, #0x80");
+            emitLabel (tlbl);
+          }
+          cost (4, 2);
+          emit3 (A_SLL, ASMOP_XL, 0);
+        }
     }
   else if (regDead (XL_IDX, ic) || pushed_xl)
     {
@@ -5117,7 +5185,7 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
               bool inv = aopInReg (right->aop, i, XL_IDX);
               if (started)
                 {
-                  if (!regDead (XH_IDX, ic) || left->aop->regs[XH_IDX] >= i || left->aop->regs[XH_IDX] >= i)
+                  if (!regDead (XH_IDX, ic) || left->aop->regs[XH_IDX] >= i || right->aop->regs[XH_IDX] >= i)
                     UNIMPLEMENTED;
                   emit3 (A_LD, ASMOP_XH, ASMOP_XL);
                 }
@@ -5625,7 +5693,7 @@ genAnd (const iCode *ic, iCode *ifx)
          }
 
        if (!xl_free)
-         UNIMPLEMENTED;
+         push (ASMOP_XL, 0, 1);
 
        if (aopIsOp8_2 (right->aop, i))
          {
@@ -5650,6 +5718,9 @@ genAnd (const iCode *ic, iCode *ifx)
            genMove_o (result->aop, i, ASMOP_XL, 0, 1, true, xh_free, y_free, false, true);
            i++;
          }
+
+       if (!xl_free)
+         pop (ASMOP_XL, 0, 1);
     }
 
 release:
