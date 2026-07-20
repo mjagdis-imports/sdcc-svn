@@ -1820,6 +1820,10 @@ spillPairReg (const char *regname)
           break;
         }
     }
+  else if (!strncmp (regname, "iy", 2))
+    spillPair (PAIR_IY);
+  else if (!strncmp (regname, "ix", 2))
+    spillPair (PAIR_IX);
 }
 
 /* swap pairs fiels type/base */
@@ -4169,7 +4173,7 @@ poppairwithsavedreg (PAIR_ID pair, short survivingreg, short tempreg)
 static void
 cheapMove (asmop *to, int to_offset, asmop *from, int from_offset, bool a_dead)
 {
-#if 1
+#if 0
   emitDebug ("; cheapMove a_dead %d", a_dead);
 #endif
 

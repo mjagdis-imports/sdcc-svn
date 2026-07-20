@@ -1,3 +1,9 @@
+2026-07-20 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  support/regression/tests/bug-4039.c:
+	  Fix bug #4039.
+
 2026-07-18 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* device/lib/stm8/setjmp.s,
