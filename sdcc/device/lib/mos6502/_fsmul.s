@@ -1,7 +1,7 @@
 ;-------------------------------------------------------------------------
 ;   _fsmul.s - routine for floating point multiplication
 ;
-;   Copyright (C) 2025, Gabriele Gorla
+;   Copyright (C) 2025-2026, Gabriele Gorla
 ;
 ;   This library is free software; you can redistribute it and/or modify it
 ;   under the terms of the GNU General Public License as published by the
@@ -68,7 +68,7 @@ ___fsmul:
 ;	ora	*___fsmul_PARM_2
 	beq	ret_zero
 
-	ldy	#0x00
+	ldy	#0x00	; fs_unpack requires Y to be 0
 	jsr ___fs_unpack_2P
 	
 	; compute sign
@@ -77,7 +77,7 @@ ___fsmul:
 	sta *s1
 	
 	; s2 is now free
-	sty *s2
+	sty *s2 	; Y is still 0
 	sec
 	lda *exp1
 	sbc #126    ; excess
@@ -140,18 +140,18 @@ skip_add1:
 	bit *mres3
 	bmi end
 	jmp end7
-	bpl not_24  ; MSB not set
+	bpl not_24 	; MSB not set
 	asl *mres0
-	bcc end     ; MSB set and rounding will not change the result
+	bcc end 	; MSB set and rounding will not change the result
 	jsr add3
-	jmp end     ; MSB set
+	jmp end 	; MSB set
 ret_zero:
 	jmp ___fs_ret_zero
 not_24:
 	bit *mres0
-	bvc end7    ; adding 0x40 will not change the result - shift 7
+	bvc end7 	; adding 0x40 will not change the result - shift 7
 	bpl need_add
-	lda #0x80  ; res0 is 01xx xxxx adding 0x40 produces 10xx xxxx
+	lda #0x80	; res0 is 01xx xxxx adding 0x40 produces 10xx xxxx
 	sta *mres0
 	bne end7
 need_add:
