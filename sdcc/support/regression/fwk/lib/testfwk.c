@@ -121,16 +121,21 @@ __printf (const char *szFormat, ...)
             case 'd':
               {
                 int i = va_arg (ap, int);
-                __printd (i);
+                if (i < 0)
+                  {
+                    __putchar('-');
+                    i = -i;
+                  }
+                __printu (i);
                 break;
-             }
+              }
 
             case 'u':
               {
                 unsigned int i = va_arg (ap, unsigned int);
                 __printu (i);
                 break;
-             }
+              }
 
            case '%':
              _putchar ('%');

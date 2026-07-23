@@ -1,7 +1,14 @@
+2026-07-23 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* support/regression/tests/snprintf.c.in: replaced __printd() by __printu(),
+	  fixed warning by making var_code const
+	* support/regression/fwk/lib/testfwk.c: removed last use of __printd()
+	* support/regression/fwk/include/testfwk.h: removed __printd() prototype
+
 2026-07-23 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* support/regression/fwk/lib/testfwk.c:
-	  Remove unused printd (seela lso bug #3864).
+	  Remove unused printd (see also bug #3864).
 
 2026-07-22 Maarten Brock <sourceforge.brock AT dse.nl>
 
