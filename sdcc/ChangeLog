@@ -1,3 +1,8 @@
+2026-07-23 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/fwk/lib/testfwk.c:
+	  Remove unused printd (seela lso bug #3864).
+
 2026-07-22 Maarten Brock <sourceforge.brock AT dse.nl>
 
 	* support/sdbinutils/libctf/doc/ctf-spec.info: removed intermediate output
