@@ -1,3 +1,44 @@
+2026-07-22 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* support/sdbinutils/libctf/doc/ctf-spec.info: removed intermediate output
+	* support/sdbinutils/bfd/po/da.gmo,
+	  support/sdbinutils/bfd/po/es.gmo,
+	  support/sdbinutils/bfd/po/fi.gmo,
+	  support/sdbinutils/bfd/po/fr.gmo,
+	  support/sdbinutils/bfd/po/hr.gmo,
+	  support/sdbinutils/bfd/po/id.gmo,
+	  support/sdbinutils/bfd/po/ja.gmo,
+	  support/sdbinutils/bfd/po/ka.gmo,
+	  support/sdbinutils/bfd/po/ms.gmo,
+	  support/sdbinutils/bfd/po/pt.gmo,
+	  support/sdbinutils/bfd/po/ro.gmo,
+	  support/sdbinutils/bfd/po/ru.gmo,
+	  support/sdbinutils/bfd/po/rw.gmo,
+	  support/sdbinutils/bfd/po/sr.gmo,
+	  support/sdbinutils/bfd/po/sv.gmo,
+	  support/sdbinutils/bfd/po/tr.gmo,
+	  support/sdbinutils/bfd/po/uk.gmo,
+	  support/sdbinutils/bfd/po/vi.gmo,
+	  support/sdbinutils/bfd/po/zh_CN.gmo: removed intermediate output products
+	* support/sdbinutils/opcodes/po/da.gmo,
+	  support/sdbinutils/opcodes/po/de.gmo,
+	  support/sdbinutils/opcodes/po/es.gmo,
+	  support/sdbinutils/opcodes/po/fi.gmo,
+	  support/sdbinutils/opcodes/po/fr.gmo,
+	  support/sdbinutils/opcodes/po/ga.gmo,
+	  support/sdbinutils/opcodes/po/id.gmo,
+	  support/sdbinutils/opcodes/po/it.gmo,
+	  support/sdbinutils/opcodes/po/ka.gmo,
+	  support/sdbinutils/opcodes/po/nl.gmo,
+	  support/sdbinutils/opcodes/po/pt_BR.gmo,
+	  support/sdbinutils/opcodes/po/ro.gmo,
+	  support/sdbinutils/opcodes/po/sr.gmo,
+	  support/sdbinutils/opcodes/po/sv.gmo,
+	  support/sdbinutils/opcodes/po/tr.gmo,
+	  support/sdbinutils/opcodes/po/uk.gmo,
+	  support/sdbinutils/opcodes/po/vi.gmo,
+	  support/sdbinutils/opcodes/po/zh_CN.gmo: removed intermediate output products
+
 2026-07-21 Gabriele Gorla <gorlik@yahoo.com>
 
 	* device/lib/mos6502/fsmul.s,
