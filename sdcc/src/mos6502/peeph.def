@@ -9,9 +9,21 @@ replace restart {
 } if notVolatile(%1), notUsed('a' 'z' 'n')
 
 replace restart {
+	lda %1, %2
+} by {
+	; Peephole dead LA2 - removed dead lda %1,%2
+} if notVolatile(%1), notUsed('a' 'z' 'n')
+
+replace restart {
 	ldx %1
 } by {
 	; Peephole dead LX1 - removed dead ldx %1
+} if notVolatile(%1), notUsed('x' 'z' 'n')
+
+replace restart {
+	ldx %1, %2
+} by {
+	; Peephole dead LX2 - removed dead ldx %1,%2
 } if notVolatile(%1), notUsed('x' 'z' 'n')
 
 replace restart {
@@ -21,47 +33,62 @@ replace restart {
 } if notVolatile(%1), notUsed('y' 'z' 'n')
 
 replace restart {
-	lda %1, %2
-} by {
-	; Peephole dead LA2 - removed dead lda %1,x
-} if notVolatile(%1), notUsed('a' 'z' 'n')
-
-replace restart {
-	ldx %1, %2
-} by {
-	; Peephole dead LX2 - removed dead ldx %1,y
-} if notVolatile(%1), notUsed('x' 'z' 'n')
-
-replace restart {
 	ldy %1, %2
 } by {
-	; Peephole dead LY2 - removed dead ldy %1,x
+	; Peephole dead LY2 - removed dead ldy %1,%2
 } if notVolatile(%1), notUsed('y' 'z' 'n')
 
 ////////////////////////////////////////////////////////
-// Dead load/stores
+// Dead stores
 ////////////////////////////////////////////////////////
 
 replace restart {
 	lda %1
 	sta %1
 } by {
-	; Peephole load/store LSA1 - removed dead lda/sta %1
-} if notVolatile(%1), notUsed('a' 'z' 'n')
+	lda %1
+	; Peephole store SA1 - removed dead sta %1
+} if notVolatile(%1)
+
+replace restart {
+	lda %1, %2
+	sta %1, %2
+} by {
+	lda %1, %2
+	; Peephole store SA2 - removed dead sta %1, %2
+} if notVolatile(%1)
 
 replace restart {
 	ldx %1
 	stx %1
 } by {
-	; Peephole load/store LSX1 - removed dead ldx/stx %1
-} if notVolatile(%1), notUsed('x' 'z' 'n')
+	ldx %1
+	; Peephole store SX1 - removed dead stx %1
+} if notVolatile(%1)
 
 replace restart {
 	ldy %1
 	sty %1
 } by {
-	; Peephole load/store LSY1 - removed dead ldy/sty %1
-} if notVolatile(%1), notUsed('y' 'z' 'n')
+	ldy %1
+	; Peephole store SY1 - removed dead sty %1
+} if notVolatile(%1)
+
+replace restart {
+	%1	%2
+	%1	%2
+} by {
+	%1	%2
+	; Peephole store SS1 - removed redundant %1 %2
+} if same(%1 'sta' 'stx' 'sty'), notVolatile(%2)
+
+replace restart {
+	%1	%2,%3
+	%1	%2,%3
+} by {
+	%1	%2,%3
+	; Peephole store SS2 - removed redundant %1 %2,%3
+} if same(%1 'sta' 'stx' 'sty'), notVolatile(%2)
 
 ////////////////////////////////////////////////////////
 // Dead transfers - could be merged with dead operations
@@ -305,7 +332,6 @@ replace restart {
         bne	%2
 } if same(%3 'cmp' 'cpx' 'cpy'), labelInRange(%2), labelRefCountChange(%1 -1), labelRefCountChange(%2 +1)
 
-
 replace restart {
 	ldx	%1
 	lda	%2,%4
@@ -473,6 +499,24 @@ replace restart {
 	lda	(%2),x
 }
 
+//replace restart {
+//	sta %1
+//	lsr %1
+//} by {
+//	lsr a
+//	sta %1
+//	; op/shift1 - replaced lsr %1 with lsr a
+//}
+
+//replace restart {
+//	sta %1,x
+//	lsr %1,x
+//} by {
+//	lsr a
+//	sta %1,x
+//	; op/shift1 - replaced lsr %1 with lsr a
+//}
+
 ////////////////////////////////////////////////////////
 // Reorder copy
 ////////////////////////////////////////////////////////
@@ -525,7 +569,7 @@ replace restart {
 } by {
         sta	%1
         ora	#0x00
-    ; Peephole load 2 - replaced redundant lda by ora
+	; Peephole load 2 - replaced redundant lda by ora
 } if notVolatile(%1)
 
 replace restart {
@@ -534,7 +578,7 @@ replace restart {
 } by {
         sta	%1,%2
         ora	#0x00
-    ; Peephole load 2a - replaced redundant lda by ora
+	; Peephole load 2a - replaced redundant lda by ora
 } if notVolatile(%1)
 
 replace restart {
@@ -542,7 +586,7 @@ replace restart {
 	ldx     %1
 } by {
 	stx	%1
-    ; Peephole load 3 - eliminated redundant ldx %1
+	; Peephole load 3 - eliminated redundant ldx %1
 } if notVolatile(%1), notUsed('n' 'z')
 
 replace restart {
@@ -550,7 +594,7 @@ replace restart {
 	ldy     %1
 } by {
 	sty	%1
-    ; Peephole load 4 - eliminated redundant ldy %1
+	; Peephole load 4 - eliminated redundant ldy %1
 } if notVolatile(%1), notUsed('n' 'z')
 
 replace restart {
@@ -560,9 +604,8 @@ replace restart {
 } by {
         lda	%1
         sta	%3
-    ; Peephole load 5 - removed redundant lda %1
+	; Peephole load 5 - removed redundant lda %1
 } if notVolatile(%1)
-
 
 replace restart {
 	lda     %1,%2
@@ -571,7 +614,7 @@ replace restart {
 } by {
         lda	%1,%2
         sta	%3,%2
-    ; Peephole load 5a - removed redundant lda %1,%2
+	; Peephole load 5a - removed redundant lda %1,%2
 } if notVolatile(%1)
 
 replace restart {
@@ -591,7 +634,6 @@ replace restart {
 	; Peephole load 7a - replaced ldx/lda with ldx/txa
 	txa
 } if notVolatile(%1)
-
 
 ////////////////////////////////////////////////////////
 // Remove dead register operation/transfers
@@ -647,7 +689,7 @@ replace restart {
 	ldy	%2
         tya
 } by {
-	; Peephole load Y - changed ldy/tya to lda
+	; Peephole load LYA - changed ldy/tya to lda
 	lda	%2
 } if notUsed('y')
 
@@ -655,7 +697,7 @@ replace restart {
 	ldx	%2
         txa
 } by {
-	; Peephole load X - changed ldx/txa to lda
+	; Peephole load LXA - changed ldx/txa to lda
 	lda	%2
 } if notUsed('x')
 
@@ -663,7 +705,7 @@ replace restart {
 	lda	%2
         tax
 } by {
-	; Peephole load AX - changed lda/tax to ldx
+	; Peephole load LAX - changed lda/tax to ldx
 	ldx	%2
 } if notUsed('a')
 
@@ -671,7 +713,7 @@ replace restart {
 	lda	%2
         tay
 } by {
-	; Peephole load AY - changed lda/tya to ldy
+	; Peephole load LAY - changed lda/tya to ldy
 	ldy	%2
 } if notUsed('a')
 
@@ -829,22 +871,6 @@ replace restart {
 
 replace restart {
 	lda	%2
-	sta	%2
-} by {
-	lda	%2
-	; Peephole store 1 - removed redundant sta %2
-} if notVolatile(%2)
-
-replace restart {
-	lda	%2,%3
-	sta	%2,%3
-} by {
-	lda	%2,%3
-	; Peephole store 1a - removed redundant sta %2,%3
-} if notVolatile(%2)
-
-replace restart {
-	lda	%2
 	%1
 	sta	%2
 } by {
@@ -852,14 +878,6 @@ replace restart {
 	%1
 	; Peephole store 2 - removed redundant sta %2
 } if notSame(%1 'pla' 'txa' 'tya'), notVolatile(%2)
-
-replace restart {
-	ldx	%2
-	stx	%2
-} by {
-	ldx	%2
-	; Peephole store 4 - removed redundant stx %2
-} if notVolatile(%2)
 
 replace restart {
 	ldx	%2
@@ -883,14 +901,6 @@ replace restart {
 
 replace restart {
 	ldy	%2
-	sty	%2
-} by {
-	ldy	%2
-	; Peephole store 6 - removed redundant sty %2
-} if notVolatile(%2)
-
-replace restart {
-	ldy	%2
 	%1
 	sty	%2
 } by {
@@ -898,22 +908,6 @@ replace restart {
 	%1
 	; Peephole store 7 - removed redundant sty
 } if notSame(%1 'tay' 'iny' 'dey'), notVolatile(%2)
-
-replace restart {
-	%1	%2
-	%1	%2
-} by {
-	%1	%2
-	; Peephole store 8 - removed redundant %1 %2
-} if same(%1 'sta' 'stx' 'sty'), notVolatile(%2)
-
-replace restart {
-	%1	%2,%3
-	%1	%2,%3
-} by {
-	%1	%2,%3
-	; Peephole store 8a - removed redundant %1 %2,%3
-} if same(%1 'sta' 'stx' 'sty'), notVolatile(%2)
 
 ////////////////////////////////////////////////////////
 // Remove duplicate branches
