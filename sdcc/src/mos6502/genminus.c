@@ -128,6 +128,18 @@ genMinusDec (iCode * ic)
 		  return true;  
 		}
 	    }
+	  // Use X or Y as scratch register for mem = mem + 1
+	  else if (!dst_reg && AOP_TYPE(result)!=AOP_SOF && AOP_TYPE(left)!=AOP_SOF)
+	    {
+	      reg_info *scratch = m6502_getFreeIdxReg();
+	      if (scratch && scratch->isDead)
+		{
+		  m6502_loadRegFromAop (scratch, AOP(left), 0);
+		  m6502_rmwWithReg (OPINCDEC, scratch);
+		  m6502_storeRegToAop (scratch, AOP(result), 0);
+		  return true;
+		}
+	    }
 	}
       return false;
     }
@@ -197,6 +209,7 @@ m6502_genMinus (iCode * ic)
   bool init_carry = true;
   int size, offset;
   bool savea = false;
+  bool opskip = true;
 
   sym_link *resulttype = operandType (IC_RESULT (ic));
   unsigned topbytemask = (IS_BITINT (resulttype) && SPEC_USIGN (resulttype) && (SPEC_BITINTWIDTH (resulttype) % 8)) ?
@@ -254,6 +267,7 @@ m6502_genMinus (iCode * ic)
       bool restore_a = !m6502_reg_a->isDead;
       bool restore_x = !m6502_reg_x->isDead;
       int a_loc, x_loc;
+
       storeRegTemp(m6502_reg_a, true);
       a_loc=m6502_getLastTempOfs();
       storeRegTemp(m6502_reg_x, true);
@@ -347,14 +361,22 @@ m6502_genMinus (iCode * ic)
 
 	  m6502_emitRegTempOp(OPCODE, m6502_getLastTempOfs() );
  	  m6502_loadRegTemp (NULL);
+          opskip = false;
 	}
       else
 	{
 	  m6502_loadRegFromAop (m6502_reg_a, AOP(left), offset);
-	  if (init_carry)
-	    INIT_CARRY();
 
-	  m6502_accopWithAop (OPCODE, AOP(right), offset);
+	  if (!opskip || AOP_TYPE (right) != AOP_LIT || (byteOfVal (AOP (right)->aopu.aop_lit, offset) != 0x00) )
+	    {
+	      if (init_carry)
+		INIT_CARRY();
+
+	      m6502_accopWithAop (OPCODE, AOP(right), offset);
+	      opskip = false;
+	    }
+	  else
+	    m6502_emitComment (TRACEGEN|VVDBG, "  %s - opskip offset=%d", __func__, offset);
 	}
 
       if ( (offset==size-1) && maskedtopbyte)
@@ -376,7 +398,9 @@ m6502_genMinus (iCode * ic)
 	  m6502_storeRegToAop (m6502_reg_a, AOP (result), offset);
 	}
 
-      init_carry = false;
+      m6502_freeReg (m6502_reg_a);
+      if (!opskip)
+        init_carry = false;
     }
 
   fastRestoreOrFreeA (savea);
