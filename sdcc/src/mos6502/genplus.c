@@ -407,8 +407,13 @@ m6502_genPlus (iCode * ic)
 
   for(offset=0; offset<size; offset++)
     {
-      m6502_loadRegFromAop (m6502_reg_a, AOP(left), offset);
+      if (opskip && AOP_TYPE (right) == AOP_LIT 
+          && (byteOfVal (AOP (right)->aopu.aop_lit, offset) == 0x00)
+          && m6502_sameRegs (AOP (left), AOP (result)) 
+          && !IS_AOP_XA (AOP(result)) )
+        continue;
 
+      m6502_loadRegFromAop (m6502_reg_a, AOP(left), offset);
 
       if (!opskip || AOP_TYPE (right) != AOP_LIT || (byteOfVal (AOP (right)->aopu.aop_lit, offset) != 0x00) )
 	{

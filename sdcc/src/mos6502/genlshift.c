@@ -302,7 +302,7 @@ genlsh16 (operand * result, operand * left, int shCount)
 	  m6502_loadRegFromAop (m6502_reg_a, AOP (left), 0);
 	  m6502_emitOp ("asl", "a");
 
-	  if(IS_AOP_XA(AOP(left)) && !maskedtopbyte)
+          if(IS_AOP_XA(AOP(left)) && !IS_AOP_XY(AOP(result)) && !maskedtopbyte)
 	    {
 	      storeRegTempAlways(m6502_reg_x, true);
 	      m6502_emitRegTempOp("rol", m6502_getLastTempOfs());

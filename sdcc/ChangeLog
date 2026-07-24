@@ -3,6 +3,11 @@
     * src/mos6502/genplus.c,
       src/mos6502/genminus.c:
       Improve add/sub with literal.
+    * src/mos6502/genplus.c,
+      src/mos6502/genminus.c,
+      src/mos6502/genlshift.c,
+      src/mos6502/gen.c:
+      Skip bytes in add/sub when 0.
 
 2026-07-23 Maarten Brock <sourceforge.brock AT dse.nl>
 

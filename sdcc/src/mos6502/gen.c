@@ -4506,9 +4506,18 @@ genSend (set *sendSet)
       m6502_aopOp (IC_LEFT (send2), send2);
       if (IS_AOP_A (AOP (IC_LEFT (send2))))
         {
+          if (IS_AOP_X (AOP (IC_LEFT (send1))))
+            {
+              storeRegTemp(m6502_reg_a, true);
+              m6502_transferRegReg(m6502_reg_x, m6502_reg_a, true);
+              m6502_loadRegTemp(m6502_reg_x);
+            }
+          else
+	    {
 	  m6502_loadRegFromAop (m6502_reg_x, AOP (IC_LEFT (send2)), 0);
 	  m6502_loadRegFromAop (m6502_reg_a, AOP (IC_LEFT (send1)), 0);
 	}
+        }
       else
         {
           m6502_loadRegFromAop (m6502_reg_a, AOP (IC_LEFT (send1)), 0);
@@ -6679,7 +6688,7 @@ static void genUnpackBitsImmed (operand * left, operand *right, operand * result
   if (delayed_a)
     m6502_pullReg (m6502_reg_a);
 
-  // TODO? wrong plac?
+  // TODO? wrong place?
   pullOrFreeReg (m6502_reg_a, needpulla);
 }
 
@@ -7028,7 +7037,6 @@ static void genPointerGet (iCode * ic, iCode * ifx)
               {
 		m6502_emitOp("ldx", "(%s+0x%04x+%d),%c",
 			     rematOffset, litOffset+hi_offset, 1, idx_reg );
-                 
               }              
             if(IS_AOP_XY(AOP(result)))
               {

@@ -352,6 +352,12 @@ m6502_genMinus (iCode * ic)
 
   for(offset=0; offset<size; offset++)
     {
+      if (opskip && AOP_TYPE (right) == AOP_LIT 
+          && (byteOfVal (AOP (right)->aopu.aop_lit, offset) == 0x00)
+          && m6502_sameRegs (AOP (left), AOP (result)) 
+          && !IS_AOP_XA (AOP(result)) )
+        continue;
+
       if (AOP_TYPE (right) == AOP_REG && AOP (right)->aopu.aop_reg[offset]->rIdx == A_IDX)
 	{
 	  storeRegTemp (m6502_reg_a, true);
