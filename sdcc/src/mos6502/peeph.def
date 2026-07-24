@@ -453,6 +453,26 @@ replace restart {
 	sta	%2
 } if same(%5 'and' 'ora' 'eor' )
 
+// copy/cast + setupDPTR - should be solved at higer level
+replace restart {
+	stx	*%1
+	ldy	#0x00
+	sty	*(%1+1)
+	clc
+	txa
+	adc	#<%2
+	sta	*(DPTR+0)
+	lda	*(%1+1)
+	adc	#>%2
+	sta	*(DPTR+1)
+	lda	[DPTR],y
+} by {
+	stx	*%1
+	ldy	#0x00
+	sty	*(%1+1)
+	lda	(%2),x
+}
+
 ////////////////////////////////////////////////////////
 // Reorder copy
 ////////////////////////////////////////////////////////

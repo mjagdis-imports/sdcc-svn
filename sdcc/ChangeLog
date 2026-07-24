@@ -8,6 +8,8 @@
       src/mos6502/genlshift.c,
       src/mos6502/gen.c:
       Skip bytes in add/sub when 0.
+    * src/mos6502/peeph.def:
+      Reorganize several peephole rules.
 
 2026-07-23 Maarten Brock <sourceforge.brock AT dse.nl>
 
