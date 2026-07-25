@@ -2,6 +2,9 @@
 
 	* doc/sdccman.lyx:
 	  Improve build documentation in particular wrt. libu8ident.
+	* src/z80/peeph.def,
+	  support/regression/tests/bug-4046.c:
+	  Fix bug #4046.
 
 2026-07-24 Gabriele Gorla <gorlik@yahoo.com>
 
@@ -72,15 +75,15 @@
 2026-07-21 Gabriele Gorla <gorlik@yahoo.com>
 
 	* device/lib/mos6502/fsmul.s,
-      device/lib/mos6502/fslt.s:
-      Improve fslt.
+	  device/lib/mos6502/fslt.s:
+	  Improve fslt.
 
 2026-07-20 Gabriele Gorla <gorlik@yahoo.com>
 
 	* device/lib/mos6502/sinf.s,
-      device/lib/mos6502/cosf.s,
-      device/lib/mos6502/_floatlib.s:
-      Implement sinf and cosf in assembly.
+	  device/lib/mos6502/cosf.s,
+	  device/lib/mos6502/_floatlib.s:
+	  Implement sinf and cosf in assembly.
 
 2026-07-20 Philipp Klaus Krause <philipp@colecovision.eu>
 
@@ -111,8 +114,8 @@
 
 2026-07-12 Gabriele Gorla <gorlik@yahoo.com>
 
-    * src/mos6502/genlshift.c:
-      Special case left shift by 8.
+	* src/mos6502/genlshift.c:
+	  Special case left shift by 8.
 
 2026-07-12 Gabriele Gorla <gorlik@yahoo.com>
 
