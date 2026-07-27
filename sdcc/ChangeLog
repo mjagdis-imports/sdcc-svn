@@ -1,3 +1,9 @@
+2026-07-26 Gabriele Gorla <gorlik@yahoo.com>
+
+    * device/lib/mos6502/_fsadd.s,
+      device/lib/mos6502/_fsmul.s:
+      Improve floating point addition and multiplication.
+
 2026-07-25 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* doc/sdccman.lyx:

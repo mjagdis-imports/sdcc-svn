@@ -43,6 +43,7 @@
 	.define mres0 "___SDCC_m6502_ret3"
 	.define s1    "___SDCC_m6502_ret4"
 	.define exp1  "___SDCC_m6502_ret5"
+	.define exp1h "___SDCC_m6502_ret6"
 	.define s2    "___SDCC_m6502_ret6"
 	.define exp2  "___SDCC_m6502_ret7"
 	
@@ -50,6 +51,9 @@
 ; code
 ;--------------------------------------------------------
 	.area CODE
+
+ret_zero:
+	jmp ___fs_ret_zero
 
 ___fsmul:
 ; check if PARM_1 is zero
@@ -60,7 +64,7 @@ ___fsmul:
 ;	ora	*___fsmul_PARM_1
 	beq	ret_zero
 
-;p1_not0:
+; check if PARM_2 is zero
 	lda	*(___fsmul_PARM_2 + 3)
 	and	#0x7F
 	ora	*(___fsmul_PARM_2 + 2)
@@ -76,22 +80,23 @@ ___fsmul:
 	eor *s2
 	sta *s1
 	
-	; s2 is now free
-	sty *s2 	; Y is still 0
+        ; s2 is no longer needed free ___SDCC_m6502_ret6 for exp1h
+	; Y is still 0
 	sec
 	lda *exp1
 	sbc #126    ; excess
 ;	sta *exp1
 	bcs no_borrow
-	dec *s2
+	dey
 no_borrow:
 	clc
 ;	lda *exp1
 	adc *exp2
 	sta *exp1
 	bcc no_carry
-	inc *s2
+	iny
 no_carry:
+	sty *exp1h		; ___SDCC_m6502_ret6 is now the exponent msb
 	
 	; add hidden bit
 	lda *(___fsmul_PARM_1 + 2)
@@ -136,74 +141,76 @@ skip_add1:
 	cpx #3
 	bne loop2
     
+	lda *mres3
+
+; no round
+	bmi end
 ; round
-	bit *mres3
-	bmi end
-	jmp end7
-	bpl not_24 	; MSB not set
-	asl *mres0
-	bcc end 	; MSB set and rounding will not change the result
-	jsr add3
-	jmp end 	; MSB set
-ret_zero:
-	jmp ___fs_ret_zero
-not_24:
-	bit *mres0
-	bvc end7 	; adding 0x40 will not change the result - shift 7
-	bpl need_add
-	lda #0x80	; res0 is 01xx xxxx adding 0x40 produces 10xx xxxx
-	sta *mres0
-	bne end7
-need_add:
-	clc
-	lda *mres0
-	adc #0x40
-	sta *mres0
-	jsr add3
-	bit *mres3
-	bpl end7
-	lda *mres0
-	adc #0x40
-	sta *mres0
-	jsr add3
-	bpl end7
-	bmi end
+;	bpl not_24 	; MSB not set
+;	asl *mres0
+;	bcc end 	; MSB set and rounding will not change the result
+;	jsr add3
+;	jmp end 	; MSB set
+;ret_zero:
+;	jmp ___fs_ret_zero
+;not_24:
+;	bit *mres0
+;	bvc end7 	; adding 0x40 will not change the result - shift 7
+;	bpl need_add
+;	ldx #0x80	; res0 is 01xx xxxx adding 0x40 produces 10xx xxxx
+;	stx *mres0
+;	bne end7	; always taken
+;need_add:
+;	clc
+;	lda *mres0
+;	adc #0x40
+;	sta *mres0
+;	jsr add3
+;	bit *mres3
+;	bpl end7
+;	lda *mres0
+;	adc #0x40
+;	sta *mres0
+;	jsr add3
+;	bpl end7
+;	bmi end
+;add3:
+;	lda *mres1
+;	adc #0
+;	sta *mres1
+;	lda *mres2
+;	adc #0
+;	sta *mres2
+;	lda *mres3
+;	adc #0
+;	sta *mres3
+;	rts
 	
 end7:
 	asl *mres0
 	rol *mres1
 	rol *mres2
-	rol *mres3
-	sec
-	lda *exp1
-	sbc #1
-	sta *exp1
-	bcs no_borrow2
-	dec *s2
-no_borrow2:
+	rol a
+; decrement exp1:exp1h
+	ldx *exp1
+        bne skip_borrow
+        dec *exp1h
+skip_borrow:
+        dec *exp1
 
 end:
-	lda *s2
-	bmi ret_zero
+	ldx *exp1h
+	bmi ret_zero2
 	bne res_inf
-	lda *___SDCC_m6502_ret2
-	and #0x7f
-	sta *___SDCC_m6502_ret2
+;	lda *mres3
+	and #0x7f	; remove hidden bit
+	sta *mres3
 	jmp ___fs_pack_ret
 
 res_inf:
 	lda *s1
 	jmp ___fs_ret_inf
 
-add3:
-	lda *mres1
-	adc #0
-	sta *mres1
-	lda *mres2
-	adc #0
-	sta *mres2
-	lda *mres3
-	adc #0
-	sta *mres3
-	rts
+ret_zero2:
+	jmp ___fs_ret_zero
 
