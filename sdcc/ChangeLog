@@ -1,3 +1,11 @@
+2026-07-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCsymt.h,
+	  src/SDCCast.c,
+	  src/SDCCmem.c,
+	  support/valdiag/tests/bug-4040.c:
+	  Fix bug #4040.
+
 2026-07-27 Maarten Brock <sourceforge.brock AT dse.nl>
 
 	* device/lib/_logexpf.c: fix warning 356: W_NONCONST_CODE_OBJ
