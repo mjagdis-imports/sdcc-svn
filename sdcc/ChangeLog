@@ -1,8 +1,13 @@
+2026-07-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/bug-3393.c:
+	  Test for bug #3393 (disabled for now, fix is not in repo yet), derived from code sample by Howard M. Harte.
+
 2026-07-26 Gabriele Gorla <gorlik@yahoo.com>
 
-    * device/lib/mos6502/_fsadd.s,
-      device/lib/mos6502/_fsmul.s:
-      Improve floating point addition and multiplication.
+	* device/lib/mos6502/_fsadd.s,
+	  device/lib/mos6502/_fsmul.s:
+	  Improve floating point addition and multiplication.
 
 2026-07-25 Philipp Klaus Krause <philipp@colecovision.eu>
 
