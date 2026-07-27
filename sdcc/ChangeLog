@@ -5,8 +5,9 @@
 	  src/SDCCmem.c,
 	  support/valdiag/tests/bug-4040.c:
 	  Fix bug #4040.
-	* src/SDCClabel.c:
-	  Partially fix bug #4045.
+	* src/SDCClabel.c,
+	  src/SDCCcse.c:
+	  Fix bug #4045.
 
 2026-07-27 Maarten Brock <sourceforge.brock AT dse.nl>
 

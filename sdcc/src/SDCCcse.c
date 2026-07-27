@@ -1240,6 +1240,7 @@ algebraicOpts (iCode *ic, eBBlock *ebp)
                       setOperandType (op, INTTYPE);
                       newic = newiCode (CAST, op, IC_LEFT (ic));
                       IC_RESULT (newic) = newiTempOperand (INTTYPE, TRUE);
+                      hTabAddItem (&iCodehTab, newic->key, newic);
                       addiCodeToeBBlock (ebp, newic, ic);
                       IC_LEFT (ic) = IC_RESULT (newic);
                     }
@@ -1301,6 +1302,7 @@ algebraicOpts (iCode *ic, eBBlock *ebp)
                       setOperandType (op, INTTYPE);
                       newic = newiCode (CAST, op, IC_LEFT (ic));
                       IC_RESULT (newic) = newiTempOperand (INTTYPE, TRUE);
+                      hTabAddItem (&iCodehTab, newic->key, newic);
                       addiCodeToeBBlock (ebp, newic, ic);
                       IC_LEFT (ic) = IC_RESULT (newic);
                     }
@@ -1398,6 +1400,7 @@ algebraicOpts (iCode *ic, eBBlock *ebp)
               IC_RESULT (newic) = IC_LEFT (ic);
               newic->filename = ic->filename;
               newic->lineno = ic->lineno;
+              hTabAddItem (&iCodehTab, newic->key, newic);
               addiCodeToeBBlock (ebp, newic, ic->next);
             }
           ic->op = '=';
@@ -1428,6 +1431,7 @@ algebraicOpts (iCode *ic, eBBlock *ebp)
                   IC_RESULT (newic) = IC_LEFT (ic);
                   newic->filename = ic->filename;
                   newic->lineno = ic->lineno;
+                  hTabAddItem (&iCodehTab, newic->key, newic);
                   addiCodeToeBBlock (ebp, newic, ic->next);
                 }
               ic->op = '=';
@@ -1478,6 +1482,7 @@ algebraicOpts (iCode *ic, eBBlock *ebp)
               IC_RESULT (newic) = IC_LEFT (ic);
               newic->filename = ic->filename;
               newic->lineno = ic->lineno;
+              hTabAddItem (&iCodehTab, newic->key, newic);
               addiCodeToeBBlock (ebp, newic, ic->next);
             }
             ic->op = '=';
@@ -1535,6 +1540,7 @@ algebraicOpts (iCode *ic, eBBlock *ebp)
                   IC_RESULT (newic) = IC_LEFT (ic);
                   newic->filename = ic->filename;
                   newic->lineno = ic->lineno;
+                  hTabAddItem (&iCodehTab, newic->key, newic);
                   addiCodeToeBBlock (ebp, newic, ic->next);
                 }
               ic->op = '=';
@@ -1555,12 +1561,14 @@ algebraicOpts (iCode *ic, eBBlock *ebp)
               IC_RESULT (newic) = IC_LEFT (ic);
               newic->filename = ic->filename;
               newic->lineno = ic->lineno;
+              hTabAddItem (&iCodehTab, newic->key, newic);
               addiCodeToeBBlock (ebp, newic, ic->next);
 
               newic = newiCode (DUMMY_READ_VOLATILE, NULL, IC_LEFT (ic));
               IC_RESULT (newic) = IC_LEFT (ic);
               newic->filename = ic->filename;
               newic->lineno = ic->lineno;
+              hTabAddItem (&iCodehTab, newic->key, newic);
               addiCodeToeBBlock (ebp, newic, ic->next);
             }
           ic->op = '=';
