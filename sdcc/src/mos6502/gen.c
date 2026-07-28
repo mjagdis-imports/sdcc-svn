@@ -2579,7 +2579,6 @@ operandConflictsWithX (operand *op)
 
   return false;
 }
-#endif
 
 /**************************************************************************
  * operandOnStack - returns True if operand is on the stack
@@ -2602,15 +2601,18 @@ operandOnStack(operand *op)
     }
   return false;
 }
+#endif
 
 /**************************************************************************
  * tsxUseful - returns True if tsx could help at least one
  *             anticipated stack references
  *************************************************************************/
 bool
-m6502_tsxUseful(const iCode *ic)
+//m6502_tsxUseful(const iCode *ic)
+m6502_tsxUseful(void)
 {
-return (currFunc && IFFUNC_ISREENT (currFunc->type));
+  return (currFunc && IFFUNC_ISREENT (currFunc->type));
+#if 0
   operand *right  = IC_RIGHT(ic);
   operand *left   = IC_LEFT(ic);
   operand *result = IC_RESULT(ic);
@@ -2664,6 +2666,7 @@ return (currFunc && IFFUNC_ISREENT (currFunc->type));
     }
 
   return uses >= 1;
+#endif
 }
 
 bool
