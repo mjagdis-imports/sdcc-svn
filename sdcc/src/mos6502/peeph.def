@@ -702,6 +702,17 @@ replace restart {
 } if notUsed('x')
 
 replace restart {
+	ldx	%1
+        ldy	%2
+	txa
+} by {
+	; Peephole load LXA2 - changed ldx/txa to lda
+        ldy	%2
+	lda	%1
+} if notUsed('x'), notVolatile(%1)
+
+
+replace restart {
 	lda	%2
         tax
 } by {
