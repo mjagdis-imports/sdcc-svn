@@ -33,7 +33,7 @@
       PicoBlaze processor is simulated by <b>ucsim_pblaze</b> <br>
       p1516 processor is simulated by <b>ucsim_p1516</b> <br>
       f8 processor is simulated by <b>ucsim_f8</b> <br>
-      OISC processors are simulated ny <b>ucsim_oisc</b>
+      OISC processors are simulated by <b>ucsim_oisc</b>
     </p>
 
     <p>The simulator can be started in the following way: </p>
@@ -48,7 +48,7 @@
       <h3>Input files</h3>
     </a>
     
-    <p>Specified files must be names of Intel hex or Motorola S19
+    <p>Specified files must be names of Intel HEX or OMF, or Motorola S19
       files. Some simulators may accept some other file formats, for
       example ucsim_p1516 accepts .p2h file which is internal format
       of
@@ -62,17 +62,19 @@
       files and reads information from them.</p>
 
     <p>A memory name (either an address space or a chip) can be
-      appended to the filename using the @ character. The content of the
-      file will then be loaded into the specified memory. If an offset
-      parameter is provided (appended to the input specification using
-      the : character), the simulator will add this offset to the
-      address before storing data in the simulated memory. The offset
-      can be a signed number in decimal, hexadecimal, or octal
-      format. An address range can also be specified using the #
-      character in the form of min_address-max_address (default range is
-      0-0xffffffff). The simulator checks if the address from the data
-      file falls within this specified range; data is only stored in
-      memory if this check succeeds.</p>
+      appended to the filename using the @ character. The content of
+      the file will then be loaded into the specified memory. If an
+      offset parameter is provided (appended to the input
+      specification using the : character), the simulator will add
+      this offset to the address before storing data in the simulated
+      memory. The offset can be a signed number in decimal,
+      hexadecimal, or octal format. An address range can also be
+      specified using the # character in the form of
+      min_address-max_address (default range is 0-0xffffffff). The
+      simulator checks if the address from the data file falls within
+      this specified range; data is only stored in memory if this
+      check succeeds. Range check is done <b>before</b> the
+      offset parameter is applied.</p>
 
     <a name="options">
       <h3>Options: </h3>
