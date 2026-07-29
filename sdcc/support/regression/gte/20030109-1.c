@@ -1,6 +1,9 @@
 /* PR c/8032 */
 /* Verify that an empty initializer inside a partial
    parent initializer doesn't confuse GCC.  */
+#ifdef __SDCC
+#pragma std_c23
+#endif
 
 struct X
 {

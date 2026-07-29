@@ -13,7 +13,7 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
    GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License 
+   You should have received a copy of the GNU General Public License
    along with this library; see the file COPYING. If not, write to the
    Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA.
@@ -39,7 +39,7 @@
 __xdata static volatile unsigned char __at (0x310000) rtc;
 
 // this is the 64bit pattern that has to be recognized by the ds1315
-__code unsigned char rtcMagic[8]={0xc5,0x3a,0xa3,0x5c,0xc5,0x3a,0xa3,0x5c};
+const unsigned char rtcMagic[8]={0xc5,0x3a,0xa3,0x5c,0xc5,0x3a,0xa3,0x5c};
 
 #define BCDtoINT(x) (((x)&0x0f)+((x)>>4)*10)
 #define INTtoBCD(x) (((x)%10)+(((x)/10)<<4))

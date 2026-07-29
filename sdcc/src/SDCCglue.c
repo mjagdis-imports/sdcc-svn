@@ -992,7 +992,7 @@ printIvalBitFields (symbol ** sym, initList ** ilist, struct dbuf_s *oBuf)
   unsigned long long ival = 0;
   unsigned size = 0;
   unsigned bit_start = 0;
-  unsigned long int bytes_written = 0;
+  unsigned int bytes_written = 0;
 
   while (lsym && IS_BITFIELD (lsym->type))
     {
@@ -1107,15 +1107,17 @@ printIvalStruct (symbol *sym, sym_link *type, initList *ilist, struct dbuf_s *oB
   else
     {
       // Hack to avoid the hack below (the one that fixed bug #2643) breaking zero-length bit-fields as first member of a struct (bug #3542).
-      if(IS_BITFIELD (sflds->type) && !SPEC_BLEN (sflds->etype))
+      //FIXME: shouldn't this be a while ?
+      if (IS_BITFIELD (sflds->type) && !SPEC_BLEN (sflds->etype))
         sflds = sflds->next;
 
       while (sflds)
         {
           unsigned int oldoffset = sflds->offset;
+          unsigned int bytes_written = (unsigned int)-1;
 
           if (IS_BITFIELD (sflds->type))
-            printIvalBitFields (&sflds, &iloop, oBuf);
+            bytes_written = printIvalBitFields (&sflds, &iloop, oBuf);
           else
             {
               printIval (sym, sflds->type, iloop, oBuf, 1);
@@ -1126,6 +1128,11 @@ printIvalStruct (symbol *sym, sym_link *type, initList *ilist, struct dbuf_s *oB
           // Handle members from anonymous unions. Just a hack to fix bug #2643.
           while (sflds && sflds->offset == oldoffset)
             {
+              /* pad out with zeros if necessary */
+              for ( ; bytes_written < getSize(sflds->type); bytes_written++)
+                {
+                  dbuf_tprintf (oBuf, "\t!db !constbyte\n", 0);
+                }
               sflds = sflds->next;
               skip_holes++;
             }

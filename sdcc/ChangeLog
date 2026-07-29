@@ -1,3 +1,63 @@
+2026-07-29 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* device/lib/ds390/rtc390.c: fix warning 356 by changing __code to const
+	* src/SDCCast.c (createIvalStruct): applied modified patch #506 by Howard M.
+	  Harte, mostly fixes bug #3393
+	* src/SDCCglue.c (printIvalStruct): improved hack to handle non-first larger
+	  union fields
+	* src/SDCCutil.c (is_UCN_valid_in_identifier): remove unused function when
+	  libu8ident is available
+	  (decode_UCNs_to_utf8, process_identifier): fix warnings
+	* support/cpp/gcc/diagnostic.cc (fancy_abort): fix warning
+	* support/cpp/libcpp/lex.cc (forms_identifier_p): suppress warnings
+	* support/regression/MakeList: exclude gte_pr58277-2 for mcs51-*-stack-auto
+	  for lack of memory,
+	  enable qct_0051-inits for all targets,
+	  enable tcc_49_bracket_evaluation for all mcs51,
+	  removed non-existent EXCLUDE_mcs51-stack-auto
+	* support/regression/gte/20001111-1.c: fix warnings in this horendous code
+	* support/regression/gte/20020206-2.c,
+	* support/regression/gte/20030109-1.c,
+	* support/regression/gte/931004-12.c,
+	* support/regression/gte/960802-1.c,
+	* support/regression/gte/comp-goto-1.c,
+	* support/regression/gte/loop-2b.c,
+	* support/regression/gte/pr58277-2.c,
+	* support/regression/qct/0051-inits.c,
+	* support/regression/tests/bug-716242.c,
+	* support/regression/tests/bug-868103.c.in,
+	* support/regression/tests/bug1856409.c.in,
+	* support/regression/tests/bug3389647.c.in,
+	* support/regression/tests/gcc-torture-execute-20041112-1.c,
+	* support/regression/tests/gcc-torture-execute-20050929-1.c,
+	* support/regression/tests/gcc-torture-execute-930526-1.c,
+	* support/regression/tests/gcc-torture-execute-960116-1.c,
+	* support/regression/tests/genericintrinsicnaddr.c,
+	* support/regression/tests/genptrs.c,
+	* support/regression/tests/nullstring.c.in,
+	* support/regression/tests/serpent.c.in,
+	* support/regression/tests/zeropad.c.in: fix warnings
+	* support/regression/gte/980526-2.c,
+	* support/regression/gte/pr103255.c,
+	* support/regression/gte/pr17133.c,
+	* support/regression/tests/compound-literal.c,
+	* support/regression/tests/dhrystone.c,
+	* support/regression/tests/gcc-torture-execute-920428-1.c,
+	* support/regression/tests/gcc-torture-execute-950710-1.c: suppress warnings
+	* support/regression/tcc/49_bracket_evaluation.c: shrink point_array to enable more targets
+	* support/regression/tests/absolute.c.in: changed __code to __code const,
+	  disabled for r2k, r2ka, r4k, r5k & r6k,
+	  added double casting to suppress warning 322, W_PTR2INT_NOREPRESENT,
+	  shouldn't an explicit cast prevent this warning like it does for int's?
+	* support/regression/tests/bug-2854.c: point somewhere in ram
+	* support/regression/tests/bug-3393.c: added bitfields,
+	  still fails with multiple bitfield-containing structs in a union !
+	  test both globals and locals
+	* support/regression/tests/bug1115321.c,
+	* support/regression/tests/float_single.c.in: changed check from SDCC to __SDCC
+	* support/regression/tests/gcc-torture-execute-20050111-1.c,
+	* support/regression/tests/gcc-torture-execute-990804-1.c: perform ASSERT
+
 2026-07-28 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/mos6502/gen.c:

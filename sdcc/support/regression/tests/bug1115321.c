@@ -255,7 +255,7 @@ void test_s( void )
 #endif
 }
 
-#if defined SDCC
+#if defined __SDCC
 extern void _putchar(char c);
 
 int putchar(int c)

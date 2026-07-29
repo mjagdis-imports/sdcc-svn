@@ -1,6 +1,6 @@
 /** Absolute addressing tests.
 
-    mem: __code, __xdata
+    mem: __code const, __xdata
 */
 #include <testfwk.h>
 #include <stddef.h>
@@ -47,6 +47,7 @@ void
 testAbsolute(void)
 {
 #if !defined(__SDCC_pdk13) && !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) // TODO: Make test suitable for pdk
+#if !defined(__SDCC_r2k) && !defined(__SDCC_r2ka) && !defined(__SDCC_r4k) && !defined(__SDCC_r5k) && !defined(__SDCC_r6k) // TODO: Make test suitable for rxk
 #if !defined(PORT_HOST)
   static {mem} char __at(ADDRESS(B6)) s = 's';
   char {mem} *pC = (char {mem} *)(ADDRESS(B0));
@@ -58,13 +59,14 @@ testAbsolute(void)
   ASSERT(pC[6] == 's');
   ASSERT(pI[0] == 0x1234);
 
-  ASSERT((unsigned int)&pc==ADDRESS(A0));
-  ASSERT((unsigned int)&p==ADDRESS(A4));
-  ASSERT((unsigned int)&a==ADDRESS(A8));
-  ASSERT((unsigned int)&f==ADDRESS(AC));
+  ASSERT((unsigned int)(unsigned long int)&pc==ADDRESS(A0));
+  ASSERT((unsigned int)(unsigned long int)&p==ADDRESS(A4));
+  ASSERT((unsigned int)(unsigned long int)&a==ADDRESS(A8));
+  ASSERT((unsigned int)(unsigned long int)&f==ADDRESS(AC));
 
   //bug 2941749
   ASSERT((*((TestStruct *)&k)).a == 0x1234);
+#endif
 #endif
 #endif
 }

@@ -7,7 +7,7 @@
 // Only some ports have intrinsic named address spaces
 #if defined(__SDCC_mcs51)
 __near int *ni;
-__code int *ci;
+__code const int *ci;
 int *i;
 #endif
 
@@ -16,7 +16,7 @@ void testGeneric(void)
 // Only some ports have intrinsic named address spaces
 #if defined(__SDCC_mcs51)
   ASSERT(_Generic(ni, default : 0, __near int *: 1, __code int* : 2) == 1);
-  ASSERT(_Generic(ci, default : 0, __near int *: 1, __code int* : 2) == 2);
+  ASSERT(_Generic(ci, default : 0, __near int *: 1, __code const int* : 2) == 2);
 #endif
 }
 

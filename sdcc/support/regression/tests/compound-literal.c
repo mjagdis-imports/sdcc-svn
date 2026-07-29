@@ -4,6 +4,7 @@
 #include <testfwk.h>
 #include <string.h>
 
+#pragma disable_warning 196
 #pragma disable_warning 360
 
 char *str1 = "aaa";

@@ -19,7 +19,7 @@ f3 (long b)
 }
 
 void
-f4 ()
+f4 (void)
 {
   long v = f1 ();
   long o = f2 ();
@@ -27,7 +27,8 @@ f4 ()
   f3 (v);
 }
 
-main ()
+void
+main (void)
 {
   f4 ();
   if (val != 0x5e000132)

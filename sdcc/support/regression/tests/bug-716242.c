@@ -30,7 +30,7 @@ f1 ()
 {
 #if !((defined __SDCC_stm8) && defined (__SDCC_MODEL_LARGE))
 #if defined(__SDCC_ds390)
-  p = (void __code *) mul2;
+  p = (void const __code *) mul2;
 #else
   p = (void *) mul2;
 #endif
