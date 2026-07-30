@@ -28,15 +28,15 @@ struct S v = {1, 2, 3, 4};
 int f (void)
 {
       if (v.a != 1) return 1;
-      if (v.i != 2) return 2;           /* holds 0: overwritten by init for d */
-      if (v.j != 3) return 3;           /* holds 0: overwritten by init for d */
+      if (v.i != 2) return 2;               /* holds 0: overwritten by init for d */
+      if (v.j != 3) return 3;               /* holds 0: overwritten by init for d */
 #if defined(__SDCC) /* only check for SDCC as it assumes little-endianness */
 #if 0 /* still fails because i,j & c are flattened into S */
-      if (v.c != 0x32) return 4;        /* holds 0: overwritten by init for d */
+      if (v.c != 0x32) return 4;            /* holds 0: overwritten by init for d */
 #endif
-      if (v.d & 0xFF != 0x32) return 5; /* holds 0: none left */
+      if ((v.d & 0xFF) != 0x32) return 5;   /* holds 0: none left */
 #endif
-      if (v.z != 4) return 6;           /* holds 0: none left */
+      if (v.z != 4) return 6;               /* holds 0: none left */
       return 0;
 }
 
@@ -44,15 +44,15 @@ int g (void)
 {
       struct S w = {5, 6, 7, 8};
       if (w.a != 5) return 1;
-      if (w.i != 6) return 2;           /* holds 0: overwritten by init for d */
-      if (w.j != 7) return 3;           /* holds 0: overwritten by init for d */
+      if (w.i != 6) return 2;               /* holds 0: overwritten by init for d */
+      if (w.j != 7) return 3;               /* holds 0: overwritten by init for d */
 #if defined(__SDCC) /* only check for SDCC as it assumes little-endianness */
 #if 0 /* still fails because i,j & c are flattened into S */
-      if (w.c != 0x76) return 4;        /* holds 0: overwritten by init for d */
+      if (w.c != 0x76) return 4;            /* holds 0: overwritten by init for d */
 #endif
-      if (w.d & 0xFF != 0x76) return 5; /* holds 0: none left */
+      if ((w.d & 0xFF) != 0x76) return 5;   /* holds 0: none left */
 #endif
-      if (w.z != 8) return 6;           /* holds 0: none left */
+      if (w.z != 8) return 6;               /* holds 0: none left */
       return 0;
 }
 
