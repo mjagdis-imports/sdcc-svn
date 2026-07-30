@@ -1,8 +1,11 @@
 2026-07-30 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/mos6502/gen.h,
-      src/mos/gen.c:
+      src/mos6502/gen.c:
       Really implement smarter tsxUseful().
+	* src/mos6502/genlshift.c,
+      src/mos6502/genrshift.c:
+      Minor cleanup up of shifts.
 
 2026-07-30 Maarten Brock <sourceforge.brock AT dse.nl>
 
@@ -19,7 +22,7 @@
 2026-07-29 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/mos6502/gen.h,
-      src/mos/gen.c:
+      src/mos6502/gen.c:
       Implement smarter tsxUseful().
     * src/mos6502/peeph.def:
       Fix reorder copy rules.
