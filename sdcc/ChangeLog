@@ -1,13 +1,17 @@
+2026-07-31 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* support/regression/tests/bug-3393.c: fix stm8 endianness
+
 2026-07-30 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/mos6502/gen.h,
-      src/mos6502/gen.c:
-      Really implement smarter tsxUseful().
+	  src/mos6502/gen.c:
+	  Really implement smarter tsxUseful().
 	* src/mos6502/genlshift.c,
-      src/mos6502/genrshift.c:
-      Minor cleanup up of shifts.
+	  src/mos6502/genrshift.c:
+	  Minor cleanup up of shifts.
 	* src/mos6502/gen.c:
-      Improve genPackBits().
+	  Improve genPackBits().
 
 2026-07-30 Maarten Brock <sourceforge.brock AT dse.nl>
 
