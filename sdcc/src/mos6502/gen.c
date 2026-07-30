@@ -2608,7 +2608,6 @@ operandOnStack(operand *op)
  *             anticipated stack references
  *************************************************************************/
 bool
-//m6502_tsxUseful(const iCode *ic)
 m6502_tsxUseful(void)
 {
   return (currFunc && IFFUNC_ISREENT (currFunc->type));
@@ -5925,6 +5924,7 @@ genCmpEQorNE (iCode * ic, iCode * ifx)
 		      needloada = storeRegTempIfSurv(m6502_reg_a);
 		      //m6502_loadRegFromAop (m6502_reg_a, AOP (left), offset);
 		    }
+
 		  if(m6502_reg_x->aop&&m6502_sameRegs(m6502_reg_x->aop, AOP(left))&&m6502_reg_x->aopofs==offset)
 		    {
 		      m6502_accopWithAop ("cpx", AOP (right), offset);
@@ -5938,6 +5938,7 @@ genCmpEQorNE (iCode * ic, iCode * ifx)
 		      m6502_loadRegFromAop (m6502_reg_a, AOP (left), offset);
 		      m6502_accopWithAop ("cmp", AOP (right), offset);
 		    }
+
 		  m6502_loadRegTempNoFlags (m6502_reg_a, needloada);
 		  needloada = false;
 		}
@@ -6528,6 +6529,7 @@ static void genUnpackBitsImmed (operand * left, operand *right, operand * result
 
   needpulla = pushRegIfSurv (m6502_reg_a);
 
+#if 0
   /* if the bitfield is a single bit in the direct page */
   if (blen == 1 && derefaop->type == AOP_DIR)
     {
@@ -6578,6 +6580,7 @@ static void genUnpackBitsImmed (operand * left, operand *right, operand * result
 	  goto finish;
 	}
     }
+#endif
 
   /* If the bitfield length is less than a byte */
   if (blen < 8)
