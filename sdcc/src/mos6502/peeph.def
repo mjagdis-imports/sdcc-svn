@@ -533,29 +533,29 @@ replace restart {
 	sta %4
 	lda %1
 	sta %2
-}
+} if notSame(%1 %2 %3 %4), notSame(%2 %3 %4)
 
-//replace restart {
-//	lda %1
-//	sta %2
-//	lda %3
-//	sta %4
-//	lda %5
-//	sta %6
-//	lda %7
-//	sta %8
-//	lda %2
-//} by {
-//	; Peephole reorder long
-//	lda %3
-//	sta %4
-//	lda %5
-//	sta %6
-//	lda %7
-//	sta %8
-//	lda %1
-//	sta %2
-//}
+replace restart {
+	lda %1
+	sta %2
+	lda %3
+	sta %4
+	lda %5
+	sta %6
+	lda %7
+	sta %8
+	lda %2
+} by {
+	; Peephole reorder long
+	lda %3
+	sta %4
+	lda %5
+	sta %6
+	lda %7
+	sta %8
+	lda %1
+	sta %2
+} if notSame(%1 %2 %3 %4 %5 %6 %7 %8), notSame(%2 %3 %4 %5 %6 %7 %8)
 
 
 ////////////////////////////////////////////////////////
@@ -728,16 +728,15 @@ replace restart {
 	ldy	%2
 } if notUsed('a')
 
-
 ////////////////////////////////////////////////////////
-// Replace transfer/store with store
+// transfer/store -> store
 ////////////////////////////////////////////////////////
 
 replace restart {
 	txa
 	sta %1
 } by {
-	; Peephole regop 12 - replaced txa/sta with stx %1
+	; Peephole SXA - replaced txa/sta with stx %1
         stx %1
 } if notUsed('a' 'n' 'z')
 
@@ -745,7 +744,7 @@ replace restart {
 	tya
 	sta %1
 } by {
-	; Peephole regop 12 - replaced tya/sta with sty %1
+	; Peephole SYA - replaced tya/sta with sty %1
         sty %1
 } if notUsed('a' 'n' 'z')
 
@@ -753,7 +752,7 @@ replace restart {
 	tax
 	stx %1
 } by {
-	; Peephole regop 13 - replaced tax/stx with sta %1
+	; Peephole SAX - replaced tax/stx with sta %1
         sta %1
 } if notUsed('x' 'n' 'z')
 
@@ -761,7 +760,7 @@ replace restart {
 	tay
 	sty %1
 } by {
-	; Peephole regop 13 - replaced tay/sty with sta %1
+	; Peephole SAY - replaced tay/sty with sta %1
         sta %1
 } if notUsed('y' 'n' 'z')
 
@@ -773,14 +772,14 @@ replace restart {
 	pla
 	pha
 } by {
-	; Peephole stack 1 - removed dead pla/pha
+	; Peephole STK1 - removed dead pla/pha
 } if notUsed('a' 'n' 'z')
 
 replace restart {
 	pha
 	pla
 } by {
-	; Peephole stack 2a - replaced pha/pla with ora #0x00
+	; Peephole STK2 - replaced pha/pla with ora #0x00
 	ora #0x00
 }
 
@@ -789,7 +788,7 @@ replace restart {
 	%1 %2
 	plp
 } by {
-	; Peephole stack 3 - removed useless php/plp around a store
+	; Peephole STK3 - removed useless php/plp around a store
 	%1 %2
 }  if same(%1 'sta' 'stx' 'sty' )
 
@@ -798,7 +797,7 @@ replace restart {
 	php
 	plp
 } by {
-	; Peephole stack 4 - removed dead php/plp
+	; Peephole STK4 - removed dead php/plp
 }
 
 ////////////////////////////////////////////////////////
@@ -807,7 +806,7 @@ replace restart {
 replace restart {
 	ora	#0x00
 } by {
-	; Peephole or 1 - eliminated unnecessary ora #0x00
+	; Peephole ORA0 - eliminated unnecessary ora #0x00
 } if notUsed('n' 'z')
 
 ////////////////////////////////////////////////////////

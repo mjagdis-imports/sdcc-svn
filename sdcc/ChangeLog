@@ -3,6 +3,8 @@
 	* src/mos6502/gen.h,
       src/mos/gen.c:
       Implement smarter tsxUseful().
+    * src/mos6502/peeph.def:
+      Fix reorder copy rules.
 
 2026-07-29 Maarten Brock <sourceforge.brock AT dse.nl>
 
