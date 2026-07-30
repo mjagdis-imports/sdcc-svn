@@ -2579,6 +2579,7 @@ operandConflictsWithX (operand *op)
 
   return false;
 }
+#endif
 
 /**************************************************************************
  * operandOnStack - returns True if operand is on the stack
@@ -2590,9 +2591,11 @@ operandOnStack(operand *op)
 
   if (!op || !IS_SYMOP (op))
     return false;
+
   sym = OP_SYMBOL (op);
   if (!sym->isspilt && sym->onStack)
     return true;
+
   if (sym->isspilt)
     {
       sym = sym->usl.spillLoc;
@@ -2601,7 +2604,6 @@ operandOnStack(operand *op)
     }
   return false;
 }
-#endif
 
 /**************************************************************************
  * tsxUseful - returns True if tsx could help at least one
@@ -2610,24 +2612,18 @@ operandOnStack(operand *op)
 bool
 m6502_tsxUseful(void)
 {
-  return (currFunc && IFFUNC_ISREENT (currFunc->type));
-#if 0
-  operand *right  = IC_RIGHT(ic);
-  operand *left   = IC_LEFT(ic);
-  operand *result = IC_RESULT(ic);
+  iCode *ic = _S.sic;
   int uses = 0;
+  operand *right;
+  operand *left;
+  operand *result;
 
-  if (ic->op == CALL)
+  while (ic && uses == 0)
     {
-      if (result && operandSize (result) < 2 && operandOnStack (result))
-        {
-          uses++;
-          ic = ic->next;
-        }
-    }
+      right  = IC_RIGHT(ic);
+      left   = IC_LEFT(ic);
+      result = IC_RESULT(ic);
 
-  while (ic && uses < 1)
-    {
       if (ic->op == IFX)
 	{
 	  if (operandOnStack (IC_COND (ic)))
@@ -2642,17 +2638,19 @@ m6502_tsxUseful(void)
 	}
       else if (ic->op == ADDRESS_OF)
 	{
-	  if (operandOnStack (right))
-	    break;
+	  if (operandOnStack (left))
+            uses++;
+
+	  break;
 	}
       else if (ic->op == LABEL || ic->op == GOTO || ic->op == CALL || ic->op == PCALL)
 	break;
-      else if (POINTER_SET (ic) || POINTER_GET (ic))
-	break;
+      //    else if (POINTER_SET (ic) || POINTER_GET (ic))
+      //	break;
       else
 	{
-	//  if (operandConflictsWithXY (result))
-	 //   break;
+	  //        if (operandConflictsWithXY (result))
+	  //          break;
 	  if (operandOnStack (left))
 	    uses += operandSize (left);
 	  if (operandOnStack (right))
@@ -2664,16 +2662,16 @@ m6502_tsxUseful(void)
       ic = ic->next;
     }
 
-  return uses >= 1;
-#endif
+  return (uses > 0);
 }
 
 bool
 m6502_keepTSX()
 {
-  if(m6502_reg_x->aop==&m6502_tsxaop)
-    return options.stackAuto || (currFunc && IFFUNC_ISREENT (currFunc->type));
-  return false;
+  if(m6502_reg_x->aop!=&m6502_tsxaop)
+    return false;
+
+  return m6502_tsxUseful();
 }
 
 void
@@ -4516,9 +4514,9 @@ genSend (set *sendSet)
             }
           else
 	    {
-	  m6502_loadRegFromAop (m6502_reg_x, AOP (IC_LEFT (send2)), 0);
-	  m6502_loadRegFromAop (m6502_reg_a, AOP (IC_LEFT (send1)), 0);
-	}
+	      m6502_loadRegFromAop (m6502_reg_x, AOP (IC_LEFT (send2)), 0);
+	      m6502_loadRegFromAop (m6502_reg_a, AOP (IC_LEFT (send1)), 0);
+	    }
         }
       else
         {
@@ -8577,6 +8575,8 @@ genm6502iCode (iCode *ic)
       else
 	m6502_regWithIdx (i)->isDead = true;
     }
+
+  _S.sic=ic;
 
   /* depending on the operation */
   switch (ic->op)

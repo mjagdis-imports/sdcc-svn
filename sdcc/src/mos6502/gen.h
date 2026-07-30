@@ -125,6 +125,7 @@ struct m6502_state_t
   int funcHasBasePtr;
   int stackPushes;
   //  int baseStackPushes;
+  iCode *sic;
   set *sendSet;
   int tempOfs;
   unsigned carryValid:1;
