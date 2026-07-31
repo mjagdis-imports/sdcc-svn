@@ -1197,6 +1197,7 @@ m6502_genRightShift (iCode * ic)
   reg_info *countreg = NULL;
   bool restore_a = false;
   bool restore_y = false;
+  bool minus = false;
   bool sign;
 
   m6502_emitComment (TRACEGEN, __func__);
