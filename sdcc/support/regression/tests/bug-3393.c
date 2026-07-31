@@ -35,7 +35,7 @@ int f (void)
       if (v.c != 0x32) return 4;            /* holds 0: overwritten by init for d */
 # endif
 
-# if defined(__SDCC_stm8)
+# if defined(__SDCC_stm8) || defined(__SDCC_hc08) || defined(__SDCC_s08)
       if ((v.d >> 8) != 0x32) return 5;     /* holds 0: none left */
 # else
       if ((v.d & 0xFF) != 0x32) return 5;   /* holds 0: none left */
@@ -56,7 +56,7 @@ int g (void)
       if (w.c != 0x76) return 4;            /* holds 0: overwritten by init for d */
 # endif
 
-# if defined(__SDCC_stm8)
+# if defined(__SDCC_stm8) || defined(__SDCC_hc08) || defined(__SDCC_s08)
       if ((w.d >> 8) != 0x76) return 5;     /* holds 0: none left */
 # else
       if ((w.d & 0xFF) != 0x76) return 5;   /* holds 0: none left */

@@ -1,6 +1,6 @@
 2026-07-31 Maarten Brock <sourceforge.brock AT dse.nl>
 
-	* support/regression/tests/bug-3393.c: fix stm8 endianness
+	* support/regression/tests/bug-3393.c: fix stm8, hc08 & s08 endianness
 
 2026-07-30 Gabriele Gorla <gorlik@yahoo.com>
 
