@@ -12,6 +12,8 @@
 	  Minor cleanup up of shifts.
 	* src/mos6502/gen.c:
 	  Improve genPackBits().
+	* src/mos6502/genrshift.c:
+	  Optimize shifts of constants.
 
 2026-07-30 Maarten Brock <sourceforge.brock AT dse.nl>
 

@@ -1314,13 +1314,6 @@ m6502_genRightShift (iCode * ic)
   if(src_x)
     {
       m6502_emitComment (TRACEGEN, "  %s - src op has x", __func__);
-      
-      // FIXME: optimize if X is literal (sign is known)
-      if(m6502_reg_x->isLitConst)
-	{
-	  if(m6502_reg_x->litConst<0x80)
-	    sign=false;
-	}
 
       late_x = src_x && dst_x && !IS_AOP_A (AOP (right)) && AOP_TYPE(right)!=AOP_SOF;  
 
@@ -1350,12 +1343,6 @@ m6502_genRightShift (iCode * ic)
     {
       m6502_emitComment (TRACEGEN, "  %s - dst op has x", __func__);
       m6502_loadRegFromAop (m6502_reg_xa, AOP (left), 0);
-      // FIXME: optimize if X is literal (sign is known)
-      if(m6502_reg_x->isLitConst)
-	{
-	  if(m6502_reg_x->litConst<0x80)
-	    sign=false;
-	}
       late_x = true;
     }
   else if (!m6502_sameRegs (AOP (left), AOP (result)))
@@ -1373,6 +1360,20 @@ m6502_genRightShift (iCode * ic)
     {
       m6502_emitComment (TRACEGEN, "%s: late countreg", __func__);
       m6502_loadRegFromAop (countreg, AOP (right), 0);
+    }
+
+  if(src_x || dst_x)
+    {
+      m6502_emitComment (TRACEGEN, "  %s - src or dst op has x", __func__);
+      
+      // FIXME: optimize if X is literal (sign is known)
+      if(m6502_reg_x->isLitConst)
+	{
+	  if(m6502_reg_x->litConst<0x80)
+	    sign=false;
+	  else
+	    minus=true;
+	}
     }
 
   m6502_useReg (countreg);
@@ -1451,7 +1452,11 @@ m6502_genRightShift (iCode * ic)
     {
       if(sign)
 	{
-          m6502_emitCmp(m6502_reg_x, 0x80);
+          if(!minus)
+            m6502_emitCmp(m6502_reg_x, 0x80);
+          else
+            m6502_emitSetCarry(1); 
+
 	  if(msb_in_x)
 	    m6502_emitRegTempOp("ror", m6502_getLastTempOfs() );
 	  else
