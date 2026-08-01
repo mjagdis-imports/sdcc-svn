@@ -1,3 +1,8 @@
+2026-08-01 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* support/regression/tests/bug-4039.c: make inline functions static as there
+	  are no external definitions and aarch64-linux-gnu chooses not to inline
+
 2026-07-31 Maarten Brock <sourceforge.brock AT dse.nl>
 
 	* support/regression/tests/bug-3393.c: fix stm8, hc08 & s08 endianness

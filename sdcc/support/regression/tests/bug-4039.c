@@ -34,6 +34,10 @@ void check(void)
     ASSERT( !vdu_interrupt_state );
 }
 
+// Must be extern to generate an external definition, a non-inlined (externally) callable version at some address,
+// or static to generate a local non-inlined callable version at an address if it needs one.
+// The compiler may always choose not to inline
+static
 inline void TileSet( uint16_t addr, uint8_t id ) {
 
     id *= 4;
@@ -45,6 +49,18 @@ inline void TileSet( uint16_t addr, uint8_t id ) {
     vdu_address_set_fast2( addr );
 }
 
+/* Failed on aarch64-linux-gnu in the compile farm due to testing Undefined Behavior
+   /usr/bin/aarch64-linux-gnu-ld.bfd: gen/host/tst_bug-4039.o: in function `LevelDraw':
+   /home/sdcc-builder/build/sdcc-build/orig/sdcc/support/regression/cases/../tests/bug-4039.c:64:(.text+0xa4): undefined reference to `DrawSprite'
+   collect2: error: ld returned 1 exit status
+   gmake[5]: *** [ports/host/spec.mk:30: gen/host/tst_bug-4039.bin] Fehler 1
+   results/host/tst_bug-4039.out:2:--- FAIL: cannot compile/link cases/tst_bug-4039.c
+*/
+
+// Must be extern to generate an external definition, a non-inlined (externally) callable version at some address,
+// or static to generate a local non-inlined callable version at an address if it needs one.
+// The compiler may always choose not to inline
+static
 inline void DrawSprite( uint16_t addr, uint8_t id ) {
 
     TileSet( addr, id );
@@ -71,7 +87,7 @@ void LevelDraw() {
 
 void
 testBug(void) {
-  
+
     LevelDraw();
 }
 
