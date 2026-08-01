@@ -1790,7 +1790,7 @@ aopPutUsesAcc (const asmop* aop, const char *s, int offset)
 }
 
 /*-----------------------------------------------------------------*/
-/* aopPut- puts a string for a aop and indicates if acc is in use */
+/* aopPut- puts a string for an aop and indicates if acc is in use */
 /*-----------------------------------------------------------------*/
 static bool
 aopPut (asmop *aop, const char *s, int offset)
@@ -10792,7 +10792,7 @@ emitPtrByteSet (const char *rname, int p_type, const char *src)
 
 /*-----------------------------------------------------------------*/
 /* genMaskExtendSign - generate masking code for masking top       */
-/* byte of bit-field and extending sign for signed bitfield        */
+/* byte of bitfield and extending sign for signed bitfield         */
 /*-----------------------------------------------------------------*/
 static void
 genMaskExtendSign (bool sign, int len)
@@ -10820,6 +10820,96 @@ genMaskExtendSign (bool sign, int len)
       emitcode ("orl", "a,#0x%02x", (0xff << len) & 0xff);
       emitLabel (tlbl);
     }
+}
+
+/*-----------------------------------------------------------------*/
+/* genUnpackDBits - generates code for unpacking bits in data      */
+/*-----------------------------------------------------------------*/
+static char *
+genUnpackDBits (operand * result, operand * left, iCode * ifx)
+{
+  const char *l;
+  int offset = 0;               /* result byte offset */
+  int rsize;                    /* result size */
+  int rlen = 0;                 /* remaining bitfield length */
+  sym_link *etype;              /* bitfield type information */
+  unsigned blen;                /* bitfield length */
+  unsigned bstr;                /* bitfield starting bit within byte */
+  static char *const accBits[] = { "acc.0", "acc.1", "acc.2", "acc.3",
+                                   "acc.4", "acc.5", "acc.6", "acc.7"
+                                 };
+
+  D (emitcode (";", "genUnpackDBits"));
+
+  etype = getSpec (operandType (result));
+  rsize = getSize (operandType (result));
+  blen = SPEC_BLEN (etype);
+  bstr = SPEC_BSTR (etype);
+
+  /* get the string representation of the name */
+  l = opGet (left, 0, FALSE, TRUE) + 1;        // remove #
+
+  if (ifx && blen <= 8)
+    {
+      emitcode ("mov", "a,%s", l);
+      if (blen == 1)
+        {
+          return accBits[bstr];
+        }
+      else
+        {
+          if (blen < 8)
+            emitcode ("anl", "a,#!constbyte", (unsigned)((((unsigned char)-1) >> (8 - blen)) << bstr));
+          return "a";
+        }
+    }
+  wassert (!ifx);
+
+  /* If the bitfield length is less than a byte */
+  if (blen < 8)
+    {
+      emitcode ("mov", "a,%s", l);
+      AccRol (8 - bstr);
+      genMaskExtendSign (!SPEC_USIGN (etype) && !IS_BOOLEAN (etype), blen);
+      opPut(result, "a", offset++);
+      goto finish;
+    }
+
+  /* Bit field did not fit in a byte. Copy all but the partial byte at the end. */
+  for (rlen = blen; rlen >= 8; rlen -= 8)
+    {
+      emitcode ("mov", "a,(%s + %d)", l, offset);
+      opPut(result, "a", offset++);
+    }
+
+  /* Handle the partial byte at the end */
+  if (rlen)
+    {
+      emitcode ("mov", "a,(%s + %d)", l, offset);
+      genMaskExtendSign (!SPEC_USIGN (etype), rlen);
+      opPut(result, "a", offset++);
+    }
+
+finish:
+  if (offset < rsize)
+    {
+      char *source;
+
+      if (SPEC_USIGN (etype) || IS_BOOLEAN (etype))
+        source = zero;
+      else
+        {
+          /* signed bitfield: sign extension with 0x00 or 0xff */
+          emitcode ("rlc", "a");
+          emitcode ("subb", "a,acc");
+
+          source = "a";
+        }
+      rsize -= offset;
+      while (rsize--)
+        opPut(result, source, offset++);
+    }
+  return NULL;
 }
 
 /*-----------------------------------------------------------------*/
@@ -10910,38 +11000,65 @@ finish:
   return NULL;
 }
 
-
 /*-----------------------------------------------------------------*/
 /* genDataPointerGet - generates code when ptr offset is known     */
 /*-----------------------------------------------------------------*/
 static void
-genDataPointerGet (operand * left, operand * result, iCode * ic)
+genDataPointerGet (operand * left, operand * result, iCode * ic, iCode * ifx)
 {
   const char *l;
+  char *ifxCond = "a";
+  sym_link *rtype, *retype;
   int size, offset = 0;
 
   D (emitcode (";", "genDataPointerGet"));
 
+  rtype = operandType (result);
+  retype = getSpec (rtype);
+
   aopOp (result, ic, TRUE);
 
-  /* get the string representation of the name */
-  l = opGet (left, 0, FALSE, TRUE) + 1;        // remove #
-  size = AOP_SIZE (result);
-  while (size--)
+  /* if bitfield then unpack the bits */
+  if (IS_BITFIELD (retype))
     {
-      struct dbuf_s dbuf;
+      ifxCond = genUnpackDBits (result, left, ifx);
+    }
+  else
+    {
+      /* get the string representation of the name */
+      l = opGet (left, 0, FALSE, TRUE) + 1;        // remove #
+      size = AOP_SIZE (result);
+      while (size--)
+        {
+          struct dbuf_s dbuf;
 
-      dbuf_init (&dbuf, 128);
-      if (AOP_SIZE (result) > 1)
-        {
-          dbuf_printf (&dbuf, "(%s + %d)", l, offset);
+          dbuf_init (&dbuf, 128);
+          if (AOP_SIZE (result) > 1)
+            {
+              dbuf_printf (&dbuf, "(%s + %d)", l, offset);
+            }
+          else
+            {
+              dbuf_append_str (&dbuf, l);
+            }
+          if (ifx || IS_AOP_PREG (result) || AOP_TYPE (result) == AOP_STK)
+            {
+              emitcode ("mov", "a,%s", dbuf_c_str (&dbuf));
+              if (!ifx)
+                opPut(result, "a", offset);
+            }
+          else
+            {
+              opPut(result, dbuf_c_str (&dbuf), offset);
+            }
+          dbuf_destroy (&dbuf);
+          offset++;
         }
-      else
-        {
-          dbuf_append_str (&dbuf, l);
-        }
-      opPut(result, dbuf_c_str (&dbuf), offset++);
-      dbuf_destroy (&dbuf);
+    }
+
+  if (ifx && !ifx->generated)
+    {
+      genIfxJump (ifx, ifxCond, left, NULL, result, ic->next);
     }
 
   freeAsmop (result, NULL, ic, TRUE);
@@ -10968,13 +11085,11 @@ genNearPointerGet (operand * left, operand * result, iCode * ic, iCode * pi, iCo
 
   aopOp (left, ic, FALSE);
 
-  /* if left is rematerialisable and
-     result is not bitfield variable type and
-     the left is pointer to data space i.e
-     lower 128 bytes of space */
-  if (AOP_TYPE (left) == AOP_IMMD && !IS_BITFIELD (retype) && DCL_TYPE (ltype) == POINTER)
+  /* if left is rematerialisable and no post-increment and
+     the left is pointer to data space i.e lower 128 bytes of space */
+  if (AOP_TYPE (left) == AOP_IMMD && DCL_TYPE (ltype) == POINTER && !pi)
     {
-      genDataPointerGet (left, result, ic);
+      genDataPointerGet (left, result, ic, ifx);
       return;
     }
 
@@ -11020,7 +11135,9 @@ genNearPointerGet (operand * left, operand * result, iCode * ic, iCode * pi, iCo
 
   /* if bitfield then unpack the bits */
   if (IS_BITFIELD (retype))
-    ifxCond = genUnpackBits (result, rname, POINTER, ifx);
+    {
+      ifxCond = genUnpackBits (result, rname, IPOINTER, ifx);
+    }
   else
     {
       /* we can just get the values */
@@ -11208,9 +11325,11 @@ genFarPointerGet (operand * left, operand * result, iCode * ic, iCode * pi, iCod
   /* so dptr now contains the address */
   aopOp (result, ic, FALSE);
 
-  /* if bit then unpack */
+  /* if bitfield then unpack the bits */
   if (IS_BITFIELD (retype))
-    ifxCond = genUnpackBits (result, "dptr", FPOINTER, ifx);
+    {
+      ifxCond = genUnpackBits (result, "dptr", FPOINTER, ifx);
+    }
   else
     {
       size = AOP_SIZE (result);
@@ -11260,7 +11379,7 @@ genCodePointerGet (operand * left, operand * result, iCode * ic, iCode * pi, iCo
   /* so dptr now contains the address */
   aopOp (result, ic, FALSE);
 
-  /* if bit then unpack */
+  /* if bitfield then unpack the bits */
   if (IS_BITFIELD (retype))
     ifxCond = genUnpackBits (result, "dptr", CPOINTER, ifx);
   else
@@ -11313,7 +11432,7 @@ genGenPointerGet (operand * left, operand * result, iCode * ic, iCode * pi, iCod
   /* so dptr-b now contains the address */
   aopOp (result, ic, FALSE);
 
-  /* if bit then unpack */
+  /* if bitfield then unpack the bits */
   if (IS_BITFIELD (retype))
     {
       ifxCond = genUnpackBits (result, "dptr", GPOINTER, ifx);
@@ -11389,8 +11508,7 @@ genPointerGet (iCode * ic, iCode * pi, iCode * ifx)
       type = operandType (left);
       p_type = DCL_TYPE (type);
     }
-  /* now that we have the pointer type we assign
-     the pointer values */
+  /* now that we have the pointer type we assign the pointer values */
   switch (p_type)
     {
     case POINTER:
@@ -11416,6 +11534,111 @@ genPointerGet (iCode * ic, iCode * pi, iCode * ifx)
     }
 }
 
+
+/*-----------------------------------------------------------------*/
+/* genPackDBits - generates code for packed bit storage in data    */
+/*-----------------------------------------------------------------*/
+static void
+genPackDBits (operand * result, operand * right)
+{
+  int offset = 0;               /* source byte offset */
+  int rlen = 0;                 /* remaining bitfield length */
+  unsigned blen;                /* bitfield length */
+  unsigned bstr;                /* bitfield starting bit within byte */
+  unsigned long long  litval;   /* source literal value (if AOP_LIT) */
+  unsigned char mask;           /* bitmask within current byte */
+  sym_link * etype = operandType (result)->next;
+
+  D (emitcode (";", "genPackDBits"));
+
+  blen = SPEC_BLEN (etype);
+  bstr = SPEC_BSTR (etype);
+
+  char *dname = Safe_strdup (opGet (result, 0, FALSE, TRUE) + 1);   //remove #
+
+  /* If the bitfield length is less than a byte */
+  if (blen < 8)
+    {
+      mask = ((unsigned char) (0xFF << (blen + bstr)) | (unsigned char) (0xFF >> (8 - bstr)));
+
+      if (AOP_TYPE (right) == AOP_LIT)
+        {
+          /* Case with a bitfield length <8 and literal source */
+          litval = ullFromVal (AOP (right)->aopu.aop_lit);
+          litval <<= bstr;
+          litval &= (~mask) & 0xff;
+          if ((mask | litval) != 0xff)
+            emitcode ("anl", "%s,#!constbyte", dname, (unsigned)mask);
+          if (litval)
+            emitcode ("orl", "%s,#!constbyte", dname, (unsigned)litval);
+        }
+      else if (blen == 1)
+        {
+          /* Case with a bitfield length == 1 and no generic pointer */
+          if (AOP_TYPE (right) == AOP_CRY)
+            emitcode ("mov", "c,%s", AOP (right)->aopu.aop_dir);
+          else
+            {
+              MOVA (opGet (right, 0, FALSE, FALSE));
+              emitcode ("rrc", "a");
+            }
+          emitcode ("mov", "a,%s", dname);
+          emitcode ("mov", "acc.%d,c", bstr);
+          emitcode ("mov", "%s,a", dname);
+        }
+      else
+        {
+          /* Case with a bitfield length < 8 and arbitrary source */
+          MOVA (opGet (right, 0, FALSE, FALSE));
+          /* shift and mask source value */
+          AccLsh (bstr);
+          emitcode ("anl", "a,#!constbyte", (unsigned)((~mask) & 0xffu));
+          emitcode ("anl", "%s,#!constbyte", dname, (unsigned)mask);
+          emitcode ("orl", "%s,a", dname);
+        }
+      Safe_free (dname);
+      return;
+    }
+
+  /* Bit length is greater than 7 bits. In this case, copy  */
+  /* all except the partial byte at the end                 */
+  if (blen >= 8)
+    {
+      for (rlen = blen; rlen >= 8; rlen -= 8)
+        {
+          emitcode ("mov", "(%s + %d),%s", dname, offset, opGet (right, offset, FALSE, FALSE));
+          offset++;
+        }
+    }
+
+  /* If there was a partial byte at the end */
+  if (rlen)
+    {
+      mask = (((unsigned char) - 1 << rlen) & 0xff);
+
+      if (AOP_TYPE (right) == AOP_LIT)
+        {
+          /* Case with partial byte and literal source */
+          litval = ullFromVal (AOP (right)->aopu.aop_lit);
+          litval >>= (blen - rlen);
+          litval &= (~mask) & 0xff;
+          if ((mask | litval) != 0xff)
+            emitcode ("anl", "(%s + %d),#!constbyte", dname, offset, (unsigned)mask);
+          if (litval)
+            emitcode ("orl", "(%s + %d),#!constbyte", dname, offset, (unsigned)litval);
+        }
+      else
+        {
+          /* Case with partial byte and arbitrary source */
+          MOVA (opGet (right, blen / 8, FALSE, FALSE));
+          /* mask source value */
+          emitcode ("anl", "a,#!constbyte", (unsigned)((~mask) & 0xffu));
+          emitcode ("anl", "(%s + %d),#!constbyte", dname, offset, (unsigned)mask);
+          emitcode ("orl", "(%s + %d),a", dname, offset);
+        }
+    }
+  Safe_free (dname);
+}
 
 /*-----------------------------------------------------------------*/
 /* genPackBits - generates code for packed bit storage             */
@@ -11667,111 +11890,6 @@ litPut (operand * result, const char *s, int offset)
 }
 
 /*-----------------------------------------------------------------*/
-/* genPackDBits - generates code for packed bit storage in data    */
-/*-----------------------------------------------------------------*/
-static void
-genPackDBits (operand * result, operand * right)
-{
-  int offset = 0;               /* source byte offset */
-  int rlen = 0;                 /* remaining bitfield length */
-  unsigned blen;                /* bitfield length */
-  unsigned bstr;                /* bitfield starting bit within byte */
-  unsigned long long  litval;   /* source literal value (if AOP_LIT) */
-  unsigned char mask;           /* bitmask within current byte */
-  sym_link * etype = operandType (result)->next;
-
-  D (emitcode (";", "genPackDBits"));
-
-  blen = SPEC_BLEN (etype);
-  bstr = SPEC_BSTR (etype);
-
-  char *dname = Safe_strdup (opGet (result, 0, FALSE, TRUE) + 1);   //remove #
-
-  /* If the bitfield length is less than a byte */
-  if (blen < 8)
-    {
-      mask = ((unsigned char) (0xFF << (blen + bstr)) | (unsigned char) (0xFF >> (8 - bstr)));
-
-      if (AOP_TYPE (right) == AOP_LIT)
-        {
-          /* Case with a bitfield length <8 and literal source */
-          litval = ullFromVal (AOP (right)->aopu.aop_lit);
-          litval <<= bstr;
-          litval &= (~mask) & 0xff;
-          if ((mask | litval) != 0xff)
-            emitcode ("anl", "%s,#!constbyte", dname, (unsigned)mask);
-          if (litval)
-            emitcode ("orl", "%s,#!constbyte", dname, (unsigned)litval);
-        }
-      else if (blen == 1)
-        {
-          /* Case with a bitfield length == 1 and no generic pointer */
-          if (AOP_TYPE (right) == AOP_CRY)
-            emitcode ("mov", "c,%s", AOP (right)->aopu.aop_dir);
-          else
-            {
-              MOVA (opGet (right, 0, FALSE, FALSE));
-              emitcode ("rrc", "a");
-            }
-          emitcode ("mov", "a,%s", dname);
-          emitcode ("mov", "acc.%d,c", bstr);
-          emitcode ("mov", "%s,a", dname);
-        }
-      else
-        {
-          /* Case with a bitfield length < 8 and arbitrary source */
-          MOVA (opGet (right, 0, FALSE, FALSE));
-          /* shift and mask source value */
-          AccLsh (bstr);
-          emitcode ("anl", "a,#!constbyte", (unsigned)((~mask) & 0xffu));
-          emitcode ("anl", "%s,#!constbyte", dname, (unsigned)mask);
-          emitcode ("orl", "%s,a", dname);
-        }
-      Safe_free (dname);
-      return;
-    }
-
-  /* Bit length is greater than 7 bits. In this case, copy  */
-  /* all except the partial byte at the end                 */
-  if (blen >= 8)
-    {
-      for (rlen = blen; rlen >= 8; rlen -= 8)
-        {
-          emitcode ("mov", "(%s + %d),%s", dname, offset, opGet (right, offset, FALSE, FALSE));
-          offset++;
-        }
-    }
-
-  /* If there was a partial byte at the end */
-  if (rlen)
-    {
-      mask = (((unsigned char) - 1 << rlen) & 0xff);
-
-      if (AOP_TYPE (right) == AOP_LIT)
-        {
-          /* Case with partial byte and literal source */
-          litval = ullFromVal (AOP (right)->aopu.aop_lit);
-          litval >>= (blen - rlen);
-          litval &= (~mask) & 0xff;
-          if ((mask | litval) != 0xff)
-            emitcode ("anl", "(%s + %d),#!constbyte", dname, offset, (unsigned)mask);
-          if (litval)
-            emitcode ("orl", "(%s + %d),#!constbyte", dname, offset, (unsigned)litval);
-        }
-      else
-        {
-          /* Case with partial byte and arbitrary source */
-          MOVA (opGet (right, blen / 8, FALSE, FALSE));
-          /* mask source value */
-          emitcode ("anl", "a,#!constbyte", (unsigned)((~mask) & 0xffu));
-          emitcode ("anl", "(%s + %d),#!constbyte", dname, offset, (unsigned)mask);
-          emitcode ("orl", "(%s + %d),a", dname, offset);
-        }
-    }
-  Safe_free (dname);
-}
-
-/*-----------------------------------------------------------------*/
 /* genDataPointerSet - remat pointer to data space                 */
 /*-----------------------------------------------------------------*/
 static void
@@ -11784,7 +11902,7 @@ genDataPointerSet (operand * right, operand * result, iCode * ic)
   aopOp (right, ic, FALSE);
 
   size = max (AOP_SIZE (right), AOP_SIZE (result));
-  /* if bit-field then pack the bits */
+  /* if bitfield then pack the bits */
   if (IS_BITVAR (operandType (result)->next))
     {
       genPackDBits (result, right);
@@ -11830,8 +11948,7 @@ genNearPointerSet (operand * right, operand * result, iCode * ic, iCode * pi)
 
   aopOp (result, ic, FALSE);
 
-  /* if the result is rematerializable &
-     in data space & not a bit variable */
+  /* if the result is rematerializable & in data space */
   if (AOP_TYPE (result) == AOP_IMMD && DCL_TYPE (ptype) == POINTER)
     {
       genDataPointerSet (right, result, ic);
@@ -11880,7 +11997,7 @@ genNearPointerSet (operand * right, operand * result, iCode * ic, iCode * pi)
   aopOp (right, ic, FALSE);
 
   rname = Safe_strdup (rname);
-  /* if bit-field then pack the bits */
+  /* if bitfield then pack the bits */
   if (IS_BITVAR (operandType (result)->next))
     {
       genPackBits (operandType (result)->next, right, rname, IPOINTER);
@@ -11992,7 +12109,7 @@ genPagedPointerSet (operand * right, operand * result, iCode * ic, iCode * pi)
   aopOp (right, ic, FALSE);
 
   rname = Safe_strdup (rname);
-  /* if bit-field then pack the bits */
+  /* if bitfield then pack the bits */
   if (IS_BITVAR (operandType (result)->next))
     {
       genPackBits (operandType (result)->next, right, rname, PPOINTER);
@@ -12059,7 +12176,7 @@ genFarPointerSet (operand * right, operand * result, iCode * ic, iCode * pi)
   /* so dptr now contains the address */
   aopOp (right, ic, FALSE);
 
-  /* if bit-field then pack */
+  /* if bitfield then pack the bits */
   if (IS_BITVAR (operandType (result)->next))
     {
       genPackBits (operandType (result)->next, right, "dptr", FPOINTER);
@@ -12104,7 +12221,7 @@ genGenPointerSet (operand * right, operand * result, iCode * ic, iCode * pi)
   /* so dptr-b now contains the address */
   aopOp (right, ic, FALSE);
 
-  /* if bit-field then unpack */
+  /* if bitfield then pack the bits */
   if (IS_BITVAR (operandType (result)->next))
     {
       genPackBits (operandType (result)->next, right, "dptr", GPOINTER);
