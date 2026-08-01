@@ -1,5 +1,12 @@
 2026-08-01 Maarten Brock <sourceforge.brock AT dse.nl>
 
+	* src/mcs51/gen.c (genUnpackDBits): added to handle bitfields in direct
+	    addressable data storgae space
+	  (genDataPointerGet): added Ifx just in case,
+	    call genUnpackDBits() for bitfields
+	  (genNearPointerGet): call genDataPointerGet() also for bitfields unless post-inc,
+	    use IPOINTER for idata
+	* support/regression/fwk/lib/testfwk.c (__printu): bugfix buf size for >16 bit int
 	* support/regression/tests/bug-4039.c: make inline functions static as there
 	  are no external definitions and aarch64-linux-gnu chooses not to inline
 

@@ -82,10 +82,10 @@ __printu (unsigned int n)
     }
   else
     {
-      static char MEMSPACE_BUF buf[6];
+      static char MEMSPACE_BUF buf[3*sizeof(int)];
       char MEMSPACE_BUF *p = &buf[sizeof (buf) - 1];
 
-      buf[sizeof(buf) - 1] = '\0';
+      *p = '\0';
 
       while (0 != n)
         {
