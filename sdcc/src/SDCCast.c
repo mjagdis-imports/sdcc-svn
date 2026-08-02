@@ -77,6 +77,8 @@ ast *optimizeGetByte (ast *, RESULT_TYPE);
 ast *optimizeGetWord (ast *, RESULT_TYPE);
 static ast *backPatchLabels (ast *, symbol *, symbol *);
 static void copyAstLoc (ast *, ast *);
+static ast *gatherAutoInit (symbol *, ast *, int *);
+void gatherImplicitVariables (ast *, ast *);
 void PA (ast * t);
 int inInitMode = 0;
 memmap *GcurMemmap = NULL;      /* points to the memmap that's currently active */
@@ -1638,14 +1640,17 @@ initAggregates (symbol *sym, initList *ival, ast *wid)
 
 /*-----------------------------------------------------------------*/
 /* gatherAutoInit - creates assignment expressions for initial     */
-/*                  values                                         */
+/*                  values. BLOCK is the block AUTOCHAIN belongs   */
+/*                  to, or NULL, and takes the temporary symbols   */
+/*                  of any compound literals the initializers hold */
 /*-----------------------------------------------------------------*/
 static ast *
-gatherAutoInit (symbol * autoChain)
+gatherAutoInit (symbol * autoChain, ast * block, int *stack)
 {
   ast *init = NULL;
   ast *work;
   symbol *sym;
+  int oldInitMode = inInitMode;
 
   inInitMode = 1;
   for (sym = autoChain; sym; sym = sym->next)
@@ -1725,6 +1730,32 @@ gatherAutoInit (symbol * autoChain)
             }
           setAstFileLine (work, sym->fileDef, sym->lineDef);
 
+          /* The initializer may hold a compound literal. Its temporary
+             symbol only becomes reachable now that the initializer list
+             has been turned into a tree, which is after the pass that puts
+             such symbols into their block has run, so it would otherwise
+             be left with neither storage nor a name. Attach it here, and
+             put its own initializer in front of the one that reads it -
+             not in front of the whole block, which would run it before a
+             variable of this block its initializer may name. */
+          if (block)
+            {
+              symbol **decl = &(block->values.sym);
+
+              while (*decl)
+                decl = &((*decl)->next);
+              gatherImplicitVariables (work, block);
+              if (*decl)
+                {
+                  ast *litInit;
+
+                  *stack += allocVariables (*decl);
+                  litInit = gatherAutoInit (*decl, block, stack);
+                  if (litInit)
+                    work = newNode (NULLOP, litInit, work);
+                }
+            }
+
           // if this is a constexpr, keep the ival for compile-time evaluation
           if (!(IS_CONSTEXPR (sym->etype)))
             sym->ival = NULL;
@@ -1734,7 +1765,7 @@ gatherAutoInit (symbol * autoChain)
             init = work;
         }
     }
-  inInitMode = 0;
+  inInitMode = oldInitMode;
   return init;
 }
 
@@ -1843,7 +1874,7 @@ processBlockVars (ast * tree, int *stack, int action)
       if (action == ALLOCATE)
         {
           *stack += allocVariables (tree->values.sym);
-          autoInit = gatherAutoInit (tree->values.sym);
+          autoInit = gatherAutoInit (tree->values.sym, tree, stack);
 
           /* if there are auto inits then do them */
           if (autoInit)

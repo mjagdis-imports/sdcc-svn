@@ -1,3 +1,9 @@
+2026-08-02 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* src/SDCCast.c,
+	  support/regression/tests/compound-literal.c:
+	  Fix compound literals in declaration initializers via patch #509 by Howard M. Harte.
+
 2026-08-01 Maarten Brock <sourceforge.brock AT dse.nl>
 
 	* src/mcs51/gen.c (genUnpackDBits): added to handle bitfields in direct
