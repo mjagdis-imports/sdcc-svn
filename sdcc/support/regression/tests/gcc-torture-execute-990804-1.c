@@ -8,10 +8,10 @@
 #pragma std_c99
 #endif
 
-int gfbyte ( void ) 
+int gfbyte ( void )
 {
  return 0;
-} 
+}
 
 void
 testTortureExecute (void)
@@ -22,20 +22,19 @@ testTortureExecute (void)
 
  i = i + 1 ;
 
- if ( i == 0 ) 
+ if ( i == 0 )
      k = -0 ;
  else
      k = i + 0 ;
 
- if (i != 1)
-   ASSERT (0);
+ ASSERT (i == 1);
 
  k = 1 ;
  if ( k <= i)
-     do 
-	 j = gfbyte () ;
+     do
+         j = gfbyte () ;
      while ( k++ < i ) ;
 
  return;
-} 
+}
 

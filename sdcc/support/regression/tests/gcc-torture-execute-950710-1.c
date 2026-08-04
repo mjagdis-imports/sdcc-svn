@@ -6,6 +6,7 @@
 
 #ifdef __SDCC
 #pragma std_c99
+#pragma disable_warning 84 /* g() will return an uninitialized struct */
 #endif
 
 struct twelve

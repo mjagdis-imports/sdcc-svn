@@ -1,5 +1,7 @@
 /* PR tree-optimization/58277 */
 
+#pragma std_c23
+
 extern void abort (void);
 static int a[1], b, c, e, i, j, k, m, q[] = { 1, 1 }, t;
 int volatile d;
@@ -90,7 +92,7 @@ main ()
   for (; k; k++)
     fn1 ();
   fn1 ();
- 
+
   if (n)
     abort ();
 

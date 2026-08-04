@@ -120,7 +120,7 @@ struct
 __idata unsigned char __at(0xAA) var_idata;
 __pdata unsigned char __at(0xAA) var_pdata;
 __xdata unsigned char __at(0xAABB) var_xdata;
-__code unsigned char __at(0xAABB) var_code;
+__code const unsigned char __at(0xAABB) var_code;
 #endif
 
 struct
@@ -178,7 +178,7 @@ test_snprintf (void)
     {
       sprintf (buf, cases[i].fmt, cases[i].arg);
       DEBUG (__prints ("Test"));
-      DEBUG (__printd (i));
+      DEBUG (__printu (i));
       DEBUG (__prints (" should be: '"));
       DEBUG (__prints (cases[i].result));
       DEBUG (__prints ("' is: '"));

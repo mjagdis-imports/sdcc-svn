@@ -1820,6 +1820,10 @@ spillPairReg (const char *regname)
           break;
         }
     }
+  else if (!strncmp (regname, "iy", 2))
+    spillPair (PAIR_IY);
+  else if (!strncmp (regname, "ix", 2))
+    spillPair (PAIR_IX);
 }
 
 /* swap pairs fiels type/base */
@@ -4169,7 +4173,7 @@ poppairwithsavedreg (PAIR_ID pair, short survivingreg, short tempreg)
 static void
 cheapMove (asmop *to, int to_offset, asmop *from, int from_offset, bool a_dead)
 {
-#if 1
+#if 0
   emitDebug ("; cheapMove a_dead %d", a_dead);
 #endif
 
@@ -10341,7 +10345,8 @@ genPlus (iCode * ic)
           i += 2;
         }
       // When adding registers the 16 bit addition results in smaller, faster code than an 8-bit addition.
-      else if ((!IS_SM83 || !started) && !maskedbyte && (!premoved || i) && i == size - 1 && isPairDead (PAIR_HL, ic) && aopInReg (IC_RESULT (ic)->aop, i, L_IDX)
+      else if ((!IS_SM83 || !started) && !maskedbyte && (!premoved || i) && i == size - 1 && isPairDead (PAIR_HL, ic) && ic->result->aop->regs[H_IDX] < 0
+        && aopInReg (ic->result->aop, i, L_IDX)
         && (aopInReg (leftop, i, L_IDX) || aopInReg (rightop, i, L_IDX))
         && (aopInReg (leftop, i, C_IDX) || aopInReg (rightop, i, C_IDX) || aopInReg (leftop, i, E_IDX) || aopInReg (rightop, i, E_IDX)))
         {

@@ -17,7 +17,7 @@ struct S2 {
 struct S2 v = {1, 2, 3, {4, 5}};
 
 int
-main()
+main(void)
 {
 	if(v.a != 1)
 		return 1;
@@ -29,6 +29,5 @@ main()
 		return 4;
 	if(v.s.b != 5)
 		return 5;
-	
 	return 0;
 }
