@@ -1,7 +1,7 @@
 ;-------------------------------------------------------------------------
-;   _fslt.s - routine for floating point comparison
+;   cosf.s - routine for floating point cosine
 ;
-;   Copyright (C) 2025-2026, Gabriele Gorla
+;   Copyright (C) 2026, Gabriele Gorla
 ;
 ;   This library is free software; you can redistribute it and/or modify it
 ;   under the terms of the GNU General Public License as published by the
@@ -26,80 +26,48 @@
 ;   might be covered by the GNU General Public License.
 ;-------------------------------------------------------------------------
 
-	.module _fslt
-
+	.module cosf
+	
 ;--------------------------------------------------------
 ; exported symbols
 ;--------------------------------------------------------
-	.globl ___fslt
+	.globl _cosf
 
 ;--------------------------------------------------------
 ; code
 ;--------------------------------------------------------
 	.area CODE
 
-___fslt:
-	lda	*(___fslt_PARM_1 + 3)
-	ora	*(___fslt_PARM_2 + 3)
-        and	#0x7f
+_cosf:
+;	if (x==0.0) return 1.0;
+	lda	*(_cosf_PARM_1+3)
+	and	#0x7F
+	ora	*(_cosf_PARM_1+2)
+	ora	*(_cosf_PARM_1+1)
+	ora	*_cosf_PARM_1
 	bne	not_zero
-	ora 	*(___fslt_PARM_1 + 2)
-	ora 	*(___fslt_PARM_2 + 2)
-;	bne	not_zero
-	ora	*(___fslt_PARM_1 + 1)
-	ora	*(___fslt_PARM_2 + 1)
-	ora	*(___fslt_PARM_1 + 0)
-	ora	*(___fslt_PARM_2 + 0)
-	beq 	reta
+
+;	return 1
+;	lda	#0x00
+	tax
+	ldy	#0x80
+	sty	*___SDCC_m6502_ret2
+	ldy	#0x3f
+	sty	*___SDCC_m6502_ret3
+	rts
+
 not_zero:
-	lda	*(___fslt_PARM_1 + 3)
-	eor	*(___fslt_PARM_2 + 3)
-	bpl	same_sign
-	lda	*(___fslt_PARM_1 + 3)
-rets:
-	bpl	ret0
-ret1:
-	lda	#0x01
-reta:
-	rts
+;	return sincosf(x, 1);
+	lda	*(_cosf_PARM_1+3)
+	sta	(_sincosf_PARM_1+3)
+	lda	*(_cosf_PARM_1+2)
+	sta	(_sincosf_PARM_1+2)
+	lda	*(_cosf_PARM_1+1)
+	sta	(_sincosf_PARM_1+1)
+	lda	*_cosf_PARM_1
+	sta	_sincosf_PARM_1
 
-same_sign:
-	sec
-	lda	*(___fslt_PARM_1 + 3)
-	bpl	both_pos
-
-; both neg
-	lda	*(___fslt_PARM_2 + 3)
-	sbc	*(___fslt_PARM_1 + 3)
-	bne	retv
-	sec
-	lda	*___fslt_PARM_2
-	sbc	*___fslt_PARM_1
-	lda	*(___fslt_PARM_2 + 1)
-	sbc	*(___fslt_PARM_1 + 1)
-	lda	*(___fslt_PARM_2 + 2)
-	sbc	*(___fslt_PARM_1 + 2)
-	lda	*(___fslt_PARM_2 + 3)
-	sbc	*(___fslt_PARM_1 + 3)
-retv:
-	bvc	rets
-	bpl	ret1
-ret0:
-	lda	#0x00
-	rts
-
-both_pos:
-;	lda	*(___fslt_PARM_1 + 3)
-	sbc	*(___fslt_PARM_2 + 3)
-	bne	retv
-	sec
-	lda	*___fslt_PARM_1
-	sbc	*___fslt_PARM_2
-	lda	*(___fslt_PARM_1 + 1)
-	sbc	*(___fslt_PARM_2 + 1)
-	lda	*(___fslt_PARM_1 + 2)
-	sbc	*(___fslt_PARM_2 + 2)
-	lda	*(___fslt_PARM_1 + 3)
-	sbc	*(___fslt_PARM_2 + 3)
-	jmp	retv
+	ldx	#0x01
+	stx	_sincosf_PARM_2
+	jmp	_sincosf
 

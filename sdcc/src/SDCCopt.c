@@ -266,7 +266,7 @@ prependCast (iCode *ic, operand *op, sym_link *type, eBBlock *ebb)
         IC_RIGHT (ic) = newop;
       return;
     }
-            
+
   iCode *newic = newiCode (CAST, operandFromLink (type), op);
   hTabAddItem (&iCodehTab, newic->key, newic);
 
@@ -819,7 +819,7 @@ convilong (iCode *ic, eBBlock *ebp)
       if ((op == '*' || op == '/' || op == '%') && port->hasNativeMulFor && port->hasNativeMulFor (ic, operandType (IC_LEFT (ic)), operandType (IC_RIGHT (ic)))) // Avoid introducing calls to non-existing support functions.
         return;
     }
-  
+
   symbol *func = NULL;
   iCode *ip = ic->next;
   iCode *newic;
@@ -925,7 +925,7 @@ convilong (iCode *ic, eBBlock *ebp)
                     lic->op = '=';
                   OP_SYMBOL (left)->type = newLongLink ();
                   SPEC_USIGN (OP_SYMBOL (left)->type) = 1;
-                }   
+                }
 
               if (!ric)
                 ic->right = operandFromValue (valCastLiteral (roptype, operandLitValue (right), operandLitValueUll (right)), false);
@@ -934,7 +934,7 @@ convilong (iCode *ic, eBBlock *ebp)
                   ric->op = '=';
                   OP_SYMBOL (right)->type = newCharLink ();
                   SPEC_USIGN (OP_SYMBOL (right)->type) = 1;
-                }    
+                }
 
               if (func) // Use support function
                 goto found;
@@ -974,7 +974,7 @@ convilong (iCode *ic, eBBlock *ebp)
                 {
                   lic->op = '=';
                   setOperandType (left, optype);
-                }          
+                }
 
               if (!ric)
                 ic->right = operandFromValue (valCastLiteral (optype, operandLitValue (right), operandLitValueUll (right)), false);
@@ -1910,7 +1910,7 @@ replaceRegEqv (ebbIndex *ebbi)
               if (ic->result && IS_AGGREGATE (operandType (ic->result)))
                 setOperandType (ic->result, aggrToPtr (operandType (ic->result), false));
             }
-          
+
           if (SKIP_IC2 (ic))
             continue;
 
@@ -2200,7 +2200,7 @@ killDeadCode (ebbIndex *ebbi, bool cleanblocks)
                   kill = true;
                 }
 
-            kill: // kill this one if required    
+            kill: // kill this one if required
               if (kill)
                 {
                   if (ic->op == CALL) // Also kill parameter passing iCodes
@@ -2276,7 +2276,7 @@ checkStaticArrayParams (ebbIndex *ebbi)
             if ((v.anything || !v.nonnull) && ic->result->isSemDeref)
               werrorfl (ic->filename, ic->lineno, W_OPTIONAL_PTR_DEREF);
           }
-          
+
         if ((ic->op == IPUSH || ic->op == SEND) &&
           ic->right || // variable arguments lack type information (and so do some arguments to builtin functions).
           ic->op == '=' && IS_PARM (ic->result))
@@ -2328,7 +2328,7 @@ checkStaticArrayParams (ebbIndex *ebbi)
                       sym = AST_SYMBOL (ast);
                     else
                       continue;
-                    
+
                     // Find called function
                     iCode *cic;
                     for (cic = ic->next; cic && cic->op != CALL  && cic->op != PCALL; cic = cic->next);
@@ -2375,7 +2375,7 @@ checkStaticArrayParams (ebbIndex *ebbi)
                     long long pargv = (vi.anything || vi.min < 0 || vi.min > ULONG_MAX) ? 0 : vi.min;
                     pargv *= pscale;
                     pargv += poffset;
-                    if (pargv < 1) // Array size expression 
+                    if (pargv < 1) // Array size expression
                       pargv = 0;
                     paramsize = pargv * getSize (paramtype->next);
                   }
@@ -3205,12 +3205,12 @@ optimizeFinalCast (ebbIndex *ebbi)
             continue;
 
           // Not all backends can handle multiple global operands in all operations well.
-          if (IS_OP_GLOBAL (uic->result) && IS_OP_GLOBAL (ic->right) && 
+          if (IS_OP_GLOBAL (uic->result) && IS_OP_GLOBAL (ic->right) &&
             !TARGET_Z80_LIKE && !TARGET_IS_STM8 && !TARGET_F8_LIKE)
             continue;
 
           if (ic->op == CAST)
-            {    
+            {
               sym_link *type1 = operandType (ic->right);
               sym_link *type2 = operandType (ic->left);
 
@@ -3221,7 +3221,7 @@ optimizeFinalCast (ebbIndex *ebbi)
                 sclsFromPtr (type1) == sclsFromPtr (type2) &&
                 getAddrspace (type1) == getAddrspace (type2))
                 ;
-             else 
+             else
                 continue;
 
              if (!IS_PTR (type1) || IS_BITFIELD(type1->next) || !IS_PTR (type2) || IS_BITFIELD(type2->next))
@@ -3319,7 +3319,7 @@ optimizeNegation (eBBlock **ebbs, int count)
                   bitVectUnSetBit (OP_USES (uic->left), uic->key);
                   uic->left = ic->left;
                   bitVectSetBit (OP_USES (uic->left), uic->key);
-                  
+
                   // Make ic assignment to self, which will be optimized out.
                   bitVectUnSetBit (OP_USES (ic->left), ic->key);
                   ic->left = 0;
@@ -3744,29 +3744,32 @@ checkPurity (const iCode *ic)
 static void
 fixParamPassing (iCode *ic)
 {
-  bool change = false;
+  bool change;
   do
-    for (iCode *pic = ic; pic; pic = pic->next)
-      {
-        if (pic->op == CALL || pic->op == PCALL ||
-          pic->op == SEND || pic->op == IPUSH && pic->parmPush || pic->op == IPUSH_VALUE_AT_ADDRESS) 
-          continue;
-        if (!isiCodeInFunctionCall (pic))
-          continue;
-        if (!pic->prev || !(pic->prev->op == CALL || pic->prev->op == PCALL ||
-          pic->prev->op == SEND || pic->prev->op == IPUSH && pic->prev->parmPush || pic->prev->op == IPUSH_VALUE_AT_ADDRESS)) 
-          continue;
+    {
+      change = false;
+      for (iCode *pic = ic; pic; pic = pic->next)
+        {
+          if (pic->op == CALL || pic->op == PCALL || pic->op == SEND ||
+              pic->op == IPUSH && pic->parmPush || pic->op == IPUSH_VALUE_AT_ADDRESS)
+            continue;
+          if (!isiCodeInFunctionCall (pic))
+            continue;
+          if (!pic->prev || !(pic->prev->op == CALL || pic->prev->op == PCALL || pic->prev->op == SEND ||
+              pic->prev->op == IPUSH && pic->prev->parmPush || pic->prev->op == IPUSH_VALUE_AT_ADDRESS))
+            continue;
 
-        // Found some iCode directly after a parameter passing iCodes. swap them.
-        pic->prev->next = pic->next;
-        pic->next->prev = pic->prev;
-        pic->next = pic->prev;
-        pic->prev = pic->prev->prev;
-        pic->prev->next = pic;
-        pic->next->prev = pic;
-        change = true;
-      }
-  while (change--);
+          // Found some iCode directly after a parameter passing iCodes. swap them.
+          pic->prev->next = pic->next;
+          pic->next->prev = pic->prev;
+          pic->next = pic->prev;
+          pic->prev = pic->prev->prev;
+          pic->prev->next = pic;
+          pic->next->prev = pic;
+          change = true;
+        }
+    }
+  while (change);
 }
 
 /*-----------------------------------------------------------------*/

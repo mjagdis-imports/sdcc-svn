@@ -2150,7 +2150,7 @@ forms_identifier_p (cpp_reader *pfile, int first,
 	  if (__builtin_expect (*buffer->cur == bidi::utf8_start, 0)
 	      && warn_bidi_p)
 	    {
-	      location_t loc;
+	      location_t loc = 0;
 	      bidi::kind kind = get_bidi_utf8 (pfile, buffer->cur, &loc);
 	      maybe_warn_bidi_on_char (pfile, kind, /*ucn_p=*/false, loc);
 	    }
@@ -2166,7 +2166,7 @@ forms_identifier_p (cpp_reader *pfile, int first,
 	  buffer->cur += 2;
 	  if (warn_bidi_p)
 	    {
-	      location_t loc;
+	      location_t loc = 0;
 	      bidi::kind kind;
 	      if (buffer->cur[-1] == 'N')
 		kind = get_bidi_named (pfile, buffer->cur, &loc);

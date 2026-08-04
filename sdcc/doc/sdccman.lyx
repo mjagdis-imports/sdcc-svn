@@ -7359,7 +7359,7 @@ SDCC can be built for various host platforms using the instructions provided bel
 \end_layout
 
 \begin_layout Subsection
-Building SDCC on Linux
+Building SDCC on Linux and BSD 
 \begin_inset CommandInset label
 LatexCommand label
 name "subsec:Building-SDCC-on-Linux"
@@ -7444,17 +7444,66 @@ Change directory into the main SDCC directory,
 Type
 \series default
  
-\family sans
-\series bold
-"./configure
-\family default
-\series default
-".
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+./configure
+\end_layout
+
+\end_inset
+
  This configures the package for compilation on your system.
- When the treedec library is available,
+\end_layout
+
+\begin_layout Itemize
+SDCC needs the boost libraries.
+ On typical GNU/Linux distributions,
+ they are in the search path,
+ on typical BSD they are not,
+ requiring e.g.
+ 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+CXX="c++ -I/usr/local/include" CC=cc ./configure
+\end_layout
+
+\end_inset
+
+ instead.
+\end_layout
+
+\begin_layout Itemize
+The pic14 and pic16 ports require gputils.
+ If they are not available,
+ and PIC support is not needed,
+ you can instead use 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+./configure –disable-pic14-port –disable-pic16-port
+\end_layout
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Itemize
+When the treedec library is available,
  it should be found and used automatically (improving the compilation time / code quality trade-off).
  As of SDCC 3.7.0,
  the current develop branch from https://github.com/freetdi/tdlib is a suitable version of treedec.
+\end_layout
+
+\begin_layout Itemize
+When the libu8ident library is available,
+ it should be found and used automatically (improving diagnostics and standard-compliance for non-ASCII characters in identifiers).
+ As of SDCC 4.6.0,
+ the 0.4 release from https://github.com/rurban/libu8ident is a suitable version of libu8ident.
 \end_layout
 
 \begin_layout Enumerate
@@ -7463,13 +7512,19 @@ Type
 Type
 \series default
  
-\family sans
-\series bold
-"make
-\family default
-\series default
-"
 \series medium
+
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+
+\series medium
+make
+\end_layout
+
+\end_inset
+
 .
 
 \series default
@@ -7483,11 +7538,15 @@ Type
 Type
 \series default
  
-\family sans
-\series bold
-"make install"
-\family default
-\series default
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+make install
+\end_layout
+
+\end_inset
+
  as root
 \series medium
 .

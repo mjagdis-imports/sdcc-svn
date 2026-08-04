@@ -447,35 +447,37 @@ extern unsigned char __data bpx;
 
 int __setjmp (jmp_buf buf)
 {
+    unsigned char * p = buf;
     /* registers would have been saved on the
        stack anyway so we need to save SP
        and the return address */
 #ifdef __SDCC_USE_XSTACK
-    *buf++ = spx;
-    *buf++ = bpx;
+    *p++ = spx;
+    *p++ = bpx;
 #endif
-    *buf++ = SP;
-    *buf++ = *((unsigned char __idata *) SP - 0);
-    *buf++ = *((unsigned char __idata *) SP - 1);
+    *p++ = SP;
+    *p++ = *((unsigned char __idata *) SP - 0);
+    *p++ = *((unsigned char __idata *) SP - 1);
 #ifdef __SDCC_MODEL_HUGE
-    *buf++ = *((unsigned char __idata *) SP - 2);
+    *p++ = *((unsigned char __idata *) SP - 2);
 #endif
     return 0;
 }
 
 int longjmp (jmp_buf buf, int rv)
 {
+    unsigned char * p = buf;
     unsigned char lsp;
 
 #ifdef __SDCC_USE_XSTACK
-    spx = *buf++;
-    bpx = *buf++;
+    spx = *p++;
+    bpx = *p++;
 #endif
-    lsp = *buf++;
-    *((unsigned char __idata *) lsp - 0) = *buf++;
-    *((unsigned char __idata *) lsp - 1) = *buf++;
+    lsp = *p++;
+    *((unsigned char __idata *) lsp - 0) = *p++;
+    *((unsigned char __idata *) lsp - 1) = *p++;
 #ifdef __SDCC_MODEL_HUGE
-    *((unsigned char __idata *) lsp - 2) = *buf++;
+    *((unsigned char __idata *) lsp - 2) = *p++;
 #endif
     SP = lsp;
     return rv ? rv : 1;

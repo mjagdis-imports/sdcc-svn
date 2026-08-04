@@ -23,7 +23,7 @@ static void *foo(int p)
       return &global;
    }
 
-  return (void __code *)(size_t)-1;
+  return (void __xdata *)(size_t)-1;
 }
 
 int bar(void)
@@ -31,7 +31,7 @@ int bar(void)
   void *p;
 
   p = foo(global);
-  if (p != (void __code *)(size_t)-1)
+  if (p != (void __xdata *)(size_t)-1)
     return 1;
 
   global++;

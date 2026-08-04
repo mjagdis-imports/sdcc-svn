@@ -124,7 +124,6 @@ void __printf(const char *szFormat, ...);
 
 void __fail (__code const char *szMsg, __code const char *szCond, __code const char *szFile, int line);
 void __prints (const char *s);
-void __printd (int n);
 #ifndef TARGET_VERY_LOW_MEMORY
 void __printu (unsigned int n);
 #endif

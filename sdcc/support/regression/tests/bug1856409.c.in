@@ -1,6 +1,6 @@
 /*
     bug 1856409
-    storage: static __code,
+    storage: static __code const,
 */
 
 #include <stdint.h>

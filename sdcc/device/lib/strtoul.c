@@ -74,6 +74,7 @@ unsigned long int strtoul(const char *nptr, char **endptr, int base)
     {
     case '-':
       neg = true;
+//      [[ fallthrough ]];
     case '+':
       ptr++;
     }
@@ -129,7 +130,9 @@ unsigned long int strtoul(const char *nptr, char **endptr, int base)
       if (ret < oldret)
         range_error = true;
       ret += (unsigned char)digit;
-#warning INEXACT RANGE ERROR CHECK WILL NOT REPORT ALL OVERFLOWS (fix by implementing ckd_mul and ckd_add)
+      if (ret < oldret)
+        range_error = true;
+//#warning INEXACT RANGE ERROR CHECK WILL NOT REPORT ALL OVERFLOWS (fix by implementing ckd_mul and ckd_add)
 #endif
     }
 

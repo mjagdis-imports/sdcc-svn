@@ -1,5 +1,7 @@
 /* suppress valid warning W_NONPTR2_GENPTR, pointer is not dereferenced */
 #pragma disable_warning 127
+/* suppress valid warning 322, Cast of pointer to integer type that cannot represent all values of the pointer type */
+#pragma disable_warning 322
 
 typedef unsigned int dev_t;
 typedef unsigned int kdev_t;

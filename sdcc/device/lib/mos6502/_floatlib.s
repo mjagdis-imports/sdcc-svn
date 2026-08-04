@@ -37,6 +37,8 @@
 	.globl ___fsmul_PARM_1
 	.globl ___fslt_PARM_1
 	.globl _fabsf_PARM_1
+	.globl _cosf_PARM_1
+	.globl _sinf_PARM_1
 
 	.globl _float_PARM_2
 	.globl ___fsadd_PARM_2
@@ -56,6 +58,8 @@
 	.area	OSEG    (PAG, OVR)
 _float_PARM_1:
 _fabsf_PARM_1:
+_cosf_PARM_1:
+_sinf_PARM_1:
 ___fsadd_PARM_1:
 ___fssub_PARM_1:
 ___fsmul_PARM_1:

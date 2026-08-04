@@ -319,7 +319,7 @@ processStrSet (set * list, const char *pre, const char *post, char *(*func)(cons
       if (func)
         {
           char *s = func (item);
-          
+
           dbuf_append_str (&dbuf, s);
           Safe_free (s);
         }
@@ -709,7 +709,7 @@ strncpyz (char *dest, const char *src, size_t n)
 }
 
 /* like strncat() with guaranteed NULL termination
- * The passed size should be the size of the dest buffer, not the number of 
+ * The passed size should be the size of the dest buffer, not the number of
  * bytes to copy.
  */
 char *
@@ -803,7 +803,7 @@ SDCCsnprintf (char *dst, size_t n, const char *fmt, ...)
   va_end (args);
 
   /* on some gnu systems, vsnprintf returns -1 if output is truncated.
-   * In the C99 spec, vsnprintf returns the number of characters that 
+   * In the C99 spec, vsnprintf returns the number of characters that
    * would have been written, were space available.
    */
   if ((len < 0) || (size_t) len >= n)
@@ -1149,7 +1149,9 @@ copyStr (const char *src, size_t *size)
               c = *src;
               break;
             }
-          if (universal) // Encode one utf-32 character to utf-8. If outside of current UTF-8 standard range (UTF-8 up to 4 bytes), emit a warning, and encode according to 1993 UTF-8 standard s(UTF-8 up to 6 bytes).
+          // Encode one utf-32 character to utf-8. If outside of current UTF-8 standard range (UTF-8 up to 4 bytes),
+          // emit a warning, and encode according to 1993 UTF-8 standard s(UTF-8 up to 6 bytes).
+          if (universal)
             {
               char s[7] = "\0\0\0\0\0\0";
               if (c < 0x80)
@@ -1324,6 +1326,7 @@ char *formatInlineAsm (char *asmStr)
     }
 }
 
+#ifndef HAVE_U8IDENT_H  // If we have libu8ident, we do better checks in check_type instead.
 // Check for valid characters in identifiers according to ISO C11 standard, annex D.
 static bool
 is_UCN_valid_in_identifier (char32_t c, bool is_first)
@@ -1365,6 +1368,7 @@ is_UCN_valid_in_identifier (char32_t c, bool is_first)
 
   return result;
 }
+#endif
 
 void
 decode_UCNs_to_utf8 (char *dest, const char *src, size_t n)
@@ -1373,22 +1377,24 @@ decode_UCNs_to_utf8 (char *dest, const char *src, size_t n)
   const char *s = src;
   size_t chars_left = n - 1;
 
-  while (*src)
+  while (*s)
     {
-      if (*src == '\\')
+      if (*s == '\\')
         {
-          ++src;
+          ++s;
           char32_t c = 0;
-          if (*src == 'u')
-            c = universalEscape (&src, 4);
+          if (*s == 'u')
+            c = universalEscape (&s, 4);
           else  // U - the lexer only accepts \u and \U escapes in identifiers
-            c = universalEscape (&src, 8);
+            c = universalEscape (&s, 8);
 
 #ifndef HAVE_U8IDENT_H  // If we have libu8ident, we do better checks in check_type instead.
           if (!is_UCN_valid_in_identifier (c, is_first))
-            werror (E_INVALID_UNIVERSAL_ID, s);
+            werror (E_INVALID_UNIVERSAL_ID, src);
           else if (c > 0x7f)
             werror (W_NONASCII_ID_NOUNILIB);
+#else
+          (void)is_first; //silence unused variable warning
 #endif
 
           if (c >= 0x10000)
@@ -1423,7 +1429,7 @@ decode_UCNs_to_utf8 (char *dest, const char *src, size_t n)
         {
           if (chars_left < 1)
             break;
-          *(dest++) = *(src++);
+          *(dest++) = *(s++);
           chars_left--;
         }
       is_first = false;
@@ -1457,7 +1463,7 @@ process_identifier (char *dest, const char *src, size_t n)
       free (normalized);
     }
 
-  enum u8id_errors errors_c = u8ident_check (dest, NULL);
+  enum u8id_errors errors_c = u8ident_check ((uint8_t *)dest, NULL);
   u8ident_free ();
   if (errors_c < 0) // Invalid identifier.
     werror (E_INVALID_ID, dest);
@@ -1466,7 +1472,7 @@ process_identifier (char *dest, const char *src, size_t n)
       if (errors_c == U8ID_EOK_NORM || errors_c == U8ID_EOK_NORM_WARN_CONFUS) // Only possible for C17 and earlier, from C23 we normalize first.
         werror (W_ID_NOT_NORMALIZED_NFC, dest);
       u8ident_init (U8ID_PROFILE_TR39_4, U8ID_NFC, U8ID_TR31_TR39);
-      int errors_tr39 = u8ident_check (dest, NULL);
+      int errors_tr39 = u8ident_check ((uint8_t *)dest, NULL);
       u8ident_free ();
       const char *errormsg = "no issue";
       switch(errors_tr39)

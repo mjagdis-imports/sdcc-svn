@@ -259,32 +259,30 @@ mcs51_genAtomicSupport (struct dbuf_s *oBuf, unsigned int startaddr)
       startaddr += (8 - startaddr % 8);
     }
   // Support routine block may not cross 256B boundary.
-  if (startaddr / 256 != (startaddr + 8 * 4 + 7) / 256)
+  if (startaddr / 256 != (startaddr + 8 * 5 + 6) / 256)
     {
       dbuf_printf (oBuf, "\t.ds\t%d\n", 256 - startaddr % 256);
       startaddr += 256 - startaddr % 256;
     }
 
+  // The following routine just needs to be in jnb range of the below ones,
+  // it doesn't have alignment requirements. Align it anyway for faster
+  // fall through for atomic in idata implementation and size reduction.
+
+  // If the value of the byte at b:dptr is the value of r2, store the value
+  // of r3 into that byte. Return the new value of that byte in a.
+  // Overwrites r0, r2, r3.
+  dbuf_printf (oBuf, "sdcc_atomic_compare_exchange_gptr_impl::\n"
+                     "\tjnb\tb.6, sdcc_atomic_compare_exchange_xdata_impl\n"
+                     "\tmov\tr0, dpl\n"
+                     "\tjb\tb.5, sdcc_atomic_compare_exchange_pdata_impl\n"
+//                     "\tsjmp\tsdcc_atomic_compare_exchange_idata_impl\n"
+              );
+
   dbuf_printf (oBuf, "sdcc_atomic_exchange_rollback_start::\n");
 
   // Each routine (except the last one) needs to be 8 bytes long.
   // Restart may happen at bytes 1 to 5 of each routine.
-  dbuf_printf (oBuf, "\tnop\n"
-                     "\tnop\n"
-                     "sdcc_atomic_exchange_pdata_impl:\n"
-                     "\tmovx\ta, @r0\n"
-                     "\tmov\tr3, a\n"
-                     "\tmov\ta, r2\n"
-                     "\tmovx\t@r0, a\n"
-                     "\tsjmp\tsdcc_atomic_exchange_exit\n");
-  dbuf_printf (oBuf, "\tnop\n"
-                     "\tnop\n"
-                     "sdcc_atomic_exchange_xdata_impl:\n"
-                     "\tmovx\ta, @dptr\n"
-                     "\tmov\tr3, a\n"
-                     "\tmov\ta, r2\n"
-                     "\tmovx\t@dptr, a\n"
-                     "\tsjmp\tsdcc_atomic_exchange_exit\n");
   dbuf_printf (oBuf, "sdcc_atomic_compare_exchange_idata_impl:\n"
                      "\tmov\ta, @r0\n"
                      "\tcjne\ta, ar2, .+#5\n"
@@ -304,14 +302,37 @@ mcs51_genAtomicSupport (struct dbuf_s *oBuf, unsigned int startaddr)
                      "\tcjne\ta, ar2, .+#5\n"
                      "\tmov\ta, r3\n"
                      "\tmovx\t@dptr, a\n"
-                     "\tret\n");
+                     "\tret\n"
+                     "\tnop\n");
+  dbuf_printf (oBuf, "\tnop\n"
+                     "\tnop\n"
+                     "sdcc_atomic_exchange_pdata_impl:\n"
+                     "\tmovx\ta, @r0\n"
+                     "\tmov\tr3, a\n"
+                     "\tmov\ta, r2\n"
+                     "\tmovx\t@r0, a\n"
+                     "\tsjmp\tsdcc_atomic_exchange_exit\n");
+  dbuf_printf (oBuf, "\tnop\n"
+                     "\tnop\n"
+                     "sdcc_atomic_exchange_xdata_impl:\n"
+                     "\tmovx\ta, @dptr\n"
+                     "\tmov\tr3, a\n"
+                     "\tmov\ta, r2\n"
+                     "\tmovx\t@dptr, a\n"
+//                   "\tsjmp\tsdcc_atomic_exchange_exit\n"
+              );
   dbuf_printf (oBuf, "sdcc_atomic_exchange_rollback_end::\n\n");
 
-  // The following two routines just need to be in jnb range of the above ones, they don't have alignment requirements.
+  dbuf_printf (oBuf, "sdcc_atomic_exchange_exit:\n"
+                     "\tmov\tdpl, r3\n"
+                     "\tret\n");
+  // The following routine just needs to be in jnb range of the above ones, it doesn't have alignment requirements.
 
   // Store value in r2 into byte at b:dptr, return previous byte at b:dptr in dpl.
   // Overwrites r0, r2, r3.
-  dbuf_printf (oBuf, "sdcc_atomic_exchange_gptr_impl::\n"
+  dbuf_printf (oBuf, "atomic_flag_test_and_set::\n"
+                     "\tmov\tr2, #1\n"
+                     "sdcc_atomic_exchange_gptr_impl::\n"
                      "\tjnb\tb.6, sdcc_atomic_exchange_xdata_impl\n"
                      "\tmov\tr0, dpl\n"
                      "\tjb\tb.5, sdcc_atomic_exchange_pdata_impl\n"
@@ -319,19 +340,7 @@ mcs51_genAtomicSupport (struct dbuf_s *oBuf, unsigned int startaddr)
                      "\tmov\ta, r2\n"
                      "\txch\ta, @r0\n"
                      "\tmov\tdpl, a\n"
-                     "\tret\n"
-                     "sdcc_atomic_exchange_exit:\n"
-                     "\tmov\tdpl, r3\n"
                      "\tret\n");
-
-  // If the value of the byte at b:dptr is the value of r2, store the value
-  // of r3 into that byte. Return the new value of that byte in a.
-  // Overwrites r0, r2, r3.
-  dbuf_printf (oBuf, "sdcc_atomic_compare_exchange_gptr_impl::\n"
-                     "\tjnb\tb.6, sdcc_atomic_compare_exchange_xdata_impl\n"
-                     "\tmov\tr0, dpl\n"
-                     "\tjb\tb.5, sdcc_atomic_compare_exchange_pdata_impl\n"
-                     "\tsjmp\tsdcc_atomic_compare_exchange_idata_impl\n");
 }
 
 /* Generate interrupt vector table. */

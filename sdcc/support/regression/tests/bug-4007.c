@@ -1,5 +1,5 @@
 /* bug-4007.c
-   TODO: Bug description
+   An issue in register pair adjustment in codegen for z80-related targets.
  */
 
 #include <testfwk.h>

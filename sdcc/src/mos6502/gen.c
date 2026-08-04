@@ -2591,9 +2591,11 @@ operandOnStack(operand *op)
 
   if (!op || !IS_SYMOP (op))
     return false;
+
   sym = OP_SYMBOL (op);
   if (!sym->isspilt && sym->onStack)
     return true;
+
   if (sym->isspilt)
     {
       sym = sym->usl.spillLoc;
@@ -2608,25 +2610,20 @@ operandOnStack(operand *op)
  *             anticipated stack references
  *************************************************************************/
 bool
-m6502_tsxUseful(const iCode *ic)
+m6502_tsxUseful(void)
 {
-return (currFunc && IFFUNC_ISREENT (currFunc->type));
-  operand *right  = IC_RIGHT(ic);
-  operand *left   = IC_LEFT(ic);
-  operand *result = IC_RESULT(ic);
+  iCode *ic = _S.sic;
   int uses = 0;
+  operand *right;
+  operand *left;
+  operand *result;
 
-  if (ic->op == CALL)
+  while (ic && uses == 0)
     {
-      if (result && operandSize (result) < 2 && operandOnStack (result))
-        {
-          uses++;
-          ic = ic->next;
-        }
-    }
+      right  = IC_RIGHT(ic);
+      left   = IC_LEFT(ic);
+      result = IC_RESULT(ic);
 
-  while (ic && uses < 1)
-    {
       if (ic->op == IFX)
 	{
 	  if (operandOnStack (IC_COND (ic)))
@@ -2641,17 +2638,19 @@ return (currFunc && IFFUNC_ISREENT (currFunc->type));
 	}
       else if (ic->op == ADDRESS_OF)
 	{
-	  if (operandOnStack (right))
-	    break;
+	  if (operandOnStack (left))
+            uses++;
+
+	  break;
 	}
       else if (ic->op == LABEL || ic->op == GOTO || ic->op == CALL || ic->op == PCALL)
 	break;
-      else if (POINTER_SET (ic) || POINTER_GET (ic))
-	break;
+      //    else if (POINTER_SET (ic) || POINTER_GET (ic))
+      //	break;
       else
 	{
-	//  if (operandConflictsWithXY (result))
-	 //   break;
+	  //        if (operandConflictsWithXY (result))
+	  //          break;
 	  if (operandOnStack (left))
 	    uses += operandSize (left);
 	  if (operandOnStack (right))
@@ -2663,15 +2662,16 @@ return (currFunc && IFFUNC_ISREENT (currFunc->type));
       ic = ic->next;
     }
 
-  return uses >= 1;
+  return (uses > 0);
 }
 
 bool
 m6502_keepTSX()
 {
-  if(m6502_reg_x->aop==&m6502_tsxaop)
-    return options.stackAuto || (currFunc && IFFUNC_ISREENT (currFunc->type));
-  return false;
+  if(m6502_reg_x->aop!=&m6502_tsxaop)
+    return false;
+
+  return m6502_tsxUseful();
 }
 
 void
@@ -4506,9 +4506,18 @@ genSend (set *sendSet)
       m6502_aopOp (IC_LEFT (send2), send2);
       if (IS_AOP_A (AOP (IC_LEFT (send2))))
         {
-	  m6502_loadRegFromAop (m6502_reg_x, AOP (IC_LEFT (send2)), 0);
-	  m6502_loadRegFromAop (m6502_reg_a, AOP (IC_LEFT (send1)), 0);
-	}
+          if (IS_AOP_X (AOP (IC_LEFT (send1))))
+            {
+              storeRegTemp(m6502_reg_a, true);
+              m6502_transferRegReg(m6502_reg_x, m6502_reg_a, true);
+              m6502_loadRegTemp(m6502_reg_x);
+            }
+          else
+	    {
+	      m6502_loadRegFromAop (m6502_reg_x, AOP (IC_LEFT (send2)), 0);
+	      m6502_loadRegFromAop (m6502_reg_a, AOP (IC_LEFT (send1)), 0);
+	    }
+        }
       else
         {
           m6502_loadRegFromAop (m6502_reg_a, AOP (IC_LEFT (send1)), 0);
@@ -5913,6 +5922,7 @@ genCmpEQorNE (iCode * ic, iCode * ifx)
 		      needloada = storeRegTempIfSurv(m6502_reg_a);
 		      //m6502_loadRegFromAop (m6502_reg_a, AOP (left), offset);
 		    }
+
 		  if(m6502_reg_x->aop&&m6502_sameRegs(m6502_reg_x->aop, AOP(left))&&m6502_reg_x->aopofs==offset)
 		    {
 		      m6502_accopWithAop ("cpx", AOP (right), offset);
@@ -5926,6 +5936,7 @@ genCmpEQorNE (iCode * ic, iCode * ifx)
 		      m6502_loadRegFromAop (m6502_reg_a, AOP (left), offset);
 		      m6502_accopWithAop ("cmp", AOP (right), offset);
 		    }
+
 		  m6502_loadRegTempNoFlags (m6502_reg_a, needloada);
 		  needloada = false;
 		}
@@ -6516,6 +6527,7 @@ static void genUnpackBitsImmed (operand * left, operand *right, operand * result
 
   needpulla = pushRegIfSurv (m6502_reg_a);
 
+#if 0
   /* if the bitfield is a single bit in the direct page */
   if (blen == 1 && derefaop->type == AOP_DIR)
     {
@@ -6566,6 +6578,7 @@ static void genUnpackBitsImmed (operand * left, operand *right, operand * result
 	  goto finish;
 	}
     }
+#endif
 
   /* If the bitfield length is less than a byte */
   if (blen < 8)
@@ -6679,7 +6692,7 @@ static void genUnpackBitsImmed (operand * left, operand *right, operand * result
   if (delayed_a)
     m6502_pullReg (m6502_reg_a);
 
-  // TODO? wrong plac?
+  // TODO? wrong place?
   pullOrFreeReg (m6502_reg_a, needpulla);
 }
 
@@ -7028,7 +7041,6 @@ static void genPointerGet (iCode * ic, iCode * ifx)
               {
 		m6502_emitOp("ldx", "(%s+0x%04x+%d),%c",
 			     rematOffset, litOffset+hi_offset, 1, idx_reg );
-                 
               }              
             if(IS_AOP_XY(AOP(result)))
               {
@@ -7155,17 +7167,29 @@ static void genPackBits (operand * result, operand * left, sym_link * etype, ope
 
   needpulla = storeRegTempIfSurv (m6502_reg_a);
 
-  if (AOP_TYPE (right) == AOP_REG)
+  if(blen<8 && AOP_TYPE (right) != AOP_LIT)
+    {
+      mask = ((unsigned char) (0xFF << (blen + bstr)) | (unsigned char) (0xFF >> (8 - bstr)));
+
+      // shift and mask source value
+      m6502_loadRegFromAop (m6502_reg_a, AOP (right), 0);
+      m6502_AccLsh (bstr);
+      m6502_emitOp ("and", IMMDFMT, (unsigned int)(~mask) & 0xffu);
+      storeRegTemp (m6502_reg_a, true);
+    }
+  else if (AOP_TYPE (right) == AOP_REG)
     {
       /* Not optimal, but works for any register sources. */
       /* Just push the source values onto the stack and   */
       /* pull them off any needed. Better optimzed would  */
       /* be to do some of the shifting/masking now and    */
       /* push the intermediate result. */
-      if (blen > 8)
-        m6502_pushReg (AOP (right)->aopu.aop_reg[1], true);
 
-      m6502_pushReg (AOP (right)->aopu.aop_reg[0], true);
+      if (blen > 8)
+        {
+          storeRegTempAlways (AOP (right)->aopu.aop_reg[1], true);
+          storeRegTempAlways (AOP (right)->aopu.aop_reg[0], true);
+        }
     }
 
   int yoff= setupDPTR(result, litOffset, rematOffset, false);
@@ -7173,10 +7197,10 @@ static void genPackBits (operand * result, operand * left, sym_link * etype, ope
   /* If the bitfield length is less than a byte */
   if (blen < 8)
     {
-      mask = ((unsigned char) (0xFF << (blen + bstr)) | (unsigned char) (0xFF >> (8 - bstr)));
-
       if (AOP_TYPE (right) == AOP_LIT)
 	{
+          mask = ((unsigned char) (0xFF << (blen + bstr)) | (unsigned char) (0xFF >> (8 - bstr)));
+
 	  // Case with a bitfield length <8 and literal source
 	  litval = ullFromVal (AOP (right)->aopu.aop_lit);
 	  litval <<= bstr;
@@ -7196,17 +7220,6 @@ static void genPackBits (operand * result, operand * left, sym_link * etype, ope
 	  return;
 	}
 
-      // Case with a bitfield length < 8 and arbitrary source
-      if (AOP_TYPE (right) == AOP_REG)
-	m6502_pullReg (m6502_reg_a);
-      else
-	m6502_loadRegFromAop (m6502_reg_a, AOP (right), 0);
-
-      // shift and mask source value
-      m6502_AccLsh (bstr);
-      m6502_emitOp ("and", IMMDFMT, (unsigned int)(~mask) & 0xffu);
-      storeRegTemp (m6502_reg_a, true);
-
       m6502_loadRegFromConst(m6502_reg_y, yoff + offset);
       m6502_emitOp("lda", INDFMT_IY, "DPTR");
       m6502_emitOp("and", IMMDFMT, (unsigned int)mask);
@@ -7225,7 +7238,7 @@ static void genPackBits (operand * result, operand * left, sym_link * etype, ope
   for (rlen = blen; rlen >= 8; rlen -= 8)
     {
       if (AOP_TYPE (right) == AOP_REG)
-        m6502_pullReg (m6502_reg_a);
+        m6502_loadRegTemp (m6502_reg_a);
       else
         m6502_loadRegFromAop (m6502_reg_a, AOP (right), offset);
 
@@ -7265,7 +7278,7 @@ static void genPackBits (operand * result, operand * left, sym_link * etype, ope
 
       // Case with partial byte and arbitrary source
       if (AOP_TYPE (right) == AOP_REG)
-	m6502_pullReg (m6502_reg_a);
+	m6502_loadRegTemp (m6502_reg_a);
       else
 	m6502_loadRegFromAop (m6502_reg_a, AOP (right), offset);
 
@@ -7716,6 +7729,10 @@ genPointerSet (iCode * ic)
           // do nothing: no need to save a in this case
           m6502_emitComment (TRACEGEN|VVDBG,"    %s : skip saving A2", __func__ );
         }
+      else if (bit_field)
+        {
+          // do nothing: no need to save a in this case
+        }
       else if(IS_AOP_WITH_A(AOP(right)) && (AOP_TYPE(result)==AOP_SOF))
         needloada = storeRegTempIfUsed (m6502_reg_a);
       else if(IS_AOP_WITH_A(AOP(right)) && !m6502_reg_x->isDead && !m6502_reg_y->isDead)
@@ -7748,9 +7765,6 @@ genPointerSet (iCode * ic)
   if (bit_field)
     {
       m6502_emitComment (TRACEGEN|VVDBG,"    %s : bitvar", __func__ );
-
-      if(needloada && IS_AOP_WITH_A (AOP(right)))
-	m6502_loadRegTempAt(m6502_reg_a, aloc);
       genPackBits (result, left, operandType (result)->next, right);
       goto release;
     }
@@ -8563,6 +8577,8 @@ genm6502iCode (iCode *ic)
       else
 	m6502_regWithIdx (i)->isDead = true;
     }
+
+  _S.sic=ic;
 
   /* depending on the operation */
   switch (ic->op)

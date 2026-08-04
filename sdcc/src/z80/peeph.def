@@ -1969,7 +1969,7 @@ replace restart {
 	jp	nz, %2
 	ld	%3, a
 	; common peephole 121a replaced constant #0x00 by a (which has just been tested to be #0x00).
-}
+} if canAssign(%3 'a')
 
 replace restart {
 	and	a, %1

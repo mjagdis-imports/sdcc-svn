@@ -40,17 +40,12 @@ testTortureExecute (void)
   if (sizeof (long long) != 8)
     return;
 
-  if (foo (0) != 0)
-    ASSERT (0);
+  ASSERT (!(foo (0) != 0));
 
-  if (foo (0xffffffffULL) != 0)
-    ASSERT (0);
-  if (foo (0x25ff00ff00ULL) != 0x25)
-    ASSERT (0);
-  if (bar (0) != 0)
-    ASSERT (0);
-  if (bar (0x25) != 0x2500000000ULL)
-    ASSERT (0);
+  ASSERT (!(foo (0xffffffffULL) != 0));
+  ASSERT (!(foo (0x25ff00ff00ULL) != 0x25));
+  ASSERT (!(bar (0) != 0));
+  ASSERT (!(bar (0x25) != 0x2500000000ULL));
   return;
 #endif
 }

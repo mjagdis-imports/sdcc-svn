@@ -1004,7 +1004,7 @@ deallocLocal (symbol *csym)
             stackPtr -= getSize (sym->type);
         }
       /* if not used give a warning */
-      if (!sym->isref && !IS_STATIC (sym->etype))
+      if (!sym->isref && !sym->istmp && !IS_STATIC (sym->etype))
         werror (W_NO_REFERENCE,
                 currFunc ? currFunc->name : "(unknown)",
                 "local variable", sym->name);

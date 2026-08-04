@@ -1,6 +1,6 @@
 /** Bug 868103 tests.
 
-    storage1: __near, __far, __code,
+    storage1: __near, __far, __code const,
     storage2: __near, __far,
 */
 
