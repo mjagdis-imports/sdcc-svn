@@ -1,5 +1,16 @@
 /* PR tree-optimization/103255 */
 
+/* Suppress valid warnings:
+warning 127: non-pointer type cast to generic pointer
+from type 'unsigned-long-int fixed'
+  to type 'struct H generic* fixed'
+warning 322: Cast of pointer to integer type that cannot represent all values of the pointer type
+from type 'unsigned-int generic* fixed'
+  to type 'unsigned-int fixed'
+*/
+#pragma disable_warning 127
+#pragma disable_warning 322
+
 struct H
 {
   unsigned a;

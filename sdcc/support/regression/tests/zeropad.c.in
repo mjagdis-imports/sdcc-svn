@@ -1,6 +1,6 @@
 /** Zeropad tests.
 
-    storage: auto, __idata, __pdata, __xdata, __code,
+    storage: auto, __idata, __pdata, __xdata, __code const,
 */
 #ifndef STORAGE
 #define STORAGE_{storage}

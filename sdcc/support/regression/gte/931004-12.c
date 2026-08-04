@@ -7,7 +7,7 @@ struct tiny
   char e;
 };
 
-f (int n, ...)
+void f (int n, ...)
 {
   struct tiny x;
   int i;
@@ -32,7 +32,7 @@ f (int n, ...)
   va_end (ap);
 }
 
-main ()
+void main (void)
 {
   struct tiny x[3];
   x[0].c = 10;

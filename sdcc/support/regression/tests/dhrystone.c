@@ -8,6 +8,7 @@
 
 #pragma disable_warning 84
 #pragma disable_warning 85
+#pragma disable_warning 322
 
 #define Mic_secs_Per_Second     1000000.0
 
@@ -22,7 +23,7 @@ typedef enum {Ident_1, Ident_2, Ident_3, Ident_4, Ident_5} Enumeration;
 #include <stdio.h>
 #include <string.h>
 
-#define Null 0 
+#define Null 0
                 /* Value of a Null pointer */
 #define true  1
 #define false 0
@@ -35,7 +36,7 @@ typedef char    Str_30 [31];
 typedef int     Arr_1_Dim [50];
 typedef int     Arr_2_Dim [50] [50];
 
-typedef struct record 
+typedef struct record
     {
     struct record *Ptr_Comp;
     Enumeration    Discr;
@@ -138,7 +139,7 @@ void testDhrystone(void)
   Ptr_Glob->Discr                       = Ident_1;
   Ptr_Glob->variant.var_1.Enum_Comp     = Ident_3;
   Ptr_Glob->variant.var_1.Int_Comp      = 40;
-  strcpy (Ptr_Glob->variant.var_1.Str_Comp, 
+  strcpy (Ptr_Glob->variant.var_1.Str_Comp,
           "DHRYSTONE PROGRAM, SOME STRING");
   strcpy (Str_1_Loc, "DHRYSTONE PROGRAM, 1'ST STRING");
 
@@ -174,7 +175,7 @@ void testDhrystone(void)
   /***************/
   /* Start timer */
   /***************/
- 
+
 #ifdef TIMES
   times (&time_info);
   Begin_Time = (long) time_info.tms_utime;
@@ -235,7 +236,7 @@ void testDhrystone(void)
   /**************/
   /* Stop timer */
   /**************/
-  
+
 #ifdef TIMES
   times (&time_info);
   End_Time = (long) time_info.tms_utime;
@@ -311,11 +312,11 @@ void testDhrystone(void)
   else
   {
 #ifdef TIME
-    Microseconds = (float) User_Time * Mic_secs_Per_Second 
+    Microseconds = (float) User_Time * Mic_secs_Per_Second
                         / (float) Number_Of_Runs;
     Dhrystones_Per_Second = (float) Number_Of_Runs / (float) User_Time;
 #else
-    Microseconds = (float) User_Time * Mic_secs_Per_Second 
+    Microseconds = (float) User_Time * Mic_secs_Per_Second
                         / ((float) HZ * ((float) Number_Of_Runs));
     Dhrystones_Per_Second = ((float) HZ * (float) Number_Of_Runs)
                         / (float) User_Time;
@@ -328,7 +329,7 @@ printf ("%ld \n", (long int)Microseconds);
 printf ("%ld \n", (long int)Dhrystones_Per_Second);
     printf ("\n");
   }
-  
+
 }
 
 void Proc_1 (REG Rec_Pointer Ptr_Val_Par)
@@ -337,27 +338,27 @@ void Proc_1 (REG Rec_Pointer Ptr_Val_Par)
 
     /* executed once */
 {
-  REG Rec_Pointer Next_Record = Ptr_Val_Par->Ptr_Comp;  
+  REG Rec_Pointer Next_Record = Ptr_Val_Par->Ptr_Comp;
                                         /* == Ptr_Glob_Next */
   /* Local variable, initialized with Ptr_Val_Par->Ptr_Comp,    */
   /* corresponds to "rename" in Ada, "with" in Pascal           */
-  
-  structassign (*Ptr_Val_Par->Ptr_Comp, *Ptr_Glob); 
+
+  structassign (*Ptr_Val_Par->Ptr_Comp, *Ptr_Glob);
   Ptr_Val_Par->variant.var_1.Int_Comp = 5;
-  Next_Record->variant.var_1.Int_Comp 
+  Next_Record->variant.var_1.Int_Comp
         = Ptr_Val_Par->variant.var_1.Int_Comp;
   Next_Record->Ptr_Comp = Ptr_Val_Par->Ptr_Comp;
   Proc_3 (&Next_Record->Ptr_Comp);
-    /* Ptr_Val_Par->Ptr_Comp->Ptr_Comp 
+    /* Ptr_Val_Par->Ptr_Comp->Ptr_Comp
                         == Ptr_Glob->Ptr_Comp */
   if (Next_Record->Discr == Ident_1)
     /* then, executed */
   {
     Next_Record->variant.var_1.Int_Comp = 6;
-    Proc_6 (Ptr_Val_Par->variant.var_1.Enum_Comp, 
+    Proc_6 (Ptr_Val_Par->variant.var_1.Enum_Comp,
            &Next_Record->variant.var_1.Enum_Comp);
     Next_Record->Ptr_Comp = Ptr_Glob->Ptr_Comp;
-    Proc_7 (Next_Record->variant.var_1.Int_Comp, 10, 
+    Proc_7 (Next_Record->variant.var_1.Int_Comp, 10,
            &Next_Record->variant.var_1.Int_Comp);
   }
   else /* not executed */
@@ -371,7 +372,7 @@ void Proc_2 (One_Fifty *Int_Par_Ref)
     /* *Int_Par_Ref == 1, becomes 4 */
 
 {
-  One_Fifty  Int_Loc;  
+  One_Fifty  Int_Loc;
   Enumeration   Enum_Loc;
 
   Int_Loc = *Int_Par_Ref + 10;
@@ -434,10 +435,10 @@ void Proc_6 (Enumeration Enum_Val_Par, Enumeration *Enum_Ref_Par)
     *Enum_Ref_Par = Ident_4;
   switch (Enum_Val_Par)
   {
-    case Ident_1: 
+    case Ident_1:
       *Enum_Ref_Par = Ident_1;
       break;
-    case Ident_2: 
+    case Ident_2:
       if (Int_Glob > 100)
         /* then */
       *Enum_Ref_Par = Ident_1;
@@ -447,7 +448,7 @@ void Proc_6 (Enumeration Enum_Val_Par, Enumeration *Enum_Ref_Par)
       *Enum_Ref_Par = Ident_2;
       break;
     case Ident_4: break;
-    case Ident_5: 
+    case Ident_5:
       *Enum_Ref_Par = Ident_3;
       break;
   } /* switch */
@@ -456,7 +457,7 @@ void Proc_6 (Enumeration Enum_Val_Par, Enumeration *Enum_Ref_Par)
 
 void Proc_7 (One_Fifty Int_1_Par_Val, One_Fifty Int_2_Par_Val, One_Fifty *Int_Par_Ref)
 /**********************************************/
-    /* executed three times                                      */ 
+    /* executed three times                                      */
     /* first call:      Int_1_Par_Val == 2, Int_2_Par_Val == 3,  */
     /*                  Int_Par_Ref becomes 7                    */
     /* second call:     Int_1_Par_Val == 10, Int_2_Par_Val == 5, */

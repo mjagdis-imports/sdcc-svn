@@ -29,6 +29,8 @@ void f (int x)
   ASSERT (m[2] == 0x5555);
   ASSERT (m[4] == 0x3333);
   ASSERT (m[9] == -23456);
+#else
+  (void)x; // silence unused parameter warning
 #endif
 }
 

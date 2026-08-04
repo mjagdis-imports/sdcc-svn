@@ -11,8 +11,8 @@
 /* PR middle-end/24109 */
 
 struct A { int i; int j; };
-struct B { struct A *a; struct A *b; };
-struct C { struct B *c; struct A *d; };
+struct B { struct A const *a; struct A const *b; };
+struct C { struct B const *c; struct A const *d; };
 struct C e = { &(struct B) { &(struct A) { 1, 2 }, &(struct A) { 3, 4 } }, &(struct A) { 5, 6 } };
 
 void

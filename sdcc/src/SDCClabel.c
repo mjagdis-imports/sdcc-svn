@@ -117,6 +117,8 @@ deleteIfx (iCode * loop, int key)
     }
   else
     {
+      if (IS_SYMOP (IC_COND (loop)))
+        bitVectUnSetBit (OP_USES (IC_COND (loop)), loop->key);
       loop->prev->next = loop->next;
       loop->next->prev = loop->prev;
     }

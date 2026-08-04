@@ -195,6 +195,7 @@ genlsh16 (operand * result, operand * left, int shCount)
  
       if(AOP_TYPE(left)==AOP_SOF || AOP_TYPE(result)==AOP_SOF)
         needpullx = storeRegTempIfSurv (m6502_reg_x);
+
       //    if(AOP_TYPE(left)==AOP_REG && !needpullx)
       //     storeRegTemp(m6502_reg_x, true);
       xloc=m6502_getLastTempOfs();
@@ -236,25 +237,21 @@ genlsh16 (operand * result, operand * left, int shCount)
         {
 	  //     m6502_emitComment (TRACEGEN, "  %s - non register path generic", __func__);
 
+          needpulla = storeRegTempIfSurv (m6502_reg_a);
+
 	  if(IS_AOP_WITH_X(AOP(left)) && AOP_TYPE(result)==AOP_SOF && !needpullx)
             needpullx = storeRegTemp(m6502_reg_x, true);
 
-          needpulla = storeRegTempIfSurv (m6502_reg_a);
           m6502_loadRegFromAop (m6502_reg_a, AOP (left), 0);
 	  m6502_emitOp ("asl", "a");
 	  m6502_storeRegToAop (m6502_reg_a, AOP (result), 0);
+
           if(AOP_TYPE(left)==AOP_REG && needpullx)
             {
-	      // m6502_emitComment (TRACEGEN, "  %s - xloc=%d", __func__, xloc);
+	      //  m6502_emitComment (TRACEGEN, "  %s - xloc=%d", __func__, xloc);
 
-              if(xloc==-1)
-		{
-		  m6502_loadRegTemp(m6502_reg_a);
-		  needpullx=false;
-		}
-	      else
-                m6502_loadRegTempAt(m6502_reg_a, xloc);
-
+	      m6502_loadRegTemp(m6502_reg_a);
+	      needpullx=false;
             }
           else
             m6502_loadRegFromAop (m6502_reg_a, AOP (left), 1);
@@ -302,7 +299,7 @@ genlsh16 (operand * result, operand * left, int shCount)
 	  m6502_loadRegFromAop (m6502_reg_a, AOP (left), 0);
 	  m6502_emitOp ("asl", "a");
 
-	  if(IS_AOP_XA(AOP(left)) && !maskedtopbyte)
+          if(IS_AOP_XA(AOP(left)) && !IS_AOP_XY(AOP(result)) && !maskedtopbyte)
 	    {
 	      storeRegTempAlways(m6502_reg_x, true);
 	      m6502_emitRegTempOp("rol", m6502_getLastTempOfs());

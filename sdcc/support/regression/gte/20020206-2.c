@@ -15,7 +15,7 @@ void foo (unsigned int x)
 }
 
 int
-main (int argc, char **argv)
+main (void)
 {
   int i;
   for (i = 0; i < 2; ++i)

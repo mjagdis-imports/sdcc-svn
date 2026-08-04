@@ -871,12 +871,12 @@ printIvalType (symbol * sym, sym_link * type, initList * ilist, struct dbuf_s *o
           for (i = (le ? 0 : size - 1); le ? (i < size) : (i > -1); i += (le ? 1 : -1))
             {
               if (i == 0)
-			    if (val->name && strlen (val->name) > 0)
+			    if (strlen (val->name) > 0)
                   dbuf_printf (oBuf, "%s", val->name);
 				else
                   dbuf_printf (oBuf, "#0x00");
               else if (0 < i && i < top)
-			    if (val->name && strlen (val->name) > 0)
+			    if (strlen (val->name) > 0)
                   dbuf_printf (oBuf, "(%s >> %d)", val->name, i * 8);
 				else
                   dbuf_printf (oBuf, "#0x00");
@@ -992,7 +992,7 @@ printIvalBitFields (symbol ** sym, initList ** ilist, struct dbuf_s *oBuf)
   unsigned long long ival = 0;
   unsigned size = 0;
   unsigned bit_start = 0;
-  unsigned long int bytes_written = 0;
+  unsigned int bytes_written = 0;
 
   while (lsym && IS_BITFIELD (lsym->type))
     {
@@ -1107,15 +1107,17 @@ printIvalStruct (symbol *sym, sym_link *type, initList *ilist, struct dbuf_s *oB
   else
     {
       // Hack to avoid the hack below (the one that fixed bug #2643) breaking zero-length bit-fields as first member of a struct (bug #3542).
-      if(IS_BITFIELD (sflds->type) && !SPEC_BLEN (sflds->etype))
+      //FIXME: shouldn't this be a while ?
+      if (IS_BITFIELD (sflds->type) && !SPEC_BLEN (sflds->etype))
         sflds = sflds->next;
 
       while (sflds)
         {
           unsigned int oldoffset = sflds->offset;
+          unsigned int bytes_written = (unsigned int)-1;
 
           if (IS_BITFIELD (sflds->type))
-            printIvalBitFields (&sflds, &iloop, oBuf);
+            bytes_written = printIvalBitFields (&sflds, &iloop, oBuf);
           else
             {
               printIval (sym, sflds->type, iloop, oBuf, 1);
@@ -1126,6 +1128,11 @@ printIvalStruct (symbol *sym, sym_link *type, initList *ilist, struct dbuf_s *oB
           // Handle members from anonymous unions. Just a hack to fix bug #2643.
           while (sflds && sflds->offset == oldoffset)
             {
+              /* pad out with zeros if necessary */
+              for ( ; bytes_written < getSize(sflds->type); bytes_written++)
+                {
+                  dbuf_tprintf (oBuf, "\t!db !constbyte\n", 0);
+                }
               sflds = sflds->next;
               skip_holes++;
             }
@@ -1529,7 +1536,7 @@ printIvalCharPtr (symbol *sym, sym_link *type, value *val, struct dbuf_s *oBuf)
    */
   size = getSize (type);
 
-  if (val->name && strlen (val->name))
+  if (strlen (val->name))
     {
       if (size == 1)            /* This appears to be Z80 specific?? */
         {

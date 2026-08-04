@@ -322,6 +322,7 @@ typedef struct symbol
   unsigned _isparm:1;               /* is a parameter          */
   unsigned ismyparm:1;              /* is parameter of the function being generated */
   unsigned isitmp:1;                /* is an intermediate temp */
+  bool istmp:1;                     // is a temporary introduced in ast handling - don't warn is not used */
   unsigned islbl:1;                 /* is a temporary label */
   unsigned isref:1;                 /* has been referenced  */
   unsigned isind:1;                 /* is an induction variable */

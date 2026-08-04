@@ -115,7 +115,7 @@ p2_not0:
 ; a=expd, y=0
 	bpl	pos_diff
 ; negative exponent difference
-; expd=-eppd
+; expd=-expd
 	eor	#0xff
 	clc
 	adc	#0x01
@@ -177,51 +177,53 @@ done:
 	bne	00268$
 00269$:
 
-; Y is still 0
-	ldx	#0x00	; rneg is in X
-	lda	*s1
-	and	*s2
-	beq	not_both_negative
-	tax		; rneg=0x80
-	bne	end
-not_both_negative:
-	lda	*s1
-	beq	skip2
-; Y is still 0
-	sec
-	tya
-	sbc	*___fsadd_PARM_1
-	sta	*___fsadd_PARM_1
-	tya
-	sbc	*(___fsadd_PARM_1 + 1)
-	sta	*(___fsadd_PARM_1 + 1)
-	tya
-	sbc	*(___fsadd_PARM_1 + 2)
-	sta	*(___fsadd_PARM_1 + 2)
-	tya
-	sbc	*(___fsadd_PARM_1 + 3)
-	sta	*(___fsadd_PARM_1 + 3)  
-skip2:
-	lda	*s2
-	beq	end	
-	sec
-	tya
-	sbc	*___fsadd_PARM_2
-	sta	*___fsadd_PARM_2
-	tya
-	sbc	*(___fsadd_PARM_2 + 1)
-	sta	*(___fsadd_PARM_2 + 1)
-	tya
-	sbc	*(___fsadd_PARM_2 + 2)
-	sta	*(___fsadd_PARM_2 + 2)
-	tya
-	sbc	*(___fsadd_PARM_2 + 3)
-	sta	*(___fsadd_PARM_2 + 3)
-end:
-
 ; sh1 and sh2 are no longer needed
 ; reuse res0 and res1 for the result
 
+; Y is still 0
+
+	ldx	*s1
+	txa
+	eor	*s2
+	beq	simple_add	; both same sign (sign is in X)
+
+; one PARM is negative
+	sec
+	txa
+	beq	p2_neg
+
+; p1_neg
+	ldx	#0x00
+	lda	*___fsadd_PARM_2
+	sbc	*___fsadd_PARM_1
+	sta	*res0
+	lda	*(___fsadd_PARM_2 + 1)
+	sbc	*(___fsadd_PARM_1 + 1)
+	sta	*res1
+	lda	*(___fsadd_PARM_2 + 2)
+	sbc	*(___fsadd_PARM_1 + 2)
+	sta	*res2
+	lda	*(___fsadd_PARM_2 + 3)
+	sbc	*(___fsadd_PARM_1 + 3)
+;	sta	*res3
+	jmp done_add
+
+p2_neg:
+	lda	*___fsadd_PARM_1
+	sbc	*___fsadd_PARM_2
+	sta	*res0
+	lda	*(___fsadd_PARM_1 + 1)
+	sbc	*(___fsadd_PARM_2 + 1)
+	sta	*res1
+	lda	*(___fsadd_PARM_1 + 2)
+	sbc	*(___fsadd_PARM_2 + 2)
+	sta	*res2
+	lda	*(___fsadd_PARM_1 + 3)
+	sbc	*(___fsadd_PARM_2 + 3)
+;	sta	*res3
+	jmp done_add
+
+simple_add:
 ; add the mantissa
 	clc
 	lda	*___fsadd_PARM_1
@@ -235,10 +237,11 @@ end:
 	sta	*res2
 	lda	*(___fsadd_PARM_1 + 3)
 	adc	*(___fsadd_PARM_2 + 3)
-	sta	*res3
+;	sta	*res3
 
+done_add:
 ; is result 0?
-;   lda	*res3
+	sta	*res3
 	ora	*res2
 	ora	*res1
 	ora	*res0
