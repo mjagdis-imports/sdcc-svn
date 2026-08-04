@@ -1,3 +1,8 @@
+2026-08-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* snap.php:
+	  Infrastructure for randomized regression testing in the distributed compile farm.
+
 2026-06-22 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* index.php,

@@ -1,3 +1,9 @@
+2026-08-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* lib/variables.mk,
+	  components/sdcc.mk:
+	  Infrastructure for randomized regression testing in the distributed compile farm.
+
 2025-11-20 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* lib/variables.mk:

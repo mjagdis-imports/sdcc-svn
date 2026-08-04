@@ -119,7 +119,9 @@ else
 	  $(MAKE) $(MAKESILENTFLAG) $(MAKEJOBFLAGS) -C $(_SDCCDIR)/support/regression SDCC_HOME=$(BUILDDIR) SDCC_EXTRA_DIR=$(SRCDIR)/sdcc-extra $$i 2>&1 | tee -a $(REGTESTLOG); \
 	done; \
 	$(MAKE) $(MAKESILENTFLAG) -C $(_SDCCDIR)/support/valdiag SDCC_HOME=$(BUILDDIR) SDCC_EXTRA_DIR=$(SRCDIR)/sdcc-extra test-ports 2>&1 | tee -a $(REGTESTLOG)
+	$(MAKE) $(MAKESILENTFLAG) $(MAKEJOBFLAGS) -C $(_SDCCDIR)/support/regression SDCC_HOME=$(BUILDDIR) SDCC_EXTRA_DIR=$(SRCDIR)/sdcc-extra random-tests-$(RANDTESTNUM) 2>&1 | tee -a $(RANDREGTESTLOG); \
 endif
 	echo "--- Regression testing finished on `date` ---"
 
 endif
+

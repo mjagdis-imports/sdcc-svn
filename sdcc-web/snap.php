@@ -290,6 +290,16 @@ function display_files($descdir, $lsDir, $cldir, $rtdir, $subdir)
           $rtIcon = '18dot2a.gif';
         $rt = "<a href=\"$rtpathp\"><img src=\"/images/$rtIcon\" border=\"0\" alt=\"Regression Test Log\" /></a>";
       }
+      $rrtpath = $rrtdir . '/' . $subdir . '/rand-regression-test-' . file_name_to_snapshot_id($file_name[$i]) . '.log';
+      if (is_file($rtpath)) {
+        $rrtpathp = preg_replace("/\s/", "%20", $rrtpath);
+        $failed = rt_failed($rrtpathp);
+        if (isset($failed))
+          $rrtIcon = $failed ? '18dot1a.gif' : '18dot4a.gif';
+        else
+          $rrtIcon = '18dot2a.gif';
+        $rrt = "<a href=\"$rrtpathp\"><img src=\"/images/$rrtIcon\" border=\"0\" alt=\"Regression Test Log\" /></a>";
+      }
     }
 
     $dispthisdir = "<tr>" .
@@ -298,6 +308,7 @@ function display_files($descdir, $lsDir, $cldir, $rtdir, $subdir)
       "<td align=\"left\">$modDate</td>" .
       "<td align=\"left\">$cl</td>" .
       "<td align=\"left\">$rt</td>".
+      "<td align=\"left\">$rrt</td>".
       "</tr>";
 
     echo $dispthisdir;
