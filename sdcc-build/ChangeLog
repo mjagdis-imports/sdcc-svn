@@ -1,3 +1,8 @@
+2026-08-05 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* components/sdcc.mk:
+	  Regression test infrastructure fix.
+
 2026-08-04 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* lib/variables.mk,
