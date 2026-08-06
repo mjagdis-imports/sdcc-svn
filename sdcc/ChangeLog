@@ -1,3 +1,8 @@
+2026-08-05 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/Makefile.in:
+	  Fuzzing infrastructure fix.
+	  
 2026-08-02 Benedikt Freisen <b.freisen AT gmx.net>
 
 	* src/SDCCast.c,
@@ -48,10 +53,10 @@
 2026-07-29 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/mos6502/gen.h,
-      src/mos6502/gen.c:
-      Implement smarter tsxUseful().
-    * src/mos6502/peeph.def:
-      Fix reorder copy rules.
+	  src/mos6502/gen.c:
+	  Implement smarter tsxUseful().
+	* src/mos6502/peeph.def:
+	  Fix reorder copy rules.
 
 2026-07-29 Maarten Brock <sourceforge.brock AT dse.nl>
 
@@ -116,7 +121,7 @@
 2026-07-28 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/mos6502/gen.c:
-      Fix bug #4038
+	  Fix bug #4038
 	* src/mos6502/peeph.def:
 	  Add LXA2 rule.
 
