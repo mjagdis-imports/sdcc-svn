@@ -452,7 +452,7 @@ Makefile: $(srcdir)/Makefile.in
 # Rules for fuzzing (pseudo-randomized regression testing)
 
 clean-random:
-	rm -f randseq randport
+	rm -f $(TMP_DIR)/randseq $(TMP_DIR)/randport
 	rm -rf ports/random-*
 
 # Build the generator for pseudorandom number sequences

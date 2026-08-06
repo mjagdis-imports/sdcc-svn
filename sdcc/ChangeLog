@@ -1,5 +1,10 @@
 2026-08-06 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* sdcc/support/regression/Makefile.in:
+	  Fuzzing infrastructure fix.
+
+2026-08-06 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* Merge fuzzing branch.
 
 2026-08-05 Philipp Klaus Krause <philipp@colecovision.eu>
