@@ -718,7 +718,7 @@ symbol *copySymbol (const symbol *);
 symbol *copySymbolChain (const symbol *);
 char *genSymName (long);
 sym_link *getSpec (sym_link *);
-int compStructSize (int, structdef *);
+int compStructSize (structdef *);
 sym_link *copyLinkChain (const sym_link *);
 int checkDecl (symbol *, int);
 value *checkPointerIval (sym_link *, value *);
@@ -772,7 +772,7 @@ void checkQualifiers (symbol *sym, sym_link *type, bool check_vla_unspec, bool d
 sym_link *typeFromStr (const char *);
 STORAGE_CLASS sclsFromPtr (sym_link * ptr);
 sym_link *newEnumType (symbol *enumlist, sym_link *userRequestedType);
-void promoteAnonStructs (int, structdef *);
+void promoteAnonStructs (structdef *);
 bool isConst (sym_link *type);
 bool isVolatile (sym_link *type);
 bool isRestrict (sym_link *type);

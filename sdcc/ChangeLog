@@ -1,3 +1,10 @@
+2026-08-07 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* src/SDCC.y,
+	* src/SDCCsymt.h,
+	* src/SDCCsymt.c (compStructSize, promoteAnonStructs): removed parameter su,
+	  use sdef->type instead
+
 2026-08-06 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* Merge fuzzing branch.
@@ -6,7 +13,7 @@
 
 	* support/regression/Makefile.in:
 	  Fuzzing infrastructure fix.
-	  
+
 2026-08-02 Benedikt Freisen <b.freisen AT gmx.net>
 
 	* src/SDCCast.c,

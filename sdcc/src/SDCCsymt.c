@@ -1829,12 +1829,14 @@ getStructElement (structdef * sdef, symbol * sym)
 /* compStructSize - computes the size of a structure                */
 /*------------------------------------------------------------------*/
 int
-compStructSize (int su, structdef * sdef)
+compStructSize (structdef * sdef)
 {
   int sum = 0, usum = 0;
   int bitOffset = 0;
   symbol *loop;
   const int oldlineno = lineno;
+
+  wassertl (sdef->type == STRUCT || sdef->type == UNION, "struct/union type not yet recorded");
 
   if (!sdef->fields)
     {
@@ -1849,12 +1851,12 @@ compStructSize (int su, structdef * sdef)
 
       /* create the internal name for this variable */
       SNPRINTF (loop->rname, sizeof (loop->rname), "_%s", loop->name);
-      if (su == UNION)
+      if (sdef->type == UNION)
         {
           sum = 0;
           bitOffset = 0;
         }
-      SPEC_VOLATILE (loop->etype) |= (su == UNION ? 1 : 0);
+      SPEC_VOLATILE (loop->etype) |= (sdef->type == UNION ? 1 : 0);
 
       /* if this is a bit field  */
       if (loop->bitVar)
@@ -1935,13 +1937,13 @@ compStructSize (int su, structdef * sdef)
                       fprintf (stderr, ": packing bitfields in structures\n");
                       SPEC_BSTR (loop->etype) = bitOffset;
                       bitOffset += loop->bitVar;
-                      loop->offset = (su == UNION ? sum = 0 : sum);
+                      loop->offset = (sdef->type == UNION ? sum = 0 : sum);
                     }
                   else
                     {
                       /* does not fit; need to realign first */
                       sum++;
-                      loop->offset = (su == UNION ? sum = 0 : sum);
+                      loop->offset = (sdef->type == UNION ? sum = 0 : sum);
                       bitOffset = 0;
                       SPEC_BSTR (loop->etype) = bitOffset;
                       bitOffset += loop->bitVar;
@@ -1961,7 +1963,7 @@ compStructSize (int su, structdef * sdef)
           if (bitOffset)
             {
               sum++;
-              loop->offset = (su == UNION ? sum = 0 : sum);
+              loop->offset = (sdef->type == UNION ? sum = 0 : sum);
               bitOffset = 0;
             }
           loop->offset = sum;
@@ -1970,7 +1972,7 @@ compStructSize (int su, structdef * sdef)
 
           /* search for "flexible array members" */
           /* and do some syntax checks */
-          if (su == STRUCT)
+          if (sdef->type == STRUCT)
             {
               int ret = checkStructFlexArray (loop, loop->type);
               if (ret == FLEXARRAY)
@@ -1994,7 +1996,7 @@ compStructSize (int su, structdef * sdef)
       loop = loop->next;
 
       /* if union then size = sizeof largest field */
-      if (su == UNION)
+      if (sdef->type == UNION)
         {
           /* For UNION, round up after each field */
           sum += ((bitOffset + 7) / 8);
@@ -2003,12 +2005,12 @@ compStructSize (int su, structdef * sdef)
     }
 
   /* For STRUCT, round up after all fields processed */
-  if (su != UNION)
+  if (sdef->type != UNION)
     sum += ((bitOffset + 7) / 8);
 
   lineno = oldlineno;
 
-  return (su == UNION ? usum : sum);
+  return (sdef->type == UNION ? usum : sum);
 }
 
 /*-------------------------------------------------------------------*/
@@ -2016,7 +2018,7 @@ compStructSize (int su, structdef * sdef)
 /*                      an enclosing struct/union                    */
 /*-------------------------------------------------------------------*/
 void
-promoteAnonStructs (int su, structdef * sdef)
+promoteAnonStructs (structdef * sdef)
 {
   symbol *field;
   symbol *subfield;
@@ -2024,6 +2026,8 @@ promoteAnonStructs (int su, structdef * sdef)
   symbol *nextfield;
   symbol *dupfield;
   int base;
+
+  wassertl (sdef->type == STRUCT || sdef->type == UNION, "struct/union type not yet recorded");
 
   tofield = &sdef->fields;
   for (field = sdef->fields; field; field = nextfield)
@@ -2057,7 +2061,7 @@ promoteAnonStructs (int su, structdef * sdef)
                   if (*subfield->name && !strcmp (dupfield->name, subfield->name))
                     {
                       werrorfl (subfield->fileDef, subfield->lineDef,
-                                E_DUPLICATE_MEMBER, su == STRUCT ? "struct" : "union", subfield->name);
+                                E_DUPLICATE_MEMBER, sdef->type == STRUCT ? "struct" : "union", subfield->name);
                       werrorfl (dupfield->fileDef, dupfield->lineDef, E_PREVIOUS_DEF);
                     }
                   dupfield = dupfield->next;
