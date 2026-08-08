@@ -6,6 +6,8 @@
 
 #ifdef __SDCC
 #pragma std_c99
+#pragma disable_warning 322 // not on all platforms does a pointer fit in an int
+                            // shouldn´t an explicit cast like used here suppress that warning?
 #endif
 
 int a[2];

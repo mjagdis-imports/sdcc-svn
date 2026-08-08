@@ -1,5 +1,6 @@
 /*-------------------------------------------------------------------------
-;  atomic_flag_test_and_set.c - C run-time: C11 atomic flag
+;  sdcc_atomic_maybe_rollback.c - C run-time: rollback for restartable
+;  sequence implementation of C11 atomics
 ;
 ;  Copyright (c) 2024, Philipp Klaus Krause
 ;
@@ -33,9 +34,43 @@ static void dummy(void) __naked
 	__asm
 	.area HOME    (CODE)
 
-_atomic_flag_test_and_set::
-	mov  r2, #1
-	ljmp sdcc_atomic_exchange_gptr_impl
+; This relies on the restartable implementations being aligned properly.
+
+sdcc_atomic_maybe_rollback::
+	push acc
+	xch  a,r0
+	mov  r0, SP
+	dec  r0
+	push psw
+	cjne @r0, #(sdcc_atomic_exchange_rollback_start >> 16), 4$
+	dec  r0
+	cjne @r0, #(sdcc_atomic_exchange_rollback_start >> 8), 4$
+	dec  r0
+	cjne @r0, #<sdcc_atomic_exchange_rollback_start, 0$
+0$:
+	jc   4$
+	cjne @r0, #sdcc_atomic_exchange_rollback_end, 1$
+1$:
+	jnc  4$
+	; we now know the interrupted routine was somewhere among the
+	; restartable implementations of atomic functions.
+	push acc
+	mov  a, @r0
+	anl  a, #0x07
+	cjne a, #6, 2$
+2$:
+	jnc  3$
+	; we actually need to restart.
+	mov  a, @r0
+	anl  a, #0xf8
+	mov  @r0, a
+3$:	; inner skip
+	pop  acc
+4$:	; outer skip
+	pop  psw
+	xch  a,r0
+	pop  acc
+	reti
 
 	__endasm;
 }

@@ -1,3 +1,16 @@
+2026-08-09 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* device/lib/ds390/Makefile.in: removed atomic_flag_test_and_set
+	* device/lib/ds390/atomic_flag_test_and_set.c: deleted, is generated
+	* device/lib/ds390/__sdcc_atomic_maybe_rollback.c: removed double underscore
+	    to move out of C name space
+	* src/ds390/gen.c (genEndFunction): added call to sdcc_atomic_maybe_rollback,
+	    do not generate epilogue for noreturn function
+	* src/ds390/main.c: generate _atomic_flag_test_and_set
+	* support/regression/tests/bug-3997.c: fixed warning 322
+	* support/regression/tests/gcc-torture-execute-loop-2c.c,
+	* support/regression/tests/gcc-torture-execute-loop-2d.c: suppress warning 322
+
 2026-08-08 Maarten Brock <sourceforge.brock AT dse.nl>
 
 	* device/lib/mcs51/atomic_flag_test_and_set.asm: deleted, is generated
