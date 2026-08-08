@@ -77,7 +77,7 @@
 /* define _RETURN for correct returning from inline asm functions
 */
 #if defined(__SDCC_MODEL_HUGE)
- #define _RETURN ljmp __sdcc_banked_ret
+ #define _RETURN ljmp sdcc_banked_ret
 #else
  #define _RETURN ret
 #endif

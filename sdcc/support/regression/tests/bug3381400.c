@@ -4,7 +4,8 @@
 
 #include <testfwk.h>
 
-#pragma disable_warning  85 //no warning about unreferenced variables (W_NO_REFERENCE)
+#pragma disable_warning  85  //no warning about unreferenced variables (W_NO_REFERENCE)
+#pragma disable_warning  322 //ReadFlashData has a terrible prototype, but luckily doesn´t use sDstAddr, so suppress warning about short that cannot hold a pointer
 
 #ifndef __SDCC_pdk14 // Lack of memory
 

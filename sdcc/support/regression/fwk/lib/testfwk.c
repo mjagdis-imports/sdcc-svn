@@ -17,10 +17,6 @@ void T2_isr (void) __interrupt (5);
 #define MEMSPACE_BUF
 #endif
 
-extern void _putchar(char c);
-extern void _initEmu(void);
-extern void _exitEmu(void);
-
 int __numTests = 0;
 static int __numFailures = 0;
 

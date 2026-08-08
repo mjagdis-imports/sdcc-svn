@@ -1648,7 +1648,7 @@ separateAddressSpaces (eBBlock **ebbs, int count)
           if (right && IS_SYMOP (right))
             rightaddrspace = getAddrspace (OP_SYMBOL (right)->type);
           if (result && IS_SYMOP (result))
-            { 
+            {
               if (POINTER_SET (ic))
                 {
                   assert (!(IS_DECL (OP_SYMBOL (result)->type) && DCL_PTR_ADDRSPACE (OP_SYMBOL (result)->type)));

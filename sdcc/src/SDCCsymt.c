@@ -2617,7 +2617,9 @@ computeTypeOr (sym_link *etype1, sym_link *etype2, sym_link *reType)
   if (SPEC_USIGN (etype1))
     {
       if (IS_LITERAL (etype2) && floatFromVal (valFromType (etype2)) >= 0)
-        SPEC_USIGN (reType) = 1;
+        {
+          SPEC_USIGN (reType) = 1;
+        }
       else
         {
           /* promote to int */
@@ -2628,7 +2630,9 @@ computeTypeOr (sym_link *etype1, sym_link *etype2, sym_link *reType)
   else                          /* etype1 signed */
     {
       if (IS_LITERAL (etype2) && floatFromVal (valFromType (etype2)) <= 127)
-        SPEC_USIGN (reType) = 0;
+        {
+          SPEC_USIGN (reType) = 0;
+        }
       else
         {
           /* promote to int */
@@ -2640,7 +2644,9 @@ computeTypeOr (sym_link *etype1, sym_link *etype2, sym_link *reType)
   if (SPEC_USIGN (etype2))
     {
       if (IS_LITERAL (etype1) && floatFromVal (valFromType (etype1)) >= 0)
-        SPEC_USIGN (reType) = 1;
+        {
+          SPEC_USIGN (reType) = 1;
+        }
       else
         {
           /* promote to int */
@@ -2651,7 +2657,9 @@ computeTypeOr (sym_link *etype1, sym_link *etype2, sym_link *reType)
   else                          /* etype2 signed */
     {
       if (IS_LITERAL (etype1) && floatFromVal (valFromType (etype1)) <= 127)
-        SPEC_USIGN (reType) = 0;
+        {
+          SPEC_USIGN (reType) = 0;
+        }
       else
         {
           /* promote to int */
@@ -2816,13 +2824,9 @@ computeType (sym_link * type1, sym_link * type2, RESULT_TYPE resultType, int op)
 
   /* if only one of them is a bool variable then the other one prevails */
   else if (IS_BOOLEAN (etype1) && !IS_BOOLEAN (etype2))
-    {
-      rType = copyLinkChain (type2);
-    }
+    rType = copyLinkChain (type2);
   else if (IS_BOOLEAN (etype2) && !IS_BOOLEAN (etype1))
-    {
-      rType = copyLinkChain (type1);
-    }
+    rType = copyLinkChain (type1);
 
   /* if both are bitvars choose the larger one */
   else if (IS_BITVAR (etype1) && IS_BITVAR (etype2))
@@ -3074,14 +3078,10 @@ compareFuncType (sym_link *dest, sym_link *src)
     return 0;
 
   if (IFFUNC_ISWPARAM (dest) != IFFUNC_ISWPARAM (src))
-    {
-      return 0;
-    }
+    return 0;
 
   if (IFFUNC_ISSHADOWREGS (dest) != IFFUNC_ISSHADOWREGS (src))
-    {
-      return 0;
-    }
+    return 0;
 
   if (IFFUNC_ISZ88DK_FASTCALL (dest) != IFFUNC_ISZ88DK_FASTCALL (src) ||
     IFFUNC_ISZ88DK_CALLEE (dest) != IFFUNC_ISZ88DK_CALLEE (src))
@@ -3226,8 +3226,8 @@ compareType (sym_link *dest, sym_link *src, bool ignoreimplicitintrinsic)
             }
 
           if (DCL_TYPE (src) == DCL_TYPE (dest) ||
-            (IS_PTR (src) && ignoreimplicitintrinsic && DCL_TYPE_IMPLICITINTRINSIC (src) || IS_GENPTR (src)) &&
-              (IS_PTR (dest) && ignoreimplicitintrinsic && DCL_TYPE_IMPLICITINTRINSIC (dest) || IS_GENPTR (dest)))
+              ((IS_PTR (src) && ignoreimplicitintrinsic && DCL_TYPE_IMPLICITINTRINSIC (src) || IS_GENPTR (src)) &&
+               (IS_PTR (dest) && ignoreimplicitintrinsic && DCL_TYPE_IMPLICITINTRINSIC (dest) || IS_GENPTR (dest))))
             {
               if (IS_FUNC (src))
                 {
@@ -3583,10 +3583,10 @@ compareTypeExact (sym_link *dest, sym_link *src, long level, bool check_top_std_
   return 1;
 }
 
-/*---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------*/
 /* compareTypeInexact - will do type check return 1 if representation is same. */
-/* Useful for redundancy elimination.                                        */
-/*---------------------------------------------------------------------------*/
+/* Useful for redundancy elimination.                                          */
+/*-----------------------------------------------------------------------------*/
 int
 compareTypeInexact (sym_link *dest, sym_link *src)
 {
@@ -4218,7 +4218,8 @@ dbuf_printTypeChain (sym_link * start, struct dbuf_s *dbuf)
           switch (DCL_TYPE (type))
             {
             case FUNCTION:
-              dbuf_printf (dbuf, "function %s %s %s",
+              dbuf_printf (dbuf, "%sfunction %s%s%s",
+                (IFFUNC_ISNORETURN (type) ? "_Noreturn " : ""),
                 (DCL_PTR_OPTIONAL (type) ? "_Optional " : ""),
                 (IFFUNC_ISBUILTIN (type) ? "__builtin__ " : ""),
                 (IFFUNC_ISJAVANATIVE (type) ? "_JavaNative " : ""));
@@ -4538,10 +4539,13 @@ printTypeChainRaw (sym_link * start, FILE * of)
                 }
               if (IFFUNC_ISNORETURN (type))
                 {
-                  fprintf (of, "_Noreturn-");
+                  fprintf (of, "_Noreturn ");
                 }
-              fprintf (of, "function %s %s",
-                       (IFFUNC_ISBUILTIN (type) ? "__builtin__" : " "), (IFFUNC_ISJAVANATIVE (type) ? "_JavaNative" : " "));
+              fprintf (of, "function ");
+              if (IFFUNC_ISBUILTIN (type))
+                fprintf (of, "__builtin__ ");
+              if (IFFUNC_ISJAVANATIVE (type))
+                fprintf (of, "_JavaNative ");
               fprintf (of, "( ");
               for (args = FUNC_ARGS (type); args; args = args->next)
                 {
@@ -5151,8 +5155,9 @@ initCSupport (void)
 
           dbuf_init (&dbuf, 128);
           dbuf_printf (&dbuf, "_%s%s%s", smuldivmod[muldivmod], ssu[su], sbwd[bwd]);
-          muldiv[muldivmod][bwd][su] = funcOfType2 (_mangleFunctionName (dbuf_c_str (&dbuf)),
-            multypes[((TARGET_IS_PIC16 || TARGET_IS_PIC14 || TARGET_IS_STM8 || TARGET_Z80_LIKE || TARGET_PDK_LIKE || TARGET_MOS6502_LIKE || TARGET_F8_LIKE) && bwd == 0) ? 1 : bwd][(bool)su],
+          muldiv[muldivmod][bwd][su] =
+            funcOfType2 (_mangleFunctionName (dbuf_c_str (&dbuf)),
+              multypes[((TARGET_IS_PIC16 || TARGET_IS_PIC14 || TARGET_IS_STM8 || TARGET_Z80_LIKE || TARGET_PDK_LIKE || TARGET_MOS6502_LIKE || TARGET_F8_LIKE) && bwd == 0) ? 1 : bwd][(bool)su],
               multypes[bwd][su % 2],
               multypes[bwd][su == 1 || su == 2],
               options.intlong_rent);
