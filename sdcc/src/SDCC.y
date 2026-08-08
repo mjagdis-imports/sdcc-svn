@@ -909,8 +909,8 @@ struct_or_union_specifier
 
           /* Create a structdef   */
           $3->fields = reverseSyms($6);        /* link the fields */
-          $3->size = compStructSize($1, $3);   /* update size of  */
-          promoteAnonStructs ($1, $3);
+          $3->size = compStructSize($3);       /* update size of  */
+          promoteAnonStructs ($3);
 
           if ($3->redefinition) // Since C23, multiple definitions for struct / union are allowed, if they are compatible and have the same tags. The current standard draft N3047 allows redeclarations of unions to have a different order of the members. We don't. The rule in N3047 is now considered a mistake by many, and will hopefully be changed to the SDCC behaviour via a national body comment for the final version of the standard.
             {

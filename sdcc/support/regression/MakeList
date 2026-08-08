@@ -106,11 +106,6 @@ EXCLUDE_stm8-large += \
 EXCLUDE_ds390 += \
 	gte_memcpy-1
 
-# ?ASlink-Error-Could not get consecutive bytes in internal RAM for area DSEG.
-EXCLUDE_mcs51-small += \
-	gte_loop-ivopts-1 \
-	gte_pr93434
-
 # Möglich, dass irgendwo die Größe als 16-bit-Wert behandelt wird, und dann (1 <<
 # 17) 0 ergibt, oder so. Da kann man einen Bugreport öffnen, um eine bessere
 # Fehlermeldung zu erhalten
@@ -141,7 +136,6 @@ EXCLUDE_pdk15-stack-auto += \
 
 # Failure
 EXCLUDE_ARCH_mcs51 += \
-	tst_bug3381400 \
 	tst_gcc-torture-execute-961017-1
 
 # Bug?
@@ -258,9 +252,11 @@ EXCLUDE_pdk15-stack-auto += \
 	gte_pr30185 \
 	gte_pr40386
 EXCLUDE_mcs51-small += \
+	gte_loop-ivopts-1 \
 	gte_loop-ivopts-2 \
 	gte_pr58277-2 \
 	gte_pr58984 \
+	gte_pr93434 \
 	gte_shiftdi-2
 EXCLUDE_mcs51-small-stack-auto += \
 	gte_loop-ivopts-2 \
@@ -309,6 +305,10 @@ EXCLUDE_mcs51-medium += \
 	qct_0080-arrays
 EXCLUDE_uc6502-stack-auto += \
 	qct_0080-arrays
+EXCLUDE_mcs51-small-stack-auto += \
+	qct_0080-arrays	
+EXCLUDE_mcs51-large-stack-auto += \
+	qct_0080-arrays	
 
 # Target too slow (fails with timeout)
 #EXCLUDE_ARCH_pdk += \

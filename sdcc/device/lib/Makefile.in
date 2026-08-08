@@ -125,6 +125,7 @@ SOURCES_LONGLONG = $(COMMON_LONGLONG) \
 SOURCES_SDCC = $(COMMON_SDCC) \
   _autobaud.c \
   _bp.c \
+  _bpx.c \
   _decdptr.c \
   _gptrget.c \
   _gptrgetc.c \
@@ -154,7 +155,7 @@ SOURCES_SDCC = $(COMMON_SDCC) \
   printf_fast_f.c \
   printf_tiny.c \
   printfl.c \
-  bpx.c
+
 
 SOURCES = $(SOURCES_FLOAT) $(SOURCES_INT) $(SOURCES_LONG) $(SOURCES_LONGLONG) $(SOURCES_SDCC)
 

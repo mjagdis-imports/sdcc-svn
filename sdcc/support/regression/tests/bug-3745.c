@@ -1,4 +1,4 @@
-/* bug-3711.c
+/* bug-3745.c
    A bug in compile-time conversion of large floating-point constants, on host systems with a 32-bit long.
 */
 
