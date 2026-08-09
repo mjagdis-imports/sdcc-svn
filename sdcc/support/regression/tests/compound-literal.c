@@ -69,7 +69,7 @@ void testCompoundLiteralInDeclaration(void)
   ASSERT(a[1] == 8);
   ASSERT(a[2] == 9);
   ASSERT(w.y == 8);
-  // ASSERT(w.x == 0);  // fails for unrelated reasons -- see e.g. patch #508
+  ASSERT(w.x == 0);
 }
 
 /* The literal's own initializer may name a variable declared earlier in the

@@ -3935,10 +3935,7 @@ $BAD_PICS
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 " >&2;}
-  for d in 3 2 1; do
-    echo "Continuing in $d seconds ...";
-    sleep 1;
-  done;
+  echo "Continuing ...";
 fi;
 
  if  grep -i "^18F1220$" pics.supported >/dev/null 2>/dev/null ; then

@@ -763,9 +763,11 @@ getBuildEnvironment (void)
   return "BORLANDC";
 #elif defined(__APPLE__)
 #if defined(__i386__)
-  return "Mac OS X i386";
+  return "macOS i386";
 #elif defined(__x86_64__)
-  return "Mac OS X x86_64";
+  return "macOS x86_64";
+#elif defined(__aarch64__)
+  return "macOS ARM64";
 #else
   return "Mac OS X ppc";
 #endif

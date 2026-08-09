@@ -10,7 +10,7 @@ unsigned char NakedFunc(void) __naked
 	__asm
 	mov	dpl,#0x01
 #if defined (__SDCC_MODEL_HUGE)
-	ljmp	__sdcc_banked_ret
+	ljmp	sdcc_banked_ret
 #else
 	ret
 #endif

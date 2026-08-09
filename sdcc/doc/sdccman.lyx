@@ -44395,10 +44395,9 @@ SiLabs C8051F120 example
 \end_inset
 
 Usually the hardware uses some sfr (an output port or an internal sfr) to select a bank and put it in the banked area of the memory map.
- The selected bank usually becomes active immediately upon assignment to this sfr and when running inside a bank it will switch out this code it is currently running.
- Therefor you cannot jump or call directly from one bank to another and need to use a so-called trampoline in the common area.
- For SDCC an example trampoline is in crtbank.asm and you may need to change it to your 8051 derivative or schematic.
- The presented code is written for the C8051F120.
+ The selected bank usually becomes active immediately upon assignment to this sfr and when running inside a bank it will switch out the code it is currently running.
+ Therefore it is not possible to jump or call directly from one bank to another and a so-called trampoline function in the common area is needed.
+ For SDCC an example trampoline for the C8051F120 is in crtbank.asm and you may need to change it to match your 8051 derivative or schematic.
 \begin_inset Newline newline
 \end_inset
 
@@ -44407,18 +44406,25 @@ Usually the hardware uses some sfr (an output port or an internal sfr) to select
 \end_inset
 
 When calling a banked function SDCC will put the LSB of the functions address in register R0,
- the MSB in R1 and the bank in R2 and then call this trampoline 
+ the MSB in R1, the bank in R2 and then call the trampoline
 \emph on
-__sdcc_banked_call
+sdcc_banked_call
 \emph default
 .
- The current selected bank is saved on the stack,
- the new bank is selected and an indirect jump is made.
- When the banked function returns it jumps to 
+ The trampoline function should save the currently selected bank on the stack,
+ select the new bank and do an indirect jump to the target address.
+ When a banked function returns SDCC will emit a jump to
 \emph on
-__sdcc_banked_ret
+sdcc_banked_ret
 \emph default
- which restores the previous bank and returns to the caller.
+ which should restore the previous bank and return to the caller.
+ For regular jumps across banks
+\emph on
+ sdcc_banked_jump
+ \emph default
+ is used instead, which is not supposed to save the currently selected bank
+ but rather just switch to the new bank and do the jump. Such jumps might be
+ used for optimizing tail calls and no-return calls.
 \end_layout
 
 \begin_layout Subsubsection

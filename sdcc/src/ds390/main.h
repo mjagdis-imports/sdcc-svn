@@ -41,6 +41,5 @@ asmLineNode;
 bool x_parseOptions (char **argv, int *pargc);
 void x_setDefaultOptions (void);
 void x_finaliseOptions (void);
-asmLineNode * ds390newAsmLineNode (int currentDPS);
 
 #endif
