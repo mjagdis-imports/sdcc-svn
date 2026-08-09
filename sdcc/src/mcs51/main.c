@@ -447,7 +447,8 @@ static bool cseCostEstimation (iCode *ic, iCode *pdic)
   sym_link *result_type = operandType(result);
 
   /* if it is a pointer then return ok for now */
-  if (IC_RESULT(ic) && IS_PTR(result_type)) return 1;
+  if (IC_RESULT(ic) && IS_PTR(result_type))
+    return 1;
 
   /* if bitwise | add & subtract then no since mcs51 is pretty good at it
      so we will cse only if they are local (i.e. both ic & pdic belong to
@@ -455,8 +456,10 @@ static bool cseCostEstimation (iCode *ic, iCode *pdic)
   if (IS_BITWISE_OP(ic) || ic->op == '+' || ic->op == '-')
     {
       /* then if they are the same Basic block then ok */
-      if (ic->eBBlockNum == pdic->eBBlockNum) return 1;
-      else return 0;
+      if (ic->eBBlockNum == pdic->eBBlockNum)
+        return 1;
+      else
+        return 0;
     }
 
   /* for others it is cheaper to do the cse */
@@ -901,30 +904,31 @@ asmLineNodeFromLineNode (lineNode *ln)
   return aln;
 }
 
-static int
-getInstructionSize (lineNode *line)
+static void
+initializeAsmLineNode (lineNode *line)
 {
   if (!line->aln)
     line->aln = (asmLineNodeBase *) asmLineNodeFromLineNode (line);
+}
 
+static int
+getInstructionSize (lineNode *line)
+{
+  initializeAsmLineNode (line);
   return line->aln->size;
 }
 
 static bitVect *
 getRegsRead (lineNode *line)
 {
-  if (!line->aln)
-    line->aln = (asmLineNodeBase *) asmLineNodeFromLineNode (line);
-
+  initializeAsmLineNode (line);
   return line->aln->regsRead;
 }
 
 static bitVect *
 getRegsWritten (lineNode *line)
 {
-  if (!line->aln)
-    line->aln = (asmLineNodeBase *) asmLineNodeFromLineNode (line);
-
+  initializeAsmLineNode (line);
   return line->aln->regsWritten;
 }
 

@@ -4541,7 +4541,7 @@ genFunction (iCode * ic)
                    * the caller's R0 isn't trashed.
                    */
                   emitpush ("psw");
-                  emitcode ("mov", "psw,#!constbyte", (FUNC_REGBANK (sym->type) << 3) & 0x00ffu);
+                  emitcode ("mov", "psw,#!constbyte", (FUNC_REGBANK (ftype) << 3) & 0x00ffu);
                   switchedPSW = TRUE;
                 }
 
@@ -5431,11 +5431,13 @@ genPlusIncr (iCode * ic)
 
   /* if increment >=16 bits in register or direct space */
   if (!optimize.nosidechannels &&
-    (AOP_TYPE (IC_LEFT (ic)) == AOP_REG ||
-       AOP_TYPE (IC_LEFT (ic)) == AOP_DIR || AOP_TYPE (IC_LEFT (ic)) == AOP_SFR ||
-       (IS_AOP_PREG (IC_LEFT (ic)) && !AOP_NEEDSACC (IC_LEFT (ic)))) &&
+      ( AOP_TYPE (IC_LEFT (ic)) == AOP_REG ||
+        AOP_TYPE (IC_LEFT (ic)) == AOP_DIR ||
+        AOP_TYPE (IC_LEFT (ic)) == AOP_SFR ||
+        (IS_AOP_PREG (IC_LEFT (ic)) && !AOP_NEEDSACC (IC_LEFT (ic)))) &&
       sameRegs (AOP (IC_LEFT (ic)), AOP (IC_RESULT (ic))) &&
-      !isOperandVolatile (IC_RESULT (ic), FALSE) && (size > 1) && (icount == 1))
+      !isOperandVolatile (IC_RESULT (ic), FALSE) &&
+      (size > 1) && (icount == 1))
     {
       symbol *tlbl;
       const char *l;
@@ -5482,7 +5484,8 @@ genPlusIncr (iCode * ic)
   /* if result is dptr */
   if ((AOP_TYPE (IC_RESULT (ic)) == AOP_STR) &&
       (AOP_SIZE (IC_RESULT (ic)) == 2) &&
-      !strncmp (AOP (IC_RESULT (ic))->aopu.aop_str[0], "dpl", 4) && !strncmp (AOP (IC_RESULT (ic))->aopu.aop_str[1], "dph", 4))
+      !strncmp (AOP (IC_RESULT (ic))->aopu.aop_str[0], "dpl", 4) &&
+      !strncmp (AOP (IC_RESULT (ic))->aopu.aop_str[1], "dph", 4))
     {
       if (aopGetUsesAcc (ic->left->aop, 0))
         return FALSE;
@@ -5511,14 +5514,13 @@ genPlusIncr (iCode * ic)
     return FALSE;
 
   /* we can if the aops of the left & result match or
-     if they are in registers and the registers are the
-     same */
+     if they are in registers and the registers are the same */
   if (sameRegs (AOP (IC_LEFT (ic)), AOP (IC_RESULT (ic))))
     {
       if (icount > 3)
         {
           MOVA (opGet (IC_LEFT (ic), 0, FALSE, FALSE));
-          emitcode ("add", "a,#!constbyte", ((char) icount) & 0xffu);
+          emitcode ("add", "a,#!constbyte", icount & 0xffu);
           opPut (IC_RESULT (ic), "a", 0);
         }
       else
@@ -5823,10 +5825,12 @@ genMinusDec (iCode * ic)
 
   /* if decrement >=16 bits in register or direct space */
   if (!optimize.nosidechannels &&
-    (AOP_TYPE (IC_LEFT (ic)) == AOP_REG ||
-       AOP_TYPE (IC_LEFT (ic)) == AOP_DIR || AOP_TYPE (IC_LEFT (ic)) == AOP_SFR ||
-       (IS_AOP_PREG (IC_LEFT (ic)) && !AOP_NEEDSACC (IC_LEFT (ic)))) &&
-      sameRegs (AOP (IC_LEFT (ic)), AOP (IC_RESULT (ic))) && (size > 1) && (icount == 1))
+      ( AOP_TYPE (IC_LEFT (ic)) == AOP_REG ||
+        AOP_TYPE (IC_LEFT (ic)) == AOP_DIR ||
+        AOP_TYPE (IC_LEFT (ic)) == AOP_SFR ||
+        (IS_AOP_PREG (IC_LEFT (ic)) && !AOP_NEEDSACC (IC_LEFT (ic)))) &&
+      sameRegs (AOP (IC_LEFT (ic)), AOP (IC_RESULT (ic))) &&
+      (size > 1) && (icount == 1))
     {
       symbol *tlbl;
       const char *l;

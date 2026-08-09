@@ -41,7 +41,8 @@ static struct
 #define D(_a, _s)
 #endif
 
-/** noOverLap - will iterate through the list looking for over lap
+#if 0 // not used, prevent warning
+/** noOverLap - will iterate through the list looking for overlap
  */
 static int
 noOverLap (set *itmpStack, symbol *fsym)
@@ -64,6 +65,7 @@ noOverLap (set *itmpStack, symbol *fsym)
     }
   return 1;
 }
+#endif
 
 /*-----------------------------------------------------------------*/
 /* createStackSpil - create a location on the stack to spil        */

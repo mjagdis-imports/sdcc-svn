@@ -4130,9 +4130,9 @@ replace restart {
 replace restart {
 	sjmp	%5
 } by {
-	sjmp	%6
+	ljmp	%6
 	; peephole 257.b jumped to %6 directly instead of via %5.
-} if labelIsUncondJump(), labelInRange(%6), notSame(%5 %6), labelRefCountChange(%5 -1), labelRefCountChange(%6 +1)
+} if labelIsUncondJump(), notSame(%5 %6), labelRefCountChange(%5 -1), labelRefCountChange(%6 +1)
 
 replace restart {
 	jz	%5

@@ -1,5 +1,22 @@
 2026-08-09 Maarten Brock <sourceforge.brock AT dse.nl>
 
+	* device/lib/ds390/setjmp.c: synchronize with device/lib/_setjmp.c
+	* device/lib/mcs51/Makefile.in,
+	* device/lib/mcs51/__sdcc_atomic_maybe_rollback.asm: removed double underscore
+	    to move out of C name space
+	* device/lib/ds390/atomic_flag_clear.c,
+	* device/lib/mcs51/atomic_flag_clear.asm: bugfix: accepts a generic pointer
+	* support/regression/tests/atomic.c: test non-inlined versions through
+	    function pointers, NB: host may have them as macros
+	* device/lib/pic16/configure,
+	* device/non-free/lib/pic14/configure,
+	* device/non-free/lib/pic16/configure: removed 3 second sleep
+	* src/ds390/main.h (ds390newAsmLineNode): removed prototype
+	* src/f8/ralloc.c (noOverLap): fix unused warning
+	* src/mcs51/peeph.def (rule 257.b): changed replacement to ljmp to also
+	    catch sjmp->ljmp, let rule 112.b handle the rest
+	* src/mos6502/main.c (m6502_genAssemblerStart): added initial .area list
+
 	* device/lib/ds390/Makefile.in: removed atomic_flag_test_and_set
 	* device/lib/ds390/atomic_flag_test_and_set.c: deleted, is generated
 	* device/lib/ds390/__sdcc_atomic_maybe_rollback.c: removed double underscore
