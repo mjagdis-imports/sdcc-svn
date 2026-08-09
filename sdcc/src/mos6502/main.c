@@ -211,6 +211,25 @@ m6502_getRegName (const struct reg_info *reg)
 static void
 m6502_genAssemblerStart (FILE * of)
 {
+  fprintf(of, ";; Ordering of segments for the linker.\n");
+  tfprintf (of, "\t!area\n", DATA_NAME);
+  tfprintf (of, "\t!area\n", OVERLAY_NAME);
+  //  if (options.xdata_overlay==0)
+  //      tfprintf (of, "\t!area    (PAG, OVR)\n", OVERLAY_NAME);
+
+  tfprintf (of, "\t!area\n", HOME_NAME);
+  tfprintf (of, "\t!area\n", STATIC_NAME);
+  tfprintf (of, "\t!area\n", "GSFINAL");
+  tfprintf (of, "\t!area\n", CODE_NAME);
+  tfprintf (of, "\t!area\n", CONST_NAME);
+  tfprintf (of, "\t!area\n", XINIT_NAME);
+
+  tfprintf (of, "\t!area\n", "_DATA");
+  tfprintf (of, "\t!area\n", XIDATA_NAME);
+  //  if(options.xdata_overlay)
+  //      tfprintf (of, "\t!area    (OVR)\n", OVERLAY_NAME);
+  tfprintf (of, "\t!area\n", XDATA_NAME);
+
   if (!options.noOptsdccInAsm)
     {
       fprintf (of, "\t.optsdcc -m%s\n", port->target);
@@ -795,7 +814,7 @@ PORT mos6502_port =
     1,                          /* transform != to !(a == b) */
     0,                          /* leave == */
     false,                      /* No array initializer support. */
-    NULL,          		/* CSE cost estimation */
+    NULL,                       /* CSE cost estimation */
     m6502_builtins,             /* builtin functions */
     GPOINTER,                   /* treat unqualified pointers as "generic" pointers */
     true,
@@ -967,7 +986,7 @@ PORT mos65c02_port =
     1,                          /* transform != to !(a == b) */
     0,                          /* leave == */
     false,                      /* No array initializer support. */
-    NULL,		        /* CSE cost estimation */
+    NULL,                       /* CSE cost estimation */
     m6502_builtins,             /* builtin functions */
     GPOINTER,                   /* treat unqualified pointers as "generic" pointers */
     true,

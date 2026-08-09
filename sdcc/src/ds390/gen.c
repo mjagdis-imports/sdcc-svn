@@ -3745,7 +3745,7 @@ static void
 genFunction (iCode * ic)
 {
   symbol *sym = OP_SYMBOL (IC_LEFT (ic));
-  sym_link *ftype;
+  sym_link *ftype = operandType (IC_LEFT (ic));
   bool switchedPSW = FALSE;
   bool fReentrant = (IFFUNC_ISREENT (sym->type) || options.stackAuto);
 
@@ -3759,7 +3759,6 @@ genFunction (iCode * ic)
 
   emitcode ("", "%s:", sym->rname);
   genLine.lineCurr->isLabel = 1;
-  ftype = operandType (IC_LEFT (ic));
   _G.currentFunc = sym;
 
   if (IFFUNC_ISNAKED (ftype))
@@ -3792,7 +3791,7 @@ genFunction (iCode * ic)
 
   /* if this is an interrupt service routine then
      save acc, b, dpl, dph  */
-  if (IFFUNC_ISISR (sym->type))
+  if (IFFUNC_ISISR (ftype))
     {
       if (!inExcludeList ("acc"))
         emitpush ("acc");
@@ -3820,14 +3819,14 @@ genFunction (iCode * ic)
       /* if this isr has no bank i.e. is going to
          run with bank 0 , then we need to save more
          registers :-) */
-      if (!FUNC_REGBANK (sym->type))
+      if (!FUNC_REGBANK (ftype))
         {
           int i;
 
           /* if this function does not call any other
              function then we can be economical and
              save only those registers that are used */
-          if (!IFFUNC_HASFCALL (sym->type))
+          if (!IFFUNC_HASFCALL (ftype))
             {
               /* if any registers used */
               if (!bitVectIsZero (sym->regsUsed))
@@ -3868,7 +3867,7 @@ genFunction (iCode * ic)
            */
           unsigned long banksToSave = 0;
 
-          if (IFFUNC_HASFCALL (sym->type))
+          if (IFFUNC_HASFCALL (ftype))
             {
 
 #define MAX_REGISTER_BANKS 4
@@ -3902,7 +3901,7 @@ genFunction (iCode * ic)
 //                      werror (W_FUNCPTR_IN_USING_ISR);
                       dtype = operandType (IC_LEFT (i))->next;
                     }
-                  if (dtype && FUNC_REGBANK (dtype) != FUNC_REGBANK (sym->type))
+                  if (dtype && FUNC_REGBANK (dtype) != FUNC_REGBANK (ftype))
                     {
                       /* Mark this bank for saving. */
                       if (FUNC_REGBANK (dtype) >= MAX_REGISTER_BANKS)
@@ -3914,9 +3913,7 @@ genFunction (iCode * ic)
                           banksToSave |= (1 << FUNC_REGBANK (dtype));
                         }
 
-                      /* And note that we don't need to do it in
-                       * genCall.
-                       */
+                      /* And note that we don't need to do it in genCall. */
                       i->bankSaved = 1;
                     }
                 }
@@ -3930,7 +3927,7 @@ genFunction (iCode * ic)
                    * the caller's R0 isn't trashed.
                    */
                   emitpush ("psw");
-                  emitcode ("mov", "psw,#!constbyte", (unsigned)((FUNC_REGBANK (sym->type) << 3) & 0x00ffu));
+                  emitcode ("mov", "psw,#!constbyte", (FUNC_REGBANK (ftype) << 3) & 0x00ffu);
                   switchedPSW = TRUE;
                 }
 
@@ -3950,7 +3947,7 @@ genFunction (iCode * ic)
     {
       /* if callee-save to be used for this function
          then save the registers being used in this function */
-      if (IFFUNC_CALLEESAVES (sym->type))
+      if (IFFUNC_CALLEESAVES (ftype))
         {
           int i;
 
@@ -4009,46 +4006,46 @@ genFunction (iCode * ic)
   /* adjust the stack for the function */
   if (sym->stack)
     {
-      int i = sym->stack;
+      unsigned int adjust = sym->stack;
       if (options.stack10bit)
         {
-          if (i > 1024)
+          if (adjust > 1024)
             werror (W_STACK_OVERFLOW, sym->name);
           assert (sym->recvSize <= 4);
-          if (sym->stack <= 8)
+          if (adjust <= 8)
             {
-              while (i--)
+              while (adjust--)
                 emitcode ("push", "acc");
             }
           else
             {
               PROTECT_SP;
               emitcode ("mov", "a,sp");
-              emitcode ("add", "a,#!constbyte", (unsigned)((short) sym->stack & 0xff));
+              emitcode ("add", "a,#!constbyte", adjust & 0xff);
               emitcode ("mov", "sp,a");
               emitcode ("mov", "a,esp");
               adjustEsp ("a");
-              emitcode ("addc", "a,#!constbyte", (unsigned)(((short) sym->stack) >> 8) & 0xff);
+              emitcode ("addc", "a,#!constbyte", (adjust >> 8) & 0xff);
               emitcode ("mov", "esp,a");
               UNPROTECT_SP;
             }
         }
       else
         {
-          if (i > 256)
+          if (adjust > 256)
             werror (W_STACK_OVERFLOW, sym->name);
 
-          if (i > 3 && sym->recvSize < 4)
+          if (adjust > 3 && sym->recvSize < 4)
             {
 
               emitcode ("mov", "a,sp");
-              emitcode ("add", "a,#!constbyte", (unsigned)((char) sym->stack & 0xff));
+              emitcode ("add", "a,#!constbyte", adjust & 0xff);
               emitcode ("mov", "sp,a");
 
             }
           else
             {
-              while (i--)
+              while (adjust--)
                 emitcode ("inc", "sp");
             }
         }
@@ -4056,9 +4053,12 @@ genFunction (iCode * ic)
 
   if (sym->xstack)
     {
+      unsigned int xadjust = sym->xstack & 0xff;
+      if (sym->xstack > 256)
+        werror (W_STACK_OVERFLOW, sym->name);
 
       emitcode ("mov", "a,_spx");
-      emitcode ("add", "a,#!constbyte", (unsigned)((char) sym->xstack & 0xff));
+      emitcode ("add", "a,#!constbyte", xadjust);
       emitcode ("mov", "_spx,a");
     }
 
@@ -4081,6 +4081,7 @@ static void
 genEndFunction (iCode * ic)
 {
   symbol *sym = OP_SYMBOL (IC_LEFT (ic));
+  sym_link *ftype = operandType (IC_LEFT (ic));
   lineNode *lnp = genLine.lineCurr;
   bitVect *regsUsed;
   bitVect *regsUsedPrologue;
@@ -4090,9 +4091,9 @@ genEndFunction (iCode * ic)
   D (emitcode (";", "genEndFunction"));
 
   _G.currentFunc = NULL;
-  if (IFFUNC_ISNAKED (sym->type))
+  if (IFFUNC_ISNAKED (ftype) || IFFUNC_ISNORETURN (ftype))
     {
-      emitcode (";", "naked function: no epilogue.");
+      emitcode (";", IFFUNC_ISNAKED (ftype) ? "naked function: no epilogue." : "noreturn function: no epilogue.");
       if (options.debug && currFunc)
         debugFile->writeEndFunction (currFunc, ic, 0);
       return;
@@ -4166,9 +4167,9 @@ genEndFunction (iCode * ic)
     }
 
   /* restore the register bank  */
-  if (FUNC_REGBANK (sym->type) || IFFUNC_ISISR (sym->type))
+  if (FUNC_REGBANK (ftype) || IFFUNC_ISISR (ftype))
     {
-      if (!FUNC_REGBANK (sym->type) || !IFFUNC_ISISR (sym->type) || !options.useXstack)
+      if (!FUNC_REGBANK (ftype) || !IFFUNC_ISISR (ftype) || !options.useXstack)
         {
           /* Special case of ISR using non-zero bank with useXstack
            * is handled below.
@@ -4177,20 +4178,20 @@ genEndFunction (iCode * ic)
         }
     }
 
-  if (IFFUNC_ISISR (sym->type))
+  if (IFFUNC_ISISR (ftype))
     {
 
       /* now we need to restore the registers */
       /* if this isr has no bank i.e. is going to
          run with bank 0 , then we need to save more
          registers :-) */
-      if (!FUNC_REGBANK (sym->type))
+      if (!FUNC_REGBANK (ftype))
         {
           int i;
           /* if this function does not call any other
              function then we can be economical and
              save only those registers that are used */
-          if (!IFFUNC_HASFCALL (sym->type))
+          if (!IFFUNC_HASFCALL (ftype))
             {
               /* if any registers used */
               if (sym->regsUsed)
@@ -4273,11 +4274,15 @@ genEndFunction (iCode * ic)
           debugFile->writeEndFunction (currFunc, ic, 1);
         }
 
+      wassert (currFunc);
+      if (currFunc->funcRestartAtomicSupport)
+        emitcode (options.acall_ajmp ? "ajmp" : "ljmp", "sdcc_atomic_maybe_rollback");
+      else
       emitcode ("reti", "");
     }
   else
     {
-      if (IFFUNC_CALLEESAVES (sym->type))
+      if (IFFUNC_CALLEESAVES (ftype))
         {
           int i;
 
@@ -4307,16 +4312,16 @@ genEndFunction (iCode * ic)
 
   /* If this was an interrupt handler using bank 0 that called another */
   /* function, then all registers must be saved; nothing to optimize.  */
-  if (IFFUNC_ISISR (sym->type) && IFFUNC_HASFCALL (sym->type) && !FUNC_REGBANK (sym->type))
+  if (IFFUNC_ISISR (ftype) && IFFUNC_HASFCALL (ftype) && !FUNC_REGBANK (ftype))
     return;
 
   /* There are no push/pops to optimize if not callee-saves or ISR */
-  if (!(FUNC_CALLEESAVES (sym->type) || FUNC_ISISR (sym->type)))
+  if (!(FUNC_CALLEESAVES (ftype) || FUNC_ISISR (ftype)))
     return;
 
   /* If there were stack parameters, we cannot optimize without also    */
   /* fixing all of the stack offsets; this is too difficult to consider. */
-  if (FUNC_HASSTACKPARM (sym->type))
+  if (FUNC_HASSTACKPARM (ftype))
     return;
 
   /* Compute the registers actually used */
@@ -4618,7 +4623,8 @@ genPlusIncr (iCode *ic)
   /* if increment 16 bits in register */
   if (AOP_TYPE (IC_LEFT (ic)) == AOP_REG &&
       AOP_TYPE (IC_RESULT (ic)) == AOP_REG &&
-      sameRegs (AOP (IC_LEFT (ic)), AOP (IC_RESULT (ic))) && (size > 1) && (icount == 1))
+      sameRegs (AOP (IC_LEFT (ic)), AOP (IC_RESULT (ic))) &&
+      (size > 1) && (icount == 1))
     {
       symbol *tlbl;
       int emitTlbl;
@@ -4629,8 +4635,9 @@ genPlusIncr (iCode *ic)
        * is <= 5 instructions previous to this, we can generate
        * jumps straight to that target.
        */
-      if (ic->next && ic->next->op == GOTO
-          && (labelRange = findLabelBackwards (ic, IC_LABEL (ic->next)->key)) != 0 && labelRange <= 5)
+      if (ic->next && ic->next->op == GOTO &&
+          (labelRange = findLabelBackwards (ic, IC_LABEL (ic->next)->key)) != 0 &&
+          labelRange <= 5)
         {
           D (emitcode (";", "tail increment optimized (range %d)", labelRange));
           tlbl = IC_LABEL (ic->next);
@@ -4655,6 +4662,7 @@ genPlusIncr (iCode *ic)
 
       l = aopGet (IC_RESULT (ic), MSB16, FALSE, FALSE, NULL);
       emitcode ("inc", "%s", l);
+
       for(offset = 2; size > 2; size--, offset++)
         {
           if (EQ (l, "acc"))
@@ -4719,15 +4727,15 @@ genPlusIncr (iCode *ic)
     return FALSE;
 
   /* we can if the aops of the left & result match or
-     if they are in registers and the registers are the
-     same */
+     if they are in registers and the registers are the same */
   if (AOP_TYPE (IC_LEFT (ic)) == AOP_REG &&
-      AOP_TYPE (IC_RESULT (ic)) == AOP_REG && sameRegs (AOP (IC_LEFT (ic)), AOP (IC_RESULT (ic))))
+      AOP_TYPE (IC_RESULT (ic)) == AOP_REG &&
+      sameRegs (AOP (IC_LEFT (ic)), AOP (IC_RESULT (ic))))
     {
       if (icount > 3)
         {
           MOVA (aopGet (IC_LEFT (ic), 0, FALSE, FALSE, NULL));
-          emitcode ("add", "a,#!constbyte", (unsigned)(((char) icount) & 0xff));
+          emitcode ("add", "a,#!constbyte", icount & 0xffu);
           aopPut (IC_RESULT (ic), "a", 0);
         }
       else
@@ -4810,7 +4818,8 @@ adjustArithmeticResult (iCode * ic)
   if (opIsGptr (IC_RESULT (ic)) &&
       IC_LEFT (ic) && AOP_SIZE (IC_LEFT (ic)) < GPTRSIZE &&
       IC_RIGHT (ic) && AOP_SIZE (IC_RIGHT (ic)) < GPTRSIZE &&
-      !sameRegs (AOP (IC_RESULT (ic)), AOP (IC_LEFT (ic))) && !sameRegs (AOP (IC_RESULT (ic)), AOP (IC_RIGHT (ic))))
+      !sameRegs (AOP (IC_RESULT (ic)), AOP (IC_LEFT (ic))) &&
+      !sameRegs (AOP (IC_RESULT (ic)), AOP (IC_RIGHT (ic))))
     {
       struct dbuf_s dbuf;
 
@@ -5053,8 +5062,8 @@ genPlus (iCode * ic)
 
   sym_link *resulttype = operandType (IC_RESULT (ic));
   unsigned topbytemask = (IS_BITINT (resulttype) && SPEC_USIGN (resulttype) && (SPEC_BITINTWIDTH (resulttype) % 8)) ?
-    (0xff >> (8 - SPEC_BITINTWIDTH (resulttype) % 8)) : 0xff;
-  bool maskedtopbyte = (topbytemask != 0xff);
+    (0xffu >> (8 - SPEC_BITINTWIDTH (resulttype) % 8)) : 0xffu;
+  bool maskedtopbyte = (topbytemask != 0xffu);
 
   if (pushResult)
     {
@@ -5237,7 +5246,8 @@ genMinusDec (iCode * ic)
   /* if decrement 16 bits in register */
   if (AOP_TYPE (IC_LEFT (ic)) == AOP_REG &&
       AOP_TYPE (IC_RESULT (ic)) == AOP_REG &&
-      sameRegs (AOP (IC_LEFT (ic)), AOP (IC_RESULT (ic))) && (size > 1) && (icount == 1))
+      sameRegs (AOP (IC_LEFT (ic)), AOP (IC_RESULT (ic))) &&
+      (size > 1) && (icount == 1))
     {
       symbol *tlbl;
       int emitTlbl;
@@ -5284,7 +5294,8 @@ genMinusDec (iCode * ic)
               emitcode ("jnz", "!tlabel", labelKey2num (tlbl->key));
             }
           else if (AOP_TYPE (IC_RESULT (ic)) == AOP_REG ||
-                   AOP_TYPE (IC_RESULT (ic)) == AOP_DPTR || IS_AOP_PREG (IC_RESULT (ic)))
+                   AOP_TYPE (IC_RESULT (ic)) == AOP_DPTR ||
+                   IS_AOP_PREG (IC_RESULT (ic)))
             {
               emitcode ("cjne", "%s,#!constbyte,!tlabel", l, 0xffu, labelKey2num (tlbl->key));
             }
@@ -5311,7 +5322,8 @@ genMinusDec (iCode * ic)
      if they are in registers and the registers are the
      same */
   if (AOP_TYPE (IC_LEFT (ic)) == AOP_REG &&
-      AOP_TYPE (IC_RESULT (ic)) == AOP_REG && sameRegs (AOP (IC_LEFT (ic)), AOP (IC_RESULT (ic))))
+      AOP_TYPE (IC_RESULT (ic)) == AOP_REG &&
+      sameRegs (AOP (IC_LEFT (ic)), AOP (IC_RESULT (ic))))
     {
       const char *l;
 
@@ -5393,7 +5405,7 @@ genMinusBits (iCode * ic)
     {
       emitcode ("mov", "c,%s", AOP (IC_RIGHT (ic))->aopu.aop_dir);
       emitcode ("subb", "a,acc");
-      emitcode ("jnb", "%s,!tlabel", AOP (IC_LEFT (ic))->aopu.aop_dir, labelKey2num ((lbl->key)));
+      emitcode ("jnb", "%s,!tlabel", AOP (IC_LEFT (ic))->aopu.aop_dir, labelKey2num (lbl->key));
       emitcode ("inc", "a");
       emitLabel (lbl);
       aopPut (IC_RESULT (ic), "a", 0);
@@ -5558,6 +5570,8 @@ genMultOneByte (operand * left, operand * right, operand * result, iCode * ic)
   bool runtimeSign, compiletimeSign;
   bool lUnsigned, rUnsigned, pushedB;
 
+  D (emitcode (";", "genMultOneByte"));
+
   /* (if two literals: the value is computed before) */
   /* if one literal, literal on the right */
   if (AOP_TYPE (left) == AOP_LIT)
@@ -5580,13 +5594,12 @@ genMultOneByte (operand * left, operand * right, operand * result, iCode * ic)
 
   pushedB = pushB ();
 
-  if ((lUnsigned && rUnsigned)
-      /* sorry, I don't know how to get size
-         without calling aopOp (result,...);
-         see Feature Request  */
-      /* || size == 1 */ )
-    /* no, this is not a bug; with a 1 byte result there's
-       no need to take care about the signedness! */
+  if (/* size == 1 || */        /* no, this is not a bug; with a 1 byte result there's
+                                   no need to take care about the signedness! */
+                                /* sorry, I don't know how to get size
+                                   without calling aopOp (result,...);
+                                   see Feature Request  */
+      (lUnsigned && rUnsigned))
     {
       /* just an unsigned 8 * 8 = 8 multiply
          or 8u * 8u = 16u */
@@ -6096,7 +6109,7 @@ genDivOneByte (operand * left, operand * right, operand * result, iCode * ic)
       if (compiletimeSign)
         emitcode ("setb", "F0");        /* set sign flag */
       else
-        emitcode ("clr", "F0"); /* reset sign flag */
+        emitcode ("clr", "F0");         /* reset sign flag */
     }
 
   /* save the signs of the operands */

@@ -508,7 +508,6 @@ FBYNAME (optimizeReturn)
 /*-----------------------------------------------------------------*/
 FBYNAME (labelIsReturnOnly)
 {
-  /* assumes that %5 pattern variable has the label name */
   const char *label, *p;
   const lineNode *pl;
   int len;

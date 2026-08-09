@@ -836,6 +836,7 @@ mergeSpec (sym_link * dest, sym_link * src, const char *name)
   SPEC_NORETURN (dest) |= SPEC_NORETURN(src);
   SPEC_CONST (dest) |= SPEC_CONST (src);
   SPEC_CONSTEXPR (dest) |= SPEC_CONSTEXPR (src);
+  SPEC_IMPLICIT_CONSTEXPR (dest) |= SPEC_IMPLICIT_CONSTEXPR (src);
   SPEC_ABSA (dest) |= SPEC_ABSA (src);
   SPEC_VOLATILE (dest) |= SPEC_VOLATILE (src);
   SPEC_RESTRICT (dest) |= SPEC_RESTRICT (src);
@@ -2029,6 +2030,34 @@ promoteAnonStructs (structdef * sdef)
 
   wassertl (sdef->type == STRUCT || sdef->type == UNION, "struct/union type not yet recorded");
 
+  /* In a union, every alternative after the first named one aliases the
+     storage the union is initialized through. Once the members have been
+     flattened into an enclosing struct they are indistinguishable from
+     ordinary consecutive fields by offset alone - an alternative that is a
+     struct larger than the first continues past the first alternative's
+     extent, exactly like the fields following the union - so record it here,
+     while the alternatives are still separate, and propagate the mark
+     through the promotion below. */
+  if (sdef->type == UNION)
+    {
+      bool isfirst = TRUE;
+
+      for (field = sdef->fields; field; field = field->next)
+        {
+          /* The union is initialized through its first named member. Every
+             other member aliases that storage - including any unnamed
+             bitfields ahead of it, which are not alternatives that can be
+             initialized at all, and which the walk would otherwise take for
+             the alternative to emit. */
+          if (isfirst && !field->bitUnnamed)
+            {
+              isfirst = FALSE;
+              continue;
+            }
+          field->anonunionalias = 1;
+        }
+    }
+
   tofield = &sdef->fields;
   for (field = sdef->fields; field; field = nextfield)
     {
@@ -2068,6 +2097,7 @@ promoteAnonStructs (structdef * sdef)
                 }
 
               subfield->offset += base;
+              subfield->anonunionalias |= field->anonunionalias;
               if (subfield->next)
                 subfield = subfield->next;
               else
@@ -2414,8 +2444,13 @@ checkSClass (symbol *sym, bool isProto)
   /* handle specifics of constexpr declarations */
   if (SPEC_CONSTEXPR (sym->etype))
     {
-      /* any constexpr is implicitly const */
-      SPEC_CONST (sym->etype) = 1;
+      /* Any constexpr the program declared is implicitly const. One the
+         compiler inferred is not: a compound literal written without a
+         storage class has the type named in it (C11 6.5.2.5p4), so making it
+         const would change what the program sees - the address of one is a
+         pointer to non-const, and assigning it to one must not warn. */
+      if (!SPEC_IMPLICIT_CONSTEXPR (sym->etype))
+        SPEC_CONST (sym->etype) = 1;
       /* constexpr declaration at file scope is implicitly static */
       if (sym->level == 0)
         SPEC_STAT (sym->etype) = 1;
