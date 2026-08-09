@@ -1,3 +1,11 @@
+2026-08-09 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* src/mcs51/gen.c (cheapMove): fixed "mov a,a" & "movx ARn,@Ri"
+	  (findOpRegInOtherOp): added helper for finding register overlap
+	  (genCast): fixed bug 3554 cast with overlapping registers
+	* support/regression/tests/bug-3554.c.in: new, added
+	* support/regression/tests/reentrant.c.in: prevent div2n stack overflow
+
 2026-08-09 Benedikt Freisen <b.freisen AT gmx.net>
 
 	* src/SDCCutil.c:
@@ -44,6 +52,8 @@
 	* src/mcs51/peeph.def (rule 257.b): changed replacement to ljmp to also
 	    catch sjmp->ljmp, let rule 112.b handle the rest
 	* src/mos6502/main.c (m6502_genAssemblerStart): added initial .area list
+
+2026-08-09 Maarten Brock <sourceforge.brock AT dse.nl>
 
 	* device/lib/ds390/Makefile.in: removed atomic_flag_test_and_set
 	* device/lib/ds390/atomic_flag_test_and_set.c: deleted, is generated
