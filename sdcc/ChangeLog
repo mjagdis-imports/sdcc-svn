@@ -19,6 +19,7 @@
 	  src/SDCCsymt.h,
 	  src/SDCCval.c,
 	  src/SDCCval.h,
+	  support/regression/MakeList,
 	  support/regression/tests/bug-2840.c,
 	  support/regression/tests/bug-3393-designated.c,
 	  support/regression/tests/bug-3393.c,
