@@ -836,6 +836,7 @@ mergeSpec (sym_link * dest, sym_link * src, const char *name)
   SPEC_NORETURN (dest) |= SPEC_NORETURN(src);
   SPEC_CONST (dest) |= SPEC_CONST (src);
   SPEC_CONSTEXPR (dest) |= SPEC_CONSTEXPR (src);
+  SPEC_IMPLICIT_CONSTEXPR (dest) |= SPEC_IMPLICIT_CONSTEXPR (src);
   SPEC_ABSA (dest) |= SPEC_ABSA (src);
   SPEC_VOLATILE (dest) |= SPEC_VOLATILE (src);
   SPEC_RESTRICT (dest) |= SPEC_RESTRICT (src);
@@ -2443,8 +2444,13 @@ checkSClass (symbol *sym, bool isProto)
   /* handle specifics of constexpr declarations */
   if (SPEC_CONSTEXPR (sym->etype))
     {
-      /* any constexpr is implicitly const */
-      SPEC_CONST (sym->etype) = 1;
+      /* Any constexpr the program declared is implicitly const. One the
+         compiler inferred is not: a compound literal written without a
+         storage class has the type named in it (C11 6.5.2.5p4), so making it
+         const would change what the program sees - the address of one is a
+         pointer to non-const, and assigning it to one must not warn. */
+      if (!SPEC_IMPLICIT_CONSTEXPR (sym->etype))
+        SPEC_CONST (sym->etype) = 1;
       /* constexpr declaration at file scope is implicitly static */
       if (sym->level == 0)
         SPEC_STAT (sym->etype) = 1;
