@@ -333,6 +333,10 @@ typedef struct symbol
   unsigned udChked:1;               /* use def checking has been already done */
   unsigned generated:1;             /* code generated (function symbols only) */
   unsigned isinscope:1;             /* is in scope */
+  unsigned anonunionalias:1;        /* promoted out of an anonymous union, but not part of
+                                       its first alternative: aliases storage initialized
+                                       through that alternative (set in promoteAnonStructs,
+                                       read by createIvalStruct and printIvalStruct) */
 
   /* following flags are used by the backend
      for code generation and can be changed

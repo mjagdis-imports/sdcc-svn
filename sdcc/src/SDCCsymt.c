@@ -2029,6 +2029,34 @@ promoteAnonStructs (structdef * sdef)
 
   wassertl (sdef->type == STRUCT || sdef->type == UNION, "struct/union type not yet recorded");
 
+  /* In a union, every alternative after the first named one aliases the
+     storage the union is initialized through. Once the members have been
+     flattened into an enclosing struct they are indistinguishable from
+     ordinary consecutive fields by offset alone - an alternative that is a
+     struct larger than the first continues past the first alternative's
+     extent, exactly like the fields following the union - so record it here,
+     while the alternatives are still separate, and propagate the mark
+     through the promotion below. */
+  if (sdef->type == UNION)
+    {
+      bool isfirst = TRUE;
+
+      for (field = sdef->fields; field; field = field->next)
+        {
+          /* The union is initialized through its first named member. Every
+             other member aliases that storage - including any unnamed
+             bitfields ahead of it, which are not alternatives that can be
+             initialized at all, and which the walk would otherwise take for
+             the alternative to emit. */
+          if (isfirst && !field->bitUnnamed)
+            {
+              isfirst = FALSE;
+              continue;
+            }
+          field->anonunionalias = 1;
+        }
+    }
+
   tofield = &sdef->fields;
   for (field = sdef->fields; field; field = nextfield)
     {
@@ -2068,6 +2096,7 @@ promoteAnonStructs (structdef * sdef)
                 }
 
               subfield->offset += base;
+              subfield->anonunionalias |= field->anonunionalias;
               if (subfield->next)
                 subfield = subfield->next;
               else
