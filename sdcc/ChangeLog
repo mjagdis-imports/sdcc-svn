@@ -1,5 +1,10 @@
 2026-08-09 Benedikt Freisen <b.freisen AT gmx.net>
 
+	* src/SDCCutil.c:
+	  Rename "Mac OS X" to "macOS" (except for PPC) via patch #503 by John Brandwood.
+
+2026-08-09 Benedikt Freisen <b.freisen AT gmx.net>
+
 	* src/SDCC.y,
 	  src/SDCCsymt.c,
 	  src/SDCCsymt.h,
