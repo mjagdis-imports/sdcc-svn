@@ -1,3 +1,7 @@
+2026-08-10 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* Merge fuzzing branch.
+
 2026-08-09 Maarten Brock <sourceforge.brock AT dse.nl>
 
 	* src/mcs51/gen.c (cheapMove): fixed "mov a,a" & "movx ARn,@Ri"
@@ -66,6 +70,11 @@
 	* support/regression/tests/gcc-torture-execute-loop-2c.c,
 	* support/regression/tests/gcc-torture-execute-loop-2d.c: suppress warning 322
 
+2026-08-08 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdcc/support/regression/Makefile.in:
+	  Fuzzing infrastructure fix.
+
 2026-08-08 Maarten Brock <sourceforge.brock AT dse.nl>
 
 	* device/lib/mcs51/atomic_flag_test_and_set.asm: deleted, is generated
@@ -107,6 +116,11 @@
 	* src/SDCCsymt.h,
 	* src/SDCCsymt.c (compStructSize, promoteAnonStructs): removed parameter su,
 	  use sdef->type instead
+
+2026-08-06 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdcc/support/regression/Makefile.in:
+	  Fuzzing infrastructure fix.
 
 2026-08-06 Philipp Klaus Krause <philipp@colecovision.eu>
 
