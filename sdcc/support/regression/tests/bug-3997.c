@@ -4,12 +4,13 @@
  */
 
 #include <testfwk.h>
+#include <stdint.h>
 
 #if !defined(__SDCC_z80) && !defined(__SDCC_sm83)
 #define __sfr char
 #endif
 
-#define BANK(VARNAME) ( (unsigned char) ((unsigned int)(& __bank_ ## VARNAME)) )
+#define BANK(VARNAME) ( (unsigned char) ((uintptr_t)(& __bank_ ## VARNAME)) )
 
 #define BANKREF_EXTERN(VARNAME) const char __bank_ ## VARNAME;
 #define __REG volatile __sfr

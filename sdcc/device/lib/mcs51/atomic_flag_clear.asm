@@ -40,7 +40,5 @@
 	.area HOME    (CODE)
 
 _atomic_flag_clear::
-	mov  r0,dpl
 	clr  a
-	mov  @r0,a
-	ret
+	ljmp __gptrput

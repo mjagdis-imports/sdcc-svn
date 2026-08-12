@@ -836,6 +836,7 @@ mergeSpec (sym_link * dest, sym_link * src, const char *name)
   SPEC_NORETURN (dest) |= SPEC_NORETURN(src);
   SPEC_CONST (dest) |= SPEC_CONST (src);
   SPEC_CONSTEXPR (dest) |= SPEC_CONSTEXPR (src);
+  SPEC_IMPLICIT_CONSTEXPR (dest) |= SPEC_IMPLICIT_CONSTEXPR (src);
   SPEC_ABSA (dest) |= SPEC_ABSA (src);
   SPEC_VOLATILE (dest) |= SPEC_VOLATILE (src);
   SPEC_RESTRICT (dest) |= SPEC_RESTRICT (src);
@@ -1829,12 +1830,14 @@ getStructElement (structdef * sdef, symbol * sym)
 /* compStructSize - computes the size of a structure                */
 /*------------------------------------------------------------------*/
 int
-compStructSize (int su, structdef * sdef)
+compStructSize (structdef * sdef)
 {
   int sum = 0, usum = 0;
   int bitOffset = 0;
   symbol *loop;
   const int oldlineno = lineno;
+
+  wassertl (sdef->type == STRUCT || sdef->type == UNION, "struct/union type not yet recorded");
 
   if (!sdef->fields)
     {
@@ -1849,12 +1852,12 @@ compStructSize (int su, structdef * sdef)
 
       /* create the internal name for this variable */
       SNPRINTF (loop->rname, sizeof (loop->rname), "_%s", loop->name);
-      if (su == UNION)
+      if (sdef->type == UNION)
         {
           sum = 0;
           bitOffset = 0;
         }
-      SPEC_VOLATILE (loop->etype) |= (su == UNION ? 1 : 0);
+      SPEC_VOLATILE (loop->etype) |= (sdef->type == UNION ? 1 : 0);
 
       /* if this is a bit field  */
       if (loop->bitVar)
@@ -1935,13 +1938,13 @@ compStructSize (int su, structdef * sdef)
                       fprintf (stderr, ": packing bitfields in structures\n");
                       SPEC_BSTR (loop->etype) = bitOffset;
                       bitOffset += loop->bitVar;
-                      loop->offset = (su == UNION ? sum = 0 : sum);
+                      loop->offset = (sdef->type == UNION ? sum = 0 : sum);
                     }
                   else
                     {
                       /* does not fit; need to realign first */
                       sum++;
-                      loop->offset = (su == UNION ? sum = 0 : sum);
+                      loop->offset = (sdef->type == UNION ? sum = 0 : sum);
                       bitOffset = 0;
                       SPEC_BSTR (loop->etype) = bitOffset;
                       bitOffset += loop->bitVar;
@@ -1961,7 +1964,7 @@ compStructSize (int su, structdef * sdef)
           if (bitOffset)
             {
               sum++;
-              loop->offset = (su == UNION ? sum = 0 : sum);
+              loop->offset = (sdef->type == UNION ? sum = 0 : sum);
               bitOffset = 0;
             }
           loop->offset = sum;
@@ -1970,7 +1973,7 @@ compStructSize (int su, structdef * sdef)
 
           /* search for "flexible array members" */
           /* and do some syntax checks */
-          if (su == STRUCT)
+          if (sdef->type == STRUCT)
             {
               int ret = checkStructFlexArray (loop, loop->type);
               if (ret == FLEXARRAY)
@@ -1994,7 +1997,7 @@ compStructSize (int su, structdef * sdef)
       loop = loop->next;
 
       /* if union then size = sizeof largest field */
-      if (su == UNION)
+      if (sdef->type == UNION)
         {
           /* For UNION, round up after each field */
           sum += ((bitOffset + 7) / 8);
@@ -2003,12 +2006,12 @@ compStructSize (int su, structdef * sdef)
     }
 
   /* For STRUCT, round up after all fields processed */
-  if (su != UNION)
+  if (sdef->type != UNION)
     sum += ((bitOffset + 7) / 8);
 
   lineno = oldlineno;
 
-  return (su == UNION ? usum : sum);
+  return (sdef->type == UNION ? usum : sum);
 }
 
 /*-------------------------------------------------------------------*/
@@ -2016,7 +2019,7 @@ compStructSize (int su, structdef * sdef)
 /*                      an enclosing struct/union                    */
 /*-------------------------------------------------------------------*/
 void
-promoteAnonStructs (int su, structdef * sdef)
+promoteAnonStructs (structdef * sdef)
 {
   symbol *field;
   symbol *subfield;
@@ -2024,6 +2027,36 @@ promoteAnonStructs (int su, structdef * sdef)
   symbol *nextfield;
   symbol *dupfield;
   int base;
+
+  wassertl (sdef->type == STRUCT || sdef->type == UNION, "struct/union type not yet recorded");
+
+  /* In a union, every alternative after the first named one aliases the
+     storage the union is initialized through. Once the members have been
+     flattened into an enclosing struct they are indistinguishable from
+     ordinary consecutive fields by offset alone - an alternative that is a
+     struct larger than the first continues past the first alternative's
+     extent, exactly like the fields following the union - so record it here,
+     while the alternatives are still separate, and propagate the mark
+     through the promotion below. */
+  if (sdef->type == UNION)
+    {
+      bool isfirst = TRUE;
+
+      for (field = sdef->fields; field; field = field->next)
+        {
+          /* The union is initialized through its first named member. Every
+             other member aliases that storage - including any unnamed
+             bitfields ahead of it, which are not alternatives that can be
+             initialized at all, and which the walk would otherwise take for
+             the alternative to emit. */
+          if (isfirst && !field->bitUnnamed)
+            {
+              isfirst = FALSE;
+              continue;
+            }
+          field->anonunionalias = 1;
+        }
+    }
 
   tofield = &sdef->fields;
   for (field = sdef->fields; field; field = nextfield)
@@ -2057,13 +2090,14 @@ promoteAnonStructs (int su, structdef * sdef)
                   if (*subfield->name && !strcmp (dupfield->name, subfield->name))
                     {
                       werrorfl (subfield->fileDef, subfield->lineDef,
-                                E_DUPLICATE_MEMBER, su == STRUCT ? "struct" : "union", subfield->name);
+                                E_DUPLICATE_MEMBER, sdef->type == STRUCT ? "struct" : "union", subfield->name);
                       werrorfl (dupfield->fileDef, dupfield->lineDef, E_PREVIOUS_DEF);
                     }
                   dupfield = dupfield->next;
                 }
 
               subfield->offset += base;
+              subfield->anonunionalias |= field->anonunionalias;
               if (subfield->next)
                 subfield = subfield->next;
               else
@@ -2410,8 +2444,13 @@ checkSClass (symbol *sym, bool isProto)
   /* handle specifics of constexpr declarations */
   if (SPEC_CONSTEXPR (sym->etype))
     {
-      /* any constexpr is implicitly const */
-      SPEC_CONST (sym->etype) = 1;
+      /* Any constexpr the program declared is implicitly const. One the
+         compiler inferred is not: a compound literal written without a
+         storage class has the type named in it (C11 6.5.2.5p4), so making it
+         const would change what the program sees - the address of one is a
+         pointer to non-const, and assigning it to one must not warn. */
+      if (!SPEC_IMPLICIT_CONSTEXPR (sym->etype))
+        SPEC_CONST (sym->etype) = 1;
       /* constexpr declaration at file scope is implicitly static */
       if (sym->level == 0)
         SPEC_STAT (sym->etype) = 1;
@@ -2613,7 +2652,9 @@ computeTypeOr (sym_link *etype1, sym_link *etype2, sym_link *reType)
   if (SPEC_USIGN (etype1))
     {
       if (IS_LITERAL (etype2) && floatFromVal (valFromType (etype2)) >= 0)
-        SPEC_USIGN (reType) = 1;
+        {
+          SPEC_USIGN (reType) = 1;
+        }
       else
         {
           /* promote to int */
@@ -2624,7 +2665,9 @@ computeTypeOr (sym_link *etype1, sym_link *etype2, sym_link *reType)
   else                          /* etype1 signed */
     {
       if (IS_LITERAL (etype2) && floatFromVal (valFromType (etype2)) <= 127)
-        SPEC_USIGN (reType) = 0;
+        {
+          SPEC_USIGN (reType) = 0;
+        }
       else
         {
           /* promote to int */
@@ -2636,7 +2679,9 @@ computeTypeOr (sym_link *etype1, sym_link *etype2, sym_link *reType)
   if (SPEC_USIGN (etype2))
     {
       if (IS_LITERAL (etype1) && floatFromVal (valFromType (etype1)) >= 0)
-        SPEC_USIGN (reType) = 1;
+        {
+          SPEC_USIGN (reType) = 1;
+        }
       else
         {
           /* promote to int */
@@ -2647,7 +2692,9 @@ computeTypeOr (sym_link *etype1, sym_link *etype2, sym_link *reType)
   else                          /* etype2 signed */
     {
       if (IS_LITERAL (etype1) && floatFromVal (valFromType (etype1)) <= 127)
-        SPEC_USIGN (reType) = 0;
+        {
+          SPEC_USIGN (reType) = 0;
+        }
       else
         {
           /* promote to int */
@@ -2812,13 +2859,9 @@ computeType (sym_link * type1, sym_link * type2, RESULT_TYPE resultType, int op)
 
   /* if only one of them is a bool variable then the other one prevails */
   else if (IS_BOOLEAN (etype1) && !IS_BOOLEAN (etype2))
-    {
-      rType = copyLinkChain (type2);
-    }
+    rType = copyLinkChain (type2);
   else if (IS_BOOLEAN (etype2) && !IS_BOOLEAN (etype1))
-    {
-      rType = copyLinkChain (type1);
-    }
+    rType = copyLinkChain (type1);
 
   /* if both are bitvars choose the larger one */
   else if (IS_BITVAR (etype1) && IS_BITVAR (etype2))
@@ -3070,14 +3113,10 @@ compareFuncType (sym_link *dest, sym_link *src)
     return 0;
 
   if (IFFUNC_ISWPARAM (dest) != IFFUNC_ISWPARAM (src))
-    {
-      return 0;
-    }
+    return 0;
 
   if (IFFUNC_ISSHADOWREGS (dest) != IFFUNC_ISSHADOWREGS (src))
-    {
-      return 0;
-    }
+    return 0;
 
   if (IFFUNC_ISZ88DK_FASTCALL (dest) != IFFUNC_ISZ88DK_FASTCALL (src) ||
     IFFUNC_ISZ88DK_CALLEE (dest) != IFFUNC_ISZ88DK_CALLEE (src))
@@ -3222,8 +3261,8 @@ compareType (sym_link *dest, sym_link *src, bool ignoreimplicitintrinsic)
             }
 
           if (DCL_TYPE (src) == DCL_TYPE (dest) ||
-            (IS_PTR (src) && ignoreimplicitintrinsic && DCL_TYPE_IMPLICITINTRINSIC (src) || IS_GENPTR (src)) &&
-              (IS_PTR (dest) && ignoreimplicitintrinsic && DCL_TYPE_IMPLICITINTRINSIC (dest) || IS_GENPTR (dest)))
+              ((IS_PTR (src) && ignoreimplicitintrinsic && DCL_TYPE_IMPLICITINTRINSIC (src) || IS_GENPTR (src)) &&
+               (IS_PTR (dest) && ignoreimplicitintrinsic && DCL_TYPE_IMPLICITINTRINSIC (dest) || IS_GENPTR (dest))))
             {
               if (IS_FUNC (src))
                 {
@@ -3579,10 +3618,10 @@ compareTypeExact (sym_link *dest, sym_link *src, long level, bool check_top_std_
   return 1;
 }
 
-/*---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------*/
 /* compareTypeInexact - will do type check return 1 if representation is same. */
-/* Useful for redundancy elimination.                                        */
-/*---------------------------------------------------------------------------*/
+/* Useful for redundancy elimination.                                          */
+/*-----------------------------------------------------------------------------*/
 int
 compareTypeInexact (sym_link *dest, sym_link *src)
 {
@@ -4214,7 +4253,8 @@ dbuf_printTypeChain (sym_link * start, struct dbuf_s *dbuf)
           switch (DCL_TYPE (type))
             {
             case FUNCTION:
-              dbuf_printf (dbuf, "function %s %s %s",
+              dbuf_printf (dbuf, "%sfunction %s%s%s",
+                (IFFUNC_ISNORETURN (type) ? "_Noreturn " : ""),
                 (DCL_PTR_OPTIONAL (type) ? "_Optional " : ""),
                 (IFFUNC_ISBUILTIN (type) ? "__builtin__ " : ""),
                 (IFFUNC_ISJAVANATIVE (type) ? "_JavaNative " : ""));
@@ -4534,10 +4574,13 @@ printTypeChainRaw (sym_link * start, FILE * of)
                 }
               if (IFFUNC_ISNORETURN (type))
                 {
-                  fprintf (of, "_Noreturn-");
+                  fprintf (of, "_Noreturn ");
                 }
-              fprintf (of, "function %s %s",
-                       (IFFUNC_ISBUILTIN (type) ? "__builtin__" : " "), (IFFUNC_ISJAVANATIVE (type) ? "_JavaNative" : " "));
+              fprintf (of, "function ");
+              if (IFFUNC_ISBUILTIN (type))
+                fprintf (of, "__builtin__ ");
+              if (IFFUNC_ISJAVANATIVE (type))
+                fprintf (of, "_JavaNative ");
               fprintf (of, "( ");
               for (args = FUNC_ARGS (type); args; args = args->next)
                 {
@@ -5147,8 +5190,9 @@ initCSupport (void)
 
           dbuf_init (&dbuf, 128);
           dbuf_printf (&dbuf, "_%s%s%s", smuldivmod[muldivmod], ssu[su], sbwd[bwd]);
-          muldiv[muldivmod][bwd][su] = funcOfType2 (_mangleFunctionName (dbuf_c_str (&dbuf)),
-            multypes[((TARGET_IS_PIC16 || TARGET_IS_PIC14 || TARGET_IS_STM8 || TARGET_Z80_LIKE || TARGET_PDK_LIKE || TARGET_MOS6502_LIKE || TARGET_F8_LIKE) && bwd == 0) ? 1 : bwd][(bool)su],
+          muldiv[muldivmod][bwd][su] =
+            funcOfType2 (_mangleFunctionName (dbuf_c_str (&dbuf)),
+              multypes[((TARGET_IS_PIC16 || TARGET_IS_PIC14 || TARGET_IS_STM8 || TARGET_Z80_LIKE || TARGET_PDK_LIKE || TARGET_MOS6502_LIKE || TARGET_F8_LIKE) && bwd == 0) ? 1 : bwd][(bool)su],
               multypes[bwd][su % 2],
               multypes[bwd][su == 1 || su == 2],
               options.intlong_rent);

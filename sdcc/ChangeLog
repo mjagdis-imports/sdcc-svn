@@ -1,3 +1,127 @@
+2026-08-10 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* Merge fuzzing branch.
+
+2026-08-09 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* src/mcs51/gen.c (cheapMove): fixed "mov a,a" & "movx ARn,@Ri"
+	  (findOpRegInOtherOp): added helper for finding register overlap
+	  (genCast): fixed bug 3554 cast with overlapping registers
+	* support/regression/tests/bug-3554.c.in: new, added
+	* support/regression/tests/reentrant.c.in: prevent div2n stack overflow
+
+2026-08-09 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* src/SDCCutil.c:
+	  Rename "Mac OS X" to "macOS" (except for PPC) via patch #503 by John Brandwood.
+
+2026-08-09 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* src/SDCC.y,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  support/regression/tests/bug-4044.c:
+	  Fix compound literal const-ness bug #4044 via patch #511 by Howard M. Harte.
+
+2026-08-09 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* src/SDCCast.c,
+	  src/SDCCglue.c,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  src/SDCCval.c,
+	  src/SDCCval.h,
+	  support/regression/MakeList,
+	  support/regression/tests/bug-2840.c,
+	  support/regression/tests/bug-3393-designated.c,
+	  support/regression/tests/bug-3393.c,
+	  support/regression/tests/compound-literal.c:
+	  Fix bug #3393 and bug #2840 in anonymous union initialization via patch #508 by Howard M. Harte.
+
+2026-08-09 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* device/lib/ds390/setjmp.c: synchronize with device/lib/_setjmp.c
+	* device/lib/mcs51/Makefile.in,
+	* device/lib/mcs51/__sdcc_atomic_maybe_rollback.asm: removed double underscore
+	    to move out of C name space
+	* device/lib/ds390/atomic_flag_clear.c,
+	* device/lib/mcs51/atomic_flag_clear.asm: bugfix: accepts a generic pointer
+	* support/regression/tests/atomic.c: test non-inlined versions through
+	    function pointers, NB: host may have them as macros
+	* device/lib/pic16/configure,
+	* device/non-free/lib/pic14/configure,
+	* device/non-free/lib/pic16/configure: removed 3 second sleep
+	* src/ds390/main.h (ds390newAsmLineNode): removed prototype
+	* src/f8/ralloc.c (noOverLap): fix unused warning
+	* src/mcs51/peeph.def (rule 257.b): changed replacement to ljmp to also
+	    catch sjmp->ljmp, let rule 112.b handle the rest
+	* src/mos6502/main.c (m6502_genAssemblerStart): added initial .area list
+
+2026-08-09 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* device/lib/ds390/Makefile.in: removed atomic_flag_test_and_set
+	* device/lib/ds390/atomic_flag_test_and_set.c: deleted, is generated
+	* device/lib/ds390/__sdcc_atomic_maybe_rollback.c: removed double underscore
+	    to move out of C name space
+	* src/ds390/gen.c (genEndFunction): added call to sdcc_atomic_maybe_rollback,
+	    do not generate epilogue for noreturn function
+	* src/ds390/main.c: generate _atomic_flag_test_and_set
+	* support/regression/tests/bug-3997.c: fixed warning 322
+	* support/regression/tests/gcc-torture-execute-loop-2c.c,
+	* support/regression/tests/gcc-torture-execute-loop-2d.c: suppress warning 322
+
+2026-08-08 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdcc/support/regression/Makefile.in:
+	  Fuzzing infrastructure fix.
+
+2026-08-08 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* device/lib/mcs51/atomic_flag_test_and_set.asm: deleted, is generated
+	* device/lib/mcs51/Makefile.in: removed atomic_flag_test_and_set
+	* device/lib/bpx.c, device/lib/_bpx.c: renamed for consistency
+	* device/lib/Makefile.in: renamed bpx to _bpx
+	* support/regression/tests/bug1678803.c,
+	* support/regression/tests/bug1712928.c,
+	* device/include/asm/mcs51/features.h,
+	* device/include/mcs51/cc2530.h,
+	* device/lib/mcs51/crtbank.asm,
+	* doc/sdccman.lyx,
+	* src/mcs51/gen.c (genCall, genPcall): applied modified patch #501 to add
+	    sdcc_banked_jump, thanks Oleg Endo,
+	    renamed __sdcc_banked* to sdcc_banked* to move them out of C namespace,
+	  (genFunction): renamed i to adjust/xadjust for clarity,
+	  (genEndFunction): do not generate epilogue for noreturn function
+	* src/mcs51/peeph.def: moved rules 401.x to 410.x,
+	    added new rules 401.x from patch #501
+	* src/mcs51/gen.c (emitpop): accept all register forms and indirections
+	* device/lib/_setjmp.c: optimized ds390 code,
+	  (mcs51 longjmp): bugfix, must set SP earlier for banked return to
+	    allocate stack space
+	* support/regression/MakeList: mcs51 enabled test bug3381400,
+	    mcs51 stack-auto disabled qct_0080-arrays, due to insufficient stack space
+	* support/regression/fwk/include/testfwk.h: add _initEmu, _exitEmu & _putchar
+	* support/regression/fwk/lib/testfwk.c: removed _initEmu, _exitEmu & _putchar
+	    prototypes
+	* support/regression/tests/bug3381400.c: disabled warning for this terrible
+	    code
+	* support/regression/tests/loop.c.in: added LOW_MEMORY macro to enable
+	    testing on mcs51 large & huge
+	* support/regression/tests/reentrant.c.in: use less recursion for mcs51 to
+	    prevent stack overflow
+
+2026-08-07 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* src/SDCC.y,
+	* src/SDCCsymt.h,
+	* src/SDCCsymt.c (compStructSize, promoteAnonStructs): removed parameter su,
+	  use sdef->type instead
+
+2026-08-06 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdcc/support/regression/Makefile.in:
+	  Fuzzing infrastructure fix.
+
 2026-08-06 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* Merge fuzzing branch.
@@ -6,7 +130,7 @@
 
 	* support/regression/Makefile.in:
 	  Fuzzing infrastructure fix.
-	  
+
 2026-08-02 Benedikt Freisen <b.freisen AT gmx.net>
 
 	* src/SDCCast.c,

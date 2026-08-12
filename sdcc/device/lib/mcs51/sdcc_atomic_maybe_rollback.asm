@@ -1,5 +1,5 @@
 ;--------------------------------------------------------------------------
-;  __sdcc_atomic_maybe_rollback - C run-time: rollback for restartable
+;  sdcc_atomic_maybe_rollback - C run-time: rollback for restartable
 ;  sequence implementation of C11 atomics
 ;
 ;  Copyright (C) 2024, Philipp Klaus Krause

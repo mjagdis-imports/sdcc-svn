@@ -252,10 +252,17 @@ postfix_expression
 
                         /* add the specifier list to the id */
                         symbol *sym1 = prepareDeclarationSymbol(NULL, $2, sym);
-                        /* implicitly make the symbol a constexpr if the initializer allows it */
+                        /* implicitly make the symbol a constexpr if the initializer allows it.
+                           This is the compiler's own inference, not something the program wrote,
+                           so record that: a constexpr the program declares is const (C23
+                           6.7.2p6), while a compound literal without a storage class has the
+                           type written in it and nothing more (C11 6.5.2.5p4). */
                         sym1->etype = getSpec(sym1->type);
                         if (constExprTree(list2expr(sym1->ival)))
-                          SPEC_CONSTEXPR(sym1->etype) = 1;
+                          {
+                            SPEC_CONSTEXPR(sym1->etype) = 1;
+                            SPEC_IMPLICIT_CONSTEXPR(sym1->etype) = 1;
+                          }
 
                         /* mark as temporary symbol for compound literal, so that gatherImplicitVariables
                            can attach it to a block, and add the temporary symbol to the symbol table */
@@ -909,8 +916,8 @@ struct_or_union_specifier
 
           /* Create a structdef   */
           $3->fields = reverseSyms($6);        /* link the fields */
-          $3->size = compStructSize($1, $3);   /* update size of  */
-          promoteAnonStructs ($1, $3);
+          $3->size = compStructSize($3);       /* update size of  */
+          promoteAnonStructs ($3);
 
           if ($3->redefinition) // Since C23, multiple definitions for struct / union are allowed, if they are compatible and have the same tags. The current standard draft N3047 allows redeclarations of unions to have a different order of the members. We don't. The rule in N3047 is now considered a mistake by many, and will hopefully be changed to the SDCC behaviour via a national body comment for the final version of the standard.
             {
