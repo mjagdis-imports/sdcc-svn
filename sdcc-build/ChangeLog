@@ -1,3 +1,10 @@
+2026-08-13 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* lib/bootstrap.mk,
+	  lib/doc-archive.mk,
+	  lib/variables.mk:
+	  Include hostname in build artifact filenames to allow multiple builds for same host architecture.
+
 2026-08-12 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* sdcc-build-bootstrap.sh,

@@ -1,6 +1,7 @@
 2026-08-13 Philipp Klaus Krause <philipp@colecovision.eu>
 
-	* Fix fuzzing for out-of-tree regression testing.
+	* support/regression/Makefile.in:
+	  Fix fuzzing for out-of-tree regression testing.
 
 2026-08-10 Philipp Klaus Krause <philipp@colecovision.eu>
 

@@ -77,9 +77,9 @@ doc-archive-build-archives: $(addprefix $(_DOC_ARCHIVE_SRC_DIR)/,*.txt *.html *.
 	# Create knownbugs.html
 	read _VER < $(ORIGDIR)/sdcc/.version; perl $(ORIGDIR)/sdcc/support/scripts/gen_known_bugs.pl $$_VER > $(_DOC_ARCHIVE_BUILDDIR)/doc/knownbugs.html
 	# create tar.gz doc package
-	cd $(_DOC_ARCHIVE_BUILDDIR); tar -cjf $(_DOC_ARCHIVE_TARBALL_DIR)/sdcc-doc-$(SNAPSHOTID).tar.bz2 doc
+	cd $(_DOC_ARCHIVE_BUILDDIR); tar -cjf $(_DOC_ARCHIVE_TARBALL_DIR)/sdcc-doc-$(SNAPSHOTID)-$(HOSTNAME).tar.bz2 doc
 	# create zip doc package
 	find $(_DOC_ARCHIVE_BUILDDIR) -type f \( -name '*.txt' -o -name '*.html' -name 'ChangeLog' \) -exec $(UNIX2DOS) {} \;
-	cd $(_DOC_ARCHIVE_BUILDDIR); zip -9r $(_DOC_ARCHIVE_TARBALL_DIR)/sdcc-doc-$(SNAPSHOTID).zip doc
+	cd $(_DOC_ARCHIVE_BUILDDIR); zip -9r $(_DOC_ARCHIVE_TARBALL_DIR)/sdcc-doc-$(SNAPSHOTID)-$(HOSTNAME).zip doc
 
 endif

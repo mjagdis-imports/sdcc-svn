@@ -84,10 +84,10 @@ REGTESTTARGETS = $(THIRD_REGTESTTARGETS)
 # Directory for regression test log file
 REGTESTDIR = $(HTDOCSDIR)/regression_test_results/$(TARGET_PLATFORM)
 # Regression test log file
-REGTESTLOG = $(REGTESTDIR)/regression-test-$(TARGET_PLATFORM)-$(SNAPSHOTID).log
+REGTESTLOG = $(REGTESTDIR)/regression-test-$(TARGET_PLATFORM)-$(SNAPSHOTID)-$(HOSTNAME).log
 
 RANDTESTNUM = 0
-RANDREGTESTLOG = $(REGTESTDIR)/rand-regression-test-$(TARGET_PLATFORM)-$(SNAPSHOTID).log
+RANDREGTESTLOG = $(REGTESTDIR)/rand-regression-test-$(TARGET_PLATFORM)-$(SNAPSHOTID)-$(HOSTNAME).log
 
 # Directory for regression test log file
 CHLOGDIR = $(HTDOCSDIR)/changelog_heads
@@ -111,8 +111,8 @@ TARBALLBASE = staging
 # The directory that the tarballs will finally go into
 TARBALLDIR = $(STAGINGBASE)/$(TARBALLBASE)
 else
-# Format is snapshots/target/sdcc-target-date-revision.tar.bz2
-BUILDNAME = snapshot-$(TARGET_PLATFORM)-$(SNAPSHOTID)
+# Format is snapshots/target/sdcc-target-date-revision-hostname.tar.bz2
+BUILDNAME = snapshot-$(TARGET_PLATFORM)-$(SNAPSHOTID)-$(HOSTNAME)
 TARBALLBASE = snapshots
 TARBALLDIR = $(SNAPSHOTDIR)/$(TARGET_PLATFORM)
 endif
