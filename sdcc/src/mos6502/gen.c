@@ -4463,10 +4463,14 @@ genPointerPush (iCode *ic)
   bool needpullx = false;
   bool needpully = false;
 
-  if (AOP_TYPE(left)==AOP_SOF)
-    needpullx=storeRegTempIfSurv(m6502_reg_x);
+  // FIXME: should add 65C02 path if free register is available
+  // and use phx/phy
 
   needpulla=storeRegTempIfSurv(m6502_reg_a);
+
+  if (AOP_TYPE(left)==AOP_SOF)
+    {
+    needpullx=storeRegTempIfSurv(m6502_reg_x);
 
   yoff = setupDPTR(left, 0, NULL, false);
 
@@ -4481,8 +4485,21 @@ genPointerPush (iCode *ic)
     }
 
   m6502_loadOrFreeRegTemp(m6502_reg_y, needpully);
-  m6502_loadOrFreeRegTemp(m6502_reg_a, needpulla);
+    }
+  else
+    {
+      int size = getSize (operandType (left)->next);
+      while (size--)
+	{
+	  const char *l = aopAdrStr (AOP(left), 0, false);
+	  m6502_emitOp("lda","%s+%d",l+1, size);
+	  m6502_pushReg (m6502_reg_a, true);
+	}
+    }
+
   m6502_loadOrFreeRegTemp(m6502_reg_x, needpullx);
+  m6502_loadOrFreeRegTemp(m6502_reg_a, needpulla);
+
   m6502_freeAsmop (left, NULL);
 }
 

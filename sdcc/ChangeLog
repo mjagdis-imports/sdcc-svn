@@ -2,6 +2,8 @@
 
 	* src/mos6502/gen.c:
       Use ZP pointer instead of DPTR when possible in genPackbits and genUnpackBits.
+	* src/mos6502/gen.c:
+      Use absolute addressing instead of DPTR when possible in genPointerPush.
 
 2026-08-14 Philipp Klaus Krause <philipp@colecovision.eu>
 
