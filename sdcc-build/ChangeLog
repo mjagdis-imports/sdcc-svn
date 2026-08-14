@@ -1,5 +1,11 @@
 2026-08-14 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* sdcc-build/lib/fetch.mk,
+	  sdcc-build/sdcc-build-bootstrap.sh:
+	  Build trunk in farm, not fuzzing branch.
+
+2026-08-14 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* Merge fuzzing branch.
 
 2026-08-13 Philipp Klaus Krause <philipp@colecovision.eu>
