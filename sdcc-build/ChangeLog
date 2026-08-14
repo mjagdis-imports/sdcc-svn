@@ -1,3 +1,31 @@
+2026-08-14 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* Merge fuzzing branch.
+
+2026-08-13 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* lib/bootstrap.mk,
+	  lib/doc-archive.mk,
+	  lib/variables.mk:
+	  Include hostname in build artifact filenames to allow multiple builds for same host architecture.
+
+2026-08-12 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdcc-build-bootstrap.sh,
+	  lib/fetch.mk:
+	  Build fuzzing branch, not trunk.
+
+2026-08-05 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* components/sdcc.mk:
+	  Regression test infrastructure fix.
+
+2026-08-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* lib/variables.mk,
+	  components/sdcc.mk:
+	  Infrastructure for randomized regression testing in the distributed compile farm.
+
 2025-11-20 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* lib/variables.mk:

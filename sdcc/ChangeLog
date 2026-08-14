@@ -1,3 +1,7 @@
+2026-08-14 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* Merge fuzzing branch.
+
 2026-08-13 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/z80/gen.c,
@@ -10,6 +14,11 @@
 	  lots of coding standard changes like space before '(' and no use of TAB
 	* src/mos6502/genlshift.c (genlsh16): silence warning for unused xloc,
 	  lots of coding standard changes like space before '(' and no use of TAB
+
+2026-08-13 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/Makefile.in:
+	  Fix fuzzing for out-of-tree regression testing.
 
 2026-08-10 Philipp Klaus Krause <philipp@colecovision.eu>
 
