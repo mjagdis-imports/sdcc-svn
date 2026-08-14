@@ -1194,8 +1194,8 @@ moveNestedInit (initList *src)
 /*   struct. A byte offset cannot tell a member promoted out of an */
 /*   anonymous union from bitfields that legitimately share one    */
 /*   storage unit, because both share a byte offset. In bits they  */
-/*   separate: consecutive bitfields start where the previous one   */
-/*   ended, an alternative of a union starts where the union does.  */
+/*   separate: consecutive bitfields start where the previous one  */
+/*   ended, an alternative of a union starts where the union does. */
 /*-----------------------------------------------------------------*/
 static unsigned
 fieldStartBit (symbol *field)
@@ -1212,11 +1212,11 @@ fieldEndBit (symbol *field)
 }
 
 /*-----------------------------------------------------------------*/
-/* overlapsInitialized - does FIELD share storage with a member an  */
-/*   explicit designator already initialized?  Those bits are the   */
-/*   union's active alternative and must not be zeroed over. A      */
-/*   field always overlaps itself, so a designated member answers   */
-/*   yes for its own storage.                                       */
+/* overlapsInitialized - does FIELD share storage with a member an */
+/*   explicit designator already initialized?  Those bits are the  */
+/*   union's active alternative and must not be zeroed over. A     */
+/*   field always overlaps itself, so a designated member answers  */
+/*   yes for its own storage.                                      */
 /*-----------------------------------------------------------------*/
 static bool
 overlapsInitialized (symbol *fields, set *initialized, symbol *field)

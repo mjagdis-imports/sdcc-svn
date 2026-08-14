@@ -1064,7 +1064,7 @@ printIvalPad (struct dbuf_s *oBuf)
 }
 
 /*-----------------------------------------------------------------*/
-/* fieldHasIval - does this member consume an entry of the          */
+/* fieldHasIval - does this member consume an entry of the         */
 /*                initializer list?  Unnamed bitfields do not.     */
 /*-----------------------------------------------------------------*/
 static bool
@@ -1074,11 +1074,11 @@ fieldHasIval (symbol *field)
 }
 
 /*-----------------------------------------------------------------*/
-/* designatedAlternative - an anonymous union is initialized        */
+/* designatedAlternative - an anonymous union is initialized       */
 /*   through its first alternative, which is what the walk in      */
-/*   printIvalStruct() emits. A designated initializer can pick     */
-/*   another one instead ({.d = 5}), and reorderIlistIval() fills   */
-/*   a promoted member's slot only in that case. If the union       */
+/*   printIvalStruct() emits. A designated initializer can pick    */
+/*   another one instead ({.d = 5}), and reorderIlistIval() fills  */
+/*   a promoted member's slot only in that case. If the union      */
 /*   starting at SFLDS has one, return that member, its            */
 /*   initializer, and the field the union ends before.             */
 /*-----------------------------------------------------------------*/
