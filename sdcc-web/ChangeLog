@@ -1,3 +1,8 @@
+2026-08-15 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* snap.php:
+	  Fix farm regression test result handling for inclusion of hostnames in filenames.
+
 2026-08-14 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* Merge fuzzing branch.
