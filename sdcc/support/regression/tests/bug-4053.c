@@ -33,7 +33,6 @@ void test_array_index_bitpacked_struct_bool(void) {
 
 void
 testBug(void) {
-#if !defined (__SDCC_mos6502) && !defined (__SDCC_mos65c02) // Test fails for these targets for unknown reasons, I'll file a bug report later today.
     test_state.save_confirm = true;
     test_array_index_bitpacked_struct_bool();
     ASSERT (text_buffer_test[0] == ICON_CBX_CHECKED[0]);
@@ -41,6 +40,5 @@ testBug(void) {
     test_state.save_confirm = false;
     test_array_index_bitpacked_struct_bool();
     ASSERT (text_buffer_test[0] == ICON_CBX[0]);
-#endif
 }
 

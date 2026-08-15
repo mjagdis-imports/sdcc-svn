@@ -4470,21 +4470,21 @@ genPointerPush (iCode *ic)
 
   if (AOP_TYPE(left)==AOP_SOF)
     {
-    needpullx=storeRegTempIfSurv(m6502_reg_x);
+      needpullx=storeRegTempIfSurv(m6502_reg_x);
 
-  yoff = setupDPTR(left, 0, NULL, false);
+      yoff = setupDPTR(left, 0, NULL, false);
 
-  needpully=storeRegTempIfSurv(m6502_reg_y);
+      needpully=storeRegTempIfSurv(m6502_reg_y);
 
-  int size = getSize (operandType (left)->next);
-  while (size--)
-    {
-      m6502_loadRegFromConst (m6502_reg_y, yoff+size);
-      m6502_emitOp ("lda", INDFMT_IY, "DPTR");
-      m6502_pushReg (m6502_reg_a, true);
-    }
+      int size = getSize (operandType (left)->next);
+      while (size--)
+        {
+          m6502_loadRegFromConst (m6502_reg_y, yoff+size);
+          m6502_emitOp ("lda", INDFMT_IY, "DPTR");
+          m6502_pushReg (m6502_reg_a, true);
+        }
 
-  m6502_loadOrFreeRegTemp(m6502_reg_y, needpully);
+      m6502_loadOrFreeRegTemp(m6502_reg_y, needpully);
     }
   else
     {
@@ -6673,7 +6673,7 @@ static void genUnpackBitsImmed (operand * left, operand *right, operand * result
           // TODO: inefficient if just getting flags
           m6502_AccRsh (bstr, false);
           m6502_emitOp ("and", IMMDFMT, ((unsigned char) - 1) >> (8 - blen));
-          if (!SPEC_USIGN (etype))
+          if (!SPEC_USIGN (etype)&&!IS_BOOLEAN(etype))
             {
               /* signed bitfield */
               symbol *tlbl = m6502_safeNewiTempLabel (NULL);
