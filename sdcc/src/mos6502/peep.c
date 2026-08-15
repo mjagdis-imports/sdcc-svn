@@ -117,7 +117,7 @@ findLabel (const lineNode *pl)
 {
   const char *p;
   lineNode *cpl;
-  static char tlabel[32];
+  static char tlabel[SDCC_NAME_MAX];
   int i;
   int label_len = 0;
 
@@ -150,7 +150,7 @@ findLabel (const lineNode *pl)
   while (*(p+label_len) && !isspace ((unsigned char)*(p+label_len)))
     label_len++;
 
-  for(i=0; i<label_len; i++)
+  for(i=0; i<label_len && i<(SDCC_NAME_MAX-1); i++)
     tlabel[i]=p[i];
 
   tlabel[i]=0;
