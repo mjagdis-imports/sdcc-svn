@@ -1,15 +1,19 @@
+2026-08-15 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* src/mcs51/peeph.def: removed unused rule 131
+
 2026-08-15 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/mos6502/gen.c,
-      support/regression/test/bug-4053.c:
-      Fix bug #4053.
+	  support/regression/test/bug-4053.c:
+	  Fix bug #4053.
 
 2026-08-14 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/mos6502/gen.c:
-      Use ZP pointer instead of DPTR when possible in genPackbits and genUnpackBits.
+	  Use ZP pointer instead of DPTR when possible in genPackbits and genUnpackBits.
 	* src/mos6502/gen.c:
-      Use absolute addressing instead of DPTR when possible in genPointerPush.
+	  Use absolute addressing instead of DPTR when possible in genPointerPush.
 
 2026-08-14 Philipp Klaus Krause <philipp@colecovision.eu>
 
