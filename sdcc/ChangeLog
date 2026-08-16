@@ -1,3 +1,8 @@
+2026-08-16 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/peep.c:
+      Fix handling of jsr and rti.
+
 2026-08-15 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/mos6502/peep.c:

@@ -45,8 +45,7 @@ typedef enum
     S4O_RD_OP,
     S4O_TERM,
     S4O_VISITED,
-    S4O_ABORT,
-    S4O_CONTINUE
+    S4O_ABORT
   } S4O_RET;
 
 static struct
@@ -57,7 +56,6 @@ static struct
 /* Forward declarations (used before definitions below). */
 static bool mos6502UncondJump (const lineNode *pl);
 static bool mos6502CondJump (const lineNode *pl);
-static bool mos6502SurelyReturns (const lineNode *pl);
 
 /*-----------------------------------------------------------------*/
 /* univisitLines - clear "visited" flag in all lines               */
@@ -267,6 +265,7 @@ mos6502MightReadReg (const lineNode *pl, const char *what)
   /* This is used by `notUsed()`; it's OK (and safer) to be conservative.
      The goal is to avoid returning "might read" for registers that clearly
      aren't used by the instruction stream. */
+
   if (!strcmp (what, "a"))
     {
       /* A is read by ALU/test ops and stores/pushes/transfers from A. */
@@ -275,12 +274,13 @@ mos6502MightReadReg (const lineNode *pl, const char *what)
           lineIsInst (pl, "eor") || lineIsInst (pl, "cmp") ||
           lineIsInst (pl, "sta") || lineIsInst (pl, "pha") ||
           lineIsInst (pl, "tax") || lineIsInst (pl, "tay") ||
-          lineIsInst (pl, "bit") || lineIsInst (pl, "tsb") ||
-          lineIsInst (pl, "trb"))
+          lineIsInst (pl, "tsb") || lineIsInst (pl, "trb") ||
+          lineIsInst (pl, "bit"))
         return true;
 
       /* Shifts/rotates read A only in accumulator form (no operand or "a"). */
       /* INC/DEC read A only in accumulator form (e.g. "inc a"). */
+
       if ((lineIsInst (pl, "asl") || lineIsInst (pl, "lsr") ||
            lineIsInst (pl, "rol") || lineIsInst (pl, "ror") || 
            lineIsInst (pl, "inc") || lineIsInst (pl, "dec") ) &&
@@ -292,9 +292,10 @@ mos6502MightReadReg (const lineNode *pl, const char *what)
     {
       /* X is read by stores/compares/transfers/stack ops and by indexed
          addressing modes that include ",x". */
-      if (lineIsInst (pl, "stx") || lineIsInst (pl, "cpx") ||
+
+      if (lineIsInst (pl, "stx") || lineIsInst (pl, "phx") ||
           lineIsInst (pl, "inx") || lineIsInst (pl, "dex") ||
-          lineIsInst (pl, "txa") || lineIsInst (pl, "phx") ||
+          lineIsInst (pl, "txa") || lineIsInst (pl, "cpx") ||
           lineIsInst (pl, "txs"))
         return true;
 
@@ -306,9 +307,9 @@ mos6502MightReadReg (const lineNode *pl, const char *what)
     {
       /* Y is read by stores/compares/transfers/stack ops and by indexed
          addressing modes that include ",y". */
-      if (lineIsInst (pl, "sty") || lineIsInst (pl, "cpy") ||
+      if (lineIsInst (pl, "sty") || lineIsInst (pl, "phy") ||
           lineIsInst (pl, "iny") || lineIsInst (pl, "dey") ||
-          lineIsInst (pl, "tya") || lineIsInst (pl, "phy"))
+          lineIsInst (pl, "tya") || lineIsInst (pl, "cpy"))
         return true;
 
       if (mos6502OperandUsesIndexReg (pl, 'y'))
@@ -332,7 +333,7 @@ mos6502MightRead(const lineNode *pl, const char *what)
   if (lineIsInst (pl, "rts") && (!strcmp (what, "a") || !strcmp (what, "x") ) )
     return true;
 
-  if(lineIsInst (pl, "rti"))
+  if(lineIsInst (pl, "rti") && (!strcmp (what, "a") || !strcmp (what, "x") || !strcmp (what, "y") ) )
     return true;
 
   if (!strcmp (what, "n") || !strcmp (what, "z") || !strcmp (what, "c") || !strcmp (what, "v"))
@@ -494,9 +495,10 @@ mos6502CondJump (const lineNode *pl)
 }
 
 static bool
-mos6502SurelyReturns (const lineNode *pl)
+mos6502SurelyTerminates (const lineNode *pl)
 {
-  return (lineIsInst (pl, "rts") || lineIsInst (pl, "rti") );
+  return (lineIsInst (pl, "rts") || lineIsInst (pl, "rti" ) || 
+          lineIsInst (pl, "jsr") );
 }
 
 /*-----------------------------------------------------------------*/
@@ -524,16 +526,13 @@ mos6502SurelyReturns (const lineNode *pl)
 /*    S4O_VISITED                                                  */
 /*       hit lineNode with "visited" flag set: scan4op() already   */
 /*       scanned this opcode.                                      */
-/*    S4O_FOUNDOPCODE                                              */
-/*       found opcode and operand, to which untilOp and pReg are   */
-/*       pointing to.                                              */
 /*    S4O_RD_OP, S4O_WR_OP                                         */
-/*       hit an opcode reading or writing from pReg                */
+/*       hit an opcode reading or writing from reg or flag                */
 /*    S4O_CONDJMP                                                  */
 /*       hit a conditional jump opcode. pl and plCond return the   */
 /*       two possible branches.                                    */
 /*    S4O_TERM                                                     */
-/*       acall, lcall, ret and reti "terminate" a scan.            */
+/*       jsr, rts and rti "terminate" a scan.                      */
 /*-----------------------------------------------------------------*/
 static S4O_RET
 scan4op (lineNode **pl, const char *what, const char *untilOp,
@@ -596,8 +595,7 @@ scan4op (lineNode **pl, const char *what, const char *untilOp,
           return S4O_CONDJMP;
         }
 
-      /* Don't need to check for de, hl since pdkMightRead() does that */
-      if (mos6502SurelyReturns (*pl))
+      if (mos6502SurelyTerminates (*pl))
         {
           D(("S4O_TERM\n"));
           return S4O_TERM;
