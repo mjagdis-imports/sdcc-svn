@@ -499,6 +499,18 @@ replace restart {
 	lda	(%2),x
 }
 
+replace restart {
+        and #0x01
+	beq %1
+	lda #0x01
+%1:
+	eor #0x01
+} by {
+        and #0x01
+	; peephole BITNOT - removed redundant beq + lda #0x01
+	eor #0x01
+} if labelRefCount(%1 1)
+
 //replace restart {
 //	sta %1
 //	lsr %1

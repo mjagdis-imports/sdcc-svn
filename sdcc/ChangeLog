@@ -4,6 +4,7 @@
       Fix handling of jsr and rti.
     * src/mos6502/peeph.def:
       Check for register overwrite first.
+      Add BITNOT rule.
 
 2026-08-15 Gabriele Gorla <gorlik@yahoo.com>
 
