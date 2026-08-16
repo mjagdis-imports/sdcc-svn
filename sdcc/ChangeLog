@@ -2,6 +2,8 @@
 
 	* src/mos6502/peep.c:
       Fix bug #4036
+	* src/mos6502/gen.c:
+      Fix regression failure in gcc-torture-execute-20030714-1 with --nogenconstprop
 
 2026-08-15 Maarten Brock <sourceforge.brock AT dse.nl>
 

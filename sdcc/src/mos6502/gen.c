@@ -7239,6 +7239,9 @@ static void genPackBits (operand * result, operand * left, sym_link * etype, ope
   unsigned char mask;           /* bitmask within current byte */
   int litOffset = 0;
   char *rematOffset = NULL;
+  int yoff;
+  char * ptr_str = NULL;
+  bool late_dptr = false;
   bool needpulla;
 
   m6502_emitComment (TRACEGEN, __func__);
@@ -7252,6 +7255,27 @@ static void genPackBits (operand * result, operand * left, sym_link * etype, ope
   needpulla = storeRegTempIfSurv (m6502_reg_a);
 
   mask = ((unsigned char) (0xFF << (blen + bstr)) | (unsigned char) (0xFF >> (8 - bstr)));
+
+  if (AOP_TYPE(result)==AOP_DIR && litOffset< 248 && !rematOffset)
+    {
+      ptr_str = AOP(result)->aopu.aop_dir;
+      yoff=litOffset;
+    }
+  else if(IS_AOP_XA(AOP(result)) && litOffset< 248 && !rematOffset
+          && m6502_reg_a->aop && m6502_reg_a->aop->type==AOP_DIR)
+    {
+      ptr_str = m6502_reg_a->aop->aopu.aop_dir;
+      yoff=litOffset;
+    }
+  else
+    {
+      ptr_str = "DPTR";
+      if(AOP_TYPE(result)!=AOP_REG)
+        late_dptr=true;
+      else
+        yoff= setupDPTR(result, litOffset, rematOffset, false);
+
+    }
 
   if (blen<8 && AOP_TYPE (right) != AOP_LIT)
     {
@@ -7276,25 +7300,8 @@ static void genPackBits (operand * result, operand * left, sym_link * etype, ope
         }
     }
 
-  int yoff;
-  char * ptr_str;
-
-  if (AOP_TYPE(result)==AOP_DIR && litOffset< 248 && !rematOffset)
-    {
-      ptr_str = AOP(result)->aopu.aop_dir;
-      yoff=litOffset;
-    }
-  else if(IS_AOP_XA(AOP(result)) && litOffset< 248 && !rematOffset
-          && m6502_reg_a->aop && m6502_reg_a->aop->type==AOP_DIR)
-    {
-      ptr_str = m6502_reg_a->aop->aopu.aop_dir;
-      yoff=litOffset;
-    }
-  else
-    {
-      ptr_str = "DPTR";
-      yoff= setupDPTR(result, litOffset, rematOffset, false);
-    }
+  if(late_dptr)
+    yoff= setupDPTR(result, litOffset, rematOffset, false);
 
 //  needpulla = storeRegTempIfUsed (m6502_reg_a);
 
