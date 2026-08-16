@@ -254,6 +254,8 @@ function display_files($descdir, $lsDir, $cldir, $rtdir, $subdir)
     echo "<th align=\"left\"><font color=\"#660000\" face=\"Arial,Helvetica,Geneva,Swiss,SunSans-Regular\">CL</font></th>";
   if ($rtdir)
     echo "<th align=\"left\"><font color=\"#660000\" face=\"Arial,Helvetica,Geneva,Swiss,SunSans-Regular\">RT</font></th>";
+   if ($rtdir)
+    echo "<th align=\"left\"><font color=\"#660000\" face=\"Arial,Helvetica,Geneva,Swiss,SunSans-Regular\">RRT</font></th>";
   echo "</tr>\n";
 
   # set the default timezone to use. Available since PHP 5.1
@@ -290,7 +292,7 @@ function display_files($descdir, $lsDir, $cldir, $rtdir, $subdir)
           $rtIcon = '18dot2a.gif';
         $rt = "<a href=\"$rtpathp\"><img src=\"/images/$rtIcon\" border=\"0\" alt=\"Regression Test Log\" /></a>";
       }
-      $rrtpath = $rrtdir . '/' . $subdir . '/rand-regression-test-' . file_name_to_snapshot_id($file_name[$i]) . '.log';
+      $rrtpath = $rtdir . '/' . $subdir . '/rand-regression-test-' . file_name_to_snapshot_id($file_name[$i]) . '.log';
       if (is_file($rtpath)) {
         $rrtpathp = preg_replace("/\s/", "%20", $rrtpath);
         $failed = rt_failed($rrtpathp);
