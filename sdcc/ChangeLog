@@ -5,6 +5,7 @@
     * src/mos6502/peeph.def:
       Check for register overwrite first.
       Add BITNOT rule.
+      Rename several peephole rules.
 
 2026-08-15 Gabriele Gorla <gorlik@yahoo.com>
 

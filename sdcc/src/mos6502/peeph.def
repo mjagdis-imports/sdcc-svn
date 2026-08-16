@@ -209,7 +209,7 @@ replace restart {
 	and	#%1
 	and	#%2
 } by {
-	; Peephole dual AND - replaced %1 and %2
+	; Peephole DAND - replaced %1 and %2
         and	#(%1&%2)
 }
 
@@ -493,6 +493,7 @@ replace restart {
 	sta	*(DPTR+1)
 	lda	[DPTR],y
 } by {
+	; peephole copy/cast + setupDPTR
 	stx	*%1
 	ldy	#0x00
 	sty	*(%1+1)
@@ -940,7 +941,7 @@ replace restart {
 	%1	%2
 } by {
 	%1	%2
-	; Peephole dup branch 1 - removed %1
+	; Peephole DBR - removed %1
 } if same(%1 'bne' 'beq' 'bcc' 'bcs' 'bvc' 'bvs' 'bpl' 'bmi' 'bra' 'jmp'), labelRefCountChange(%2 -1)
 
 
@@ -950,83 +951,83 @@ replace restart {
 
 replace restart {
 	bne	%1
-	jmp	%5
+	jmp	%2
 %1:
 } by {
-	beq	%5
-	; Peephole branch 1 - inverted bne and eliminated jmp
+	beq	%2
+	; Peephole BNE - inverted bne and eliminated jmp
 %1:
-} if labelInRange(%5), labelRefCountChange(%1 -1)
+} if labelInRange(%2), labelRefCountChange(%1 -1)
 
 replace restart {
 	beq	%1
-	jmp	%5
+	jmp	%2
 %1:
 } by {
-	bne	%5
-	; Peephole branch 2 - inverted beq and eliminated jmp
+	bne	%2
+	; Peephole BEQ - inverted beq and eliminated jmp
 %1:
-} if labelInRange(%5), labelRefCountChange(%1 -1)
+} if labelInRange(%2), labelRefCountChange(%1 -1)
 
 replace restart {
 	bcc	%1
-	jmp	%5
+	jmp	%2
 %1:
 } by {
-	bcs	%5
-	; Peephole branch 3 - inverted bcc and eliminated jmp
+	bcs	%2
+	; Peephole BCC - inverted bcc and eliminated jmp
 %1:
-} if labelInRange(%5), labelRefCountChange(%1 -1)
+} if labelInRange(%2), labelRefCountChange(%1 -1)
 
 replace restart {
 	bcs	%1
-	jmp	%5
+	jmp	%2
 %1:
 } by {
-	bcc	%5
-	; Peephole branch 4 - inverted bcs and eliminated jmp
+	bcc	%2
+	; Peephole BCS - inverted bcs and eliminated jmp
 %1:
-} if labelInRange(%5), labelRefCountChange(%1 -1)
+} if labelInRange(%2), labelRefCountChange(%1 -1)
 
 replace restart {
 	bpl	%1
-	jmp	%5
+	jmp	%2
 %1:
 } by {
-	bmi	%5
-	; Peephole branch 5 - inverted bpl and eliminated jmp
+	bmi	%2
+	; Peephole BPL - inverted bpl and eliminated jmp
 %1:
-} if labelInRange(%5), labelRefCountChange(%1 -1)
+} if labelInRange(%2), labelRefCountChange(%1 -1)
 
 replace restart {
 	bmi	%1
-	jmp	%5
+	jmp	%2
 %1:
 } by {
-	bpl	%5
-	; Peephole branch 6 - inverted bmi and eliminated jmp
+	bpl	%2
+	; Peephole BMI - inverted bmi and eliminated jmp
 %1:
-} if labelInRange(%5), labelRefCountChange(%1 -1)
+} if labelInRange(%2), labelRefCountChange(%1 -1)
 
 replace restart {
 	bvc	%1
-	jmp	%5
+	jmp	%2
 %1:
 } by {
-	bvs	%5
-	; Peephole branch 7 - inverted bvc and eliminated jmp
+	bvs	%2
+	; Peephole BVC - inverted bvc and eliminated jmp
 %1:
-} if labelInRange(%5), labelRefCountChange(%1 -1)
+} if labelInRange(%2), labelRefCountChange(%1 -1)
 
 replace restart {
 	bvs	%1
-	jmp	%5
+	jmp	%2
 %1:
 } by {
-	bvc	%5
-	; Peephole branch 8 - inverted bvs and eliminated jmp
+	bvc	%2
+	; Peephole BVS - inverted bvs and eliminated jmp
 %1:
-} if labelInRange(%5), labelRefCountChange(%1 -1)
+} if labelInRange(%2), labelRefCountChange(%1 -1)
 
 ////////////////////////////////////////////////////////
 // Replace branch to jmp with branch
@@ -1035,23 +1036,23 @@ replace restart {
 replace restart {
 	%1	%5
 } by {
-	; Peephole branch 9 - replaced branch to jmp with branch
+	; Peephole BRJMP - replaced branch to jmp with branch
 	%1	%6
-} if same(%1 'bne' 'beq' 'bcc' 'bcs' 'bvc' 'bvs' 'bpl' 'bmi'), labelIsUncondJump(%5), notSame(%5 %6), labelInRange(%6), labelRefCountChange(%5 -1), labelRefCountChange(%6 +1)
+} if same(%1 'bne' 'beq' 'bcc' 'bcs' 'bvc' 'bvs' 'bpl' 'bmi' 'bra'), labelIsUncondJump(%5), notSame(%5 %6), labelInRange(%6), labelRefCountChange(%5 -1), labelRefCountChange(%6 +1)
 
 replace restart {
 	jmp	%5
 } by {
-	; Peephole branch 10 - replaced jmp to jmp with jmp
+	; Peephole DJMP - replaced jmp to jmp with jmp
 	jmp	%6
 } if labelIsUncondJump(%5), notSame(%5 %6), labelRefCountChange(%5 -1), labelRefCountChange(%6 +1)
 
 replace restart {
-	jmp	%5
+	jmp	%1
 } by {
-	; Peephole branch 11 - replaced jmp to rts with rts
+	; Peephole JMPRET - replaced jmp to rts with rts
 	rts
-} if optimizeReturn(), labelIsReturnOnly(%5), labelRefCountChange(%5 -1)
+} if optimizeReturn(), labelIsReturnOnly(%1), labelRefCountChange(%1 -1)
 
 ////////////////////////////////////////////////////////
 // Remove dead code
@@ -1088,7 +1089,7 @@ replace restart {
 %1:
 	rts
 } by {
-    ; Peephole ret 1 - eliminated redundant rts
+    ; Peephole DRET - eliminated redundant rts
 %1:
 	rts
 }
@@ -1098,7 +1099,7 @@ replace restart {
 	rts
 } by {
 	jmp	%1
-	; Peephole ret 2 - tail call optimization.
+	; Peephole TAIL - tail call optimization.
 } if optimizeReturn()
 
 ////////////////////////////////////////////////////////
@@ -1109,6 +1110,6 @@ replace restart {
 replace restart {
 %1:
 } by {
-	; Peephole label - removed redundant label %1
+	; Peephole LABEL - removed redundant label %1
 } if labelRefCount(%1 0)
 
