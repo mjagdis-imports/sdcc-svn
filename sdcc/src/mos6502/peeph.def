@@ -6,37 +6,37 @@ replace restart {
 	lda %1
 } by {
 	; Peephole dead LA1 - removed dead lda %1
-} if notVolatile(%1), notUsed('a' 'z' 'n')
+} if notVolatile(%1), notUsed('n' 'z' 'a')
 
 replace restart {
 	lda %1, %2
 } by {
 	; Peephole dead LA2 - removed dead lda %1,%2
-} if notVolatile(%1), notUsed('a' 'z' 'n')
+} if notVolatile(%1), notUsed('n' 'z' 'a')
 
 replace restart {
 	ldx %1
 } by {
 	; Peephole dead LX1 - removed dead ldx %1
-} if notVolatile(%1), notUsed('x' 'z' 'n')
+} if notVolatile(%1), notUsed('n' 'z' 'x')
 
 replace restart {
 	ldx %1, %2
 } by {
 	; Peephole dead LX2 - removed dead ldx %1,%2
-} if notVolatile(%1), notUsed('x' 'z' 'n')
+} if notVolatile(%1), notUsed('n' 'z' 'x')
 
 replace restart {
 	ldy %1
 } by {
 	; Peephole dead LY1 - removed dead ldy %1
-} if notVolatile(%1), notUsed('y' 'z' 'n')
+} if notVolatile(%1), notUsed('n' 'z' 'y')
 
 replace restart {
 	ldy %1, %2
 } by {
 	; Peephole dead LY2 - removed dead ldy %1,%2
-} if notVolatile(%1), notUsed('y' 'z' 'n')
+} if notVolatile(%1), notUsed('n' 'z' 'y')
 
 ////////////////////////////////////////////////////////
 // Dead stores
@@ -98,19 +98,19 @@ replace restart {
 	%1
 } by {
 	; Peephole dead transfer TA - removed dead %1
-} if same(%1 'txa' 'tya'), notUsed('a' 'z' 'n')
+} if same(%1 'txa' 'tya'), notUsed('n' 'z' 'a')
 
 replace restart {
 	%1
 } by {
 	; Peephole dead transfer TX - removed dead %1
-} if same(%1 'tax' 'tsx' ), notUsed('x' 'z' 'n')
+} if same(%1 'tax' 'tsx' ), notUsed('n' 'z' 'x')
 
 replace restart {
 	tay
 } by {
 	; Peephole dead transfer TY - removed dead tay
-} if notUsed('y' 'z' 'n')
+} if notUsed('n' 'z' 'y')
 
 ////////////////////////////////////////////////////////
 // Dead operations
@@ -120,37 +120,37 @@ replace restart {
 	%1 %2
 } by {
 	; Peephole dead logic LOP - removed dead  %1 %2
-} if same(%1 'and' 'ora' 'eor'), notUsed('a' 'z' 'n')
+} if same(%1 'and' 'ora' 'eor'), notUsed('n' 'z' 'a')
 
 replace restart {
 	%1 %2
 } by {
 	; Peephole dead shift SOP - removed dead  %1 a
-} if same(%1 'asl' 'lsr' 'rol' 'ror'), same(%2 'a'), notUsed('a' 'z' 'n' 'c')
+} if same(%1 'asl' 'lsr' 'rol' 'ror'), same(%2 'a'), notUsed('c' 'n' 'z' 'a')
 
 replace restart {
 	%1 %2
 } by {
 	; Peephole dead arith AOP - removed dead  %1 %2
-} if same(%1 'adc' 'sbc'), notUsed('a' 'z' 'n' 'c' 'v')
+} if same(%1 'adc' 'sbc'), notUsed('v' 'c' 'n' 'z' 'a')
 
 replace restart {
 	%1 %2
 } by {
 	; Peephole dead arith AOP - removed dead  %1 a
-} if same(%1 'inc' 'dec'), same(%2 'a'), notUsed('a' 'z' 'n')
+} if same(%1 'inc' 'dec'), same(%2 'a'), notUsed('n' 'z' 'a')
 
 replace restart {
 	%1
 } by {
 	; Peephole dead X op XOP - removed dead  %1
-} if same(%1 'inx' 'dex'), notUsed('x' 'z' 'n')
+} if same(%1 'inx' 'dex'), notUsed('n' 'z' 'x')
 
 replace restart {
 	%1
 } by {
 	; Peephole dead Y op YOP - removed dead  %1
-} if same(%1 'iny' 'dey'), notUsed('y' 'z' 'n')
+} if same(%1 'iny' 'dey'), notUsed('n' 'z' 'y')
 
 replace restart {
 	%1
@@ -738,7 +738,7 @@ replace restart {
 } by {
 	; Peephole SXA - replaced txa/sta with stx %1
         stx %1
-} if notUsed('a' 'n' 'z')
+} if notUsed('n' 'z' 'a')
 
 replace restart {
 	tya
@@ -746,7 +746,7 @@ replace restart {
 } by {
 	; Peephole SYA - replaced tya/sta with sty %1
         sty %1
-} if notUsed('a' 'n' 'z')
+} if notUsed('n' 'z' 'a')
 
 replace restart {
 	tax
@@ -754,7 +754,7 @@ replace restart {
 } by {
 	; Peephole SAX - replaced tax/stx with sta %1
         sta %1
-} if notUsed('x' 'n' 'z')
+} if notUsed('n' 'z' 'x')
 
 replace restart {
 	tay
@@ -762,7 +762,7 @@ replace restart {
 } by {
 	; Peephole SAY - replaced tay/sty with sta %1
         sta %1
-} if notUsed('y' 'n' 'z')
+} if notUsed('n' 'z' 'y')
 
 ////////////////////////////////////////////////////////
 // Remove redundant/unnecessary stack operations
@@ -773,7 +773,7 @@ replace restart {
 	pha
 } by {
 	; Peephole STK1 - removed dead pla/pha
-} if notUsed('a' 'n' 'z')
+} if notUsed('n' 'z' 'a')
 
 replace restart {
 	pha
