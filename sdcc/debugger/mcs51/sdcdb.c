@@ -1548,7 +1548,7 @@ char *completionMain(const char *text, int state)
 
           for (i=0; i < (sizeof(cmdTab)/sizeof(struct cmdtab)) ; i++)
             {
-              if (!strncmp(rl_line_buffer+start,cmdTab[i].cmd,len) &&
+              if (!strncmp(rl_line_buffer+start, cmdTab[i].cmd, len) &&
                   cmdTab[i].cmd[len] == '\0')
                 {
                   compl_func = cmdTab[i].completion_func;
@@ -1565,6 +1565,26 @@ char *completionMain(const char *text, int state)
 #endif  /* HAVE_READLINE_COMPLETITION */
 
 /*-----------------------------------------------------------------*/
+/* commandGets - Get a command line using gets()                   */
+/*-----------------------------------------------------------------*/
+static int commandGets(FILE *cmdfile)
+{
+  if ( cmdfile == stdin )
+    {
+      if (sim_cmd_mode)
+        printf("(sim) ");
+      else
+        fprintf(stdout, "%s", cmdGetPrompt());
+      fflush(stdout);
+    }
+
+  if (fgets(cmdbuff, sizeof(cmdbuff), cmdfile) == NULL)
+    return 1;
+  
+  return 0;
+}
+
+/*-----------------------------------------------------------------*/
 /* commandLoop - the main command loop or loop over command file   */
 /*-----------------------------------------------------------------*/
 static void commandLoop(FILE *cmdfile)
@@ -1573,6 +1593,7 @@ static void commandLoop(FILE *cmdfile)
 #ifdef HAVE_LIBREADLINE
   char *line_read;
 
+  int is_tty = cmdfile == stdin && isatty(STDIN_FILENO);
   FILE *old_rl_instream, *old_rl_outstream;
   actualcmdfile = cmdfile;
 
@@ -1595,54 +1616,53 @@ static void commandLoop(FILE *cmdfile)
 
   while (1)
     {
-      if ( cmdfile == stdin )
+      /* If not attached to a TTY and confirm is disabled, read using gets as we are not interactive */
+      if (!is_tty && !cmdGetConfirm())
         {
-          if (sim_cmd_mode)
-            line_read = (char*)readline ("(sim) ");
+          if (commandGets(cmdfile))
+            break;
+        }
+      else
+        {
+          if (cmdfile == stdin)
+            {
+              if (sim_cmd_mode)
+                line_read = (char*)readline ("(sim) ");
+              else
+                line_read = (char*)readline (cmdGetPrompt());
+            }
           else
-            line_read = (char*)readline ("(sdcdb) ");
-        }
-      else
-        line_read = (char*)readline ("");
+            line_read = (char*)readline ("");
 
-      if (line_read)
-        {
-          /* If the line has any text in it,
-             save it on the history. */
-          if (line_read && *line_read)
-              add_history (line_read);
+          if (line_read)
+            {
+              /* If the line has any text in it,
+                 save it on the history. */
+              if (*line_read)
+                add_history (line_read);
 
-           // FIX: readline returns malloced string.
-           //   should check the source to verify it can be used
-           //    directly. for now - just copy it to cmdbuff.
-           strcpy(cmdbuff,line_read);
+              // FIX: readline returns malloced string.
+              //   should check the source to verify it can be used
+              //    directly. for now - just copy it to cmdbuff.
+              strcpy(cmdbuff,line_read);
 #if defined(_WIN32) || defined(HAVE_RL_FREE)
-            rl_free(line_read);
+              rl_free(line_read);
 #else
-            free(line_read);
+              free(line_read);
 #endif
-            line_read = NULL;
-        }
-      else
-        {
-          break;  // EOF
+              line_read = NULL;
+            }
+          else
+            {
+              break;  // EOF
+            }
         }
 #else  /* HAVE_LIBREADLINE */
   actualcmdfile = cmdfile;
 
   while (1)
     {
-      if ( cmdfile == stdin )
-        {
-          if (sim_cmd_mode)
-              printf("(sim) ");
-          else
-              fprintf(stdout,"(sdcdb) ");
-          fflush(stdout);
-        }
-      //fprintf(stderr,"commandLoop actualcmdfile=%p cmdfile=%p\n",
-      //        actualcmdfile,cmdfile);
-      if (fgets(cmdbuff,sizeof(cmdbuff),cmdfile) == NULL)
+      if (commandGets(cmdfile))
           break;
 #endif  /* HAVE_LIBREADLINE */
 

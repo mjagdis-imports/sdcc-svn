@@ -1,3 +1,10 @@
+2026-08-17 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* debugger/mcs51/cmd.c,
+	* debugger/mcs51/cmd.h,
+	* debugger/mcs51/sdcdb.c: applied slightly modified patch #269
+	  Thanks Peter Dons Tychsen
+
 2026-08-16 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/mos6502/peep.c:

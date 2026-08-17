@@ -40,6 +40,8 @@ static module *list_mod = NULL;
 
 EXTERN_STACK_DCL(callStack,function *,1024)
 
+static char *version= "SDCDB " SDCDB_VERSION "\n";
+
 #if defined(__APPLE__) && defined(__MACH__)
 static char *copying=
 {" GNU GENERAL PUBLIC LICENSE Version 2"};
@@ -334,9 +336,12 @@ static  int printOrSetSymValue (symbol *sym, context *cctxt,
                                 int flg, int dnum, int fmt,
                                 char *rs, char *val, char cmp);
 
-int srcMode = SRC_CMODE ;
-set *dispsymbols = NULL   ; /* set of displayable symbols */
-static int currentFrame = 0;        /* actual displayed frame     */
+int srcMode = SRC_CMODE;
+set *dispsymbols = NULL;                /* set of displayable symbols */
+static int currentFrame = 0;            /* actual displayed frame     */
+static char prompt[100] = "(sdcdb) ";   /* current prompt             */
+static int confirm = 1;                 /* current confirm setting    */
+
 /*-----------------------------------------------------------------*/
 /* funcWithName - returns function with name                       */
 /*-----------------------------------------------------------------*/
@@ -1356,8 +1361,45 @@ int cmdSetOption (char *s, context *cctxt)
       return 0;
     }
 
+  if (strncmp(s, "confirm", 8) == 0)
+    {
+      s = trim_left(s+8);
+      s = trim_right(s);
+      if (strcmp(s, "on") == 0)
+        confirm = 1;
+      else if (strcmp(s, "off") == 0)
+        confirm = 0;
+      else
+        fprintf(stderr, "'set confirm %s' not valid\n", s);
+      return 0;
+    }
+
+  if (strncmp(s, "prompt", 7) == 0)
+    {
+      strncpy(prompt, s+7, sizeof(prompt));
+      /* make sure prompt is terminated */
+      prompt[sizeof(prompt)-1] = 0;
+      return 0;
+    }
+
   fprintf (stderr, "'set %s' command not yet implemented\n", s);
   return 0;
+}
+
+/*-----------------------------------------------------------------*/
+/* cmdGetPompt - Get the current prompt                            */
+/*-----------------------------------------------------------------*/
+char *cmdGetPrompt(void)
+{
+  return prompt;
+}
+
+/*-----------------------------------------------------------------*/
+/* cmdGetConfirm - Get the current confirm setting                 */
+/*-----------------------------------------------------------------*/
+int cmdGetConfirm(void)
+{
+  return confirm;
 }
 
 /*-----------------------------------------------------------------*/
@@ -3560,5 +3602,13 @@ int cmdShow (char *s, context *cctxt)
       return 0;
     }
 
+
+  if (strcmp (s, "version") == 0)
+    {
+      fputs (version, stdout);
+      return 0;
+    }
+
   return 0;
 }
+
