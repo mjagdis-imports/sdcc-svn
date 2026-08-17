@@ -1,5 +1,7 @@
 2026-08-17 Maarten Brock <sourceforge.brock AT dse.nl>
 
+	* debugger/mcs51/simi.c: applied patch #445, Thanks Mark Symonds
+
 	* debugger/mcs51/cmd.c,
 	* debugger/mcs51/cmd.h,
 	* debugger/mcs51/sdcdb.c: applied slightly modified patch #269

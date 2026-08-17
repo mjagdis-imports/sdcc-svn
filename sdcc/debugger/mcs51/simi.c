@@ -65,6 +65,8 @@ char simactive = 0;
 
 static memcache_t memCache[NMEM_CACHE];
 
+#define WAIT_PERIOD 200                /* Simulator wait period in millisecs. */
+
 /*-----------------------------------------------------------------*/
 /* get data from  memory cache/ load cache from simulator          */
 /*-----------------------------------------------------------------*/
@@ -92,7 +94,7 @@ static char *getMemCache(unsigned int addr,int cachenum, unsigned int size)
           sprintf(cache->buffer,"dx 0x%x 0x%x\n",laddr,laddr+0xff );
           sendSim(cache->buffer);
         }
-      waitForSim(100,NULL);
+      waitForSim(WAIT_PERIOD, NULL);
       resp = simResponse();
       cache->addr = strtol(resp,0,0);
       buf = cache->buffer;
@@ -302,7 +304,9 @@ void openSimulator (char **args, int nargs)
       exit(1);
     }
   /* now that we have opened, wait for the prompt */
-  waitForSim(200, NULL);
+  waitForSim(WAIT_PERIOD, NULL);
+  if (!isalnum(simibuff[0] || !isalnum(simibuff[1]))
+    waitForSim(WAIT_PERIOD, NULL);  
   simactive = 1;
 }
 #else
@@ -411,7 +415,7 @@ void openSimulator (char **args, int nargs)
       exit(1);
     }
   /* now that we have opened, wait for the prompt */
-  waitForSim(200,NULL);
+  waitForSim(WAIT_PERIOD, NULL);
   simactive = 1;
 }
 #endif
@@ -504,7 +508,7 @@ void simSetPC( unsigned int addr )
   char buffer[40];
   sprintf(buffer,"pc %d\n", addr);
   sendSim(buffer);
-  waitForSim(100,NULL);
+  waitForSim(WAIT_PERIOD, NULL);
   simResponse();
 }
 
@@ -532,7 +536,7 @@ int simSetValue (unsigned int addr,char mem, unsigned int size, unsigned long va
     }
   sprintf(s,"\n");
   sendSim(buffer);
-  waitForSim(100,NULL);
+  waitForSim(WAIT_PERIOD, NULL);
   simResponse();
   return 0;
 }
@@ -561,7 +565,7 @@ unsigned long simGetValue (unsigned int addr,char mem, unsigned int size)
     {
       /* create the simulator command */
       sendSim(buffer);
-      waitForSim(100,NULL);
+      waitForSim(WAIT_PERIOD, NULL);
       resp = simResponse();
 
       /* got the response we need to parse it the response
@@ -613,7 +617,7 @@ void simSetBP (unsigned int addr)
 
   sprintf(buff, "break 0x%x\n", addr);
   sendSim(buff);
-  waitForSim(100, NULL);
+  waitForSim(WAIT_PERIOD, NULL);
 }
 
 /*-----------------------------------------------------------------*/
@@ -625,7 +629,7 @@ void simClearBP (unsigned int addr)
 
   sprintf(buff, "clear 0x%x\n", addr);
   sendSim(buff);
-  waitForSim(100, NULL);
+  waitForSim(WAIT_PERIOD, NULL);
 }
 
 /*-----------------------------------------------------------------*/
@@ -638,7 +642,7 @@ void simLoadFile (char *s)
   sprintf(buff, "file \"%s\"\n", s);
   printf("%s",buff);
   sendSim(buff);
-  waitForSim(500, NULL);
+  waitForSim(WAIT_PERIOD * 5, NULL);
 }
 
 /*-----------------------------------------------------------------*/
@@ -647,7 +651,7 @@ void simLoadFile (char *s)
 unsigned int simGoTillBp ( unsigned int gaddr)
 {
   char *sr;
-  int wait_ms = 1000;
+  int wait_ms = WAIT_PERIOD * 10;
 
   invalidateCache(XMEM_CACHE);
   invalidateCache(IMEM_CACHE);
@@ -671,17 +675,17 @@ unsigned int simGoTillBp ( unsigned int gaddr)
   else if (gaddr == -1)
     { /* resume */
       sendSim ("run\n");
-      wait_ms = 100;
+      wait_ms = WAIT_PERIOD;
     }
   else if (gaddr == 1 )
     { /* nexti or next */
       sendSim ("next\n");
-      wait_ms = 100;
+      wait_ms = WAIT_PERIOD;
     }
   else if (gaddr == 2 )
     { /* stepi or step */
       sendSim ("step\n");
-      wait_ms = 100;
+      wait_ms = WAIT_PERIOD;
     }
   else
     {
@@ -715,7 +719,7 @@ unsigned int simGoTillBp ( unsigned int gaddr)
 
   /* better solution: ask pc */
   sendSim ("pc\n");
-  waitForSim(100, NULL);
+  waitForSim(WAIT_PERIOD, NULL);
   sr = simResponse();
   nointerrupt = 0;
 
@@ -732,7 +736,7 @@ void simReset (void)
   invalidateCache(IMEM_CACHE);
   invalidateCache(SREG_CACHE);
   sendSim("res\n");
-  waitForSim(100, NULL);
+  waitForSim(WAIT_PERIOD, NULL);
 }
 
 /*-----------------------------------------------------------------*/
