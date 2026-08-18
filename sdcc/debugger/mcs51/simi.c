@@ -215,12 +215,12 @@ static PROCESS_INFORMATION *execSimulator(char **args, int nargs)
 
 void openSimulator (char **args, int nargs)
 {
-    struct sockaddr_in sin;
-    int retry = 0;
-    int i;
-    int iResult;
-    int fh;
-    u_long iMode;
+  struct sockaddr_in sin;
+  int retry = 0;
+  int i;
+  int iResult;
+  int fh;
+  u_long iMode;
 
   init_winsock();
 
@@ -335,15 +335,15 @@ static int execSimulator(char **args, int nargs)
 
 void openSimulator (char **args, int nargs)
 {
-    struct sockaddr_in sin;
-    int retry = 0;
-    int i;
-    int iResult;
+  struct sockaddr_in sin;
+  int retry = 0;
+  int i;
+  int iResult;
 #if defined(__sun) || defined(__CYGWIN__)
-    u_long iMode;
+  u_long iMode;
 #endif
 
-    Dprintf(D_simi, ("simi: openSimulator\n"));
+  Dprintf(D_simi, ("simi: openSimulator\n"));
 #ifdef SDCDB_DEBUG
   if (D_simi & sdcdbDebug)
     {
