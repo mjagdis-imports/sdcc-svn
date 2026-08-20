@@ -1,7 +1,12 @@
+2026-08-20 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* snap.php:
+	  Fix farm regression test result handling for hyphens in hostnames.
+
 2026-08-15 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* snap.php:
-	  Fix farm regression test result handling for inclusion of hostnames in filenames, fix display of column for fuzzed regressiont esting results.
+	  Fix farm regression test result handling for inclusion of hostnames in filenames, fix display of column for fuzzed regression testing results.
 
 2026-08-14 Philipp Klaus Krause <philipp@colecovision.eu>
 
