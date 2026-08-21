@@ -37,7 +37,7 @@ L       [a-zA-Z_$]
 E       [Ee][+-]?{D}+
 BE      [Pp][+-]?{D}+
 FS      (f|F|l|L|df|dd|dl|DF|DD|DL)
-IS      [uUlL]*
+IS      [uUlLzZ]*
 WB      (((u|U)(wb|WB))|((wb|WB)(u|U)?))
 CP      (L|u|U|u8)
 HASH    (#|%:)
@@ -238,6 +238,7 @@ static void checkCurrFile (const char *s);
 "__iar"                 { count (); TKEYWORD (IAR); }
 "__cosmic"              { count (); TKEYWORD (COSMIC); }
 "__dynamicc"            { count (); TKEYWORD (DYNAMICC); }
+"__builtin__"           { count (); return BUILTIN; }
 "__sdcccall"            { count (); return SDCCCALL; }
 "__preserves_regs"      { count (); return PRESERVES_REGS; }
 "__z88dk_fastcall"      { count (); TKEYWORD (Z88DK_FASTCALL); }
@@ -246,7 +247,7 @@ static void checkCurrFile (const char *s);
 "__z88dk_params_offset" { count (); return Z88DK_PARAMS_OFFSET; }
 "__addressmod"          { count (); return ADDRESSMOD; }
 "__typeof"              { count (); return TYPEOF; }
-
+"_Optional"             { count (); return OPTIONAL; }
 
 ({L}|{UCN}|{UTF8IDF1ST})({L}|{D}|{UCN}|{UTF8IDF})*  {
   if (!options.std_c95)
@@ -705,6 +706,7 @@ enum {
    P_OVERLAY_,     /* I had a strange conflict with P_OVERLAY while */
                    /* cross-compiling for MINGW32 with gcc 3.2 */
    P_NOOVERLAY,
+   P_NOSIDECHANNELS,
    P_LESSPEDANTIC,
    P_NOGCSE,
    P_CALLEE_SAVES,
@@ -956,6 +958,17 @@ doPragma (int id, const char *name, const char *cp)
         }
 
       options.noOverlay = 1;
+      break;
+
+    case P_NOSIDECHANNELS:
+      cp = get_pragma_token(cp, &token);
+      if (TOKEN_EOL != token.type)
+        {
+          err = 1;
+          break;
+        }
+
+      optimize.nosidechannels = true;
       break;
 
     case P_LESSPEDANTIC:
@@ -1273,6 +1286,7 @@ static struct pragma_s pragma_tbl[] = {
   { "nogcse",              P_NOGCSE,              0, doPragma },
   { "overlay",             P_OVERLAY_,            0, doPragma },
   { "nooverlay",           P_NOOVERLAY,           0, doPragma },
+  { "nosidechannels",      P_NOSIDECHANNELS,      0, doPragma },
   { "callee_saves",        P_CALLEE_SAVES,        0, doPragma },
   { "exclude",             P_EXCLUDE,             0, doPragma },
   { "noiv",                P_NOIV,                0, doPragma },

@@ -25,6 +25,6 @@ f (int *q)
 void
 testTortureExecute (void)
 {
-  ASSERT (f ((int __code *) 0xffffffff) == 0);
+  ASSERT (f ((int __xdata *) 0xffffffff) == 0);
   return;
 }

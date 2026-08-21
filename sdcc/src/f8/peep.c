@@ -184,8 +184,9 @@ f8instructionSize (lineNode *pl)
     else
       werrorfl("unknown", 0, W_UNRECOGNIZED_ASM, __func__, 999, pl->line);
 
-  if (lineIsInst (pl, "adc") || lineIsInst (pl, "add") || lineIsInst (pl, "and") ||  lineIsInst (pl, "cp") ||
-    lineIsInst (pl, "or") || lineIsInst (pl, "sbc") || lineIsInst (pl, "sub") || lineIsInst (pl, "xor"))
+  if (larg &&
+    (lineIsInst (pl, "adc") || lineIsInst (pl, "add") || lineIsInst (pl, "and") ||  lineIsInst (pl, "cp") ||
+    lineIsInst (pl, "or") || lineIsInst (pl, "sbc") || lineIsInst (pl, "sub") || lineIsInst (pl, "xor")))
     {
       if (!strncmp (larg, "xl", 2) && isReg8 (rarg))
         return 1;
@@ -205,10 +206,11 @@ f8instructionSize (lineNode *pl)
         return 4;
     }
 
-  if (lineIsInst (pl, "bool") || lineIsInst (pl, "clr") || lineIsInst (pl, "daa") || lineIsInst (pl, "dec") ||
+  if (larg &&
+    (lineIsInst (pl, "bool") || lineIsInst (pl, "clr") || lineIsInst (pl, "daa") || lineIsInst (pl, "dec") ||
     lineIsInst (pl, "inc") ||  lineIsInst (pl, "pop") ||  lineIsInst (pl, "push") ||  lineIsInst (pl, "rlc") ||
     lineIsInst (pl, "rrc") || lineIsInst (pl, "sll") || lineIsInst (pl, "sra") || lineIsInst (pl, "srl") ||
-    lineIsInst (pl, "thrd") || lineIsInst (pl, "tst"))
+    lineIsInst (pl, "thrd") || lineIsInst (pl, "tst")))
     {
       if (!strncmp (larg, "xl", 2))
         return 1;
@@ -220,11 +222,12 @@ f8instructionSize (lineNode *pl)
         return 3;
     }
 
-  if (!IS_F8L && (lineIsInst (pl, "adcw") || lineIsInst (pl, "sbcw") && !rarg[0]) ||
+  if (larg &&
+    (!IS_F8L && lineIsInst (pl, "adcw") || !IS_F8L && lineIsInst (pl, "sbcw") && (!rarg || !rarg[0]) ||
     !IS_F8L && lineIsInst (pl, "boolw") || lineIsInst (pl, "clrw") || !IS_F8L && lineIsInst (pl, "decw") || lineIsInst (pl, "incw") ||
     !IS_F8L && lineIsInst (pl, "incnw") || !IS_F8L && lineIsInst (pl, "mul") || !IS_F8L && lineIsInst (pl, "negw") || lineIsInst (pl, "popw") ||
     lineIsInst (pl, "pushw") || !IS_F8L && lineIsInst (pl, "sllw") || !IS_F8L && lineIsInst (pl, "sraw") || !IS_F8L && lineIsInst (pl, "srlw") ||
-    !IS_F8L && lineIsInst (pl, "rlcw") || !IS_F8L && lineIsInst (pl, "rrcw") || lineIsInst (pl, "tstw"))
+    !IS_F8L && lineIsInst (pl, "rlcw") || !IS_F8L && lineIsInst (pl, "rrcw") || lineIsInst (pl, "tstw")))
     {
       if (larg[0] == 'y')
         return 1;
@@ -236,10 +239,14 @@ f8instructionSize (lineNode *pl)
         return 3;
     }
 
-  if (lineIsInst (pl, "xch") && larg[0] == 'f' && isSprel (rarg))
+  if (lineIsInst (pl, "xch") && larg && larg[0] == 'f' && rarg && isSprel (rarg))
     return 1;
-  else if (lineIsInst (pl, "xch"))
+  else if (larg && lineIsInst (pl, "xch"))
     return 1 + (larg[0] != 'y');
+  else if(lineIsInst (pl, "xchw") && larg && rarg && isSprel (rarg))
+    return 2 + (larg[0] != 'y');
+  else if(lineIsInst (pl, "xchw") && larg && rarg)
+    return 1 + (larg[0] != 'x');
   
   if (lineIsInst (pl, "addw") && !strncmp (larg, "sp", 2) && rarg[0] == '#')
     return 2;
@@ -252,7 +259,7 @@ f8instructionSize (lineNode *pl)
         return 3;
     }
 
-  if (!IS_F8L && (lineIsInst (pl, "addw") || lineIsInst (pl, "cpw") || lineIsInst (pl, "orw") || lineIsInst (pl, "sbcw") ||
+  if (!IS_F8L && larg && rarg && (lineIsInst (pl, "addw") || lineIsInst (pl, "cpw") || lineIsInst (pl, "orw") || lineIsInst (pl, "sbcw") ||
     lineIsInst (pl, "subw") || lineIsInst (pl, "xorw")))
     {
       if (larg[0] == 'y' && rarg[0] == 'x')
@@ -269,7 +276,7 @@ f8instructionSize (lineNode *pl)
         return 4;
     }
 
-  if (lineIsInst (pl, "ld"))
+  if (larg && lineIsInst (pl, "ld"))
     {
       if (!strncmp (larg, "xl", 2) && isReg8 (rarg))
         return 1;
@@ -299,10 +306,10 @@ f8instructionSize (lineNode *pl)
         return 4;
     }
 
-  if (!IS_F8L && (lineIsInst (pl, "ldi") || lineIsInst (pl, "ldwi")) && isYrel (larg))
+  if (!IS_F8L && larg && (lineIsInst (pl, "ldi") || lineIsInst (pl, "ldwi")) && isYrel (larg))
     return 2;
 
-  if (lineIsInst (pl, "ldw"))
+  if (larg && lineIsInst (pl, "ldw"))
     {
       if (larg[0] == 'y' && rarg[0] == 'x')
         return 1;
@@ -332,7 +339,7 @@ f8instructionSize (lineNode *pl)
         return 4;
     }
 
-  if (!IS_F8L && lineIsInst (pl, "rot"))
+  if (larg && (lineIsInst (pl, "msk") || !IS_F8L && lineIsInst (pl, "rot")))
     {
       if (!strncmp (larg, "xl", 2))
         return 2;
@@ -340,7 +347,7 @@ f8instructionSize (lineNode *pl)
         return 3;
     }
 
-  if (!IS_F8L && (lineIsInst (pl, "zex") || lineIsInst (pl, "sex")))
+  if (!IS_F8L && larg && (lineIsInst (pl, "zex") || lineIsInst (pl, "sex")))
     {
       if (!strncmp (larg, "y", 1) && !strncmp (rarg, "xl", 2))
         return 1;
@@ -351,7 +358,7 @@ f8instructionSize (lineNode *pl)
   if (!IS_F8L && lineIsInst (pl, "mad"))
     return 1;
 
-  if (lineIsInst (pl, "call") || lineIsInst (pl, "jp"))
+  if (larg && (lineIsInst (pl, "call") || lineIsInst (pl, "jp")))
     {
       if (larg[0] == 'y')
         return 1;
@@ -367,7 +374,7 @@ f8instructionSize (lineNode *pl)
       else
         return 2;
     }
-  else if (!IS_F8L && lineIsInst (pl, "dnjnz"))
+  else if (!IS_F8L && larg && lineIsInst (pl, "dnjnz"))
     {
       if (!strncmp (larg, "yh", 2))
         return 2;
@@ -400,7 +407,7 @@ f8MightReadFlag (const lineNode *pl, const char *what)
     return false;
   if (lineIsInst (pl, "rlc") || lineIsInst (pl, "rrc"))
     return !strcmp (what, "cf");
-  if (lineIsInst (pl, "addw") || lineIsInst (pl, "orw") || lineIsInst (pl, "subw"))
+  if (lineIsInst (pl, "addw") || lineIsInst (pl, "orw") || lineIsInst (pl, "subw") || lineIsInst (pl, "xorw"))
     return false;
   if (lineIsInst (pl, "adcw") || lineIsInst (pl, "rlcw") || lineIsInst (pl, "rrcw") || lineIsInst (pl, "sbcw"))
     return !strcmp (what, "cf");
@@ -483,7 +490,21 @@ static bool argCont(const char *arg, char what)
         return false;
     }
 
-  return (strchr(arg, what));
+  while (arg[0])
+    {
+      if (arg[0] == ';') // Start of end-of-line comment
+        return false;
+      if (arg[0] == what)
+        return true;
+      if (arg[0] == '#') // Skip lit prefix
+        do
+          arg++;
+        while (isalnum (arg[0]));
+      else
+        arg++;
+    }
+
+  return false;
 }
 
 static bool
@@ -532,7 +553,7 @@ f8MightRead (const lineNode *pl, const char *what)
   // 16-bit 2/1-op inst, and some others.
   if (lineIsInst (pl, "clrw") || lineIsInst (pl, "popw"))
     return false;
-  if (lineIsInst (pl, "adcw") || lineIsInst (pl, "addw") || lineIsInst (pl, "boolw") || lineIsInst (pl, "cpw") || lineIsInst (pl, "decw") || lineIsInst (pl, "incw") || lineIsInst (pl, "mul") || lineIsInst (pl, "negw") || lineIsInst (pl, "orw") || lineIsInst (pl, "pushw") || lineIsInst (pl, "rlcw") || lineIsInst (pl, "rrcw") || lineIsInst (pl, "sllw") || lineIsInst (pl, "sraw") || lineIsInst (pl, "srlw") || lineIsInst (pl, "subw") || lineIsInst (pl, "sbcw") || lineIsInst (pl, "tstw") || lineIsInst (pl, "incnw") || lineIsInst (pl, "xorw"))
+  if (lineIsInst (pl, "adcw") || lineIsInst (pl, "addw") || lineIsInst (pl, "boolw") || lineIsInst (pl, "cpw") || lineIsInst (pl, "decw") || lineIsInst (pl, "incw") || lineIsInst (pl, "mul") || lineIsInst (pl, "negw") || lineIsInst (pl, "orw") || lineIsInst (pl, "pushw") || lineIsInst (pl, "rlcw") || lineIsInst (pl, "rrcw") || lineIsInst (pl, "sllw") || lineIsInst (pl, "sraw") || lineIsInst (pl, "srlw") || lineIsInst (pl, "subw") || lineIsInst (pl, "sbcw") || lineIsInst (pl, "tstw") || lineIsInst (pl, "incnw") || lineIsInst (pl, "xchw") || lineIsInst (pl, "xorw"))
     {
       const char *larg = lineArg (pl, 0);
       const char *rarg = lineArg (pl, 1);
@@ -572,6 +593,14 @@ f8MightRead (const lineNode *pl, const char *what)
       if (argCont (larg + 1, extra))
         return true;
       return false;
+    }
+  if (lineIsInst (pl, "msk"))
+    {
+      const char *larg = lineArg (pl, 0);
+      const char *rarg = lineArg (pl, 1);
+
+      if (larg && rarg)
+        return (argCont (larg + 1, extra) || rarg[0] == what[0] && rarg[1] == what[1]);
     }
   if (lineIsInst (pl, "sex") || lineIsInst (pl, "zex"))
     {
@@ -654,7 +683,7 @@ f8SurelyWritesFlag (const lineNode *pl, const char *what)
     }
   if (lineIsInst (pl, "clrw") || lineIsInst (pl, "pushw"))
     return false;
-  if (lineIsInst (pl, "orw"))
+  if (lineIsInst (pl, "orw") || lineIsInst (pl, "xorw"))
     return (!strcmp (what, "of") || !strcmp (what, "zf") || !strcmp (what, "nf"));
   if (lineIsInst (pl, "tstw"))
     return strcmp (what, "hf");

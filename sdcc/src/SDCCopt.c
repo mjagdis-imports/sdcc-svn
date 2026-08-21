@@ -188,12 +188,12 @@ cnvToFcall (iCode * ic, eBBlock * ebp)
       /* push right */
       if (IS_REGPARM (FUNC_ARGS(func->type)->next->etype))
         {
-          newic = newiCodeParm (SEND, right, func->type, &bytesPushed);
+          newic = newiCodeParm (SEND, right, NULL, func->type, &bytesPushed);
           newic->argreg = SPEC_ARGREG (FUNC_ARGS (func->type)->next->etype);
         }
       else
         {
-          newic = newiCodeParm (IPUSH, right, func->type, &bytesPushed);
+          newic = newiCodeParm (IPUSH, right, NULL, func->type, &bytesPushed);
         }
 
       hTabAddItem (&iCodehTab, newic->key, newic);
@@ -206,12 +206,12 @@ cnvToFcall (iCode * ic, eBBlock * ebp)
       /* insert push left */
       if (IS_REGPARM (FUNC_ARGS(func->type)->etype))
         {
-          newic = newiCodeParm (SEND, left, func->type, &bytesPushed);
+          newic = newiCodeParm (SEND, left, NULL, func->type, &bytesPushed);
           newic->argreg = SPEC_ARGREG (FUNC_ARGS (func->type)->etype);
         }
       else
         {
-          newic = newiCodeParm (IPUSH, left, func->type, &bytesPushed);
+          newic = newiCodeParm (IPUSH, left, NULL, func->type, &bytesPushed);
         }
       hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
@@ -259,14 +259,14 @@ prependCast (iCode *ic, operand *op, sym_link *type, eBBlock *ebb)
 {
   if (IS_OP_LITERAL (op))
     {
-      operand *newop = operandFromValue (valCastLiteral (type, operandLitValue (op), operandLitValue (op)), false);
+      operand *newop = operandFromValue (valCastLiteral (type, operandLitValue (op), operandLitValueUll (op)), false);
       if (isOperandEqual (op, IC_LEFT (ic)))
         IC_LEFT (ic) = newop;
       if (isOperandEqual (op, IC_RIGHT (ic)))
         IC_RIGHT (ic) = newop;
       return;
     }
-            
+
   iCode *newic = newiCode (CAST, operandFromLink (type), op);
   hTabAddItem (&iCodehTab, newic->key, newic);
 
@@ -361,8 +361,8 @@ cnvToFloatCast (iCode *ic, eBBlock *ebp)
 
   if (IS_BOOLEAN (type))
     {
-      wassert(multypes[0][1] == UCHARTYPE);
-      func = conv[0][0][1];
+      wassert(multypes[0][0] == UCHARTYPE);
+      func = conv[0][0][0];
       goto found;
     }
 
@@ -400,7 +400,7 @@ found:
         }
       else
         {
-          newic = newiCodeParm (IPUSH, ic->right, func->type, &bytesPushed);
+          newic = newiCodeParm (IPUSH, ic->right, NULL, func->type, &bytesPushed);
         }
       hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
@@ -506,7 +506,7 @@ found:
         }
       else
         {
-          newic = newiCodeParm (IPUSH, ic->right, func->type, &bytesPushed);
+          newic = newiCodeParm (IPUSH, ic->right, NULL, func->type, &bytesPushed);
         }
       hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
@@ -629,7 +629,7 @@ found:
         }
       else
         {
-          newic = newiCodeParm (IPUSH, ic->right, func->type, &bytesPushed);
+          newic = newiCodeParm (IPUSH, ic->right, NULL, func->type, &bytesPushed);
         }
       hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
@@ -743,7 +743,7 @@ found:
         }
       else
         {
-          newic = newiCodeParm (IPUSH, ic->right, func->type, &bytesPushed);
+          newic = newiCodeParm (IPUSH, ic->right, NULL, func->type, &bytesPushed);
         }
       hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
@@ -819,7 +819,7 @@ convilong (iCode *ic, eBBlock *ebp)
       if ((op == '*' || op == '/' || op == '%') && port->hasNativeMulFor && port->hasNativeMulFor (ic, operandType (IC_LEFT (ic)), operandType (IC_RIGHT (ic)))) // Avoid introducing calls to non-existing support functions.
         return;
     }
-  
+
   symbol *func = NULL;
   iCode *ip = ic->next;
   iCode *newic;
@@ -839,9 +839,9 @@ convilong (iCode *ic, eBBlock *ebp)
   right = ic->right;
 
   // Special case: 16x16->32 multiplication.
-  if (op == '*' && (muls16tos32[0] || muls16tos32[1] || port->hasNativeMulFor) &&
-    (IS_SYMOP (left) && bitVectnBitsOn (OP_DEFS (left)) == 1 && bitVectnBitsOn (OP_USES (left)) == 1 || IS_OP_LITERAL (left) && operandLitValue (left) < 32768 && operandLitValue (left) >= -32768) &&
-    (IS_SYMOP (right) && bitVectnBitsOn (OP_DEFS (right)) == 1 && bitVectnBitsOn (OP_USES (right)) == 1 || IS_OP_LITERAL (right) && operandLitValue (right) < 32768 && operandLitValue (right) >= -32768) &&
+  if (op == '*' && (mul_16_16_32[0] || mul_16_16_32[1] || port->hasNativeMulFor) &&
+    (IS_SYMOP (left) && bitVectnBitsOn (OP_DEFS (left)) == 1 || IS_OP_LITERAL (left) && operandLitValue (left) < (1ll << 15) && operandLitValue (left) >= -(1ll << 15)) &&
+    (IS_SYMOP (right) && bitVectnBitsOn (OP_DEFS (right)) == 1 || IS_OP_LITERAL (right) && operandLitValue (right) < (1ll << 15) && operandLitValue (right) >= -(1ll << 15)) &&
     getSize (leftType) == 4 && getSize (rightType) == 4)
     {
       iCode *lic = IS_SYMOP (left) ? hTabItemWithKey (iCodehTab, bitVectFirstBit (OP_DEFS (left))) : 0;
@@ -850,70 +850,145 @@ convilong (iCode *ic, eBBlock *ebp)
       if ((!lic || lic->op == CAST && IS_INTEGRAL (operandType (lic->right)) && getSize (operandType (lic->right)) == 2 && SPEC_USIGN (operandType (lic->right)) == SPEC_USIGN (operandType (left))) &&
         (!ric || ric->op == CAST && IS_INTEGRAL (operandType (ric->right)) && getSize (operandType (ric->right)) == 2 && SPEC_USIGN (operandType (ric->right)) == SPEC_USIGN (operandType (right))))
         {
-          func = muls16tos32[SPEC_USIGN (operandType (left))];
+          func = mul_16_16_32[SPEC_USIGN (operandType (left))];
+          sym_link *optype =  lic ? operandType (lic->right) : operandType (ric->right);
+          bool native = port->hasNativeMulFor && port->hasNativeMulFor (ic, optype, optype);
 
-          if (func || port->hasNativeMulFor && lic && ric && port->hasNativeMulFor (ic, operandType (lic->right), operandType (ric->right)))
+          if (func || native)
             {
-              if (lic)
+              if (!lic)
+                ic->left = operandFromValue (valCastLiteral (optype, operandLitValue (left), operandLitValueUll (left)), false);
+              else if (bitVectnBitsOn (OP_USES (left)) > 1)
+                prependCast (ic, ic->left, operandType (lic->right), ebp);
+              else
                 {
                   lic->op = '=';
-                  OP_SYMBOL (left)->type = newIntLink ();
+                  setOperandType (left, optype);
                 }
-              else
-                ic->left = operandFromValue (valCastLiteral (newIntLink(), operandLitValue (left), operandLitValue (left)), false);
 
-              if (ric)
+              if (!ric)
+                ic->right = operandFromValue (valCastLiteral (optype, operandLitValue (right), operandLitValueUll (right)), false);
+              else if (bitVectnBitsOn (OP_USES (right)) > 1)
+                prependCast (ic, ic->right, operandType (ric->right), ebp);
+              else
                 {
                   ric->op = '=';
-                  OP_SYMBOL (right)->type = newIntLink ();
+                  setOperandType (right, optype);
                 }
-              else
-                ic->right = operandFromValue (valCastLiteral (newIntLink(), operandLitValue (right), operandLitValue (right)), false);
 
-              if (func) // Use 16x16->32 support function
+              if (!native) // Use support function
                 goto found;
-              else // Native
+              else
                 return;
             }
         }
     }
-  if (op == '*' && (mulu32u8tou64 || port->hasNativeMulFor) &&
-    (IS_SYMOP (left) && bitVectnBitsOn (OP_DEFS (left)) == 1 && bitVectnBitsOn (OP_USES (left)) == 1 /*|| IS_OP_LITERAL (left) && operandLitValue (left) < 256 && operandLitValue (left) >= 0*/) &&
-    (IS_SYMOP (right) && bitVectnBitsOn (OP_DEFS (right)) == 1 && bitVectnBitsOn (OP_USES (right)) == 1 /*|| IS_OP_LITERAL (right) && operandLitValue (right) < 256 && operandLitValue (right) >= 0*/) &&
+  if (op == '*' && (mul_u32_u8_64 || port->hasNativeMulFor) &&
+    (IS_SYMOP (left) && bitVectnBitsOn (OP_DEFS (left)) == 1 || IS_OP_LITERAL (left) && operandLitValue (left) <= 255 && operandLitValue (left) >= 0) &&
+    (IS_SYMOP (right) && bitVectnBitsOn (OP_DEFS (right)) == 1 || IS_OP_LITERAL (right) && operandLitValue (right) <= 255 && operandLitValue (right) >= 0) &&
     getSize (leftType) == 8 && getSize (rightType) == 8)
     {
       iCode *lic = IS_SYMOP (left) ? hTabItemWithKey (iCodehTab, bitVectFirstBit (OP_DEFS (left))) : 0;
       iCode *ric = IS_SYMOP (right) ? hTabItemWithKey (iCodehTab, bitVectFirstBit (OP_DEFS (right))) : 0;
 
-      if ((lic && lic->op == CAST && IS_INTEGRAL (operandType (lic->right)) && getSize (operandType (lic->right)) <= 4 && SPEC_USIGN (operandType (lic->right))) && // Todo: Allow !lic / !ric for literal operands?
-        (ric && ric->op == CAST && IS_INTEGRAL (operandType (ric->right)) && getSize (operandType (ric->right)) <= 1 && SPEC_USIGN (operandType (ric->right))))
+      bool swapop = false;
+      if (ric && ric->op == CAST && getSize (operandType (ric->right)) > 1 || IS_OP_LITERAL (right) && (operandLitValue (right) < 0 || operandLitValue (right) > 255))
         {
-          func = mulu32u8tou64;
+          iCode *tic = lic;
+          lic = ric;
+          ric = tic;
+          swapop = true;
+        }
+      sym_link *roptype =  (ric && ric->op == CAST) ? operandType (ric->right) : UCHARTYPE;
 
-          if (func || port->hasNativeMulFor && lic && ric && port->hasNativeMulFor (ic, operandType (lic->right), operandType (ric->right)))
+      if ((lic && lic->op == CAST && IS_INTEGRAL (operandType (lic->right)) && getSize (operandType (lic->right)) <= 4 && SPEC_USIGN (operandType (lic->right))) && // todo: allow literal left?
+        (!ric || ric->op == CAST && IS_INTEGRAL (operandType (ric->right)) && getSize (operandType (ric->right)) <= 1 && SPEC_USIGN (operandType (ric->right))))
+        {
+          func = mul_u32_u8_64;
+
+          if (func || port->hasNativeMulFor && lic && ric && port->hasNativeMulFor (ic, operandType (lic->right), roptype))
             {
-              if (lic)
+              if (swapop)
                 {
-                  if (getSize (operandType (IC_RIGHT (lic))) == 4)
+                  operand *top = ic->left;
+                  ic->left = ic->right;
+                  ic->right = top;
+                  left = ic->left;
+                  right = ic->right;
+                }
+
+              if (!lic)
+                ic->left = operandFromValue (valCastLiteral (newLongLink(), operandLitValue (left), operandLitValueUll (left)), false);
+              else
+                {
+                  if (getSize (operandType (lic->right)) == 4)
                     lic->op = '=';
                   OP_SYMBOL (left)->type = newLongLink ();
                   SPEC_USIGN (OP_SYMBOL (left)->type) = 1;
                 }
-              else
-                ic->left = operandFromValue (valCastLiteral (newIntLink(), operandLitValue (left), operandLitValue (left)), false);
 
-              if (ric)
+              if (!ric)
+                ic->right = operandFromValue (valCastLiteral (roptype, operandLitValue (right), operandLitValueUll (right)), false);
+              else
                 {
                   ric->op = '=';
                   OP_SYMBOL (right)->type = newCharLink ();
-                  SPEC_USIGN (OP_SYMBOL (left)->type) = 1;
+                  SPEC_USIGN (OP_SYMBOL (right)->type) = 1;
                 }
-              else
-                ic->right = operandFromValue (valCastLiteral (newIntLink(), operandLitValue (right), operandLitValue (right)), false);
 
-              if (func) // Use 32x8->64 support function
+              if (func) // Use support function
                 goto found;
               else // Native
+                return;
+            }
+        }
+      if (swapop)
+        {
+          iCode *tic = lic;
+          lic = ric;
+          ric = tic;
+        }
+    }
+  if (op == '*' && (mul_32_32_64[0] || mul_16_16_32[1] || port->hasNativeMulFor) &&
+    (IS_SYMOP (left) && bitVectnBitsOn (OP_DEFS (left)) == 1 || IS_OP_LITERAL (left) && operandLitValue (left) < (1ll << 31) && operandLitValue (left) >= -(1ll << 31)) &&
+    (IS_SYMOP (right) && bitVectnBitsOn (OP_DEFS (right)) == 1 || IS_OP_LITERAL (right) && operandLitValue (right) < (1ll << 31) && operandLitValue (right) >= -(1ll << 31)) &&
+    getSize (leftType) == 8 && getSize (rightType) == 8)
+    {
+      iCode *lic = IS_SYMOP (left) ? hTabItemWithKey (iCodehTab, bitVectFirstBit (OP_DEFS (left))) : 0;
+      iCode *ric = IS_SYMOP (right) ? hTabItemWithKey (iCodehTab, bitVectFirstBit (OP_DEFS (right))) : 0;
+
+      if ((!lic || lic->op == CAST && IS_INTEGRAL (operandType (lic->right)) && getSize (operandType (lic->right)) == 4 && SPEC_USIGN (operandType (lic->right)) == SPEC_USIGN (operandType (left))) &&
+        (!ric || ric->op == CAST && IS_INTEGRAL (operandType (ric->right)) && getSize (operandType (ric->right)) == 4 && SPEC_USIGN (operandType (ric->right)) == SPEC_USIGN (operandType (right))))
+        {
+          func = mul_32_32_64[SPEC_USIGN (operandType (left))];
+          sym_link *optype =  lic ? operandType (lic->right) : operandType (ric->right);
+          bool native = port->hasNativeMulFor && port->hasNativeMulFor (ic, optype, optype);
+
+          if (func || native)
+            {
+              if (!lic)
+                ic->left = operandFromValue (valCastLiteral (optype, operandLitValue (left), operandLitValueUll (left)), false);
+              else if (bitVectnBitsOn (OP_USES (left)) > 1)
+                prependCast (ic, ic->left, operandType (lic->right), ebp);
+              else
+                {
+                  lic->op = '=';
+                  setOperandType (left, optype);
+                }
+
+              if (!ric)
+                ic->right = operandFromValue (valCastLiteral (optype, operandLitValue (right), operandLitValueUll (right)), false);
+              else if (bitVectnBitsOn (OP_USES (right)) > 1)
+                prependCast (ic, ic->right, operandType (ric->right), ebp);
+              else
+                {
+                  ric->op = '=';
+                  setOperandType (right, optype);
+                }
+
+              if (!native) // Use support function
+                goto found;
+              else
                 return;
             }
         }
@@ -935,7 +1010,7 @@ convilong (iCode *ic, eBBlock *ebp)
       for (su = 0; su < 4 && muldivmod >= 0; su++)
         {
           if ((compareType (leftType, multypes[0][su%2], false) == 1) &&
-              (compareType (rightType, multypes[0][su/2], false) == 1))
+              (compareType (rightType, multypes[0][su == 1 || su == 2], false) == 1))
             {
               func = muldiv[muldivmod][0][su];
               goto found;
@@ -989,9 +1064,11 @@ convilong (iCode *ic, eBBlock *ebp)
   fprintf (stderr, "ic %d op %d leftType: ", ic->key, op); printTypeChain (leftType, stderr); fprintf (stderr, "\n");
   return;
 found:
+  wassert (func);
+
   // Update left and right - they might have changed due to inserted casts.
-  left = IC_LEFT (ic);
-  right = IC_RIGHT (ic);
+  left = ic->left;
+  right = ic->right;
   unsetDefsAndUses (ic);
   remiCodeFromeBBlock (ebp, ic);
 
@@ -1045,7 +1122,7 @@ found:
         }
       else
         {
-          newic = newiCodeParm (IPUSH, ic->right, func->type, &bytesPushed);
+          newic = newiCodeParm (IPUSH, ic->right, NULL, func->type, &bytesPushed);
         }
       hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
@@ -1062,7 +1139,7 @@ found:
         }
       else
         {
-          newic = newiCodeParm (IPUSH, ic->left, func->type, &bytesPushed);
+          newic = newiCodeParm (IPUSH, ic->left, NULL, func->type, &bytesPushed);
         }
       hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
@@ -1141,7 +1218,8 @@ convbuiltin (iCode *const ic, eBBlock *ebp)
       /* TODO: Eliminate it, convert any SEND of volatile into DUMMY_READ_VOLATILE. */
       /* For now just convert back to call to make sure any volatiles are read. */
 
-      strcpy(OP_SYMBOL (IC_LEFT (icc))->rname, !strcmp (bif->name, "__builtin_memcpy") ? "___memcpy" : (!strcmp (bif->name, "__builtin_strncpy") ? "_strncpy" : "_memset"));
+      // memcpy is special, we might get an builtin memcpy here, even if string.h was never included, and no memcpy is visible, so we need to convert to __memcpy instead.
+      strcpy (OP_SYMBOL (IC_LEFT (icc))->rname, !strcmp (bif->name, "__builtin_memcpy") ? "___memcpy" : (!strcmp (bif->name, "__builtin_strncpy") ? "_strncpy" : "_memset"));
       goto convert;
     }
 
@@ -1161,6 +1239,8 @@ convert:
   /* Convert parameter passings from SEND to PUSH. */
   stack = 0;
   struct value *args;
+  symbol *nonbuiltin_memcpy = findSym (SymbolTab, NULL, "__memcpy");
+  wassert (nonbuiltin_memcpy);
   for (icc = ic, args = FUNC_ARGS (nonbuiltin_memcpy->type); icc->op != CALL; icc = icc->next, args = args->next)
     {
       wassert (args);
@@ -1568,7 +1648,7 @@ separateAddressSpaces (eBBlock **ebbs, int count)
           if (right && IS_SYMOP (right))
             rightaddrspace = getAddrspace (OP_SYMBOL (right)->type);
           if (result && IS_SYMOP (result))
-            { 
+            {
               if (POINTER_SET (ic))
                 {
                   assert (!(IS_DECL (OP_SYMBOL (result)->type) && DCL_PTR_ADDRSPACE (OP_SYMBOL (result)->type)));
@@ -1764,7 +1844,7 @@ isLocalWithoutDef (symbol * sym)
 }
 
 static void
-replaceRegEqvOperand (iCode * ic, operand ** opp, int force_isaddr, int new_isaddr)
+replaceRegEqvOperand (iCode *ic, operand **opp, int force_isaddr, int new_isaddr)
 {
   operand * op = *opp;
   symbol * sym = OP_SYMBOL (op);
@@ -1780,6 +1860,10 @@ replaceRegEqvOperand (iCode * ic, operand ** opp, int force_isaddr, int new_isad
       operand * nop;
 
       nop = operandFromOperand (OP_REQV (op));
+      nop->isConstEliminated = op->isConstEliminated;
+      nop->isRestrictEliminated = op->isRestrictEliminated;
+      nop->isOptionalEliminated = op->isOptionalEliminated;
+      nop->isSemDeref = op->isSemDeref;
 
       /* Copy def/use info from true symbol to register equivalent */
       /* but only if this hasn't been done already. */
@@ -1826,7 +1910,7 @@ replaceRegEqv (ebbIndex *ebbi)
               if (ic->result && IS_AGGREGATE (operandType (ic->result)))
                 setOperandType (ic->result, aggrToPtr (operandType (ic->result), false));
             }
-          
+
           if (SKIP_IC2 (ic))
             continue;
 
@@ -1920,17 +2004,102 @@ findReqv (symbol * prereqv, eBBlock ** ebbs, int count)
   return NULL;
 }
 
+static int
+killiCode (eBBlock **ebbs, int i, int count, iCode *ic)
+{
+  bool volLeft = IS_SYMOP (IC_LEFT (ic)) && isOperandVolatile (IC_LEFT (ic), FALSE);
+  bool volRight = IS_SYMOP (IC_RIGHT (ic))  && isOperandVolatile (IC_RIGHT (ic), FALSE);
+
+  // A dead address-of operation should die, even if taking the address of a volatile object.
+  if (ic->op == ADDRESS_OF)
+    volLeft = false;
+
+  if (ic->next && ic->seqPoint == ic->next->seqPoint
+      && (ic->next->op == '+' || ic->next->op == '-'))
+    {
+      if (isOperandEqual (ic->left, ic->next->left)
+          || isOperandEqual (ic->left, ic->next->right))
+        volLeft = false;
+      if (isOperandEqual (ic->right, ic->next->left)
+          || isOperandEqual (ic->right, ic->next->right))
+        volRight = false;
+    }
+
+  if (POINTER_GET (ic) && IS_VOLATILE (operandType (ic->left)->next))
+    {
+      if (ic->result && SPIL_LOC (ic->result))
+        {
+          bitVectUnSetBit (OP_DEFS (ic->result), ic->key);
+          IC_RESULT (ic) = newiTempFromOp (ic->result);
+          SPIL_LOC (ic->result) = NULL;
+        }
+      return 0;
+    }
+
+  /* now delete from defUseSet */
+  deleteItemIf (&ebbs[i]->outExprs, ifDiCodeIsX, ic);
+  bitVectUnSetBit (ebbs[i]->outDefs, ic->key);
+
+  /* and defset of the block */
+  bitVectUnSetBit (ebbs[i]->defSet, ic->key);
+
+  if (ic->result)
+    bitVectUnSetBit (OP_DEFS (ic->result), ic->key);
+
+  /* If this is the last of a register equivalent, */
+  /* look for a successor register equivalent. */
+  if (IS_ITEMP (ic->result)
+      && OP_SYMBOL (ic->result)->isreqv
+      && bitVectIsZero (OP_DEFS (ic->result)))
+    {
+      symbol * resultsym = OP_SYMBOL (ic->result);
+      symbol * prereqv = resultsym->prereqv;
+      if (prereqv && prereqv->reqv && (OP_SYMBOL (prereqv->reqv) == resultsym))
+        {
+          operand * newreqv;
+          IC_RESULT (ic) = NULL;
+          newreqv = findReqv (prereqv, ebbs, count);
+          if (newreqv)
+            prereqv->reqv = newreqv;
+        }
+    }
+  ic->result = NULL;
+
+  if (volLeft || volRight)
+    {
+      /* something is volatile, so keep the iCode */
+      /* and change the operator instead */
+      ic->op = DUMMY_READ_VOLATILE;
+      /* keep only the volatile operands */
+      if (!volLeft)
+        ic->left = NULL;
+      if (!volRight)
+        ic->right = NULL;
+    }
+  else
+    {
+      /* nothing is volatile, eliminate the iCode */
+      unsetDefsAndUses (ic);
+      remiCodeFromeBBlock (ebbs[i], ic);
+      /* for the left & right remove the usage */
+      if (IS_SYMOP (ic->left) && OP_SYMBOL (ic->left)->isstrlit)
+        freeStringSymbol (OP_SYMBOL (ic->left));
+      if (IS_SYMOP (ic->right) && OP_SYMBOL (ic->right)->isstrlit)
+        freeStringSymbol (OP_SYMBOL (ic->right));
+    }
+  return 1;
+}
+
 /*-----------------------------------------------------------------*/
 /* killDeadCode - eliminates dead assignments                      */
 /*-----------------------------------------------------------------*/
 int
-killDeadCode (ebbIndex * ebbi)
+killDeadCode (ebbIndex *ebbi, bool cleanblocks)
 {
-  eBBlock ** ebbs = ebbi->dfOrder;
+  eBBlock **ebbs = ebbi->dfOrder;
   int count = ebbi->count;
   int change = 1;
   int gchange = 0;
-  int i = 0;
 
   /* basic algorithm :-                                          */
   /* first the exclusion rules :-                                */
@@ -1949,17 +2118,26 @@ killDeadCode (ebbIndex * ebbi)
     {
       change = 0;
       /* for all blocks do */
-      for (i = 0; i < count; i++)
+      for (int i = 0; i < count; i++)
         {
           iCode *ic;
 
           /* for all instructions in the block do */
           for (ic = ebbs[i]->sch; ic; ic = ic->next)
             {
-              int kill, j;
-              kill = 0;
+              int j;
+              bool kill = false;
 
-              if (SKIP_IC (ic) && ic->op != RECEIVE ||
+              if (cleanblocks) // Fix for bug #3998, but don't do it too early, toa void a regression in diagnostics.
+                // Get rid of computations in unreachable blocks early, so we don't leave dead defs/uses for iTemps, that might confuse other optimizations.
+                if (ebbs[i]->noPath && (IS_ITEMP (ic->result) || IS_ITEMP (ic->left) || IS_ITEMP (ic->right)))
+                  {
+                    kill = true;
+                    goto kill;
+                  }
+
+              if (SKIP_IC (ic) && ic->op != RECEIVE &&
+                !(ic->op == CALL && IS_SYMOP (ic->left) && OP_SYMBOL (ic->left)->funcPure && optimize.purity) ||
                   ic->op == IFX ||
                   ic->op == RETURN ||
                   ic->op == DUMMY_READ_VOLATILE ||
@@ -1995,7 +2173,7 @@ killDeadCode (ebbIndex * ebbi)
               /* does this definition reach the end of the block
                  or the usage is zero then we can kill */
               if (!bitVectBitValue (ebbs[i]->outDefs, ic->key))
-                kill = 1;       /* if not we can kill it */
+                kill = true;       // if not we can kill it
               else
                 {
                   /* if this is a global variable or function parameter */
@@ -2008,7 +2186,7 @@ killDeadCode (ebbIndex * ebbi)
                   /* if we are sure there are no usages */
                   if (bitVectIsZero (OP_USES (IC_RESULT (ic))))
                     {
-                      kill = 1;
+                      kill = true;
                       goto kill;
                     }
 
@@ -2019,106 +2197,25 @@ killDeadCode (ebbIndex * ebbi)
                   if (applyToSet (ebbs[i]->succList, isDefAlive, ic))
                     continue;
 
-                  kill = 1;
+                  kill = true;
                 }
 
-            kill:
-              /* kill this one if required */
+            kill: // kill this one if required
               if (kill)
                 {
-                  bool volLeft = IS_SYMOP (IC_LEFT (ic))
-                                 && isOperandVolatile (IC_LEFT (ic), FALSE);
-                  bool volRight = IS_SYMOP (IC_RIGHT (ic))
-                                  && isOperandVolatile (IC_RIGHT (ic), FALSE);
-
-                  /* a dead address-of operation should die, even if volatile */
-                  if (ic->op == ADDRESS_OF)
-                    volLeft = FALSE;
-
-                  if (ic->next && ic->seqPoint == ic->next->seqPoint
-                      && (ic->next->op == '+' || ic->next->op == '-'))
+                  if (ic->op == CALL) // Also kill parameter passing iCodes
                     {
-                      if (isOperandEqual (IC_LEFT(ic), IC_LEFT(ic->next))
-                          || isOperandEqual (IC_LEFT(ic), IC_RIGHT(ic->next)))
-                        volLeft = FALSE;
-                      if (isOperandEqual (IC_RIGHT(ic), IC_LEFT(ic->next))
-                          || isOperandEqual (IC_RIGHT(ic), IC_RIGHT(ic->next)))
-                        volRight = FALSE;
-                    }
-
-                  if (POINTER_GET (ic) && IS_VOLATILE (operandType (IC_LEFT (ic))->next))
-                    {
-                      if (SPIL_LOC (IC_RESULT (ic)))
+                      value *args = FUNC_ARGS (OP_SYMBOL (ic->left)->type);
+                      for (iCode *pic = ic->prev; pic && (pic->op == SEND || pic->op == IPUSH && pic->parmPush || pic->op == IPUSH_VALUE_AT_ADDRESS || pic->op == '=' && isParameterToCall (args, pic->result)); pic = pic->prev)
                         {
-                          bitVectUnSetBit (OP_DEFS (ic->result), ic->key);
-                          IC_RESULT (ic) = newiTempFromOp (IC_RESULT (ic));
-                          SPIL_LOC (IC_RESULT (ic)) = NULL;
-                        }
-                      continue;
-                    }
-
-                  change = 1;
-                  gchange++;
-
-                  /* now delete from defUseSet */
-                  deleteItemIf (&ebbs[i]->outExprs, ifDiCodeIsX, ic);
-                  bitVectUnSetBit (ebbs[i]->outDefs, ic->key);
-
-                  /* and defset of the block */
-                  bitVectUnSetBit (ebbs[i]->defSet, ic->key);
-
-                  /* If this is the last of a register equivalent, */
-                  /* look for a successor register equivalent. */
-                  bitVectUnSetBit (OP_DEFS (IC_RESULT (ic)), ic->key);
-                  if (IS_ITEMP (IC_RESULT (ic))
-                      && OP_SYMBOL (IC_RESULT (ic))->isreqv
-                      && bitVectIsZero (OP_DEFS (IC_RESULT (ic))))
-                    {
-                      symbol * resultsym = OP_SYMBOL (IC_RESULT (ic));
-                      symbol * prereqv = resultsym->prereqv;
-
-                      if (prereqv && prereqv->reqv && (OP_SYMBOL (prereqv->reqv) == resultsym))
-                        {
-                          operand * newreqv;
-
-                          IC_RESULT (ic) = NULL;
-                          newreqv = findReqv (prereqv, ebbs, count);
-                          if (newreqv)
-                            {
-                              prereqv->reqv = newreqv;
-                            }
+                          int c = killiCode (ebbs, i, count, pic);
+                          change += c;
+                          gchange += c;
                         }
                     }
-
-                  /* delete the result */
-                  if (IC_RESULT (ic))
-                    bitVectUnSetBit (OP_DEFS (IC_RESULT (ic)), ic->key);
-                  IC_RESULT (ic) = NULL;
-
-                  if (volLeft || volRight)
-                    {
-                      /* something is volatile, so keep the iCode */
-                      /* and change the operator instead */
-                      ic->op = DUMMY_READ_VOLATILE;
-
-                      /* keep only the volatile operands */
-                      if (!volLeft)
-                        IC_LEFT (ic) = NULL;
-                      if (!volRight)
-                        IC_RIGHT (ic) = NULL;
-                    }
-                  else
-                    {
-                      /* nothing is volatile, eliminate the iCode */
-                      unsetDefsAndUses (ic);
-                      remiCodeFromeBBlock (ebbs[i], ic);
-
-                      /* for the left & right remove the usage */
-                      if (IS_SYMOP (ic->left) && OP_SYMBOL (ic->left)->isstrlit)
-                        freeStringSymbol (OP_SYMBOL (ic->left));
-                      if (IS_SYMOP (ic->right) && OP_SYMBOL (ic->right)->isstrlit)
-                        freeStringSymbol (OP_SYMBOL (ic->right));
-                    }
+                  int c = killiCode (ebbs, i, count, ic);
+                  change += c;
+                  gchange += c;
                 }
             }                   /* end of all instructions */
 
@@ -2145,6 +2242,196 @@ printCyclomatic (eBBlock ** ebbs, int count)
 
   /* print the information */
   werror (I_CYCLOMATIC, currFunc->name, nEdges, nNodes, nEdges - nNodes + 2);
+}
+
+/*-----------------------------------------------------------------*/
+/* checkStaticArrayParams - try to warn if a [static] parameter is */
+/* not an array of sufficient size. Also try to warn on deref.     */
+/* of invalid pointer. Also warnings for other array parameters.   */
+/*-----------------------------------------------------------------*/
+static void
+checkStaticArrayParams (ebbIndex *ebbi)
+{
+  eBBlock ** ebbs = ebbi->bbOrder;
+  int count = ebbi->count;
+
+  for (int i = 0; i < count; i++)
+    for (iCode *ic = ebbs[i]->sch; ic; ic = ic->next)
+      {
+        if (ic->left && ic->left->isSemDeref)
+          {
+            const struct valinfo v = getOperandValinfo (ic, ic->left, false);
+            if ((v.anything || !v.nonnull) && ic->left->isSemDeref)
+              werrorfl (ic->filename, ic->lineno, W_OPTIONAL_PTR_DEREF);
+          }
+        if (ic->right && ic->right->isSemDeref)
+          {
+            const struct valinfo v = getOperandValinfo (ic, ic->right, false);
+            if ((v.anything || !v.nonnull) && ic->right->isSemDeref)
+              werrorfl (ic->filename, ic->lineno, W_OPTIONAL_PTR_DEREF);
+          }
+        if (ic->result && ic->result->isSemDeref)
+          {
+            const struct valinfo v = getOperandValinfo (ic, ic->right, false);
+            if ((v.anything || !v.nonnull) && ic->result->isSemDeref)
+              werrorfl (ic->filename, ic->lineno, W_OPTIONAL_PTR_DEREF);
+          }
+
+        if ((ic->op == IPUSH || ic->op == SEND) &&
+          ic->right || // variable arguments lack type information (and so do some arguments to builtin functions).
+          ic->op == '=' && IS_PARM (ic->result))
+          {
+            operand *argop;
+            sym_link *paramtype;
+            if (ic->op == '=')
+              {
+                argop = ic->right;
+                paramtype = operandType (ic->result);
+              }
+            else
+              {
+                argop = ic->left;
+                paramtype = operandType (ic->right);
+              }
+
+            if (IS_DECL (paramtype) && !isOptional (paramtype->next) && (DCL_STATIC_ARRAY_PARAM (paramtype) || DCL_ELEM (paramtype) || DCL_ELEM_AST (paramtype))) // Only check array parameters.
+              {
+                unsigned long paramsize;
+                if (DCL_ELEM (paramtype) != 0) // Array size is an integer constant
+                  paramsize = DCL_ELEM (paramtype) * getSize (paramtype->next);
+                else if (DCL_ELEM_AST (paramtype))
+                  {
+                    // Find sym used in array size. Also for simple arithmetic expressions like (sym * N + M).
+                    symbol *sym;
+                    long long pscale = 1;
+                    long long poffset = 0;
+                    ast *ast = DCL_ELEM_AST (paramtype);
+                    if (IS_AST_OP (ast) && ast->opval.op == '+' && ast->right && IS_LITERAL (ast->right->ftype))
+                      {
+                        value *rval = valFromType (ast->right->ftype);
+                        if (floatFromVal (rval) >= -4096 && floatFromVal (rval) < 4096)
+                          {
+                            poffset = floatFromVal (rval);
+                            ast = ast->left;
+                          }
+                      }
+                    if (IS_AST_OP (ast) && ast->opval.op == '*' && ast->right && IS_LITERAL (ast->right->ftype))
+                      {
+                        value *rval = valFromType (ast->right->ftype);
+                        if (floatFromVal (rval) >= 0 && floatFromVal (rval) < 4096)
+                          {
+                            pscale = floatFromVal (rval);
+                            ast = ast->left;
+                          }
+                      }
+                    if (IS_AST_SYM_VALUE (ast))
+                      sym = AST_SYMBOL (ast);
+                    else
+                      continue;
+
+                    // Find called function
+                    iCode *cic;
+                    for (cic = ic->next; cic && cic->op != CALL  && cic->op != PCALL; cic = cic->next);
+                    if (!cic) // call not found.
+                      continue;
+                    sym_link *dtype = operandType (cic->left);
+                    sym_link *ftype = IS_FUNCPTR (dtype) ? dtype->next : dtype;
+
+                    // Find parameter for symbol.
+                    value *v;
+                    for (v = FUNC_ARGS (ftype); v; v = v->next)
+                      if (v->sym && !strcmp(v->sym->name, sym->name))
+                        break;
+                    if (!v)
+                      continue;
+
+                    // Find pic where the corresponding argument is passed.
+                    iCode *pic;
+                    operand *pargop;
+                    for (pic = cic->prev; pic; pic = pic->prev)
+                      {
+                        if ((pic->op == IPUSH || pic->op == SEND) && pic->right || pic->op == '=' && IS_PARM (pic->result))
+                          {
+                            if (pic->op == '=')
+                              pargop = pic->right;
+                            else
+                              pargop = pic->left;
+                            if (pic->op != '=' && IS_VALOP (pic->right) && !strcmp (OP_VALUE (pic->right)->sym->name, sym->name))
+                              break;
+                            if (pic->op == '=' && !strcmp (OP_SYMBOL(pic->result)->name, sym->name))
+                              break;
+                          }
+                        else
+                          {
+                            pic = NULL;
+                            break;
+                          }
+                      }
+                    if (!pic)
+                      continue;
+
+                    // Deduce bound
+                    const struct valinfo vi = getOperandValinfo (pic, pargop, false);
+                    long long pargv = (vi.anything || vi.min < 0 || vi.min > ULONG_MAX) ? 0 : vi.min;
+                    pargv *= pscale;
+                    pargv += poffset;
+                    if (pargv < 1) // Array size expression
+                      pargv = 0;
+                    paramsize = pargv * getSize (paramtype->next);
+                  }
+                else
+                  continue;
+
+                const struct valinfo vi = getOperandValinfo (ic, argop, false);
+                if (!vi.anything && vi.maxsize < paramsize && DCL_STATIC_ARRAY_PARAM (paramtype))
+                  werrorfl (ic->filename, ic->lineno, W_STATIC_ARRAY_PARAM_LENGTH);
+                else if (!vi.anything && vi.maybemaxsize < paramsize)
+                  werrorfl (ic->filename, ic->lineno, W_ARRAY_PARAM_LENGTH);
+              }
+          }
+        else if (ic->op == GET_VALUE_AT_ADDRESS)
+          {
+            const struct valinfo v = getOperandValinfo (ic, ic->left, false);
+            wassert (IS_OP_LITERAL (ic->right));
+            long long roff = operandLitValue (ic->right);
+            int size = getSize (operandType (ic->result));
+            if (!v.anything && roff + size > (long long)v.maxsize)
+              werrorfl (ic->filename, ic->lineno, W_INVALID_PTR_DEREF);
+            else if (!v.anything && roff + size > (long long)v.maybemaxsize)
+              werrorfl (ic->filename, ic->lineno, W_MAYBE_INVALID_PTR_DEREF);
+            if ((v.anything || !v.nonnull) &&
+              (isOptional (operandType (ic->left)->next) && !ic->left->isOptionalEliminated || ic->left->isSemDeref))
+              werrorfl (ic->filename, ic->lineno, W_OPTIONAL_PTR_DEREF);
+          }
+        else if (POINTER_SET (ic))
+          {
+            const struct valinfo v = getOperandValinfo (ic, ic->result, false);
+            int size = getSize (operandType (ic->right));
+            if (!v.anything && size > (long long)v.maxsize)
+              werrorfl (ic->filename, ic->lineno, W_INVALID_PTR_DEREF);
+            else if (!v.anything && size > (long long)v.maybemaxsize)
+              werrorfl (ic->filename, ic->lineno, W_MAYBE_INVALID_PTR_DEREF);
+            if ((v.anything || !v.nonnull) &&
+              (isOptional(operandType (ic->result)->next) && !ic->result->isOptionalEliminated || ic->result->isSemDeref))
+              werrorfl (ic->filename, ic->lineno, W_OPTIONAL_PTR_DEREF);
+          }
+        else if (ic->op == '<' || ic->op == '>' || ic->op == LE_OP || ic->op == GE_OP)
+          {
+            bool left_optional_maybenull = false;
+            bool right_optional_maybenull = false;
+            if (IS_PTR (operandType (ic->left)) && isOptional (operandType (ic->left)->next) && !ic->left->isOptionalEliminated)
+              left_optional_maybenull = !getOperandValinfo (ic, ic->left, false).nonnull;
+            if (IS_PTR (operandType (ic->right)) && isOptional (operandType (ic->right)->next) && !ic->right->isOptionalEliminated)
+              right_optional_maybenull = !getOperandValinfo (ic, ic->right, false).nonnull;
+            if (left_optional_maybenull || right_optional_maybenull)
+              werrorfl (ic->filename, ic->lineno, W_OPTIONAL_RELATIONAL);
+          }
+        else if (ic->op == '+' || ic->op == '-')
+          if (IS_PTR (operandType (ic->left)) && isOptional (operandType (ic->left)->next) && !ic->left->isOptionalEliminated && !getOperandValinfo (ic, ic->left, false).nonnull)
+            werrorfl (ic->filename, ic->lineno, W_OPTIONAL_ARITHMETIC);
+          else if (IS_PTR (operandType (ic->right)) && isOptional (operandType (ic->right)->next) && !ic->left->isOptionalEliminated && !getOperandValinfo (ic, ic->right, false).nonnull)
+            werrorfl (ic->filename, ic->lineno, W_OPTIONAL_ARITHMETIC);
+      }
 }
 
 /*-----------------------------------------------------------------*/
@@ -2527,8 +2814,8 @@ optimize:
                     }
                   else
                     {
-                      wassert (IS_OP_LITERAL (IC_LEFT (ic)));
-                      IC_LEFT (ic) = operandFromValue (valCastLiteral (clefttype, operandLitValue (IC_LEFT (ic)), operandLitValue (IC_LEFT (ic))), false);
+                      wassert (IS_OP_LITERAL (ic->left));
+                      ic->left = operandFromValue (valCastLiteral (clefttype, operandLitValue (ic->left), operandLitValueUll (ic->left)), false);
                     }
                   if (ic->op != LEFT_OP && IS_SYMOP (IC_RIGHT (ic)))
                     {
@@ -2546,8 +2833,8 @@ optimize:
                     }
                   else if (ic->op != LEFT_OP && ic->op != UNARYMINUS)
                     {
-                      wassert (IS_OP_LITERAL (IC_RIGHT (ic)));
-                      IC_RIGHT (ic) = operandFromValue (valCastLiteral (crighttype, operandLitValue (IC_RIGHT (ic)), operandLitValue (IC_RIGHT (ic))), false);
+                      wassert (IS_OP_LITERAL (ic->right));
+                      ic->right = operandFromValue (valCastLiteral (crighttype, operandLitValue (ic->right), operandLitValueUll (ic->right)), false);
                     }
                 }
               if (uic->op == CAST && ic->op != RIGHT_OP)
@@ -2794,7 +3081,7 @@ optimizeCastCast (eBBlock **ebbs, int count)
                       if (!SPEC_USIGN (type1) && (mask >> (bitsForType (type1))))
                         continue;
 
-                      IC_RIGHT (uic) = operandFromValue (valCastLiteral (type1, operandLitValue (uic->right), operandLitValue (uic->right)), false);
+                      uic->right = operandFromValue (valCastLiteral (type1, operandLitValue (uic->right), operandLitValue (uic->right)), false);
                     }
                   else if (uic->op == CAST) /* Otherwise this use must be a second cast */
                     {
@@ -2858,7 +3145,6 @@ optimizeCastCast (eBBlock **ebbs, int count)
               else
                 continue;
 
-
               /* Change the first cast to a simple assignment and */
               /* let the second cast do all the work */
               ic->op = '=';
@@ -2919,12 +3205,12 @@ optimizeFinalCast (ebbIndex *ebbi)
             continue;
 
           // Not all backends can handle multiple global operands in all operations well.
-          if (IS_OP_GLOBAL (uic->result) && IS_OP_GLOBAL (ic->right) && 
+          if (IS_OP_GLOBAL (uic->result) && IS_OP_GLOBAL (ic->right) &&
             !TARGET_Z80_LIKE && !TARGET_IS_STM8 && !TARGET_F8_LIKE)
             continue;
 
           if (ic->op == CAST)
-            {    
+            {
               sym_link *type1 = operandType (ic->right);
               sym_link *type2 = operandType (ic->left);
 
@@ -2935,7 +3221,7 @@ optimizeFinalCast (ebbIndex *ebbi)
                 sclsFromPtr (type1) == sclsFromPtr (type2) &&
                 getAddrspace (type1) == getAddrspace (type2))
                 ;
-             else 
+             else
                 continue;
 
              if (!IS_PTR (type1) || IS_BITFIELD(type1->next) || !IS_PTR (type2) || IS_BITFIELD(type2->next))
@@ -3033,7 +3319,7 @@ optimizeNegation (eBBlock **ebbs, int count)
                   bitVectUnSetBit (OP_USES (uic->left), uic->key);
                   uic->left = ic->left;
                   bitVectSetBit (OP_USES (uic->left), uic->key);
-                  
+
                   // Make ic assignment to self, which will be optimized out.
                   bitVectUnSetBit (OP_USES (ic->left), ic->key);
                   ic->left = 0;
@@ -3130,10 +3416,10 @@ offsetFoldGet (eBBlock **ebbs, int count)
     {
       for (ic = ebbs[i]->sch; ic; ic = ic->next)
         {
-          if (ic->op == ADDRESS_OF && IC_RESULT (ic) && IS_ITEMP (IC_RESULT (ic)))
+          if (ic->op == ADDRESS_OF && IS_ITEMP (ic->result) && bitVectnBitsOn (OP_DEFS (ic->result)) == 1)
             {
               /* There must be only one use of the result */
-              if (bitVectnBitsOn (OP_USES (IC_RESULT (ic))) != 1)
+              if (bitVectnBitsOn (OP_USES (ic->result)) != 1)
                 continue;
 
               /* This use must be an addition / subtraction */
@@ -3394,7 +3680,7 @@ removeRedundantTemps (iCode *sic)
 /* checkRestartAtomic - try to prove that no restartable           */
 /*                      atomics implementation is used from here.  */
 /*-----------------------------------------------------------------*/
-void
+static void
 checkRestartAtomic (ebbIndex *ebbi)
 {
   if (!currFunc)
@@ -3415,6 +3701,75 @@ checkRestartAtomic (ebbIndex *ebbi)
         else if (ic->op == CALL || ic->op == PCALL || ic->op == INLINEASM)
           currFunc->funcRestartAtomicSupport = true;
     }
+}
+
+static void
+checkPurity (const iCode *ic)
+{
+  bool uses_volatile = false;
+  bool pure = true;
+
+  for (; ic; ic = ic->next)
+    {
+      uses_volatile |= POINTER_GET (ic) && IS_VOLATILE (operandType (ic->left)->next) || IS_OP_VOLATILE (ic->left) || IS_OP_VOLATILE (ic->right);
+      uses_volatile |= (ic->op == GET_VALUE_AT_ADDRESS || ic->op == SET_VALUE_AT_ADDRESS) && IS_VOLATILE (operandType (IC_RESULT(ic))->next) || IS_OP_VOLATILE (IC_RESULT(ic));
+      uses_volatile |= (ic->op == INLINEASM);
+
+      if (ic->op == PCALL || ic->op == CALL && (!IS_SYMOP (ic->left) || !OP_SYMBOL (ic->left)->funcPure)
+        || ic->op == GET_VALUE_AT_ADDRESS || ic->op == SET_VALUE_AT_ADDRESS || POINTER_SET (ic))
+        pure = false;
+      if (ic->op != FUNCTION && ic->op != ENDFUNCTION && ic->op != CALL && ic->op != ADDRESS_OF && ic->op != RECEIVE &&
+        ic->left && IS_SYMOP (ic->left) && !IS_ITEMP (ic->left) && !IS_AUTO (OP_SYMBOL (ic->left)))
+        pure = false;
+      if (ic->right && IS_SYMOP (ic->right) && !IS_ITEMP (ic->right) && !IS_AUTO (OP_SYMBOL (ic->right)))
+        pure = false;
+      if (ic->result && IS_SYMOP (ic->result) && !IS_ITEMP (ic->result) && !IS_AUTO (OP_SYMBOL (ic->result)))
+        pure = false;
+
+      pure &= !uses_volatile;
+    }
+
+  if (currFunc)
+    {
+      currFunc->funcUsesVolatile = uses_volatile;
+      currFunc->funcPure = pure;
+    }
+}
+
+/*-----------------------------------------------------------------*/
+/* fixParamPassing - sometimes, we get other iCode in between      */
+/*                   param passing ones. Fix that, since later     */
+/*                   stages might not be able to handle it.       */
+/*-----------------------------------------------------------------*/
+static void
+fixParamPassing (iCode *ic)
+{
+  bool change;
+  do
+    {
+      change = false;
+      for (iCode *pic = ic; pic; pic = pic->next)
+        {
+          if (pic->op == CALL || pic->op == PCALL || pic->op == SEND ||
+              pic->op == IPUSH && pic->parmPush || pic->op == IPUSH_VALUE_AT_ADDRESS)
+            continue;
+          if (!isiCodeInFunctionCall (pic))
+            continue;
+          if (!pic->prev || !(pic->prev->op == CALL || pic->prev->op == PCALL || pic->prev->op == SEND ||
+              pic->prev->op == IPUSH && pic->prev->parmPush || pic->prev->op == IPUSH_VALUE_AT_ADDRESS))
+            continue;
+
+          // Found some iCode directly after a parameter passing iCodes. swap them.
+          pic->prev->next = pic->next;
+          pic->next->prev = pic->prev;
+          pic->next = pic->prev;
+          pic->prev = pic->prev->prev;
+          pic->prev->next = pic;
+          pic->next->prev = pic;
+          change = true;
+        }
+    }
+  while (change);
 }
 
 /*-----------------------------------------------------------------*/
@@ -3440,6 +3795,7 @@ eBBlockFromiCode (iCode *ic)
      this will eliminate redundant labels and
      will change jump to jumps by jumps */
   ic = iCodeLabelOptimize (ic);
+  fixParamPassing (ic);
 
   /* break it down into basic blocks */
   ebbi = iCodeBreakDown (ic);
@@ -3480,7 +3836,7 @@ eBBlockFromiCode (iCode *ic)
   /* Burn the corpses, so the dead may rest in peace,
      safe from cse necromancy */
   computeDataFlow (ebbi);
-  killDeadCode (ebbi);
+  killDeadCode (ebbi, false);
 
   /* do common subexpression elimination for each block */
   change = cseAllBlocks (ebbi, FALSE);
@@ -3512,7 +3868,7 @@ eBBlockFromiCode (iCode *ic)
     }
 
   /* kill dead code */
-  kchange = killDeadCode (ebbi);
+  kchange = killDeadCode (ebbi, false);
 
   if (options.dump_i_code)
     dumpEbbsToFileExt (DUMP_DEADCODE, ebbi);
@@ -3521,7 +3877,22 @@ eBBlockFromiCode (iCode *ic)
   // Before they will get lifted out of loops, and have their life-ranges
   // extended across multiple blocks.
   optimizeCastCast (ebbi->bbOrder, ebbi->count);
-  optimizeRot (ebbi->bbOrder, ebbi->count); // Now it is worth trying, after all parameters of inline functions have been propagated.
+  optimizeRot (ebbi->bbOrder, ebbi->count); // Now it is worth trying to optimize rotations, after all parameters of inline functions have been propagated.
+
+  // Generalized constant propagation - analysis for diagnostics only, no optimization yet.
+  if (optimize.genconstprop)
+    {
+      ic = iCodeLabelOptimize (iCodeFromeBBlock (ebbi->bbOrder, ebbi->count));
+      recomputeValinfos (ic, ebbi, "_0");
+      freeeBBlockData (ebbi);
+      ebbi = iCodeBreakDown (ic);
+      computeControlFlow (ebbi);
+      loops = createLoopRegions (ebbi);
+      computeDataFlow (ebbi);
+      killDeadCode (ebbi, false);
+      // Check before loop optimizations, but after dead code elimination and generalized constant propagation, so we can avoid false positives in dead branches, and have the necessary information.
+      checkStaticArrayParams (ebbi);
+    }
 
   /* do loop optimizations */
   change += (lchange = loopOptimizations (loops, ebbi));
@@ -3546,10 +3917,26 @@ eBBlockFromiCode (iCode *ic)
          dead code elimination once more : this will
          get rid of the extra assignments to the induction
          variables created during loop optimizations */
-      killDeadCode (ebbi);
+      killDeadCode (ebbi, false);
 
       if (options.dump_i_code)
         dumpEbbsToFileExt (DUMP_LOOPD, ebbi);
+    }
+
+  // Generalized constant propagation - do optimizations here a first time, before the first call to computeLiveRanges to ensure uninitalized variables are still recognized as such.
+  if (optimize.genconstprop)
+    {
+      ic = iCodeLabelOptimize (iCodeFromeBBlock (ebbi->bbOrder, ebbi->count));
+      recomputeValinfos (ic, ebbi, "_1");
+      optimizeValinfo (ic);
+      freeeBBlockData (ebbi);
+      ebbi = iCodeBreakDown (ic);
+      computeControlFlow (ebbi);
+      loops = createLoopRegions (ebbi);
+      computeDataFlow (ebbi);
+      killDeadCode (ebbi, true);
+      if (options.dump_i_code)
+        dumpEbbsToFileExt (DUMP_GENCONSTPROP1, ebbi);
     }
 
   offsetFoldGet (ebbi->bbOrder, ebbi->count);
@@ -3557,41 +3944,31 @@ eBBlockFromiCode (iCode *ic)
   computeControlFlow (ebbi);
   loops = createLoopRegions (ebbi);
   computeDataFlow (ebbi);
-  computeLiveRanges (ebbi->bbOrder, ebbi->count, true);
 
-  // Generalized constant propagation - do it here a first time before the first call to computeLiveRanges to ensure uninitalized variables are still recognized as such.
-  if (optimize.genconstprop)
-    {
-      ic = iCodeLabelOptimize (iCodeFromeBBlock (ebbi->bbOrder, ebbi->count));
-      recomputeValinfos (ic, ebbi, "_0");
-      optimizeValinfo (ic);
-      freeeBBlockData (ebbi);
-      ebbi = iCodeBreakDown (ic);
-      computeControlFlow (ebbi);
-      loops = createLoopRegions (ebbi);
-      computeDataFlow (ebbi);
-    }
+  computeLiveRanges (ebbi->bbOrder, ebbi->count, true);
 
   // lospre
   recomputeLiveRanges (ebbi->bbOrder, ebbi->count, false);
   while (optimizeOpWidth (ebbi->bbOrder, ebbi->count))
     optimizeCastCast (ebbi->bbOrder, ebbi->count);
+  computeDataFlow (ebbi);                                  // Apparently needed here, since otherwise we get some cases of killDeadCode below killing code not actually dead.
   recomputeLiveRanges (ebbi->bbOrder, ebbi->count, false); // Recompute again before killing dead code, since dead code elimination needs updated ic->seq - the old ones might have been invalidated in optimizeOpWidth above.
-  killDeadCode (ebbi); // Ensure lospre doesn't resurrect dead code.
+  killDeadCode (ebbi, false);                               // Ensure lospre doesn't resurrect dead code.
   adjustIChain (ebbi->bbOrder, ebbi->count);
   ic = iCodeLabelOptimize (iCodeFromeBBlock (ebbi->bbOrder, ebbi->count));
+  checkPurity (ic);                                        // Check purity - dead code elimination had a chance to eliminate any calls to impure functions by now.
   shortenLiveRanges (ic, ebbi);
   guessCounts (ic, ebbi);
   if (optimize.lospre && (TARGET_Z80_LIKE || TARGET_HC08_LIKE || TARGET_IS_STM8 || TARGET_F8_LIKE)) /* For mcs51, we get a code size regression with lospre enabled, since the backend can't deal well with the added temporaries */
     {
       lospre (ic, ebbi);
-      if (options.dump_i_code)
-        dumpEbbsToFileExt (DUMP_LOSPRE, ebbi);
 
       /* GCSE, lospre and maybe other optimizations sometimes create temporaries that have non-connected live ranges, which is bad (e.g. for offsetFoldUse and register allocation). Split them. */
       freeeBBlockData (ebbi);
       ebbi = iCodeBreakDown (ic);
       computeControlFlow (ebbi);
+      if (options.dump_i_code)
+        dumpEbbsToFileExt (DUMP_LOSPRE, ebbi);
       loops = createLoopRegions (ebbi);
       computeDataFlow (ebbi);
       recomputeLiveRanges (ebbi->bbOrder, ebbi->count, false);
@@ -3600,7 +3977,7 @@ eBBlockFromiCode (iCode *ic)
       separateLiveRanges (ic, ebbi);
     }
 
-  removeRedundantTemps (ic); // Remove some now-redundant leftovers iTemps that can confuse later optimizations.
+  removeRedundantTemps (ic); // Remove some now-redundant leftover iTemps that can confuse later optimizations.
 
   /* Break down again and redo some steps to not confuse live range analysis later. */
   freeeBBlockData (ebbi);
@@ -3608,9 +3985,9 @@ eBBlockFromiCode (iCode *ic)
   computeControlFlow (ebbi);
   loops = createLoopRegions (ebbi);
   computeDataFlow (ebbi);
-  killDeadCode (ebbi);
+  killDeadCode (ebbi, false);
   offsetFoldUse (ebbi->bbOrder, ebbi->count);
-  killDeadCode (ebbi);
+  killDeadCode (ebbi, true);
 
   /* sort it back by block number */
   //qsort (ebbs, saveCount, sizeof (eBBlock *), bbNumCompare);
@@ -3677,18 +4054,19 @@ eBBlockFromiCode (iCode *ic)
       computeControlFlow (ebbi);
       loops = createLoopRegions (ebbi);
       computeDataFlow (ebbi);
+      killDeadCode (ebbi, true);
       recomputeLiveRanges (ebbi->bbOrder, ebbi->count, false);
       ic = iCodeLabelOptimize (iCodeFromeBBlock (ebbi->bbOrder, ebbi->count));
-      recomputeValinfos (ic, ebbi, "_1");
+      recomputeValinfos (ic, ebbi, "_2");
       optimizeValinfo (ic);
       freeeBBlockData (ebbi);
       ebbi = iCodeBreakDown (ic);
       computeControlFlow (ebbi);
       loops = createLoopRegions (ebbi);
       computeDataFlow (ebbi);
-      killDeadCode (ebbi);
+      killDeadCode (ebbi, true);
       if (options.dump_i_code)
-        dumpEbbsToFileExt (DUMP_GENCONSTPROP, ebbi);
+        dumpEbbsToFileExt (DUMP_GENCONSTPROP2, ebbi);
     }
 
   optimizeFinalCast (ebbi);
@@ -3707,7 +4085,7 @@ eBBlockFromiCode (iCode *ic)
     computeControlFlow (ebbi);
     loops = createLoopRegions (ebbi);
     computeDataFlow (ebbi);
-    killDeadCode (ebbi); /* iCodeLabelOptimize() above might result in dead code, when both branches of an ifx go to the same destination. */
+    killDeadCode (ebbi, true); // iCodeLabelOptimize() above might result in dead code, when both branches of an ifx go to the same destination.
   }
   while (change);
 

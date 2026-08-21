@@ -1,6 +1,9 @@
 #ifndef __TESTFWK_H
 #define __TESTFWK_H   1
 
+// suppress warning about double and long double as no target supports them
+#pragma disable_warning 93
+
 // This is used to avoid repeating the same checks over and over again, also much easier to maintain.
 #if defined(__SDCC_pdk13)
   #define SDCC_PDK 13
@@ -10,6 +13,13 @@
   #define SDCC_PDK 15
 #elif defined(__SDCC_pdk16)
   #define SDCC_PDK 16
+#endif
+
+#if defined(__SDCC_mos6502) || defined(__SDCC_mos65c02)
+#define SDCC_MOS
+#if defined(__SDCC_STACK_AUTO)
+#define SDCC_SMALL_STACK 256
+#endif
 #endif
 
 // This macro allows easy check for multiple devices: SDCC_PDK_BITS(<=13), SDCC_PDK_BITS(>=14)
@@ -112,9 +122,11 @@ void __printf(const char *szFormat, ...);
 # define __pdata __data
 #endif
 
+void _initEmu(void);
+_Noreturn void _exitEmu(void);
 void __fail (__code const char *szMsg, __code const char *szCond, __code const char *szFile, int line);
+void _putchar(char c);
 void __prints (const char *s);
-void __printd (int n);
 #ifndef TARGET_VERY_LOW_MEMORY
 void __printu (unsigned int n);
 #endif
@@ -122,9 +134,6 @@ __code const char *__getSuiteName (void);
 void __runSuite (void);
 
 #define ASSERT(_a)  (++__numTests, (_a) ? (void)0 : __fail ("Assertion failed", #_a, __FILE__, __LINE__))
-#define ASSERTFALSE(_a)  ASSERT(!(_a))
-#define FAIL()      FAILM("Failure")
-#define FAILM(_a)   __fail(_a, #_a, __FILE__, __LINE__)
 
 #define UNUSED(_a)  if (_a) { }
 

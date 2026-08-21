@@ -38,7 +38,6 @@
 #include <limits.h>
 #include <errno.h>
 
-#ifdef __SDCC_LONGLONG
 static signed char _isdigit(const char c, unsigned char base)
 {
   unsigned char v;
@@ -76,6 +75,7 @@ unsigned long long int strtoull(const char *nptr, char **endptr, int base)
     {
     case '-':
       neg = true;
+//      [[ fallthrough ]];
     case '+':
       ptr++;
     }
@@ -131,7 +131,9 @@ unsigned long long int strtoull(const char *nptr, char **endptr, int base)
       if (ret < oldret)
         range_error = true;
       ret += (unsigned char)digit;
-#warning INEXACT RANGE ERROR CHECK WILL NOT REPORT ALL OVERFLOWS (fix by implementing ckd_mul and ckd_add for unsigned long long)
+      if (ret < oldret)
+        range_error = true;
+//#warning INEXACT RANGE ERROR CHECK WILL NOT REPORT ALL OVERFLOWS (fix by implementing ckd_mul and ckd_add for unsigned long long)
 #endif
     }
 
@@ -146,4 +148,4 @@ unsigned long long int strtoull(const char *nptr, char **endptr, int base)
 
   return (neg ? -ret : ret);
 }
-#endif
+

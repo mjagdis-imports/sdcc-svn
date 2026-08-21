@@ -77,6 +77,8 @@ ast *optimizeGetByte (ast *, RESULT_TYPE);
 ast *optimizeGetWord (ast *, RESULT_TYPE);
 static ast *backPatchLabels (ast *, symbol *, symbol *);
 static void copyAstLoc (ast *, ast *);
+static ast *gatherAutoInit (symbol *, ast *, int *);
+void gatherImplicitVariables (ast *, ast *);
 void PA (ast * t);
 int inInitMode = 0;
 memmap *GcurMemmap = NULL;      /* points to the memmap that's currently active */
@@ -218,6 +220,7 @@ copyAstValues (ast * dest, ast * src)
       dest->values.cast.literalFromCast = src->values.cast.literalFromCast;
       dest->values.cast.removedCast = src->values.cast.removedCast;
       dest->values.cast.implicitCast = src->values.cast.implicitCast;
+      dest->values.cast.semDeref = src->values.cast.semDeref;
     }
 }
 
@@ -372,26 +375,94 @@ removePostIncDecOps (ast * tree)
 #endif
 
 /*-----------------------------------------------------------------*/
+/* inlineTempVar - create a temporary variable for inlining        */
+/*-----------------------------------------------------------------*/
+static symbol *
+inlineTempVar (sym_link *type, long level)
+{
+  symbol *sym;
+
+  sym = newSymbol (genSymName (level), level);
+  sym->type = copyLinkChain (type);
+  sym->etype = getSpec (sym->type);
+  SPEC_SCLS (sym->etype) = S_AUTO;
+  SPEC_OCLS (sym->etype) = NULL;
+  SPEC_EXTR (sym->etype) = 0;
+  SPEC_STAT (sym->etype) = 0;
+  if (IS_SPEC (sym->type))
+    {
+      SPEC_CONST (sym->type) = false;
+      SPEC_VOLATILE (sym->type) = false;
+      SPEC_ATOMIC (sym->type) = false;
+      SPEC_ADDRSPACE (sym->type) = 0;
+    }
+  else
+    {
+      DCL_PTR_CONST (sym->type) = false;
+      DCL_PTR_VOLATILE (sym->type) = false;
+      DCL_PTR_ATOMIC (sym->type) = false;
+      DCL_PTR_ADDRSPACE (sym->type) = 0;
+    }
+  SPEC_ABSA (sym->etype) = 0;
+
+  return sym;
+}
+
+/*-----------------------------------------------------------------*/
+/* inlineAddDecl - add a variable declaration to an ast block. It  */
+/*                 is also added to the symbol table if addSymTab  */
+/*                 is nonzero.                                     */
+/*-----------------------------------------------------------------*/
+static void
+inlineAddDecl (symbol *sym, ast *block, bool addSymTab, bool toFront)
+{
+  sym->reqv = NULL;
+  SYM_SPIL_LOC (sym) = NULL;
+  sym->key = 0;
+  if (block != NULL)
+    {
+      symbol **decl = &(block->values.sym);
+
+      sym->level = block->level;
+      sym->block = block->block;
+
+      while (*decl)
+        {
+          if (strcmp ((*decl)->name, sym->name) == 0)
+            return;
+          decl = &((*decl)->next);
+        }
+
+      if (toFront)
+        {
+          sym->next = block->values.sym;
+          block->values.sym = sym;
+        }
+      else
+        *decl = sym;
+
+      if (addSymTab)
+        addSym (SymbolTab, sym, sym->name, sym->level, sym->block, false);
+    }
+}
+
+/*-----------------------------------------------------------------*/
 /* replaceAstWithTemporary: Replace the AST pointed to by the arg  */
 /*            with a reference to a new temporary variable. Returns*/
 /*            an AST which assigns the original value to the       */
 /*            temporary.                                           */
 /*-----------------------------------------------------------------*/
 ast *
-replaceAstWithTemporary (ast ** treeptr)
+replaceAstWithTemporary (ast **treeptr)
 {
-  symbol *sym = newSymbol (genSymName (NestLevel), NestLevel);
-  ast *tempvar;
+  ast *dtr = decorateType (resolveSymbols (*treeptr), RESULT_TYPE_NONE, true);
+  symbol *sym = inlineTempVar (TTYPE (dtr), NestLevel);
+  inlineAddDecl (sym, NULL, true, false);
 
-  /* Tell gatherImplicitVariables() to automatically give the
-     symbol the correct type */
-  sym->infertype = 1;
-  sym->type = NULL;
-  sym->etype = NULL;
-
-  tempvar = newNode ('=', newAst_VALUE (symbolVal (sym)), *treeptr);
+  ast *tempvar = newNode ('=', newAst_VALUE (symbolVal (sym)), *treeptr);
   *treeptr = newAst_VALUE (symbolVal (sym));
 
+  sym->implicitaddtoblock = true;
   addSymChain (&sym);
 
   return tempvar;
@@ -671,7 +742,7 @@ resolveSymbols (ast *tree)
 
     /* If entering a block with symbols defined, mark the symbols in-scope */
     /* before continuing down the tree, and mark them out-of-scope again   */
-    /* on the way back up */ 
+    /* on the way back up */
     if (tree->type == EX_OP && tree->opval.op == BLOCK && tree->values.sym)
       {
         symbol * sym = tree->values.sym;
@@ -690,7 +761,7 @@ resolveSymbols (ast *tree)
           }
         return tree;
       }
-      
+
 resolveChildren:
   resolveSymbols (tree->left);
   resolveSymbols (tree->right);
@@ -718,7 +789,7 @@ setAstFileLine (ast *tree, const char *filename, int lineno)
 /* funcOfType :- function of type with name                        */
 /*-----------------------------------------------------------------*/
 symbol *
-funcOfType (const char *name, sym_link * type, sym_link * argType, int nArgs, int rent)
+funcOfType (const char *name, sym_link *rtype, sym_link *argType, int nArgs, int rent)
 {
   symbol *sym;
   /* create the symbol */
@@ -727,7 +798,7 @@ funcOfType (const char *name, sym_link * type, sym_link * argType, int nArgs, in
   /* setup return value */
   sym->type = newLink (DECLARATOR);
   DCL_TYPE (sym->type) = FUNCTION;
-  sym->type->next = copyLinkChain (type);
+  sym->type->next = copyLinkChain (rtype);
   sym->etype = getSpec (sym->type);
   FUNC_ISREENT (sym->type) = rent ? 1 : 0;
   FUNC_NONBANKED (sym->type) = 1;
@@ -742,12 +813,44 @@ funcOfType (const char *name, sym_link * type, sym_link * argType, int nArgs, in
         {
           args->type = copyLinkChain (argType);
           args->etype = getSpec (args->type);
-          SPEC_EXTR (args->etype) = 1;
           if (!nArgs)
             break;
           args = args->next = newValue ();
         }
     }
+
+  /* save it */
+  addSymChain (&sym);
+  sym->cdef = 1;
+  allocVariables (sym);
+  return sym;
+}
+
+/*-----------------------------------------------------------------*/
+/* funcOfType2 :- function of type with name                       */
+/*-----------------------------------------------------------------*/
+symbol *
+funcOfType2 (const char *name, sym_link *rtype, sym_link *largType, sym_link *rargType, int rent)
+{
+  symbol *sym;
+  /* create the symbol */
+  sym = newSymbol (name, 0);
+
+  /* setup return value */
+  sym->type = newLink (DECLARATOR);
+  DCL_TYPE (sym->type) = FUNCTION;
+  sym->type->next = copyLinkChain (rtype);
+  sym->etype = getSpec (sym->type);
+  FUNC_ISREENT (sym->type) = rent ? 1 : 0;
+  FUNC_NONBANKED (sym->type) = 1;
+
+  value *args;
+  args = FUNC_ARGS (sym->type) = newValue ();
+  args->type = copyLinkChain (largType);
+  args->etype = getSpec (args->type);
+  args = args->next = newValue ();
+  args->type = copyLinkChain (rargType);
+  args->etype = getSpec (args->type);
 
   /* save it */
   addSymChain (&sym);
@@ -783,7 +886,6 @@ funcOfTypeVarg (const char *name, const char *rtype, int nArgs, const char **aty
         {
           args->type = typeFromStr (atypes[i]);
           args->etype = getSpec (args->type);
-          SPEC_EXTR (args->etype) = 1;
           if ((i + 1) == nArgs)
             break;
           args = args->next = newValue ();
@@ -926,10 +1028,11 @@ processParms (ast * func, value * defParm, ast ** actParm, int *parmNumber,     
 
       /* don't perform integer promotion of explicitly typecasted variable arguments
        * if sdcc extensions are enabled */
-      if (options.std_sdcc && !TARGET_PDK_LIKE && IFFUNC_HASVARARGS (functype) &&
-          (IS_CAST_OP (*actParm) ||
-           (IS_AST_SYM_VALUE (*actParm) && AST_VALUES (*actParm, cast.removedCast)) ||
-           (IS_AST_LIT_VALUE (*actParm) && AST_VALUES (*actParm, cast.literalFromCast))))
+      if (options.std_sdcc && (TARGET_IS_MCS51 || TARGET_IS_DS390 || TARGET_MOS6502_LIKE || TARGET_PIC_LIKE) &&
+        IFFUNC_HASVARARGS (functype) &&
+        (IS_CAST_OP (*actParm) ||
+          (IS_AST_SYM_VALUE (*actParm) && AST_VALUES (*actParm, cast.removedCast)) ||
+          (IS_AST_LIT_VALUE (*actParm) && AST_VALUES (*actParm, cast.literalFromCast))))
         {
           /* Parameter was explicitly typecast; don't touch it. */
           return 0;
@@ -977,7 +1080,7 @@ processParms (ast * func, value * defParm, ast ** actParm, int *parmNumber,     
 
   if (FUNC_NOPROTOTYPE (functype))
     {
-      // Todo: implement this! Idea: build a temporarty function type that can be used for processFuncArgs, which then can be used here.
+      // Todo: implement this! Idea: build a temporarty function type that can be used for processFunc, which then can be used here.
       wassertl (0, "Setting of register parameter vs. other parameter not yet implemented for functions without prototype.");
       return 0;
     }
@@ -1087,6 +1190,47 @@ moveNestedInit (initList *src)
 }
 
 /*-----------------------------------------------------------------*/
+/* fieldStartBit, fieldEndBit - bit extent of a field within its   */
+/*   struct. A byte offset cannot tell a member promoted out of an */
+/*   anonymous union from bitfields that legitimately share one    */
+/*   storage unit, because both share a byte offset. In bits they  */
+/*   separate: consecutive bitfields start where the previous one  */
+/*   ended, an alternative of a union starts where the union does. */
+/*-----------------------------------------------------------------*/
+static unsigned
+fieldStartBit (symbol *field)
+{
+  return field->offset * 8 + (IS_BITFIELD (field->type) ? SPEC_BSTR (field->etype) : 0);
+}
+
+static unsigned
+fieldEndBit (symbol *field)
+{
+  if (IS_BITFIELD (field->type))
+    return fieldStartBit (field) + SPEC_BLEN (field->etype);
+  return (field->offset + getSize (field->type)) * 8;
+}
+
+/*-----------------------------------------------------------------*/
+/* overlapsInitialized - does FIELD share storage with a member an */
+/*   explicit designator already initialized?  Those bits are the  */
+/*   union's active alternative and must not be zeroed over. A     */
+/*   field always overlaps itself, so a designated member answers  */
+/*   yes for its own storage.                                      */
+/*-----------------------------------------------------------------*/
+static bool
+overlapsInitialized (symbol *fields, set *initialized, symbol *field)
+{
+  symbol *f;
+
+  for (f = fields; f; f = f->next)
+    if (isinSet (initialized, f) &&
+        fieldStartBit (f) < fieldEndBit (field) && fieldStartBit (field) < fieldEndBit (f))
+      return true;
+  return false;
+}
+
+/*-----------------------------------------------------------------*/
 /* findStructField - find a specific field in a struct definition  */
 /*-----------------------------------------------------------------*/
 static symbol *
@@ -1120,6 +1264,14 @@ createIvalStruct (ast *sym, sym_link *type, initList *ilist, ast *rootValue)
   set *initialized_fields = newSet ();
 
   // Handle designated initializers first.
+  /* An initializer after a designated one initializes the member that
+     follows the designated member (C11 6.7.9p17), not the first member of
+     the struct, so remember where the positional walk below resumes. */
+  symbol *resume = NULL;
+  /* a union takes a single initializer, so a designator is the whole list
+     for it and only the zero fill below is left to do */
+  bool uniondesig = false;
+
   for (;iloop && iloop->designation; iloop = iloop->next)
     {
       symbol *sflds;
@@ -1146,20 +1298,108 @@ createIvalStruct (ast *sym, sym_link *type, initList *ilist, ast *rootValue)
               break;
             }
         }
-      
+
       sflds->implicit = 1;
       lAst = newNode (PTR_OP, newNode ('&', sym, NULL), newAst_VALUE (symbolVal (sflds)));
       lAst = decorateType (resolveSymbols (lAst), RESULT_TYPE_NONE, true);
       rast = decorateType (resolveSymbols (createIval (lAst, sflds->type, iloop, rast, rootValue, 1)), RESULT_TYPE_NONE, true);
       addSet (&initialized_fields, sflds);
+      resume = sflds->next;
 
       if (SPEC_STRUCT (type)->type == UNION)
-        goto release;
+        {
+          uniondesig = true;
+          break;
+        }
     }
 
+  /* An anonymous union is initialized through one alternative only, so the
+     bytes of it that alternative does not reach get no initializer - but
+     C11 6.7.9p19 still zeroes them, being sub-objects that were not
+     initialized explicitly. Static storage already reads as zero, and its
+     __xinit_ image is padded; automatic storage needs the stores emitting,
+     and they go first so that the real initializers below overwrite the
+     leading part. */
+  if (AST_SYMBOL (rootValue)->islocal && !SPEC_STAT (etype))
+    {
+      symbol *run = SPEC_STRUCT (type)->fields;
+
+      while (run)
+        {
+          symbol *f, *runend;
+          unsigned unionstart, covered;
+          bool designated = false;
+
+          if (!run->anonunionalias)
+            {
+              run = run->next;
+              continue;
+            }
+
+          /* [run, runend) is the row of members promoted out of one union */
+          unionstart = fieldStartBit (run);
+          covered = unionstart;
+
+          /* how far the alternative the union is initialized through
+             reaches: the unmarked fields of this union, just before the
+             row. A designator picking an alternative instead is left
+             alone entirely. */
+          for (f = SPEC_STRUCT (type)->fields; f != run; f = f->next)
+            {
+              if (fieldStartBit (f) < unionstart)
+                continue;
+              if (isinSet (initialized_fields, f))
+                designated = true;
+              else if (fieldEndBit (f) > covered)
+                covered = fieldEndBit (f);
+            }
+          for (runend = run; runend && runend->anonunionalias; runend = runend->next)
+            if (isinSet (initialized_fields, runend))
+              designated = true;
+
+          /* TYPE is itself the union when the row was promoted out of an
+             anonymous struct of its own. Only one member of it is ever
+             initialized, so a designator naming one of the row leaves the
+             alternative ahead of the row uninitialized after all. */
+          if (designated && SPEC_STRUCT (type)->type == UNION)
+            covered = unionstart;
+
+          for (f = run; f != runend; f = f->next)
+            {
+              if (IS_BITFIELD (f->type) && SPEC_BUNNAMED (f->etype))
+                continue;
+              if (fieldEndBit (f) <= covered)
+                continue;
+              /* Storage an explicit designator initialized is never zeroed
+                 over, wherever in the object that designator was. It cannot
+                 be gated on a designator having been seen in or before this
+                 row: a nested anonymous union splits one union's members
+                 into several rows, so the designator may sit in a row this
+                 walk has not reached yet. */
+              if (overlapsInitialized (SPEC_STRUCT (type)->fields, initialized_fields, f))
+                continue;
+              f->implicit = 1;
+              lAst = newNode (PTR_OP, newNode ('&', sym, NULL), newAst_VALUE (symbolVal (f)));
+              lAst = decorateType (resolveSymbols (lAst), RESULT_TYPE_NONE, true);
+              rast = decorateType (resolveSymbols (createIval (lAst, f->type, NULL, rast, rootValue, 1)), RESULT_TYPE_NONE, true);
+              covered = fieldEndBit (f);
+            }
+          run = runend;
+        }
+    }
+
+  if (uniondesig)
+    goto release;
+
   // Handle the rest and fill in the gaps.
+  unsigned prevEnd = 0;             /* end bit of the last field initialized below */
+  bool positional = (resume == NULL);   /* has the walk reached the resume point? */
+
   for (symbol *sflds = SPEC_STRUCT (type)->fields; sflds; sflds = sflds->next)
     {
+      if (sflds == resume)
+        positional = true;
+
       if (isinSet (initialized_fields, sflds)) // Already initalized by designated initializer
         continue;
 
@@ -1167,17 +1407,49 @@ createIvalStruct (ast *sym, sym_link *type, initList *ilist, ast *rootValue)
       if (sflds && IS_BITFIELD (sflds->type) && SPEC_BUNNAMED (sflds->etype))
         continue;
 
+      /* promoteAnonStructs() flattens the members of an anonymous union
+         into the enclosing struct, so they all carry the same offset.
+         Brace elision initializes such a union once, through its first
+         member; the siblings aliasing storage that was just initialized
+         must not consume an initializer of their own. Comparing bit
+         extents rather than byte offsets keeps bitfields in: several of
+         them legitimately share a byte, but each starts where the
+         previous one ended, so only a real alias starts before prevEnd.
+         An alternative that is a struct larger than the first continues
+         past prevEnd and so cannot be recognized by extent at all; those
+         members carry anonunionalias from promoteAnonStructs().
+         overlapsInitialized() covers the case a designator creates: it
+         names the union's active alternative, and the alternative the walk
+         would otherwise initialize shares that storage, so writing it here
+         would write over the value the designator asked for. */
+      if (sflds->anonunionalias || fieldStartBit (sflds) < prevEnd ||
+          overlapsInitialized (SPEC_STRUCT (type)->fields, initialized_fields, sflds))
+        {
+          if (fieldEndBit (sflds) > prevEnd)
+            prevEnd = fieldEndBit (sflds);
+          continue;
+        }
+
+      /* A member ahead of the resume point takes no initializer of its own;
+         it is only zeroed, which static storage already is. */
+      if (!positional)
+        {
+          if (!AST_SYMBOL (rootValue)->islocal || SPEC_STAT (etype))
+            continue;
+        }
       /* if we have come to end */
-      if (!iloop && (!AST_SYMBOL (rootValue)->islocal || SPEC_STAT (etype)))
+      else if (!iloop && (!AST_SYMBOL (rootValue)->islocal || SPEC_STAT (etype)))
         break;
 
       /* initialize this field */
       sflds->implicit = 1;
       lAst = newNode (PTR_OP, newNode ('&', sym, NULL), newAst_VALUE (symbolVal (sflds)));
       lAst = decorateType (resolveSymbols (lAst), RESULT_TYPE_NONE, true);
-      rast = decorateType (resolveSymbols (createIval (lAst, sflds->type, iloop, rast, rootValue, 1)), RESULT_TYPE_NONE, true);
+      rast = decorateType (resolveSymbols (createIval (lAst, sflds->type, positional ? iloop : NULL, rast, rootValue, 1)), RESULT_TYPE_NONE, true);
       addSet (&initialized_fields, sflds);
-      iloop = iloop ? iloop->next : NULL;
+      prevEnd = fieldEndBit (sflds);
+      if (positional)
+        iloop = iloop ? iloop->next : NULL;
 
       /* Unions can only initialize a single field */
       if (SPEC_STRUCT (type)->type == UNION)
@@ -1299,7 +1571,7 @@ createIvalArray (ast * sym, sym_link * type, initList * ilist, ast * rootValue)
           if (iloop && (lcnt && size > lcnt))
             {
               // is this a better way? at least it won't crash
-              char *name = (IS_AST_SYM_VALUE (sym)) ? AST_SYMBOL (sym)->name : "";
+              const char *name = (IS_AST_SYM_VALUE (sym)) ? AST_SYMBOL (sym)->name : "";
               werrorfl (iloop->filename, iloop->lineno, W_EXCESS_INITIALIZERS, "array", name);
 
               break;
@@ -1381,7 +1653,7 @@ createIvalCharPtr (ast * sym, sym_link * type, ast * iexpr, ast * rootVal)
         {
           if (size > symsize)
             {
-              char *name = (IS_AST_SYM_VALUE (sym)) ? AST_SYMBOL (sym)->name : "";
+              const char *name = (IS_AST_SYM_VALUE (sym)) ? AST_SYMBOL (sym)->name : "";
 
               TYPE_TARGET_ULONG c;
               if (IS_CHAR (type->next))
@@ -1522,14 +1794,17 @@ initAggregates (symbol *sym, initList *ival, ast *wid)
 
 /*-----------------------------------------------------------------*/
 /* gatherAutoInit - creates assignment expressions for initial     */
-/*                  values                                         */
+/*                  values. BLOCK is the block AUTOCHAIN belongs   */
+/*                  to, or NULL, and takes the temporary symbols   */
+/*                  of any compound literals the initializers hold */
 /*-----------------------------------------------------------------*/
 static ast *
-gatherAutoInit (symbol * autoChain)
+gatherAutoInit (symbol * autoChain, ast * block, int *stack)
 {
   ast *init = NULL;
   ast *work;
   symbol *sym;
+  int oldInitMode = inInitMode;
 
   inInitMode = 1;
   for (sym = autoChain; sym; sym = sym->next)
@@ -1609,6 +1884,32 @@ gatherAutoInit (symbol * autoChain)
             }
           setAstFileLine (work, sym->fileDef, sym->lineDef);
 
+          /* The initializer may hold a compound literal. Its temporary
+             symbol only becomes reachable now that the initializer list
+             has been turned into a tree, which is after the pass that puts
+             such symbols into their block has run, so it would otherwise
+             be left with neither storage nor a name. Attach it here, and
+             put its own initializer in front of the one that reads it -
+             not in front of the whole block, which would run it before a
+             variable of this block its initializer may name. */
+          if (block)
+            {
+              symbol **decl = &(block->values.sym);
+
+              while (*decl)
+                decl = &((*decl)->next);
+              gatherImplicitVariables (work, block);
+              if (*decl)
+                {
+                  ast *litInit;
+
+                  *stack += allocVariables (*decl);
+                  litInit = gatherAutoInit (*decl, block, stack);
+                  if (litInit)
+                    work = newNode (NULLOP, litInit, work);
+                }
+            }
+
           // if this is a constexpr, keep the ival for compile-time evaluation
           if (!(IS_CONSTEXPR (sym->etype)))
             sym->ival = NULL;
@@ -1618,7 +1919,7 @@ gatherAutoInit (symbol * autoChain)
             init = work;
         }
     }
-  inInitMode = 0;
+  inInitMode = oldInitMode;
   return init;
 }
 
@@ -1727,7 +2028,7 @@ processBlockVars (ast * tree, int *stack, int action)
       if (action == ALLOCATE)
         {
           *stack += allocVariables (tree->values.sym);
-          autoInit = gatherAutoInit (tree->values.sym);
+          autoInit = gatherAutoInit (tree->values.sym, tree, stack);
 
           /* if there are auto inits then do them */
           if (autoInit)
@@ -1759,7 +2060,7 @@ processBlockVars (ast * tree, int *stack, int action)
           sym = sym->next;
         }
     }
-    
+
   return tree;
 }
 
@@ -2508,7 +2809,7 @@ isInitiallyTrue (ast *initExpr, ast * condExpr)
     return FALSE;
 
   /* Replace the symbol with its initial value and see if the condition */
-  /* simplifies to a non-zero (TRUE) literal value */      
+  /* simplifies to a non-zero (TRUE) literal value */
   condExpr = copyAst (condExpr);
   if (replLoopSymByVal (condExpr, sym, AST_VALUE (initExpr)))
     {
@@ -2572,7 +2873,7 @@ createDoFor (symbol * trueLabel, symbol * continueLabel, symbol * falseLabel,
     }
   else
     loopExpr = createLabel (continueLabel, loopExpr);
-   
+
   /* now start putting them together */
   forTree = newNode (NULLOP, initExpr, forBody);
   forTree = newNode (NULLOP, forTree, loopExpr);
@@ -2658,8 +2959,8 @@ getResultTypeFromType (sym_link * type)
 
 /*    BOOL and single bit BITFIELD are not interchangeable!
  *    There must be a cast to do this safely, in which case
- *    the previous IS_BOOLEAN test will handle it. 
-      
+ *    the previous IS_BOOLEAN test will handle it.
+
       if (blen <= 1)
         return RESULT_TYPE_BOOL;
 */
@@ -2846,13 +3147,12 @@ getLeftResultType (ast * tree, RESULT_TYPE resultType)
 }
 
 /*------------------------------------------------------------------*/
-/* gatherImplicitVariables: assigns correct type information to     */
-/*            symbols and values created by replaceAstWithTemporary */
-/*            and adds the symbols to the declarations list of the  */
-/*            innermost block that contains them                    */
+/* gatherImplicitVariables:  adds the symbols created by            */
+/*            replaceAstWithTemporary to the declarations list of   */
+/*            the innermost block that contains them                */
 /*------------------------------------------------------------------*/
 void
-gatherImplicitVariables (ast * tree, ast * block)
+gatherImplicitVariables (ast *tree, ast *block)
 {
   if (!tree)
     return;
@@ -2868,25 +3168,8 @@ gatherImplicitVariables (ast * tree, ast * block)
 
       /* special case for assignment to compiler-generated temporary variable:
          compute type of RHS, and set the symbol's type to match */
-      if (assignee->type == NULL && assignee->infertype)
+      if (assignee->implicitaddtoblock)
         {
-          ast *dtr = decorateType (resolveSymbols (tree->right), RESULT_TYPE_NONE, true);
-
-          if (dtr != tree->right)
-            tree->right = dtr;
-
-          assignee->type = copyLinkChain (TTYPE (dtr));
-          assignee->etype = getSpec (assignee->type);
-          SPEC_ADDRSPACE (assignee->etype) = 0;
-          SPEC_SCLS (assignee->etype) = S_AUTO;
-          SPEC_OCLS (assignee->etype) = NULL;
-          SPEC_EXTR (assignee->etype) = 0;
-          SPEC_STAT (assignee->etype) = 0;
-          SPEC_VOLATILE (assignee->etype) = 0;
-          SPEC_ATOMIC (assignee->etype) = 0;
-          SPEC_ABSA (assignee->etype) = 0;
-          SPEC_CONST (assignee->etype) = 0;
-
           wassertl (block != NULL, "implicit variable not contained in block");
           wassert (assignee->next == NULL);
           if (block != NULL)
@@ -2901,6 +3184,7 @@ gatherImplicitVariables (ast * tree, ast * block)
 
               *decl = assignee;
             }
+          assignee->implicitaddtoblock = false;
         }
     }
   if (tree->type == EX_VALUE && IS_AST_SYM_VALUE (tree) && AST_SYMBOL (tree)->iscomplit)
@@ -2918,19 +3202,13 @@ gatherImplicitVariables (ast * tree, ast * block)
             }
 
           *decl = tempsym;
+          AST_SYMBOL (tree)->iscomplit = false;
         }
-    }
-  if (tree->type == EX_VALUE && !(IS_LITERAL (tree->opval.val->etype)) &&
-      tree->opval.val->type == NULL && tree->opval.val->sym && tree->opval.val->sym->infertype)
-    {
-      /* fixup type of value for compiler-inferred temporary var */
-      tree->opval.val->type = tree->opval.val->sym->type;
-      tree->opval.val->etype = tree->opval.val->sym->etype;
     }
 
   /* If entering a block with symbols defined, mark the symbols in-scope */
   /* before continuing down the tree, and mark them out-of-scope again   */
-  /* on the way back up */ 
+  /* on the way back up */
   if (tree->type == EX_OP && tree->opval.op == BLOCK && tree->values.sym)
     {
       symbol * sym = tree->values.sym;
@@ -2956,12 +3234,17 @@ gatherImplicitVariables (ast * tree, ast * block)
 }
 
 /*-----------------------------------------------------------------*/
-/* CodePtrPointsToConst - if code memory is read-only, then        */
-/*   pointers to code memory implicitly point to constants.        */
-/*   Make this explicit.                                           */
+/* checkCodePtrPointsToConst - if code memory is read-only, then   */
+/*   pointers to code memory should point to constants.            */
+/*   Warn if this is not the case.                                 */
+/*                                                                 */
+/*   Note:                                                         */
+/*   The --fconst-code flag restores the pre-4.5.23 behavior and   */
+/*   implicitly makes them point to constants, omitting the        */
+/*   warning.                                                      */
 /*-----------------------------------------------------------------*/
 void
-CodePtrPointsToConst (sym_link * t)
+checkCodePtrPointsToConst (sym_link *t, const char *filename, int lineno)
 {
   if (port->mem.code_ro)
     {
@@ -2973,15 +3256,104 @@ CodePtrPointsToConst (sym_link * t)
               /* find the first non-array link */
               while (IS_ARRAY (t2->next))
                 t2 = t2->next;
-              if (IS_SPEC (t2->next))
-                SPEC_CONST (t2->next) = 1;
+
+              if (options.const_code)
+                {
+                  /* pre-4.5.23 behavior: just make them point to const */
+                  if (IS_SPEC (t2->next))
+                    SPEC_CONST (t2->next) = 1;
+                  else
+                    DCL_PTR_CONST (t2->next) = 1;
+                }
               else
-                DCL_PTR_CONST (t2->next) = 1;
+                {
+                  /* implicitly overriding const-ness can interfere with
+                   * _Generic, so just output a warning, instead */
+                  if (((IS_SPEC (t2->next) && !SPEC_CONST (t2->next) && !SPEC_SCLS_IMPLICITINTRINSIC (t2->next)) ||
+                      (IS_DECL (t2->next) && !DCL_PTR_CONST (t2->next) && !DCL_TYPE_IMPLICITINTRINSIC (t2->next)))
+                      && !IS_FUNC (t2->next))
+                    werrorfl (filename, lineno, W_NONCONST_CODE_PTR);
+                }
             }
           t = t->next;
         }
     }
 }
+
+/*-----------------------------------------------------------------*/
+/* removeQualifiers - removes all qualifiers from the first        */
+/*                    element of the type chain                    */
+/*-----------------------------------------------------------------*/
+void
+removeQualifiers (sym_link *type)
+{
+  if (IS_SPEC (type))
+    {
+      SPEC_CONST (type) = false;
+      SPEC_RESTRICT (type) = false;
+      SPEC_VOLATILE (type) = false;
+      SPEC_ATOMIC (type) = false;
+      SPEC_OPTIONAL (type) = false;
+      SPEC_ADDRSPACE (type) = NULL;
+    }
+  else
+    {
+      DCL_PTR_CONST (type) = false;
+      DCL_PTR_RESTRICT (type) = false;
+      DCL_PTR_VOLATILE (type) = false;
+      DCL_PTR_ATOMIC (type) = false;
+      DCL_PTR_OPTIONAL (type) = false;
+      DCL_PTR_ADDRSPACE (type) = NULL;
+    }
+}
+
+/*-----------------------------------------------------------------*/
+/* ptrTypeFromType - derive a suitable type for a pointer to a     */
+/*                   given type                                    */
+/*-----------------------------------------------------------------*/
+sym_link *
+ptrTypeFromType (sym_link *type)
+{
+  sym_link *p = newLink (DECLARATOR);
+
+  if (!getSpec (type))
+    {
+      DCL_TYPE (p) = POINTER;
+      DCL_TYPE_IMPLICITINTRINSIC (p) = true;
+    }
+  else
+    {
+      DCL_TYPE_IMPLICITINTRINSIC (p) = SPEC_SCLS_IMPLICITINTRINSIC (getSpec (type));
+      if (SPEC_SCLS (getSpec (type)) == S_CODE)
+        DCL_TYPE (p) = CPOINTER;
+      else if (SPEC_SCLS (getSpec (type)) == S_XDATA)
+        DCL_TYPE (p) = FPOINTER;
+      else if (SPEC_SCLS (getSpec (type)) == S_XSTACK)
+        DCL_TYPE (p) = PPOINTER;
+      else if (SPEC_SCLS (getSpec (type)) == S_IDATA)
+        DCL_TYPE (p) = IPOINTER;
+      else if (SPEC_SCLS (getSpec (type)) == S_EEPROM)
+        DCL_TYPE (p) = EEPPOINTER;
+      else if (SPEC_OCLS (getSpec (type)))
+        {
+          DCL_TYPE (p) = PTR_TYPE (SPEC_OCLS (getSpec (type)));
+          DCL_TYPE_IMPLICITINTRINSIC (p) = true;
+        }
+      else
+        {
+          DCL_TYPE (p) = POINTER;
+          DCL_TYPE_IMPLICITINTRINSIC (p) = true;
+        }
+    }
+
+  p->next = copyLinkChain (type);
+  if (IS_DECL (p->next))
+    DCL_PTR_OPTIONAL (p->next) = false;
+  else
+    SPEC_OPTIONAL (p->next) = false; // _Optional qualifier is not preserved across &.
+  return p;
+}
+
 
 /*-----------------------------------------------------------------*/
 /* checkPtrCast - if casting to/from pointers, do some checking    */
@@ -2990,7 +3362,7 @@ void
 checkPtrCast (sym_link *newType, sym_link *orgType, bool implicit, bool orgIsNullPtrConstant)
 {
   int errors = 0;
-  
+
   if (IS_ARRAY (orgType))
     {
       value *val;
@@ -3043,7 +3415,7 @@ checkPtrCast (sym_link *newType, sym_link *orgType, bool implicit, bool orgIsNul
             }
           else if (IS_GENPTR (newType) && IS_VOID (newType->next)) // cast to void* is always allowed
             {
-              if (IS_FUNCPTR (orgType)) 
+              if (IS_FUNCPTR (orgType))
                 errors += werror (FUNCPTRSIZE > GPTRSIZE ? E_INCOMPAT_PTYPES : W_INCOMPAT_PTYPES);
             }
           else if (IS_GENPTR (orgType) && IS_VOID (orgType->next)) // cast from void* is always allowed - as long as we cast to a pointer to an object type
@@ -3076,7 +3448,7 @@ checkPtrCast (sym_link *newType, sym_link *orgType, bool implicit, bool orgIsNul
           // UB up to C23, constraint violation in C2y (N3712), but we make it a warning only, so we can keep our implemenation-defined behavior.
           if (IS_INTEGRAL (newType) && !IS_BOOLEAN (newType) && bitsForType (newType) < bitsForType (orgType))
             errors += werror (W_PTR2INT_NOREPRESENT);
-          
+
           if (implicit)         // sneaky
             {
               if (IS_INTEGRAL (newType))
@@ -3358,7 +3730,7 @@ optStdLibCall (ast *tree, RESULT_TYPE resulttype)
 
       symbol *memcpy_sym = findSym (SymbolTab, NULL, !strcmp(funcname, "__builtin_strcpy") ? "__builtin_memcpy" : "__memcpy");
 
-      if(!memcpy_sym)
+      if (!memcpy_sym)
         return;
 
       ast *lengthparm = newAst_VALUE (valCastLiteral (newIntLink(), strlength, strlength));
@@ -3372,7 +3744,7 @@ optStdLibCall (ast *tree, RESULT_TYPE resulttype)
       node->left->lineno = parm->lineno;
       node->left->filename = node->left->left->filename = parm->filename;
       node->left = decorateType (node->left, RESULT_TYPE_GPTR, true);
-      
+
       node->right = lengthparm;
       node->decorated = 1;
       parms->right = node;
@@ -3402,7 +3774,7 @@ rewriteAstNodeOp (ast *tree, int op, ast *left, ast *right)
   tree->left = left;
   tree->right = right;
   tree->decorated = 0;
-  
+
   rewriteAstJoinSideEffects (tree, oLeft, oRight);
 }
 
@@ -3422,7 +3794,7 @@ rewriteAstNodeVal (ast *tree, value *val)
   tree->right = NULL;
   TETYPE (tree) = getSpec (TTYPE (tree) = tree->opval.val->type);
   tree->decorated = 0;
-  
+
   rewriteAstJoinSideEffects (tree, oLeft, oRight);
 }
 
@@ -3449,6 +3821,7 @@ rewriteStructAssignment (ast *tree)
   copyAstLoc (params, tree);
 
   /* create call to the appropriate memcpy function */
+  symbol *builtin_memcpy = findSym (SymbolTab, NULL, "__builtin_memcpy") ? findSym (SymbolTab, NULL, "__builtin_memcpy") : findSym (SymbolTab, NULL, "__memcpy");
   ast *ast_memcpy = newAst_VALUE (symbolVal (builtin_memcpy));
   copyAstLoc (ast_memcpy, tree);
   ast *call = newNode (CALL, ast_memcpy, params);
@@ -3657,7 +4030,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
       resultTypeProp = getLeftResultType (tree, resultTypeProp);
     else
       resultTypeProp = RESULT_TYPE_OTHER;
-      
+
     switch (tree->opval.op)
       {
       case '?':
@@ -3737,7 +4110,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           int arrayIndex = (int) ulFromVal (valFromType (RETYPE (tree)));
           int arraySize = DCL_ELEM (LTYPE (tree));
           int arrayLimit = findingAddressOf ? arraySize+1 : arraySize;
-          
+
           if (arraySize && arrayIndex >= arrayLimit)
             {
               werrorfl (tree->filename, tree->lineno, W_IDX_OUT_OF_BOUNDS, arrayIndex, arraySize);
@@ -3945,7 +4318,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           if (otree != tree)
             return decorateType (otree, RESULT_TYPE_NONE, reduceTypeAllowed);
 
-          /* if right is a literal and has the same size with left, 
+          /* if right is a literal and has the same size with left,
              then also sync their signedness to avoid unnecessary cast */
           if (IS_LITERAL (RTYPE (tree)) && getSize (RTYPE (tree)) == getSize (LTYPE (tree)))
             SPEC_USIGN (RTYPE (tree)) = SPEC_USIGN (LTYPE (tree));
@@ -3974,7 +4347,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           werrorfl (tree->filename, tree->lineno, E_ILLEGAL_ADDR, "address of bit variable");
           goto errorTreeReturn;
         }
-        
+
       if (LETYPE (tree) && SPEC_SCLS (LETYPE (tree)) == S_SFR && !port->mem.sfrupointer)
         {
           werror (E_SFR_POINTER);
@@ -3999,7 +4372,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
         }
 
       p = newLink (DECLARATOR);
-      
+
       if (!LETYPE (tree))
         {
           DCL_TYPE (p) = POINTER;
@@ -4033,12 +4406,17 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
       if (IS_AST_SYM_VALUE (tree->left))
         {
           AST_SYMBOL (tree->left)->addrtaken = 1;
-          // Do not require allocated space for static variables in inline function definitions for which no code will be emitted. Allocated space will be requested if and where it gets inlined.
+          // Do not require allocated space for static variables in inline function definitions for which no code will be emitted.
+          // Allocated space will be requested if and where it gets inlined.
           AST_SYMBOL (tree->left)->allocreq =
             !(AST_SYMBOL (tree->left)->level && currFunc && FUNC_ISINLINE (currFunc->type) && !IS_EXTERN (getSpec (currFunc->type)) && !IS_STATIC (getSpec (currFunc->type)));
         }
 
-      p->next = LTYPE (tree);
+      p->next = copyLinkChain (LTYPE (tree));
+      if (IS_DECL (p->next))
+        DCL_PTR_OPTIONAL (p->next) = false;
+      else
+        SPEC_OPTIONAL (p->next) = false; // _Optional qualifier is not preserved across &.
       TTYPE (tree) = p;
       TETYPE (tree) = getSpec (TTYPE (tree));
       LLVAL (tree) = 1;
@@ -4181,7 +4559,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
         }
 
       /* OR / XOR char with literal integral, try to reduce integral to CHAR if it fits in a CHAR */
-      if (reduceTypeAllowed && 
+      if (reduceTypeAllowed &&
           !TARGET_PDK_LIKE && // Temporary fix to avoid bug #3259 - Wrong opcodes
           IS_AST_LIT_VALUE (tree->right) &&
           IS_INTEGRAL (RTYPE (tree)) &&
@@ -4199,7 +4577,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
             }
         }
 
-      /* if right is a literal and has the same size with left, 
+      /* if right is a literal and has the same size with left,
          then also sync their signedness to avoid unnecessary cast */
       if (IS_LITERAL (RTYPE (tree)) && getSize (RTYPE (tree)) == getSize (LTYPE (tree)))
         SPEC_USIGN (RTYPE (tree)) = SPEC_USIGN (LTYPE (tree));
@@ -4435,7 +4813,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
               TETYPE (tree) = TTYPE (tree) = tree->opval.val->type;
               return tree;
             }
-          
+
           TRVAL (tree) = LRVAL (tree) = 1;
           if (reduceTypeAllowed)
               COPYTYPE (TTYPE (tree), TETYPE (tree), LTYPE (tree));
@@ -4540,7 +4918,13 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
 
       /* if the left is a pointer */
       if (IS_PTR (LTYPE (tree)) || IS_AGGREGATE (LTYPE (tree)))
-        TETYPE (tree) = getSpec (TTYPE (tree) = LTYPE (tree));
+        {
+          TETYPE (tree) = getSpec (TTYPE (tree) = copyLinkChain (LTYPE (tree)));
+          if (IS_SPEC (TTYPE (tree)->next))
+            SPEC_OPTIONAL (TTYPE (tree)->next) = false;
+          else
+            DCL_PTR_OPTIONAL (TTYPE (tree)->next) = false;
+        }
       else
         {
           tree->left = addCast (tree->left, resultTypeProp, TRUE);
@@ -4639,11 +5023,16 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
       /* the result is a ptrdiff */
       if ((IS_ARRAY (LTYPE (tree)) || IS_PTR (LTYPE (tree))) && (IS_ARRAY (RTYPE (tree)) || IS_PTR (RTYPE (tree))))
         TETYPE (tree) = TTYPE (tree) = newPtrDiffLink();
-      else
-        /* if only the left is a pointer */
-        /* then result is a pointer      */
-      if (IS_PTR (LTYPE (tree)) || IS_ARRAY (LTYPE (tree)))
-        TETYPE (tree) = getSpec (TTYPE (tree) = LTYPE (tree));
+      // If only the left is a pointer, then result is a pointer,
+      // But any _Optional qualifier on the target is dropped.
+      else if (IS_PTR (LTYPE (tree)) || IS_ARRAY (LTYPE (tree)))
+        {
+          TETYPE (tree) = getSpec (TTYPE (tree) = copyLinkChain (LTYPE (tree)));
+          if (IS_SPEC (TTYPE (tree)->next))
+            SPEC_OPTIONAL (TTYPE (tree)->next) = false;
+          else
+            DCL_PTR_OPTIONAL (TTYPE (tree)->next) = false;
+        }
       else
         {
           tree->left = addCast (tree->left, resultTypeProp, TRUE);
@@ -4926,7 +5315,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
     case CAST:                 /* change the type   */
       /* cannot cast to struct / union */
       if (IS_AGGREGATE (LTYPE (tree)))
-        {printTypeChain (LTYPE (tree), 0);
+        {
           werrorfl (tree->filename, tree->lineno, E_CAST_ILLEGAL);
           goto errorTreeReturn;
         }
@@ -4940,7 +5329,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
 
       /* if 'from' and 'to' are the same remove the superfluous cast,
        * this helps other optimizations */
-      if (compareTypeExact (LTYPE (tree), RTYPE (tree), -1) == 1)
+      if (compareTypeExact (LTYPE (tree), RTYPE (tree), -1, true) == 1)
         {
           /* mark that the explicit cast has been removed,
            * for proper processing (no integer promotion) of explicitly typecasted variable arguments */
@@ -4948,9 +5337,9 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           return tree->right;
         }
 
-      /* If code memory is read only, then pointers to code memory */
-      /* implicitly point to constants -- make this explicit       */
-      CodePtrPointsToConst (LTYPE (tree));
+      /* If code memory is read only, then pointers to code memory
+       * should point to constants -- warn if this is not the case */
+      checkCodePtrPointsToConst (LTYPE (tree), tree->left->filename, tree->left->lineno);
 
 #if 0
       /* if the right is a literal replace the tree */
@@ -5504,7 +5893,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
       if (IS_LITERAL (LTYPE (tree)))
         {
           ast * heir;
-          
+
           ++noAlloc;
           tree->right = decorateType (tree->right, resultTypeProp, reduceTypeAllowed);
           --noAlloc;
@@ -5513,7 +5902,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
             heir = tree->right->left;
           else
             heir = tree->right->right;
-            
+
           heir = decorateType (heir, resultTypeProp, reduceTypeAllowed);
           if (IS_LITERAL (TETYPE (heir)))
             TTYPE (heir) = valRecastLitVal (TTYPE (tree->right), valFromType (TETYPE (heir)))->type;
@@ -5576,6 +5965,30 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
             goto errorTreeReturn;
           }
 
+        /* if we have a controlling expression rather than a type name, apply lvalue
+           conversion, array to pointer conversion and function to pointer conversion */
+        if (!ctrl_op_is_type)
+          {
+            type = typeofOp (tree->left);
+            if (IS_DECL (type))
+              {
+                if (IS_ARRAY (type))
+                  type = aggregateToPointer (valFromType (type))->type;
+
+                if (IS_FUNC (type))
+                  type = ptrTypeFromType (type);
+
+                if (DCL_TYPE_IMPLICITINTRINSIC (type))
+                  DCL_TYPE (type) = GPOINTER;
+              }
+            else
+              {
+                if (SPEC_SCLS_IMPLICITINTRINSIC (type))
+                  SPEC_SCLS (type) = S_FIXED;
+              }
+            removeQualifiers (type);
+          }
+
         /* TODO: verify that 'type' is not a variably modified type */
 
         for(assoc_list = tree->right; assoc_list; assoc_list = assoc_list->left)
@@ -5598,29 +6011,19 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
                 assoc_type = assoc->left->opval.lnk;
                 for (assoc_etype = assoc_type; !IS_SPEC(assoc_etype); assoc_etype = assoc_etype->next);
                 checkTypeSanity (assoc_etype, "(_Generic)");
-                if (ctrl_op_is_type)
+
+                /* treat as non-equal if the address spaces differ */
+                if (SPEC_ADDRSPACE (getSpec (type)) != SPEC_ADDRSPACE (getSpec (assoc_type)))
+                  continue;
+
+                if (compareTypeExact (assoc_type, type, 0, true) > 0)
                   {
-                    if (compareTypeExact (assoc_type, type, 0) > 0 && !(SPEC_NOUN (getSpec (type)) == V_CHAR && getSpec (type)->select.s.b_implicit_sign != getSpec (assoc_type)->select.s.b_implicit_sign))
+                    if (found_expr)
                       {
-                        if (found_expr)
-                          {
-                            werror (E_MULTIPLE_MATCHES_IN_GENERIC);
-                            goto errorTreeReturn;
-                          }
-                        found_expr = assoc->right;
+                        werror (E_MULTIPLE_MATCHES_IN_GENERIC);
+                        goto errorTreeReturn;
                       }
-                  }
-                else
-                  {
-                    if (compareType (assoc_type, type, true) > 0 && !(SPEC_NOUN (getSpec (type)) == V_CHAR && getSpec (type)->select.s.b_implicit_sign != getSpec (assoc_type)->select.s.b_implicit_sign))
-                      {
-                        if (found_expr)
-                          {
-                            werror (E_MULTIPLE_MATCHES_IN_GENERIC);
-                            goto errorTreeReturn;
-                          }
-                        found_expr = assoc->right;
-                      }
+                    found_expr = assoc->right;
                   }
               }
           }
@@ -5634,7 +6037,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
             fprintf (stderr, "\n");
             goto errorTreeReturn;
           }
-        
+
         tree = found_expr;
       }
       return tree;
@@ -5854,6 +6257,9 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           goto errorTreeReturn;
         }
 
+      if (IS_PTR (LTYPE (tree)) && !isConst (LTYPE (tree)->next) && IS_AST_SYM_VALUE (tree->right) && AST_SYMBOL (tree->right)->isstrlit)
+        werrorfl (tree->filename, tree->lineno, W_NONCONST_STRINGLIT);
+
       return tree;
 
       /*------------------------------------------------------------------*/
@@ -5896,7 +6302,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           if (IS_FUNCPTR (LTYPE (tree)))
             {
               functype = LTYPE (tree)->next;
-              processFuncPtrArgs (functype);
+              processFuncPtr (functype);
             }
           else
             functype = LTYPE (tree);
@@ -5954,7 +6360,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
             }
           else if (!typecompat)
             {
-              werrorfl (tree->filename, tree->lineno, W_RETURN_MISMATCH);
+              werrorfl (tree->filename, tree->lineno, E_RETURN_MISMATCH);
               printFromToType (RTYPE (tree), currFunc->type->next);
             }
 
@@ -6140,6 +6546,7 @@ typeofOp (ast *tree)
 {
   ++noAlloc;
   tree = decorateType (resolveSymbols (tree), RESULT_TYPE_NONE, false);
+  tree->decorated = 0; // Reset, so we redecorate parameters later at CALL node to ensure that register parameters get marked correctly.
   --noAlloc;
   sym_link *type = copyLinkChain (tree->ftype);
   sym_link *spec_type;
@@ -6633,7 +7040,7 @@ createFor (symbol * trueLabel, symbol * continueLabel, symbol * falseLabel,
 
   /* attach condition label to condition */
   condExpr = createLabel (condLabel, condExpr);
-  
+
   /* attach continue to forLoop expression & attach */
   /* goto the forcond @ and of loopExpression       */
   loopExpr = newNode (NULLOP, loopExpr, newNode (GOTO, newAst_VALUE (symbolVal (condLabel)), NULL));
@@ -6649,7 +7056,7 @@ createFor (symbol * trueLabel, symbol * continueLabel, symbol * falseLabel,
   forTree = newNode (NULLOP, initExpr, condExpr);
   forTree = newNode (NULLOP, forTree, forBody);
   forTree = newNode (NULLOP, forTree, loopExpr);
-  
+
   /* the break label is already in the tree as a sibling */
   /* to the original FOR node this tree is replacing */
   return forTree;
@@ -7219,76 +7626,6 @@ fixupInline (ast * tree, long level)
 }
 
 /*-----------------------------------------------------------------*/
-/* inlineAddDecl - add a variable declaration to an ast block. It  */
-/*                 is also added to the symbol table if addSymTab  */
-/*                 is nonzero.                                     */
-/*-----------------------------------------------------------------*/
-static void
-inlineAddDecl (symbol * sym, ast * block, int addSymTab, int toFront)
-{
-  sym->reqv = NULL;
-  SYM_SPIL_LOC (sym) = NULL;
-  sym->key = 0;
-  if (block != NULL)
-    {
-      symbol **decl = &(block->values.sym);
-
-      sym->level = block->level;
-      sym->block = block->block;
-
-      while (*decl)
-        {
-          if (strcmp ((*decl)->name, sym->name) == 0)
-            return;
-          decl = &((*decl)->next);
-        }
-
-      if (toFront)
-        {
-          sym->next = block->values.sym;
-          block->values.sym = sym;
-        }
-      else
-        *decl = sym;
-
-      if (addSymTab)
-        addSym (SymbolTab, sym, sym->name, sym->level, sym->block, false);
-    }
-}
-
-/*-----------------------------------------------------------------*/
-/* inlineTempVar - create a temporary variable for inlining        */
-/*-----------------------------------------------------------------*/
-static symbol *
-inlineTempVar (sym_link * type, long level)
-{
-  symbol *sym;
-
-  sym = newSymbol (genSymName (level), level);
-  sym->type = copyLinkChain (type);
-  sym->etype = getSpec (sym->type);
-  SPEC_SCLS (sym->etype) = S_AUTO;
-  SPEC_OCLS (sym->etype) = NULL;
-  SPEC_EXTR (sym->etype) = 0;
-  SPEC_STAT (sym->etype) = 0;
-  if (IS_SPEC (sym->type))
-    {
-      SPEC_VOLATILE (sym->type) = 0;
-      SPEC_ATOMIC (sym->type) = 0;
-      SPEC_ADDRSPACE (sym->type) = 0;
-    }
-  else
-    {
-      DCL_PTR_VOLATILE (sym->type) = 0;
-      DCL_PTR_ATOMIC (sym->type) = 0;
-      DCL_PTR_ADDRSPACE (sym->type) = 0;
-    }
-  SPEC_ABSA (sym->etype) = 0;
-
-  return sym;
-}
-
-/*-----------------------------------------------------------------*/
 /* inlineFindParm - search an ast tree of parameters to find one   */
 /*                  at a particular index (0=first parameter).     */
 /*                  Returns 0 if not found.                        */
@@ -7407,6 +7744,7 @@ expandInlineFuncs (ast * tree, ast * block)
               /* {{inline_function_code}}, retsym                         */
 
               retsym = inlineTempVar (func->type->next, block->level);
+              retsym->istmp = true;
               SPEC_SCLS (retsym->etype) = S_FIXED;
               inlineAddDecl (retsym, block, TRUE, TRUE);
             }
@@ -7656,10 +7994,12 @@ createFunction (symbol * name, ast * body)
   inlineState.count = 0;
   expandInlineFuncs (body, NULL);
 
+  gatherImplicitVariables (body, NULL); /* move implicit variables into blocks */
+
   if (FUNC_ISINLINE (name->type))
     name->funcTree = copyAst (body);
 
-  allocParms (FUNC_ARGS (name->type), IFFUNC_ISSMALLC (name->type), IFFUNC_ISDYNAMICC (name->type));  /* allocate the parameters */
+  allocParms (FUNC_ARGS (name->type), name->type); // allocate the parameters
 
   /* do processing for parameters that are passed in registers */
   processRegParms (FUNC_ARGS (name->type), body);
@@ -7667,8 +8007,6 @@ createFunction (symbol * name, ast * body)
   /* set the stack pointer */
   stackPtr = 0;
   xstackPtr = -1;
-
-  gatherImplicitVariables (body, NULL); /* move implicit variables into blocks */
 
   /* allocate & autoinit the block variables */
   processBlockVars (body, &stack, ALLOCATE);
@@ -7722,7 +8060,7 @@ createFunction (symbol * name, ast * body)
     {
       GcurMemmap = statsg;
       codeOutBuf = &statsg->oBuf;
-      eBBlockFromiCode (iCodeFromAst (decorateType (resolveSymbols (staticAutos), RESULT_TYPE_NONE, true)));
+      eBBlockFromiCode (iCodeFromAst (decorateType (resolveSymbols (staticAutos), RESULT_TYPE_NONE, true))); // todo: currFunc non-NULL here! problem for funcUsesVolatile, etc?
       staticAutos = NULL;
     }
 
@@ -7742,7 +8080,7 @@ skipall:
   if (port->reset_labelKey)
     labelKey = 1;
   name->key = 0;
-  FUNC_HASBODY (name->type) = 1;
+  FUNC_HASBODY (name->type) = true;
   addSet (&operKeyReset, name);
   applyToSet (operKeyReset, resetParmKey);
 

@@ -34,7 +34,8 @@
 int __setjmp (jmp_buf buf)
 {
     unsigned char sp, esp;
-    unsigned long lsp;
+    unsigned int lsp;
+    unsigned char __xdata * xsp;
 
     /* registers would have been saved on the
        stack anyway so we need to save SP
@@ -43,30 +44,34 @@ int __setjmp (jmp_buf buf)
         sp = SP;
         esp = ESP;
     }
+    *buf++ = sp;
+    *buf++ = esp;
     lsp = sp;
-    lsp |= (unsigned int)(esp << 8);
-    lsp |= 0x400000;
-    *buf++ = lsp;
-    *buf++ = lsp >> 8;
-    *buf++ = *((unsigned char __xdata *) lsp - 0);
-    *buf++ = *((unsigned char __xdata *) lsp - 1);
-    *buf++ = *((unsigned char __xdata *) lsp - 2);
+    lsp |= esp << 8;
+    xsp = (unsigned char __xdata *) (0x400000 | lsp);
+    *buf = *xsp;
+    *++buf = *--xsp;
+    *++buf = *--xsp;
     return 0;
 }
 
 int longjmp (jmp_buf buf, int rv)
 {
-    unsigned long lsp;
+    unsigned char sp, esp;
+    unsigned int lsp;
+    unsigned char __xdata * xsp;
 
-    lsp = *buf++;
-    lsp |= (unsigned int)(*buf++ << 8);
-    lsp |= 0x400000;
-    *((unsigned char __xdata *) lsp - 0) = *buf++;
-    *((unsigned char __xdata *) lsp - 1) = *buf++;
-    *((unsigned char __xdata *) lsp - 2) = *buf++;
+    sp = *buf++;
+    esp = *buf++;
     __critical {
-        SP = lsp;
-        ESP = lsp >> 8;
+        SP = sp;
+        ESP = esp;
     }
+    lsp = sp;
+    lsp |= esp << 8;
+    xsp = (unsigned char __xdata *) (0x400000 | lsp);
+    *xsp = *buf;
+    *--xsp = *++buf;
+    *--xsp = *++buf;
     return rv ? rv : 1;
 }

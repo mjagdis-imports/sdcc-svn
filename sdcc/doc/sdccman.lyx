@@ -1,5 +1,5 @@
-#LyX 2.4 created this file. For more info see https://www.lyx.org/
-\lyxformat 620
+#LyX 2.5 created this file. For more info see https://www.lyx.org/
+\lyxformat 643
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -92,11 +92,19 @@ End
 \use_indices false
 \paperorientation portrait
 \suppress_date false
-\justification true
-\use_refstyle 0
+\justification default
+\crossref_package prettyref
 \use_formatted_ref 0
 \use_minted 0
 \use_lineno 0
+\backgroundcolor none
+\fontcolor none
+\notefontcolor lightgray
+\boxbgcolor red
+\table_border_color default
+\table_odd_row_color default
+\table_even_row_color default
+\table_alt_row_colors_start 1
 \branch test
 \selected 0
 \filename_suffix 0
@@ -131,6 +139,7 @@ End
 \html_be_strict false
 \docbook_table_output 0
 \docbook_mathml_prefix 1
+\docbook_mathml_version 0
 \end_header
 
 \begin_body
@@ -148,7 +157,6 @@ Please note:
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -380,7 +388,6 @@ You might also want to have a look at the wiki
 status open
 
 \begin_layout Plain Layout
-
 https://sourceforge.net/p/sdcc/wiki/
 \end_layout
 
@@ -1069,7 +1076,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -1101,7 +1107,6 @@ The latest SDCC version can be downloaded from
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sdcc.sourceforge.net/snap.php
 \end_layout
 
@@ -1179,7 +1184,6 @@ derived from GCC cpp preprocessor
 status collapsed
 
 \begin_layout Plain Layout
-
 http://gcc.gnu.org/
 \end_layout
 
@@ -1199,7 +1203,6 @@ derived from ASXXXX
 status collapsed
 
 \begin_layout Plain Layout
-
 https://shop-pdp.net/ashtml/
 \end_layout
 
@@ -1242,7 +1245,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -1265,7 +1267,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -1297,7 +1298,6 @@ derived from GNU Binutils
 status collapsed
 
 \begin_layout Plain Layout
-
 http://www.gnu.org/software/binutils/
 \end_layout
 
@@ -1396,7 +1396,6 @@ Boost C++ libraries:
 status collapsed
 
 \begin_layout Plain Layout
-
 http://www.boost.org/
 \end_layout
 
@@ -1430,7 +1429,6 @@ GPLv2 license
 status collapsed
 
 \begin_layout Plain Layout
-
 http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 \end_layout
 
@@ -1458,7 +1456,6 @@ LGPLv2.1 license
 status collapsed
 
 \begin_layout Plain Layout
-
 http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
 \end_layout
 
@@ -1486,7 +1483,6 @@ GPLv3 license
 status collapsed
 
 \begin_layout Plain Layout
-
 http://www.gnu.org/licenses/gpl.html
 \end_layout
 
@@ -1514,7 +1510,6 @@ zlib/libpng License
 status collapsed
 
 \begin_layout Plain Layout
-
 http://www.opensource.org/licenses/Zlib
 \end_layout
 
@@ -1542,7 +1537,6 @@ Boost Software License 1.0 (BSL-1.0)
 status collapsed
 
 \begin_layout Plain Layout
-
 http://www.opensource.org/licenses/BSL-1.0
 \end_layout
 
@@ -1562,7 +1556,6 @@ This documentation is maintained using a free open source word processor (\Speci
 status collapsed
 
 \begin_layout Plain Layout
-
 http://www.lyx.org/
 \end_layout
 
@@ -1681,7 +1674,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -1711,7 +1703,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -1731,7 +1722,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -1750,7 +1740,6 @@ status open
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -1774,7 +1763,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -1793,7 +1781,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -1813,7 +1800,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -1832,7 +1818,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -1855,7 +1840,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -1874,7 +1858,6 @@ status open
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -1949,7 +1932,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -1971,7 +1953,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -1990,7 +1971,6 @@ status open
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -2014,7 +1994,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -2033,7 +2012,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -2053,7 +2031,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -2072,7 +2049,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -2095,7 +2071,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -2114,7 +2089,6 @@ status open
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -2139,7 +2113,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -2156,7 +2129,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -2172,7 +2144,6 @@ option -
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -2196,7 +2167,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -2208,7 +2178,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -2233,7 +2202,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -2245,7 +2213,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -2368,7 +2335,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -2387,7 +2353,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -2410,7 +2375,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -2428,7 +2392,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -2448,7 +2411,6 @@ status open
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -2897,7 +2859,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -2945,7 +2906,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -2971,7 +2931,6 @@ In 4.1.10,
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -3005,7 +2964,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -3028,7 +2986,6 @@ In 4.1.13,
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -3075,7 +3032,6 @@ In 4.2.9,
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -3142,7 +3098,6 @@ In 4.3.6,
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -3221,12 +3176,139 @@ In 4.5.12,
 
 \begin_layout Itemize
 In 4.5.12,
- struct/union members other than anoymous struct/union or bit-fields must be named.
+ struct/union members other than anonymous struct/union or bit-fields must be named.
 \end_layout
 
 \begin_layout Itemize
 In 4.5.13,
  stray non-ASCII characters in source files are an error instead of being silently ignored.
+\end_layout
+
+\begin_layout Itemize
+In 4.5.15,
+ the omission of integer promotions on explicitly cast variable arguments only happens for the mcs51,
+ ds390,
+ mos6502,
+ mos65c02,
+ pic14 and pic16 ports.
+\end_layout
+
+\begin_layout Itemize
+In 4.5.17,
+ the names of mixed-sign support functions for multiplicative operators have been fixed.
+\end_layout
+
+\begin_layout Itemize
+In 4.5.18,
+ plain int bit-fields are signed.
+\end_layout
+
+\begin_layout Itemize
+In 4.5.20,
+ some non-matching return types that previously raised warnings raise errors.
+\end_layout
+
+\begin_layout Itemize
+In 4.5.23,
+ 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+_Generic
+\end_layout
+
+\end_inset
+
+ works as clarified by C23,
+ more attention is payed to implicit 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+char
+\end_layout
+
+\end_inset
+
+ signedness,
+ string literals are only 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+const
+\end_layout
+
+\end_inset
+
+ if requested with 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+--fconst-str
+\end_layout
+
+\end_inset
+
+,
+ and a read-only 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+__code
+\end_layout
+
+\end_inset
+
+ address space only implies 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+const
+\end_layout
+
+\end_inset
+
+ if requested with 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+--fconst-code
+\end_layout
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Itemize
+In 4.5.24,
+ 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+--fconst-str
+\end_layout
+
+\end_inset
+
+ has been renamed to 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+--fconst-stringlit
+\end_layout
+
+\end_inset
+
+.
 \end_layout
 
 \begin_layout Section
@@ -3252,7 +3334,6 @@ The SDCC home page at
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sdcc.sourceforge.net/
 \end_layout
 
@@ -3267,7 +3348,6 @@ http://sdcc.sourceforge.net/
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sdcc.sourceforge.net/doc/sdccman.pdf
 \end_layout
 
@@ -3281,7 +3361,6 @@ http://sdcc.sourceforge.net/doc/sdccman.pdf
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sourceforge.net/p/sdcc/code/8805/tree/trunk/sdcc/
 \end_layout
 
@@ -3357,7 +3436,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -3374,7 +3452,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -3393,7 +3470,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -3411,7 +3487,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -3428,7 +3503,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -3544,7 +3618,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -3561,7 +3634,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -3580,7 +3652,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -3597,7 +3668,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -3616,7 +3686,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -3633,7 +3702,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -3652,7 +3720,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -3669,7 +3736,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -3688,7 +3754,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -3705,7 +3770,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -3724,7 +3788,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -3741,7 +3804,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -3760,7 +3822,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -3777,7 +3838,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -3796,7 +3856,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -3813,7 +3872,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -3832,7 +3890,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -3849,7 +3906,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -3868,7 +3924,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -3885,7 +3940,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -3904,7 +3958,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -3921,7 +3974,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -3940,7 +3992,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -3957,7 +4008,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -3976,7 +4026,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -3993,7 +4042,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -4012,7 +4060,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -4029,7 +4076,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -4048,7 +4094,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -4065,7 +4110,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -4085,7 +4129,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -4103,7 +4146,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -4124,7 +4166,6 @@ Furthermore the environment variables CC,
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -4784,7 +4825,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -4804,7 +4844,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -4830,7 +4869,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -4842,7 +4880,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -4920,7 +4957,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -4946,7 +4982,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -5068,7 +5103,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -5087,7 +5121,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -5105,7 +5138,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -5141,7 +5173,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -5167,7 +5198,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -6052,7 +6082,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -6074,7 +6103,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -6095,7 +6123,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -6534,7 +6561,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -6567,7 +6593,6 @@ With the exception of
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -6665,7 +6690,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -6687,7 +6711,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -6708,7 +6731,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -7302,7 +7324,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -7338,7 +7359,7 @@ SDCC can be built for various host platforms using the instructions provided bel
 \end_layout
 
 \begin_layout Subsection
-Building SDCC on Linux
+Building SDCC on Linux and BSD 
 \begin_inset CommandInset label
 LatexCommand label
 name "subsec:Building-SDCC-on-Linux"
@@ -7371,7 +7392,6 @@ bz2
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sdcc.sourceforge.net/snap.php
 \end_layout
 
@@ -7424,17 +7444,66 @@ Change directory into the main SDCC directory,
 Type
 \series default
  
-\family sans
-\series bold
-"./configure
-\family default
-\series default
-".
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+./configure
+\end_layout
+
+\end_inset
+
  This configures the package for compilation on your system.
- When the treedec library is available,
+\end_layout
+
+\begin_layout Itemize
+SDCC needs the boost libraries.
+ On typical GNU/Linux distributions,
+ they are in the search path,
+ on typical BSD they are not,
+ requiring e.g.
+ 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+CXX="c++ -I/usr/local/include" CC=cc ./configure
+\end_layout
+
+\end_inset
+
+ instead.
+\end_layout
+
+\begin_layout Itemize
+The pic14 and pic16 ports require gputils.
+ If they are not available,
+ and PIC support is not needed,
+ you can instead use 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+./configure –disable-pic14-port –disable-pic16-port
+\end_layout
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Itemize
+When the treedec library is available,
  it should be found and used automatically (improving the compilation time / code quality trade-off).
  As of SDCC 3.7.0,
  the current develop branch from https://github.com/freetdi/tdlib is a suitable version of treedec.
+\end_layout
+
+\begin_layout Itemize
+When the libu8ident library is available,
+ it should be found and used automatically (improving diagnostics and standard-compliance for non-ASCII characters in identifiers).
+ As of SDCC 4.6.0,
+ the 0.4 release from https://github.com/rurban/libu8ident is a suitable version of libu8ident.
 \end_layout
 
 \begin_layout Enumerate
@@ -7443,13 +7512,19 @@ Type
 Type
 \series default
  
-\family sans
-\series bold
-"make
-\family default
-\series default
-"
 \series medium
+
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+
+\series medium
+make
+\end_layout
+
+\end_inset
+
 .
 
 \series default
@@ -7463,11 +7538,15 @@ Type
 Type
 \series default
  
-\family sans
-\series bold
-"make install"
-\family default
-\series default
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+make install
+\end_layout
+
+\end_inset
+
  as root
 \series medium
 .
@@ -7588,7 +7667,6 @@ In order to install Cygwin on Windows download setup.exe from www.cygwin.com
 status collapsed
 
 \begin_layout Plain Layout
-
 http://www.cygwin.com/
 \end_layout
 
@@ -7714,7 +7792,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -7738,7 +7815,6 @@ rxvt -sl 1000 -fn "Lucida Console-12" -sr -cr red
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -7821,7 +7897,6 @@ Download the source package
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sdcc.sourceforge.net/snap.php
 \end_layout
 
@@ -7863,7 +7938,6 @@ Apart from the SDCC sources you also need to have the BOOST libraries installed 
 status collapsed
 
 \begin_layout Plain Layout
-
 http://www.boost.org/
 \end_layout
 
@@ -7885,7 +7959,6 @@ In order to build SDCC with MSVC you need win32 executables of bison.exe,
 status collapsed
 
 \begin_layout Plain Layout
-
 http://unxutils.sourceforge.net
 \end_layout
 
@@ -7917,7 +7990,6 @@ msys (
 status collapsed
 
 \begin_layout Plain Layout
-
 http://www.mingw.org/wiki/msys
 \end_layout
 
@@ -7940,7 +8012,6 @@ msys2
 status collapsed
 
 \begin_layout Plain Layout
-
 https://msys2.github.io
 \end_layout
 
@@ -8171,7 +8242,6 @@ Download the binary zip package from
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sdcc.sf.net/snap.php
 \end_layout
 
@@ -8227,7 +8297,6 @@ sdcc-x.y.z-setup.exe
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sourceforge.net/projects/sdcc/files/
 \end_layout
 
@@ -8242,7 +8311,6 @@ sdcc-yyyymmdd-xxxx-setup.exe
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sdcc.sourceforge.net/snap.php
 \end_layout
 
@@ -8693,7 +8761,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -8732,7 +8799,6 @@ make
 status collapsed
 
 \begin_layout Plain Layout
-
 http://www.lyx.org
 \end_layout
 
@@ -8744,7 +8810,6 @@ http://www.lyx.org
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sdcc.sourceforge.net/snap.php
 \end_layout
 
@@ -8803,7 +8868,6 @@ PDF version of this document
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sdcc.sourceforge.net/doc/sdccman.pdf
 \end_layout
 
@@ -8846,7 +8910,6 @@ There are many references pointing away from this documentation.
 status collapsed
 
 \begin_layout Plain Layout
-
 http://www.opencores.org
 \end_layout
 
@@ -8893,7 +8956,6 @@ FPGA (field programmable gate array)
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sourceforge.net/projects/fpgac/
 \end_layout
 
@@ -8957,7 +9019,6 @@ The first thing you should do after installing your SDCC compiler is to see if i
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -9286,7 +9347,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -9307,7 +9367,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -9697,12 +9756,21 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-cpp|see
+cpp
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+|
+\end_layout
 
+\end_inset
+
+see
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 {
 \end_layout
 
@@ -9713,7 +9781,6 @@ sdcpp
 status collapsed
 
 \begin_layout Plain Layout
-
 }
 \end_layout
 
@@ -9729,7 +9796,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 http://gcc.gnu.org/
 \end_layout
 
@@ -9762,7 +9828,6 @@ SDCC used an about 1998 branch of asxxxx version 2.0 which unfortunately is not 
 status collapsed
 
 \begin_layout Plain Layout
-
 https://shop-pdp.net/
 \end_layout
 
@@ -9841,7 +9906,6 @@ sstm8 (simulator)
 status collapsed
 
 \begin_layout Plain Layout
-
 http://mazsola.iit.uni-miskolc.hu/~drdani/embedded/s51
 \end_layout
 
@@ -9937,7 +10001,6 @@ ISO/IEC 9899 - Programming languages - C
 status collapsed
 
 \begin_layout Plain Layout
-
 https://www.open-std.org/jtc1/sc22/wg14/www/projects#9899
 \end_layout
 
@@ -9977,7 +10040,6 @@ status open
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -10116,7 +10178,6 @@ K
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 &
@@ -10356,7 +10417,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -10396,7 +10456,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -10454,7 +10513,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -10541,7 +10599,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -10600,7 +10657,6 @@ status open
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -10751,7 +10807,7 @@ long long
 \end_layout
 
 \begin_layout Itemize
-Qualifier-preserving standard library functions are not implemented.
+#embed is not supported
 \end_layout
 
 \begin_layout Subsubsection*
@@ -10993,7 +11049,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -11136,6 +11191,75 @@ literal "false"
  Case range expressions
 \end_layout
 
+\begin_layout Itemize
+\begin_inset CommandInset href
+LatexCommand href
+name "N3398"
+target "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n3398.pdf"
+literal "false"
+
+\end_inset
+
+:
+ The 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+containerof
+\end_layout
+
+\end_inset
+
+ Macro
+\end_layout
+
+\begin_layout Itemize
+\begin_inset CommandInset href
+LatexCommand href
+name "N3485"
+target "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n3485.htm"
+literal "false"
+
+\end_inset
+
+:
+ Literal Suffixes for 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+size_t
+\end_layout
+
+\end_inset
+
+ (as an extension)
+\end_layout
+
+\begin_layout Itemize
+\begin_inset CommandInset href
+LatexCommand href
+name "N3804"
+target "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n3804.txt"
+literal "false"
+
+\end_inset
+
+:
+ The Elvis operator 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+?:
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Subsection
 Embedded C
 \end_layout
@@ -11186,7 +11310,6 @@ status open
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -11279,7 +11402,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -11302,7 +11424,6 @@ status open
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -11371,7 +11492,7 @@ Structures,
 \end_layout
 
 \begin_layout Itemize
-A plain int bit-field is treated as an unsigned int bit-field.
+A plain int bit-field is treated as a signed int bit-field.
 \end_layout
 
 \begin_layout Itemize
@@ -11775,7 +11896,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -11794,7 +11914,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -11903,7 +12022,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -11922,7 +12040,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -11956,7 +12073,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -12006,7 +12122,6 @@ file containing debug information (generated with option -
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -12066,7 +12181,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -12347,7 +12461,6 @@ The srecord package is available at
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sourceforge.net/projects/srecord/
 \end_layout
 
@@ -12807,6 +12920,722 @@ name "sec:Command-Line-Options"
 \end_inset
 
 
+\end_layout
+
+\begin_layout Subsection
+Language dialect Options
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-std-<arg>
+\series default
+ Determine the language standard.
+ For enhanced compatibility with other compilers,
+ 
+\series bold
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-std
+\series default
+ can also be used with a single dash (i.e.
+ 
+\series bold
+-std
+\series default
+) and with 
+\series bold
+=
+\series default
+ or 
+\series bold
+
+\begin_inset space \textvisiblespace{}
+\end_inset
+
+
+\series default
+ (whitespace) as delimiter.
+ The language standard,
+ specified via 
+\series bold
+<arg>
+\series default
+,
+ can be one of the following:
+\end_layout
+
+\begin_deeper
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+c90 
+\begin_inset Index idx
+range none
+pageformat default
+status collapsed
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-std-c89
+\end_layout
+
+\end_inset
+
+
+\series default
+ Follow the ISO/IEC 9899 First Edition standard (ANSI C89 / ISO C90).
+ Alternative spellings:
+ 
+\series bold
+c89
+\series default
+,
+ 
+\series bold
+iso9899:1990
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+c94 
+\begin_inset Index idx
+range none
+pageformat default
+status collapsed
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-std-sdcc99
+\end_layout
+
+\end_inset
+
+
+\series default
+ Follow the ISO/IEC 9899 First Edition standard as modified in amendment 1.
+ Alternative spelling:
+ 
+\series bold
+c95,
+ iso9899:199409
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+c99 
+\begin_inset Index idx
+range none
+pageformat default
+status collapsed
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-std-sdcc99
+\end_layout
+
+\end_inset
+
+
+\series default
+ Follow the ISO/IEC 9899 Second Edition standard (ISO C99).
+ Alternative spelling:
+ 
+\series bold
+iso9899:1999
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+c11 
+\begin_inset Index idx
+range none
+pageformat default
+status collapsed
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-std-sdcc11
+\end_layout
+
+\end_inset
+
+
+\series default
+ Follow the ISO/IEC 9899 Third Edition standard (ISO C11).
+ Alternative spelling:
+ 
+\series bold
+iso9899:2011
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+c17 
+\begin_inset Index idx
+range none
+pageformat default
+status collapsed
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-std-sdcc17
+\end_layout
+
+\end_inset
+
+
+\series default
+ Follow the ISO/IEC 9899 Fourth Edition standard (ISO C17).
+ Alternative spellings:
+ 
+\series bold
+iso9899:2017
+\series default
+,
+ 
+\series bold
+c18
+\series default
+,
+ 
+\series bold
+iso9899:2018
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+c23 
+\begin_inset Index idx
+range none
+pageformat default
+status collapsed
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-std-sdcc23
+\end_layout
+
+\end_inset
+
+
+\series default
+ Follow the ISO/IEC 9899 Fifth Edition standard (ISO C23).
+ Alternative spelling:
+ 
+\series bold
+c2x
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+c2y 
+\begin_inset Index idx
+range none
+pageformat default
+status collapsed
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-std-sdcc2y
+\end_layout
+
+\end_inset
+
+
+\series default
+ Enable features anticipated for the Sixth Edition standard (currently abbreviated ISO C2y).
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+sdcc90 
+\begin_inset Index idx
+range none
+pageformat default
+status collapsed
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-std-sdcc89
+\end_layout
+
+\end_inset
+
+
+\series default
+ Generally follow ANSI C89 / ISO C90,
+ but allow some SDCC behaviour that conflicts with the standard.
+ Alternative spelling:
+ 
+\series bold
+sdcc89
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+sdcc99 
+\begin_inset Index idx
+range none
+pageformat default
+status collapsed
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-std-sdcc99
+\end_layout
+
+\end_inset
+
+
+\series default
+ Generally follow ISO C99,
+ but allow some SDCC behaviour that conflicts with the standard.
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+sdcc11 
+\begin_inset Index idx
+range none
+pageformat default
+status collapsed
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-std-sdcc11
+\end_layout
+
+\end_inset
+
+
+\series default
+ Generally follow ISO C11,
+ but allow some SDCC behaviour that conflicts with the standard (default).
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+sdcc17 
+\begin_inset Index idx
+range none
+pageformat default
+status collapsed
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-std-sdcc17
+\end_layout
+
+\end_inset
+
+
+\series default
+ Generally follow ISO C17,
+ but allow some SDCC behaviour that conflicts with the standard.
+ Alternative spelling:
+ 
+\series bold
+sdcc18
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+sdcc23 
+\begin_inset Index idx
+range none
+pageformat default
+status collapsed
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-std-sdcc23
+\end_layout
+
+\end_inset
+
+
+\series default
+ Generally follow ISO C23,
+ but allow some SDCC behaviour that conflicts with the standard.
+ Alternative spelling:
+ 
+\series bold
+sdcc2x
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+sdcc2y 
+\begin_inset Index idx
+range none
+pageformat default
+status collapsed
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-std-sdcc2y
+\end_layout
+
+\end_inset
+
+
+\series default
+ Generally follow ISO C2y,
+ but allow some SDCC behaviour that conflicts with the standard.
+\end_layout
+
+\end_deeper
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-fdollars-in-identifiers
+\begin_inset Index idx
+range none
+pageformat default
+status collapsed
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-fdollars-in-identifiers
+\end_layout
+
+\end_inset
+
+
+\series default
+ Permit '$' as an identifier character.
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-fsigned-char
+\begin_inset Index idx
+range none
+pageformat default
+status open
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-fsigned-char
+\end_layout
+
+\end_inset
+
+
+\series default
+ By default char is 
+\family typewriter
+unsigned
+\family default
+.
+ To set the signedness for characters to signed,
+ use the option -
+\series bold
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+
+\series default
+-fsigned-char.
+ If this option is not set and no signedness keyword (unsigned/signed) is given,
+ a char will be unsigned.
+ All other types are unaffected.
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-const-stringlit
+\begin_inset Index idx
+range none
+pageformat default
+status open
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-const-stringlit
+\end_layout
+
+\end_inset
+
+
+\series default
+ Make string literals const.
 \end_layout
 
 \begin_layout Subsection
@@ -13562,7 +14391,17 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-Preprocessor!Options
+Preprocessor
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+Options
 \end_layout
 
 \end_inset
@@ -13611,12 +14450,21 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-cpp|see
+cpp
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+|
+\end_layout
 
+\end_inset
+
+see
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 {
 \end_layout
 
@@ -13627,7 +14475,6 @@ sdcpp
 status collapsed
 
 \begin_layout Plain Layout
-
 }
 \end_layout
 
@@ -13647,7 +14494,6 @@ gcc
 status collapsed
 
 \begin_layout Plain Layout
-
 http://gcc.gnu.org/
 \end_layout
 
@@ -13667,7 +14513,6 @@ Manual at
 status collapsed
 
 \begin_layout Plain Layout
-
 http://www.gnu.org/software/gcc/onlinedocs/
 \end_layout
 
@@ -14006,6 +14851,51 @@ Optimization options
 
 \begin_layout Labeling
 \labelwidthstring 00.00.0000
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-
+\series bold
+no
+\series default
+purity
+\begin_inset Index idx
+range none
+pageformat default
+status open
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-purity
+\end_layout
+
+\end_inset
+
+ Disable optimization based on functions being pure.
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
 
 \series bold
 -
@@ -14013,7 +14903,6 @@ Optimization options
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -14033,7 +14922,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -14089,7 +14977,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 #
 \end_layout
@@ -14118,6 +15005,53 @@ Subexpression elimination
 
 \begin_layout Labeling
 \labelwidthstring 00.00.0000
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-
+\series bold
+nolospre
+\series default
+
+\begin_inset Index idx
+range none
+pageformat default
+status open
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-nolospre
+\end_layout
+
+\end_inset
+
+ Disable lospre.
+ lospre is an advanced redundancy elimination technique,
+ essentially an improved variant of global subexpression elimination.
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
 
 \series bold
 -
@@ -14125,7 +15059,6 @@ Subexpression elimination
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -14145,7 +15078,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -14188,7 +15120,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 #
 \end_layout
@@ -14213,7 +15144,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -14232,7 +15162,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -14266,7 +15195,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 #
 \end_layout
@@ -14291,7 +15219,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -14310,7 +15237,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -14351,7 +15277,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -14374,7 +15299,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -14400,7 +15324,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -14419,7 +15342,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -14460,7 +15382,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -14479,7 +15400,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -14508,7 +15428,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -14527,7 +15446,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -14555,7 +15473,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -14576,7 +15493,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -14619,7 +15535,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -14638,7 +15553,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -14680,7 +15594,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -14699,7 +15612,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -14723,7 +15635,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -14746,7 +15657,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -14774,7 +15684,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -14793,7 +15702,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -14817,7 +15725,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -14840,7 +15747,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -14868,7 +15774,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -14887,7 +15792,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -14916,7 +15820,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -14935,7 +15838,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -14962,7 +15864,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -14985,7 +15886,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -15010,7 +15910,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -15033,7 +15932,6 @@ status open
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -15063,56 +15961,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--
-\series bold
-nolospre
-\series default
-
-\begin_inset Index idx
-range none
-pageformat default
-status open
-
-\begin_layout Plain Layout
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--nolospre
-\end_layout
-
-\end_inset
-
- Disable lospre.
- lospre is an advanced redundancy elimination technique,
- essentially an improved variant of global subexpression elimination.
-\end_layout
-
-\begin_layout Labeling
-\labelwidthstring 00.00.0000
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
 \backslash
 /
 \end_layout
@@ -15135,7 +15983,6 @@ status open
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -15162,7 +16009,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -15186,7 +16032,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -15199,6 +16044,68 @@ status collapsed
 \end_inset
 
  Disable the optimization of calls to the standard library.
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-nosidechannels
+\begin_inset Index idx
+range none
+pageformat default
+status open
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-nosidechannels
+\end_layout
+
+\end_inset
+
+
+\series default
+ Disable optimizations that are likely to introduce side-channels,
+ which could leak information about the data being processed (in particular timing and energy-use side-channels).
+ While SDCC can try to avoid introducing side-channels,
+ the option cannot remove side-channels introduced by the programmer.
+ Machine-independent code transformations affected by this option include:
+\end_layout
+
+\begin_layout Itemize
+The optimization of divisions of signed operands by powers of two into shifts is disabled.
+\end_layout
+
+\begin_layout Itemize
+When a switch statement has more than two cases,
+ jump tables are preferred over match-and-jump sequences.
+\end_layout
+
+\begin_layout Standard
+Also see the documentation for the individual ports for port-specific details on side-channels.
 \end_layout
 
 \begin_layout Subsection
@@ -15231,7 +16138,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -15250,7 +16156,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -15294,7 +16199,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -15313,7 +16217,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -15356,7 +16259,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -15377,7 +16279,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -15440,7 +16341,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -15459,7 +16359,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -15643,7 +16542,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -15662,7 +16560,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -15729,7 +16626,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -15745,7 +16641,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -15768,7 +16663,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -15788,7 +16682,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -15803,7 +16696,7 @@ status collapsed
  
 \begin_inset CommandInset label
 LatexCommand label
-name "lyx:--callee-saves-function1[,function2][,function3]..."
+name "lyx:--callee-saves-function1[.function2][.function3]..."
 
 \end_inset
 
@@ -15857,7 +16750,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -15881,7 +16773,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 #
 \end_layout
@@ -15893,7 +16784,6 @@ pragma callee
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -15909,7 +16799,7 @@ saves
  
 \begin_inset CommandInset ref
 LatexCommand vpageref
-reference "ite:callee_saves-function1[,function2[,function3...]]--"
+reference "ite:callee_saves-function1[.function2[.function3...]]--"
 nolink "false"
 
 \end_inset
@@ -15926,7 +16816,6 @@ nolink "false"
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -15946,7 +16835,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -15967,7 +16855,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -15987,7 +16874,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -16006,7 +16892,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -16079,7 +16964,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -16098,7 +16982,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -16128,7 +17011,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -16147,7 +17029,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -16198,7 +17079,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -16217,7 +17097,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -16258,80 +17137,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--fsigned-char
-\begin_inset Index idx
-range none
-pageformat default
-status open
-
-\begin_layout Plain Layout
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--fsigned-char
-\end_layout
-
-\end_inset
-
-
-\series default
- By default char is 
-\family typewriter
-unsigned
-\family default
-.
- To set the signedness for characters to signed,
- use the option -
-\series bold
-
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
-
-\series default
--fsigned-char.
- If this option is set and no signedness keyword (unsigned/signed) is given,
- a char will be unsigned.
- All other types are unaffected.
-\end_layout
-
-\begin_layout Labeling
-\labelwidthstring 00.00.0000
-
-\series bold
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
 \backslash
 /
 \end_layout
@@ -16350,7 +17155,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -16378,7 +17182,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -16397,7 +17200,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -16437,6 +17239,53 @@ status collapsed
 
 \begin_layout Plain Layout
 
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-norestartseqatomics
+\begin_inset Index idx
+range none
+pageformat default
+status open
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-norestartseqatomics
+\end_layout
+
+\end_inset
+
+
+\series default
+ Omit restartable sequence support routines for atomics;
+ can reduce code size,
+ but disables support for atomic that use these support routines;
+ trying to use such atomics will then result in a diagnostic.
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 /
@@ -16456,7 +17305,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -16505,7 +17353,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -16524,7 +17371,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -16553,7 +17399,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -16572,7 +17417,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -16595,7 +17439,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -16617,7 +17460,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -16636,7 +17478,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -16664,7 +17505,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -16696,7 +17536,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -16753,7 +17592,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -16776,7 +17614,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -16804,7 +17641,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -16823,7 +17659,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -16851,7 +17686,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -16870,7 +17704,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -16898,7 +17731,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -16917,7 +17749,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -16972,7 +17803,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -16991,7 +17821,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -17070,574 +17899,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--std-<arg>
-\series default
- Determine the language standard.
- For enhanced compatibility with other compilers,
- 
-\series bold
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--std
-\series default
- can also be used with a single dash (i.e.
- 
-\series bold
--std
-\series default
-) and with 
-\series bold
-=
-\series default
- or 
-\series bold
-
-\begin_inset space \textvisiblespace{}
-\end_inset
-
-
-\series default
- (whitespace) as delimiter.
- The language standard,
- specified via 
-\series bold
-<arg>
-\series default
-,
- can be one of the following:
-\end_layout
-
-\begin_deeper
-\begin_layout Labeling
-\labelwidthstring 00.00.0000
-
-\series bold
-c90 
-\begin_inset Index idx
-range none
-pageformat default
-status collapsed
-
-\begin_layout Plain Layout
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--std-c89
-\end_layout
-
-\end_inset
-
-
-\series default
- Follow the ISO/IEC 9899 First Edition standard (ANSI C89 / ISO C90).
- Alternative spellings:
- 
-\series bold
-c89
-\series default
-,
- 
-\series bold
-iso9899:1990
-\end_layout
-
-\begin_layout Labeling
-\labelwidthstring 00.00.0000
-
-\series bold
-c94 
-\begin_inset Index idx
-range none
-pageformat default
-status collapsed
-
-\begin_layout Plain Layout
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--std-sdcc99
-\end_layout
-
-\end_inset
-
-
-\series default
- Follow the ISO/IEC 9899 First Edition standard as modified in amendment 1.
- Alternative spelling:
- 
-\series bold
-c95,
- iso9899:199409
-\end_layout
-
-\begin_layout Labeling
-\labelwidthstring 00.00.0000
-
-\series bold
-c99 
-\begin_inset Index idx
-range none
-pageformat default
-status collapsed
-
-\begin_layout Plain Layout
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--std-sdcc99
-\end_layout
-
-\end_inset
-
-
-\series default
- Follow the ISO/IEC 9899 Second Edition standard (ISO C99).
- Alternative spelling:
- 
-\series bold
-iso9899:1999
-\end_layout
-
-\begin_layout Labeling
-\labelwidthstring 00.00.0000
-
-\series bold
-c11 
-\begin_inset Index idx
-range none
-pageformat default
-status collapsed
-
-\begin_layout Plain Layout
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--std-sdcc11
-\end_layout
-
-\end_inset
-
-
-\series default
- Follow the ISO/IEC 9899 Third Edition standard (ISO C11).
- Alternative spelling:
- 
-\series bold
-iso9899:2011
-\end_layout
-
-\begin_layout Labeling
-\labelwidthstring 00.00.0000
-
-\series bold
-c17 
-\begin_inset Index idx
-range none
-pageformat default
-status collapsed
-
-\begin_layout Plain Layout
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--std-sdcc17
-\end_layout
-
-\end_inset
-
-
-\series default
- Follow the ISO/IEC 9899 Fourth Edition standard (ISO C17).
- Alternative spellings:
- 
-\series bold
-iso9899:2017
-\series default
-,
- 
-\series bold
-c18
-\series default
-,
- 
-\series bold
-iso9899:2018
-\end_layout
-
-\begin_layout Labeling
-\labelwidthstring 00.00.0000
-
-\series bold
-c23 
-\begin_inset Index idx
-range none
-pageformat default
-status collapsed
-
-\begin_layout Plain Layout
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--std-sdcc23
-\end_layout
-
-\end_inset
-
-
-\series default
- Follow the ISO/IEC 9899 Fifth Edition standard (ISO C23).
- Alternative spelling:
- 
-\series bold
-c2x
-\end_layout
-
-\begin_layout Labeling
-\labelwidthstring 00.00.0000
-
-\series bold
-c2y 
-\begin_inset Index idx
-range none
-pageformat default
-status collapsed
-
-\begin_layout Plain Layout
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--std-sdcc2y
-\end_layout
-
-\end_inset
-
-
-\series default
- Enable features anticipated for the Sixth Edition standard (currently abbreviated ISO C2y).
-\end_layout
-
-\begin_layout Labeling
-\labelwidthstring 00.00.0000
-
-\series bold
-sdcc90 
-\begin_inset Index idx
-range none
-pageformat default
-status collapsed
-
-\begin_layout Plain Layout
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--std-sdcc89
-\end_layout
-
-\end_inset
-
-
-\series default
- Generally follow ANSI C89 / ISO C90,
- but allow some SDCC behaviour that conflicts with the standard.
- Alternative spelling:
- 
-\series bold
-sdcc89
-\end_layout
-
-\begin_layout Labeling
-\labelwidthstring 00.00.0000
-
-\series bold
-sdcc99 
-\begin_inset Index idx
-range none
-pageformat default
-status collapsed
-
-\begin_layout Plain Layout
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--std-sdcc99
-\end_layout
-
-\end_inset
-
-
-\series default
- Generally follow ISO C99,
- but allow some SDCC behaviour that conflicts with the standard.
-\end_layout
-
-\begin_layout Labeling
-\labelwidthstring 00.00.0000
-
-\series bold
-sdcc11 
-\begin_inset Index idx
-range none
-pageformat default
-status collapsed
-
-\begin_layout Plain Layout
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--std-sdcc11
-\end_layout
-
-\end_inset
-
-
-\series default
- Generally follow ISO C11,
- but allow some SDCC behaviour that conflicts with the standard (default).
-\end_layout
-
-\begin_layout Labeling
-\labelwidthstring 00.00.0000
-
-\series bold
-sdcc17 
-\begin_inset Index idx
-range none
-pageformat default
-status collapsed
-
-\begin_layout Plain Layout
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--std-sdcc17
-\end_layout
-
-\end_inset
-
-
-\series default
- Generally follow ISO C17,
- but allow some SDCC behaviour that conflicts with the standard.
- Alternative spelling:
- 
-\series bold
-sdcc18
-\end_layout
-
-\begin_layout Labeling
-\labelwidthstring 00.00.0000
-
-\series bold
-sdcc23 
-\begin_inset Index idx
-range none
-pageformat default
-status collapsed
-
-\begin_layout Plain Layout
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--std-sdcc23
-\end_layout
-
-\end_inset
-
-
-\series default
- Generally follow ISO C23,
- but allow some SDCC behaviour that conflicts with the standard.
- Alternative spelling:
- 
-\series bold
-sdcc2x
-\end_layout
-
-\begin_layout Labeling
-\labelwidthstring 00.00.0000
-
-\series bold
-sdcc2y 
-\begin_inset Index idx
-range none
-pageformat default
-status collapsed
-
-\begin_layout Plain Layout
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--std-sdcc2y
-\end_layout
-
-\end_inset
-
-
-\series default
- Generally follow ISO C2y,
- but allow some SDCC behaviour that conflicts with the standard.
-\end_layout
-
-\end_deeper
-\begin_layout Labeling
-\labelwidthstring 00.00.0000
-
-\series bold
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
 \backslash
 /
 \end_layout
@@ -17658,7 +17919,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -17710,7 +17970,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -17731,7 +17990,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -17776,54 +18034,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--fdollars-in-identifiers
-\begin_inset Index idx
-range none
-pageformat default
-status collapsed
-
-\begin_layout Plain Layout
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--fdollars-in-identifiers
-\end_layout
-
-\end_inset
-
-
-\series default
- Permit '$' as an identifier character.
-\end_layout
-
-\begin_layout Labeling
-\labelwidthstring 00.00.0000
-
-\series bold
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
 \backslash
 /
 \end_layout
@@ -17844,7 +18054,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -17903,7 +18112,6 @@ lint (syntax checking tool)
 status collapsed
 
 \begin_layout Plain Layout
-
 http://www.splint.org
 \end_layout
 
@@ -17976,7 +18184,6 @@ Splint has an excellent on line manual at
 status collapsed
 
 \begin_layout Plain Layout
-
 http://www.splint.org/manual/
 \end_layout
 
@@ -18019,7 +18226,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -18040,7 +18246,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -18112,7 +18317,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -18133,7 +18337,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -18209,7 +18412,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -18230,7 +18432,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -18259,7 +18460,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -18271,7 +18471,6 @@ _
 status open
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -18295,7 +18494,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -18307,7 +18505,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -18327,7 +18524,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -18349,7 +18545,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -18401,7 +18596,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -18413,7 +18607,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -18433,7 +18626,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -18455,7 +18647,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -18480,7 +18671,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -18492,7 +18682,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -18523,7 +18712,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -18544,7 +18732,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -18585,7 +18772,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -18597,7 +18783,6 @@ _
 status open
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -18621,7 +18806,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -18633,7 +18817,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -18655,7 +18838,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -18676,7 +18858,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -18705,7 +18886,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -18717,7 +18897,6 @@ _
 status open
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -18740,7 +18919,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -18752,7 +18930,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -18771,7 +18948,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -18793,7 +18969,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -18814,7 +18989,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -18843,7 +19017,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -18855,7 +19028,6 @@ _
 status open
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -18879,7 +19051,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -18891,7 +19062,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -18911,7 +19081,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -18961,7 +19130,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -18980,7 +19148,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -19036,7 +19203,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -19055,7 +19221,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -19096,7 +19261,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -19116,7 +19280,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -19135,12 +19298,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-HC08!Options!-
+HC08
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Options
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 /
@@ -19282,7 +19464,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -19301,7 +19482,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -19334,7 +19514,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -19353,7 +19532,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -19384,7 +19562,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -19403,7 +19580,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -19434,7 +19610,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -19453,7 +19628,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -19484,7 +19658,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -19503,7 +19676,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -19530,7 +19702,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -19542,7 +19713,6 @@ _
 status open
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -19582,7 +19752,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -19608,7 +19777,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -19632,7 +19800,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -19659,7 +19826,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -19683,7 +19849,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -19710,7 +19875,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -19734,7 +19898,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -19761,7 +19924,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -19785,7 +19947,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -19811,7 +19972,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -19839,7 +19999,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -19864,7 +20023,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -19931,7 +20089,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -19947,12 +20104,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-DS390!Options!-
+DS390
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Options
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 /
@@ -19988,7 +20164,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -20002,12 +20177,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-DS390!Options!-
+DS390
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Options
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 /
@@ -20035,7 +20229,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -20051,12 +20244,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-DS390!Options!-
+DS390
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Options
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 /
@@ -20094,7 +20306,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -20113,7 +20324,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -20138,7 +20348,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -20157,7 +20366,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -20180,7 +20388,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -20206,7 +20413,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -20231,7 +20437,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -20245,12 +20450,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-DS390!Options!-
+DS390
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Options
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 /
@@ -20278,7 +20502,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -20292,12 +20515,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-DS390!Options!-
+DS390
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Options
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 /
@@ -20326,7 +20568,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -20340,12 +20581,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-DS390!Options!-
+DS390
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Options
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 /
@@ -20389,7 +20649,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -20405,12 +20664,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-Z80!Options!-
+Z80
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Options
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 /
@@ -20438,7 +20716,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -20454,12 +20731,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-Z80!Options!-
+Z80
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Options
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 /
@@ -20489,7 +20785,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -20509,12 +20804,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-Z80!Options!-
+Z80
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Options
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 /
@@ -20540,7 +20854,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -20560,12 +20873,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-Z80!Options!-
+Z80
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Options
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 /
@@ -20625,7 +20957,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -20641,12 +20972,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-Z80!Options!-
+Z80
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Options
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 /
@@ -20672,7 +21022,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -20688,12 +21037,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-Z80!Options!-
+Z80
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Options
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 /
@@ -20721,7 +21089,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -20737,12 +21104,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-Z80!Options!-
+Z80
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Options
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 /
@@ -20767,7 +21153,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -20787,7 +21172,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -20803,12 +21187,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-Z80!Options!-
+Z80
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Options
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 /
@@ -20873,7 +21276,27 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-GBZ80!Options!-bo <Num>
+GBZ80
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+Options
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+-bo <Num>
 \end_layout
 
 \end_inset
@@ -20898,7 +21321,27 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-GBZ80!Options!-ba <Num>
+GBZ80
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+Options
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+-ba <Num>
 \end_layout
 
 \end_inset
@@ -20944,7 +21387,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -20963,7 +21405,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -20993,7 +21434,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -21012,7 +21452,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -21072,7 +21511,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -21091,7 +21529,6 @@ status open
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -21121,7 +21558,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -21140,7 +21576,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -21170,7 +21605,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -21189,7 +21623,6 @@ status open
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -21288,7 +21721,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -21307,7 +21739,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -21335,7 +21766,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -21354,7 +21784,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -21389,7 +21818,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -21408,7 +21836,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -21442,7 +21869,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -21461,7 +21887,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -21512,7 +21937,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -21537,7 +21961,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -21560,7 +21983,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -21581,7 +22003,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -21620,7 +22041,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -21638,7 +22058,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -21683,12 +22102,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-SDCC!Environment variables!SDCC
+SDCC
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Environment variables
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+SDCC
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 _
@@ -21701,7 +22139,6 @@ LEAVE
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -21752,7 +22189,27 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-SDCC!Environment variables!TMP,
+SDCC
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+Environment variables
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+TMP,
  TEMP,
  TMPDIR
 \end_layout
@@ -21780,12 +22237,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-SDCC!Environment variables!SDCC
+SDCC
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Environment variables
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+SDCC
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 _
@@ -21835,12 +22311,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-SDCC!Environment variables!SDCC
+SDCC
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Environment variables
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+SDCC
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 _
@@ -21890,12 +22385,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-SDCC!Environment variables!SDCC
+SDCC
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Environment variables
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+SDCC
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 _
@@ -21965,7 +22479,27 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-SDCC!Environment variables!undocumented
+SDCC
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+Environment variables
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+undocumented
 \end_layout
 
 \end_inset
@@ -22018,7 +22552,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -22030,7 +22563,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -22056,7 +22588,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -22068,7 +22599,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -22143,7 +22673,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -22155,7 +22684,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -22181,7 +22709,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -22193,7 +22720,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -22352,7 +22878,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -22364,7 +22889,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -22525,7 +23049,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -22537,7 +23060,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -22705,7 +23227,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -22724,7 +23245,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -22753,7 +23273,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -22765,7 +23284,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -23015,7 +23533,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -23027,7 +23544,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -23144,7 +23660,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -23156,7 +23671,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -23181,7 +23695,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -23193,7 +23706,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -23218,7 +23730,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -23230,7 +23741,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -23300,7 +23810,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -23312,7 +23821,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -23373,7 +23881,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -23385,7 +23892,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -23770,7 +24276,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -23782,7 +24287,6 @@ _
 status open
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -23850,7 +24354,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -23862,7 +24365,6 @@ _
 status open
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -23894,7 +24396,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -23906,7 +24407,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -23937,7 +24437,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -23949,7 +24448,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -24017,7 +24515,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -24029,7 +24526,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -24069,7 +24565,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -24081,7 +24576,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -24141,7 +24635,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -24160,7 +24653,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -24183,7 +24675,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -24202,7 +24693,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -24235,7 +24725,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -24254,7 +24743,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -24281,7 +24769,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -24300,7 +24787,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -24323,7 +24809,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -24342,7 +24827,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -24363,7 +24847,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -24383,7 +24866,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -24400,7 +24882,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -24420,7 +24901,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -24493,7 +24973,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -24505,7 +24984,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -24563,7 +25041,17 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-Z80!I/O memory
+Z80
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+I/O memory
 \end_layout
 
 \end_inset
@@ -24575,7 +25063,17 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-Z180!I/O memory
+Z180
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+I/O memory
 \end_layout
 
 \end_inset
@@ -24673,7 +25171,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -24685,7 +25182,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -24724,7 +25220,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -24736,7 +25231,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -24832,6 +25326,38 @@ out (c),a
 \end_layout
 
 \begin_layout Subsubsection
+__far
+\begin_inset Index idx
+range none
+pageformat default
+status open
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+far
+\end_layout
+
+\end_inset
+
+ (eZ80 only)
+\end_layout
+
+\begin_layout Standard
+The ez80 port supports a 1 MB __far address space that contains the generic address space.
+ Support for __far is still very incomplete and should be considered experimental.
+\end_layout
+
+\begin_layout Subsubsection
 __sfr
 \begin_inset Index idx
 range none
@@ -24844,7 +25370,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -24856,7 +25381,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -24903,7 +25427,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -24917,12 +25440,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-Z180!Options!-
+Z180
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Options
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 /
@@ -24946,12 +25488,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-Z180!Pragmas!
+Z180
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Pragmas
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 #
@@ -24989,7 +25550,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -25026,7 +25586,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -25038,7 +25597,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -25078,7 +25636,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -25090,7 +25647,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -25123,7 +25679,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -25135,7 +25690,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -25176,7 +25730,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -25195,8 +25748,6 @@ far
 The Rabbit ports supports a 1 MB __far address space that contains the generic address space.
  Due to limitations of the Rabbit ldp instructions,
  variables declared as __far can be neither volatile nor atomic.
- Note:
- This support is still very incomplete and should be considered experimental.
 \end_layout
 
 \begin_layout Subsection
@@ -25237,7 +25788,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -25249,7 +25799,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -25295,7 +25844,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -25307,7 +25855,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -25345,7 +25892,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -25357,7 +25903,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -25414,7 +25959,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -25426,7 +25970,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -25463,7 +26006,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -25475,7 +26017,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -25523,7 +26064,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -25535,7 +26075,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -25605,7 +26144,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -25617,7 +26155,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -25687,7 +26224,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -25699,7 +26235,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -25788,7 +26323,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -25800,7 +26334,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -25958,7 +26491,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -25970,7 +26502,6 @@ _
 status open
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -25996,7 +26527,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -26008,7 +26538,6 @@ _
 status open
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -26086,7 +26615,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -26098,7 +26626,6 @@ _
 status open
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -26123,7 +26650,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -26135,7 +26661,6 @@ _
 status open
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -26684,7 +27209,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -26696,7 +27220,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -26833,7 +27356,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -26845,7 +27367,6 @@ _
 status open
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -26898,7 +27419,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -26910,7 +27430,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -26924,7 +27443,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -26936,7 +27454,6 @@ external
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -27145,9 +27662,11 @@ xx
 \end_layout
 
 \begin_layout Subsection
-Omitting promotion on arguments of vararg function (does not apply to pdk13,
- pdk14,
- pdk15)
+Omitting promotion on arguments of vararg function (mcs51,
+ ds390,
+ mos6502,
+ mos65c02,
+ pic14 and pic16 only)
 \end_layout
 
 \begin_layout Standard
@@ -27197,6 +27716,55 @@ xx
 \end_inset
 
  is a placeholder for the desired version of the C standard.
+\end_layout
+
+\begin_layout Subsection
+Parameter forward declarations
+\end_layout
+
+\begin_layout Standard
+SDCC (when using 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+--std-sdccxx
+\end_layout
+
+\end_inset
+
+) supports parameter forward declarations for s single parameter of integer type.
+ The supported functionality is thus a subset of the GCC extension:
+\end_layout
+
+\begin_layout Verse
+void f(size_t n;
+ char a[static n],
+ size_t n);
+\end_layout
+
+\begin_layout Subsection
+_Optional
+\end_layout
+
+\begin_layout Standard
+SDCC supports the 
+\emph on
+_Optional
+\begin_inset Index idx
+range none
+pageformat default
+status collapsed
+
+\begin_layout Plain Layout
+_Optional
+\end_layout
+
+\end_inset
+
+
+\emph default
+ qualifier.
 \end_layout
 
 \begin_layout Section
@@ -27307,7 +27875,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -27326,7 +27893,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -27361,7 +27927,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 #
@@ -27443,7 +28008,6 @@ __reentrant
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -27659,7 +28223,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -27805,7 +28368,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 #
 \end_layout
@@ -27867,30 +28429,6 @@ Division
 \end_inset
 
 #pragma nooverlay
-\begin_inset Index idx
-range none
-pageformat default
-status collapsed
-
-\begin_layout Plain Layout
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-#
-\end_layout
-
-\end_inset
-
-pragma nooverlay
-\end_layout
-
-\end_inset
-
-
 \begin_inset Newline newline
 \end_inset
 
@@ -28132,7 +28670,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -28144,7 +28681,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -28195,7 +28731,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -28207,7 +28742,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -28266,7 +28800,6 @@ volatile
 status collapsed
 
 \begin_layout Plain Layout
-
 http://en.wikipedia.org/wiki/Volatile_variable
 \end_layout
 
@@ -28487,7 +29020,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -28506,7 +29038,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -28529,7 +29060,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -28550,7 +29080,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -28635,7 +29164,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 #
@@ -29035,7 +29563,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -29047,7 +29574,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -29121,7 +29647,17 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-HC08!interrupt
+HC08
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+interrupt
 \end_layout
 
 \end_inset
@@ -29170,7 +29706,17 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-Z80!interrupt
+Z80
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+interrupt
 \end_layout
 
 \end_inset
@@ -29721,7 +30267,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -29733,7 +30278,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -30335,7 +30879,17 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-HC08!interrupt
+HC08
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+interrupt
 \end_layout
 
 \end_inset
@@ -30358,7 +30912,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -30370,7 +30923,6 @@ _
 status open
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -30411,7 +30963,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -30423,7 +30974,6 @@ _
 status open
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -30838,7 +31388,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -30850,7 +31399,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -31320,7 +31868,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -31332,7 +31879,6 @@ _
 status open
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -31357,7 +31903,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -31369,7 +31914,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -31984,7 +32528,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -31996,7 +32539,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -32468,7 +33010,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -32480,7 +33021,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -32672,7 +33212,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -32684,7 +33223,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -33366,7 +33904,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -33378,7 +33915,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -33438,7 +33974,6 @@ Assembler documentation
 status collapsed
 
 \begin_layout Plain Layout
-
 http://svn.code.sf.net/p/sdcc/code/trunk/sdcc/sdas/doc/asmlnk.txt
 \end_layout
 
@@ -33462,7 +33997,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -33474,7 +34008,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -33502,7 +34035,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -33514,7 +34046,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -33774,7 +34305,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -33795,7 +34325,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -33871,7 +34400,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -33895,7 +34423,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -33907,7 +34434,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -34015,7 +34541,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -34027,7 +34552,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -34112,7 +34636,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -34124,7 +34647,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -34264,7 +34786,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -34276,7 +34797,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -34951,7 +35471,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 #
 \end_layout
@@ -35049,7 +35568,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -35061,7 +35579,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -35170,7 +35687,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -35182,7 +35698,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -35457,7 +35972,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -35469,7 +35983,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -35827,7 +36340,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -35846,7 +36358,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -35870,7 +36381,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -35889,7 +36399,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -36674,7 +37183,6 @@ Libraries
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sdcc.sourceforge.net/wiki/index.php/List_of_the_SDCC_library
 \end_layout
 
@@ -36752,7 +37260,17 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-printf()!putchar()
+printf()
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+putchar()
 \end_layout
 
 \end_inset
@@ -36983,7 +37501,17 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-printf()!floating point support
+printf()
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+floating point support
 \end_layout
 
 \end_inset
@@ -36997,7 +37525,6 @@ printf()!floating point support
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -37017,7 +37544,6 @@ USE
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -37041,7 +37567,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -37060,7 +37585,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -37099,12 +37623,21 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-printf()!printf
+printf()
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+printf
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 _
@@ -37137,12 +37670,21 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-printf()!printf
+printf()
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+printf
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 _
@@ -37166,12 +37708,21 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-printf()!printf
+printf()
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+printf
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 _
@@ -37195,12 +37746,21 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-printf()!printf
+printf()
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+printf
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 _
@@ -37213,7 +37773,6 @@ fast
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -38558,7 +39117,6 @@ C,
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sourceforge.net/p/sdcc/mailman/sdcc-user/
 \end_layout
 
@@ -38734,7 +39292,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -38753,7 +39310,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -38778,7 +39334,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -38790,7 +39345,6 @@ _
 status open
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -38811,7 +39365,6 @@ pdata (mcs51,
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -38840,7 +39393,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -38859,7 +39411,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -38999,7 +39550,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -39022,7 +39572,6 @@ Segments may be placed anywhere in the 4 meg address space using the usual -
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -39231,7 +39780,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 #
 \end_layout
@@ -39267,7 +39815,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 #
@@ -39313,7 +39860,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 #
 \end_layout
@@ -39325,7 +39871,6 @@ pragma callee
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -39353,7 +39898,7 @@ function prologue
  function1[,function2[,function3...]] 
 \begin_inset CommandInset label
 LatexCommand label
-name "ite:callee_saves-function1[,function2[,function3...]]--"
+name "ite:callee_saves-function1[.function2[.function3...]]--"
 
 \end_inset
 
@@ -39382,7 +39927,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -39392,7 +39936,7 @@ status collapsed
 -callee-saves command line option is used (see page 
 \begin_inset CommandInset ref
 LatexCommand vpageref
-reference "lyx:--callee-saves-function1[,function2][,function3]..."
+reference "lyx:--callee-saves-function1[.function2][.function3]..."
 nolink "false"
 
 \end_inset
@@ -39414,7 +39958,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 #
 \end_layout
@@ -39426,7 +39969,6 @@ pragma callee
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -39458,7 +40000,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 #
@@ -39529,7 +40070,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 #
 \end_layout
@@ -39558,7 +40098,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -39582,7 +40121,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -39594,7 +40132,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -39639,7 +40176,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 #
 \end_layout
@@ -39651,7 +40187,6 @@ pragma less
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -39678,7 +40213,6 @@ name "ite:less_pedantic"
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -39826,7 +40360,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 #
 \end_layout
@@ -39838,7 +40371,6 @@ pragma disable
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -39871,7 +40403,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 #
 \end_layout
@@ -39903,7 +40434,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 #
 \end_layout
@@ -39934,7 +40464,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 #
@@ -39975,7 +40504,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 #
@@ -40054,7 +40582,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 #
 \end_layout
@@ -40086,7 +40613,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 #
 \end_layout
@@ -40099,6 +40625,38 @@ pragma nooverlay
 \end_inset
 
  - the compiler will not overlay the parameters and local variables of a function.
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+nosidechannels
+\series default
+
+\begin_inset Index idx
+range none
+pageformat default
+status open
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+#
+\end_layout
+
+\end_inset
+
+pragma nosidechannels
+\end_layout
+
+\end_inset
+
+ - the compiler will avoid introducing side channels that could leak information on the processed data (e.g.
+ timing or energy side-channels).
 \end_layout
 
 \begin_layout Itemize
@@ -40118,7 +40676,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 #
 \end_layout
@@ -40136,7 +40693,6 @@ pragma max_allocs_per_node
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -40164,7 +40720,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 #
 \end_layout
@@ -40181,7 +40736,6 @@ pragma stackauto
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -40201,7 +40755,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -40242,7 +40795,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 #
 \end_layout
@@ -40255,7 +40807,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -40267,7 +40818,6 @@ code
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -40301,7 +40851,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 #
 \end_layout
@@ -40314,7 +40863,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -40326,7 +40874,6 @@ code
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -40361,7 +40908,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 #
 \end_layout
@@ -40374,7 +40920,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -40386,7 +40931,6 @@ code
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -40421,7 +40965,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 #
 \end_layout
@@ -40433,7 +40976,6 @@ pragma std
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -40467,7 +41009,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 #
 \end_layout
@@ -40479,7 +41020,6 @@ pragma std
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -40512,7 +41052,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 #
 \end_layout
@@ -40524,7 +41063,6 @@ pragma std
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -40558,7 +41096,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 #
 \end_layout
@@ -40570,7 +41107,6 @@ pragma std
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -40603,7 +41139,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 #
 \end_layout
@@ -40615,7 +41150,6 @@ pragma std
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -40648,7 +41182,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 #
 \end_layout
@@ -40660,7 +41193,6 @@ pragma std
 status open
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -40694,7 +41226,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 #
 \end_layout
@@ -40706,7 +41237,6 @@ pragma std
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -40744,7 +41274,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 #
 \end_layout
@@ -40756,7 +41285,6 @@ pragma std
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -40790,7 +41318,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 #
 \end_layout
@@ -40802,7 +41329,6 @@ pragma std
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -40835,7 +41361,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 #
 \end_layout
@@ -40847,7 +41372,6 @@ pragma std
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -40881,7 +41405,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 #
 \end_layout
@@ -40900,7 +41423,6 @@ pragma codeseg
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -40928,7 +41450,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 #
 \end_layout
@@ -40947,7 +41468,6 @@ pragma constseg
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -41003,7 +41523,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 #
 \end_layout
@@ -41015,7 +41534,6 @@ pragma preproc
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -41037,43 +41555,6 @@ asm
 
 \family typewriter
 #pragma preproc_asm -
-\begin_inset Index idx
-range none
-pageformat default
-status collapsed
-
-\begin_layout Plain Layout
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-#
-\end_layout
-
-\end_inset
-
-pragma preproc
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-asm
-\end_layout
-
-\end_inset
-
-
 \begin_inset Newline newline
 \end_inset
 
@@ -41411,7 +41892,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 #
 \end_layout
@@ -41423,7 +41903,6 @@ pragma sdcc
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -41471,43 +41950,6 @@ Default is off.
 \end_inset
 
 #pragma sdcc_hash +
-\begin_inset Index idx
-range none
-pageformat default
-status collapsed
-
-\begin_layout Plain Layout
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-#
-\end_layout
-
-\end_inset
-
-pragma sdcc
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-hash
-\end_layout
-
-\end_inset
-
-
 \begin_inset Newline newline
 \end_inset
 
@@ -41613,31 +42055,7 @@ Some of the pragmas are intended to be used to turn-on or off certain optimizati
 \begin_layout Verse
 
 \family typewriter
-#pragma save
-\begin_inset Index idx
-range none
-pageformat default
-status collapsed
-
-\begin_layout Plain Layout
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-#
-\end_layout
-
-\end_inset
-
-pragma save
-\end_layout
-
-\end_inset
-
- 
+#pragma save 
 \begin_inset space ~
 \end_inset
 
@@ -41669,31 +42087,7 @@ pragma save
 \begin_inset Newline newline
 \end_inset
 
-#pragma nogcse
-\begin_inset Index idx
-range none
-pageformat default
-status collapsed
-
-\begin_layout Plain Layout
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-#
-\end_layout
-
-\end_inset
-
-pragma nogcse
-\end_layout
-
-\end_inset
-
- 
+#pragma nogcse 
 \begin_inset space ~
 \end_inset
 
@@ -41717,31 +42111,7 @@ pragma nogcse
 \begin_inset Newline newline
 \end_inset
 
-#pragma noinduction
-\begin_inset Index idx
-range none
-pageformat default
-status collapsed
-
-\begin_layout Plain Layout
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-#
-\end_layout
-
-\end_inset
-
-pragma noinduction
-\end_layout
-
-\end_inset
-
- /* turn off induction optimizations */
+#pragma noinduction /* turn off induction optimizations */
 \begin_inset Newline newline
 \end_inset
 
@@ -41793,31 +42163,7 @@ int foo ()
 \begin_inset Newline newline
 \end_inset
 
-#pragma restore
-\begin_inset Index idx
-range none
-pageformat default
-status collapsed
-
-\begin_layout Plain Layout
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-#
-\end_layout
-
-\end_inset
-
-pragma restore
-\end_layout
-
-\end_inset
-
- /* turn the optimizations back on */
+#pragma restore /* turn the optimizations back on */
 \end_layout
 
 \begin_layout Standard
@@ -41842,7 +42188,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 #
@@ -41916,7 +42261,27 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-SDCC!Defines!__SDCC (version macro)
+SDCC
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+Defines
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+__SDCC (version macro)
 \end_layout
 
 \end_inset
@@ -41987,12 +42352,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-SDCC!Defines!__SDCC
+SDCC
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Defines
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+__SDCC
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 _
@@ -42012,12 +42396,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-SDCC!Defines!__SDCC
+SDCC
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Defines
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+__SDCC
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 _
@@ -42037,12 +42440,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-SDCC!Defines!__SDCC
+SDCC
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Defines
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+__SDCC
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 _
@@ -42086,12 +42508,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-SDCC!Defines!SDCC
+SDCC
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Defines
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+SDCC
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 _
@@ -42104,7 +42545,6 @@ STACK
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -42134,7 +42574,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -42161,12 +42600,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-SDCC!Defines!SDCC
+SDCC
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Defines
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+SDCC
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 _
@@ -42179,7 +42637,6 @@ MODEL
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -42209,7 +42666,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -42236,12 +42692,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-SDCC!Defines!SDCC
+SDCC
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Defines
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+SDCC
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 _
@@ -42254,7 +42729,6 @@ MODEL
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -42284,7 +42758,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -42311,12 +42784,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-SDCC!Defines!SDCC
+SDCC
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Defines
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+SDCC
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 _
@@ -42329,7 +42821,6 @@ MODEL
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -42358,7 +42849,6 @@ when
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -42386,12 +42876,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-SDCC!Defines!SDCC
+SDCC
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Defines
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+SDCC
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 _
@@ -42404,7 +42913,6 @@ MODEL
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -42434,7 +42942,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -42461,12 +42968,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-SDCC!Defines!SDCC
+SDCC
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Defines
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+SDCC
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 _
@@ -42479,7 +43005,6 @@ USE
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -42509,7 +43034,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -42536,12 +43060,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-SDCC!Defines!SDCC
+SDCC
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Defines
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+SDCC
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 _
@@ -42554,7 +43097,6 @@ STACK
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -42598,12 +43140,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-SDCC!Defines!SDCC
+SDCC
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Defines
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+SDCC
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 _
@@ -42616,7 +43177,6 @@ MODEL
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -42729,12 +43289,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-SDCC!Defines!SDCC
+SDCC
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Defines
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+SDCC
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 _
@@ -42776,12 +43355,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-SDCC!Defines!SDCC
+SDCC
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Defines
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+SDCC
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 _
@@ -42795,7 +43393,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -42807,7 +43404,6 @@ IN
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -42837,7 +43433,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -42864,12 +43459,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-SDCC!Defines!SDCC
+SDCC
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Defines
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+SDCC
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 _
@@ -42883,7 +43497,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -42895,7 +43508,6 @@ CALLEE
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -42925,7 +43537,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -42952,12 +43563,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-SDCC!Defines!SDCC
+SDCC
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Defines
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+SDCC
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 _
@@ -42970,7 +43600,6 @@ FLOAT
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -42999,7 +43628,6 @@ when
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -43027,12 +43655,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-SDCC!Defines!SDCC
+SDCC
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Defines
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+SDCC
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 _
@@ -43046,7 +43693,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -43058,7 +43704,6 @@ LONG
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -43088,7 +43733,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -43115,12 +43759,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-SDCC!Defines!SDCC
+SDCC
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Defines
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+SDCC
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 _
@@ -43133,7 +43796,6 @@ OPTIMIZE
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -43163,7 +43825,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -43190,12 +43851,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-SDCC!Defines!SDCC
+SDCC
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Defines
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+SDCC
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 _
@@ -43208,7 +43888,6 @@ OPTIMIZE
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -43238,7 +43917,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -43265,7 +43943,27 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-SDCC!Defines!SDCCCALL
+SDCC
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+Defines
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+SDCCCALL
 \end_layout
 
 \end_inset
@@ -43355,7 +44053,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -43367,7 +44064,6 @@ _
 status open
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -43414,7 +44110,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -43700,10 +44395,9 @@ SiLabs C8051F120 example
 \end_inset
 
 Usually the hardware uses some sfr (an output port or an internal sfr) to select a bank and put it in the banked area of the memory map.
- The selected bank usually becomes active immediately upon assignment to this sfr and when running inside a bank it will switch out this code it is currently running.
- Therefor you cannot jump or call directly from one bank to another and need to use a so-called trampoline in the common area.
- For SDCC an example trampoline is in crtbank.asm and you may need to change it to your 8051 derivative or schematic.
- The presented code is written for the C8051F120.
+ The selected bank usually becomes active immediately upon assignment to this sfr and when running inside a bank it will switch out the code it is currently running.
+ Therefore it is not possible to jump or call directly from one bank to another and a so-called trampoline function in the common area is needed.
+ For SDCC an example trampoline for the C8051F120 is in crtbank.asm and you may need to change it to match your 8051 derivative or schematic.
 \begin_inset Newline newline
 \end_inset
 
@@ -43712,18 +44406,25 @@ Usually the hardware uses some sfr (an output port or an internal sfr) to select
 \end_inset
 
 When calling a banked function SDCC will put the LSB of the functions address in register R0,
- the MSB in R1 and the bank in R2 and then call this trampoline 
+ the MSB in R1, the bank in R2 and then call the trampoline
 \emph on
-__sdcc_banked_call
+sdcc_banked_call
 \emph default
 .
- The current selected bank is saved on the stack,
- the new bank is selected and an indirect jump is made.
- When the banked function returns it jumps to 
+ The trampoline function should save the currently selected bank on the stack,
+ select the new bank and do an indirect jump to the target address.
+ When a banked function returns SDCC will emit a jump to
 \emph on
-__sdcc_banked_ret
+sdcc_banked_ret
 \emph default
- which restores the previous bank and returns to the caller.
+ which should restore the previous bank and return to the caller.
+ For regular jumps across banks
+\emph on
+ sdcc_banked_jump
+ \emph default
+ is used instead, which is not supposed to save the currently selected bank
+ but rather just switch to the new bank and do the jump. Such jumps might be
+ used for optimizing tail calls and no-return calls.
 \end_layout
 
 \begin_layout Subsubsection
@@ -43787,7 +44488,6 @@ Functions that need to be in a switched bank must be put in a named segment.
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -43871,7 +44571,6 @@ Runtime library
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -46389,7 +47088,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -46401,7 +47099,6 @@ _
 status open
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -46439,7 +47136,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -46458,7 +47154,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -46486,7 +47181,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -46511,7 +47205,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -46564,7 +47257,6 @@ crtstart.asm
 status collapsed
 
 \begin_layout Plain Layout
-
 http://svn.code.sf.net/p/sdcc/code/trunk/sdcc/device/lib/mcs51/crtstart.asm
 \end_layout
 
@@ -46591,7 +47283,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sdcc.svn.sourceforge.net/viewvc/sdcc/trunk/sdcc/device/lib/mcs51/Makefile.in?view=markup 
 \end_layout
 
@@ -46831,7 +47522,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -46889,7 +47579,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -46909,7 +47598,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -46926,7 +47614,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -48364,6 +49051,38 @@ The compiling and linking procedure remains the same,
  _bp is the stack frame pointer and is used to compute the offset into the stack for parameters and local variables.
 \end_layout
 
+\begin_layout Subsection
+Side channels
+\end_layout
+
+\begin_layout Standard
+The command line option and pragma to avoid the introduction of side channels are supported in the backend.
+ However,
+ some side channels remain even when using it;
+ these include:
+\end_layout
+
+\begin_layout Itemize
+Division,
+ modulo and multiplication operations can leak operand data.
+\end_layout
+
+\begin_layout Itemize
+Shift operations can leak right operand data.
+\end_layout
+
+\begin_layout Itemize
+Equality comparisons can leak operand data.
+\end_layout
+
+\begin_layout Itemize
+Reads and writes via pointers can leak which intrinsic named address spaces the pointers point into.
+\end_layout
+
+\begin_layout Itemize
+Floating-point operations (except unary minus) can leak operand data.
+\end_layout
+
 \begin_layout Section
 DS400 port
 \end_layout
@@ -48403,7 +49122,6 @@ DS400
 status collapsed
 
 \begin_layout Plain Layout
-
 ftp://ftp.dalsemi.com/pub/tini/ds80c400/c_libraries/sdcc/index.html
 \end_layout
 
@@ -48503,7 +49221,6 @@ status open
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sdcc.sourceforge.net/wiki/index.php/Z80_code_size
 \end_layout
 
@@ -48541,7 +49258,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -48565,7 +49281,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -51355,6 +52070,251 @@ The internal interrupts 2 to 7 are software interrupts (for the rst and syscall 
  More complex prioritites (changing priority while the handler is executing) require interrupt handlers written in assembler.
 \end_layout
 
+\begin_layout Subsubsection
+Rabbit memory map and memory models
+\end_layout
+
+\begin_layout Standard
+Most Rabbit instructions operate on a 64K logical address space.
+ The Rabbits support a 1M (up to Rabbit 3000A) or 512K to 16M (from Rabbit 4000,
+ configured via MECR register,
+ default is 1M) physical address space,
+ which the logical address space is mapped into via a memory management unit (MMU).
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename rabbit-memory.svg
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+SDCC assumes a 1M physical address space,
+ and that memory for the program and constant data (typically flash) is located from 0x0 in the physical address space,
+ up to at most 0x7ffff.
+ It assumes that memory for non-constant data (typically RAM) is mapped from 0x80000.
+ This is the typical hardware configuration for Rabbit-based systems,
+ including the Rabbit Control Modules (RCM).
+\end_layout
+
+\begin_layout Standard
+The logical address space is divided into four segments,
+ which the MMU maps into physical address space.
+ SDCC uses the Rabbit 
+\begin_inset Quotes sld
+\end_inset
+
+Root
+\begin_inset Quotes srd
+\end_inset
+
+ segment for the SDCC code,
+ gsinit,
+ etc segments (startup code,
+ const data not in __far,
+ program code in small memory model).
+ It uses the 
+\begin_inset Quotes sld
+\end_inset
+
+Stack
+\begin_inset Quotes srd
+\end_inset
+
+ segment for the SDCC data segment,
+ stack and heap (non-const data no in __far).
+ The SDCC xdata segment (non-const data in __far) is placed in physical memory above 0x80000 (exact location can be given by 
+\emph on
+-
+\series bold
+\emph default
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+
+\series default
+\emph on
+-
+\emph default
+xram-loc
+\begin_inset Index idx
+range none
+pageformat default
+status open
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-xram-loc
+\end_layout
+
+\end_inset
+
+),
+ the SDCC xconst segment (const data in __far) is placed in physical memory above 0x0 (directly after code,
+ gsinit,
+ etc).
+ The Rabbit 
+\begin_inset Quotes sld
+\end_inset
+
+Data
+\begin_inset Quotes srd
+\end_inset
+
+ segment is not used directly by SDCC.
+ Its intended use is for user-defined named address spaces.
+ The Rabbit 
+\begin_inset Quotes sld
+\end_inset
+
+XPC
+\begin_inset Quotes srd
+\end_inset
+
+ segment is used for the SDCC xcode segment (program code in medium memory model).
+\end_layout
+
+\begin_layout Standard
+The size of the Rabbit 
+\begin_inset Quotes sld
+\end_inset
+
+Root
+\begin_inset Quotes srd
+\end_inset
+
+,
+ 
+\begin_inset Quotes sld
+\end_inset
+
+Data
+\begin_inset Quotes srd
+\end_inset
+
+ and 
+\begin_inset Quotes sld
+\end_inset
+
+Stack
+\begin_inset Quotes srd
+\end_inset
+
+ segments can be adjusted according to user needs by setting up the SEGSIZE register in __sdcc_external_startup and the 
+\emph on
+-
+\series bold
+\emph default
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+
+\series default
+\emph on
+-
+\emph default
+data-loc
+\begin_inset Index idx
+range none
+pageformat default
+status open
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-data-loc
+\end_layout
+
+\end_inset
+
+ command line option (the value for the option shall be 0xS000,
+ where S matches the upper nibble of the SEGSIZE register).
+\end_layout
+
+\begin_layout Standard
+Pointers to objects that are not __far-qualified objects are represented by their logical address as 16-bit value.
+ Pointers to objects that are __far-qualified are represented by their physical address as 24-bit value.
+\end_layout
+
+\begin_layout Standard
+The default crt0 that ships with SDCC uses a 32KB 
+\begin_inset Quotes sld
+\end_inset
+
+Root
+\begin_inset Quotes srd
+\end_inset
+
+ segment followed by a 8KB 
+\begin_inset Quotes sld
+\end_inset
+
+Data
+\begin_inset Quotes srd
+\end_inset
+
+ segment,
+ a 16KB 
+\begin_inset Quotes sld
+\end_inset
+
+Stack
+\begin_inset Quotes srd
+\end_inset
+
+ segment and the 8KB 
+\begin_inset Quotes sld
+\end_inset
+
+XPC
+\begin_inset Quotes srd
+\end_inset
+
+ segment.
+\end_layout
+
 \begin_layout Subsection
 Z80,
  Z180,
@@ -51805,6 +52765,35 @@ For banked functions,
  all parameters are passed on the stack.
 \end_layout
 
+\begin_layout Subsection
+Side channels
+\end_layout
+
+\begin_layout Standard
+The command line option and pragma to avoid the introduction of side channels are supported in the backend.
+ However,
+ some side channels remain even when using it;
+ these include:
+\end_layout
+
+\begin_layout Itemize
+Division,
+ modulo,
+ and multiplication operations can leak operand data.
+\end_layout
+
+\begin_layout Itemize
+Shift operations can leak right operand data.
+\end_layout
+
+\begin_layout Itemize
+Comparisons can leak operand data in the sm83 backend.
+\end_layout
+
+\begin_layout Itemize
+Floating-point operations (except unary minus) can leak operand data.
+\end_layout
+
 \begin_layout Section
 The HC08 and S08 ports
 \end_layout
@@ -51828,7 +52817,6 @@ HC08
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sdcc.sourceforge.net/wiki/index.php/Hc08_code_size
 \end_layout
 
@@ -51855,6 +52843,30 @@ HC08
 \end_inset
 
  startup code follows the same scheme as the MCS51 startup code.
+\end_layout
+
+\begin_layout Subsection
+Side channels
+\end_layout
+
+\begin_layout Standard
+The command line option and pragma to avoid the introduction of side channels are supported in the backend.
+ However,
+ some side channels remain even when using it;
+ these include:
+\end_layout
+
+\begin_layout Itemize
+Division,
+ modulo and multiplication operations can leak operand data.
+\end_layout
+
+\begin_layout Itemize
+Shift operations can leak right operand data.
+\end_layout
+
+\begin_layout Itemize
+Floating-point operations (except unary minus) can leak operand data.
 \end_layout
 
 \begin_layout Section
@@ -52004,6 +53016,29 @@ For compatibility with the Cosmic STM8 compiler,
  and are called using callf.
 \end_layout
 
+\begin_layout Subsection
+Side channels
+\end_layout
+
+\begin_layout Standard
+The command line option and pragma to avoid the introduction of side channels are supported in the backend.
+ However,
+ some side channels remain even when using it;
+ these include:
+\end_layout
+
+\begin_layout Itemize
+Division and modulo operations can leak operand data
+\end_layout
+
+\begin_layout Itemize
+Shift operations can leak right operand data
+\end_layout
+
+\begin_layout Itemize
+Floating-point operations (except unary minus) can leak operand data
+\end_layout
+
 \begin_layout Section
 The f8 port
 \end_layout
@@ -52023,6 +53058,29 @@ If the the function does not have variable arguments,
  yx (32 bit) or use a hidden extra pointer parameter pointing to the location (anything wider than 32 bit,
  and all struct / union).
  The stack is not adjusted for the parameters by the callee (thus the caller has to do this instead).
+\end_layout
+
+\begin_layout Subsection
+Side channels
+\end_layout
+
+\begin_layout Standard
+The command line option and pragma to avoid the introduction of side channels are supported in the backend.
+ However,
+ some side channels remain even when using it;
+ these include:
+\end_layout
+
+\begin_layout Itemize
+Division and modulo operations can leak operand data.
+\end_layout
+
+\begin_layout Itemize
+Shift operations can leak right operand data.
+\end_layout
+
+\begin_layout Itemize
+Floating-point operations (except unary minus) can leak operand data.
 \end_layout
 
 \begin_layout Section
@@ -52076,7 +53134,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -52100,7 +53157,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -52163,6 +53219,48 @@ The compiler can pass segment location to the linker.
 \begin_layout Standard
 –xram-loc:
  start address of the data segment
+\end_layout
+
+\begin_layout Section
+The PDK13,
+ PDK14,
+ PDK15 ports
+\end_layout
+
+\begin_layout Subsection
+Side channels
+\end_layout
+
+\begin_layout Standard
+The command line option and pragma to avoid the introduction of side channels are supported in the backend.
+ However,
+ some side channels remain even when using it;
+ these include:
+\end_layout
+
+\begin_layout Itemize
+Division,
+ modulo and multiplication operations can leak operand data.
+\end_layout
+
+\begin_layout Itemize
+Shift operations can leak right operand data.
+\end_layout
+
+\begin_layout Itemize
+Reads from signed bit-fields can leak the sign bit.
+\end_layout
+
+\begin_layout Itemize
+Signed casts can leak the sign of the operand.
+\end_layout
+
+\begin_layout Itemize
+Comparisons can leak operand data.
+\end_layout
+
+\begin_layout Itemize
+Floating-point operations (except unary minus) can leak operand data.
 \end_layout
 
 \begin_layout Section
@@ -52861,7 +53959,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 ,
 \end_layout
@@ -52937,7 +54034,17 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-PIC14!interrupt
+PIC14
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+interrupt
 \end_layout
 
 \end_inset
@@ -53072,7 +54179,6 @@ gputils (pic tools)
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sourceforge.net/projects/gputils
 \end_layout
 
@@ -53109,7 +54215,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -53128,7 +54233,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -53408,7 +54512,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -53425,7 +54528,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -53439,12 +54541,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-PIC14!Options!-
+PIC14
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Options
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 /
@@ -53467,7 +54588,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -53481,12 +54601,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-PIC14!Options!-
+PIC14
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Options
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 /
@@ -53509,7 +54648,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -53523,12 +54661,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-PIC14!Options!-
+PIC14
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Options
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 /
@@ -53551,7 +54708,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -53565,12 +54721,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-PIC14!Options!-
+PIC14
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Options
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 /
@@ -53596,7 +54771,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -53610,12 +54784,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-PIC14!Options!-
+PIC14
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Options
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 /
@@ -53637,7 +54830,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -53665,12 +54857,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-PIC14!Environment variables!SDCC
+PIC14
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Environment variables
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+SDCC
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 _
@@ -53684,7 +54895,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -53696,7 +54906,6 @@ SPLIT
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -53716,12 +54925,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-SDCC!Environment variables!SDCC
+SDCC
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Environment variables
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+SDCC
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 _
@@ -53735,7 +54963,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -53747,7 +54974,6 @@ SPLIT
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -53969,7 +55195,6 @@ This warning can usually be ignored due to the very good compatibility amongst 1
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 ,
@@ -54476,7 +55701,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -54490,12 +55714,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-PIC16!Options!-
+PIC16
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Options
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 /
@@ -54514,7 +55757,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -54531,7 +55773,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -54545,12 +55786,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-PIC16!Options!-
+PIC16
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Options
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 /
@@ -54589,7 +55849,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -54613,7 +55872,6 @@ These options influence the generated assembler code.
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -54661,7 +55919,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -54677,7 +55934,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -54699,7 +55955,6 @@ Optimization Options
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -54751,7 +56006,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -54769,7 +56023,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -54786,7 +56039,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -54802,7 +56054,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -54824,7 +56075,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -54841,7 +56091,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -54855,7 +56104,17 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-PIC16!MPLAB
+PIC16
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+MPLAB
 \end_layout
 
 \end_inset
@@ -54875,7 +56134,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -54891,7 +56149,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -54912,7 +56169,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -54935,7 +56191,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -54952,7 +56207,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -54968,7 +56222,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -54994,7 +56247,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -55006,7 +56258,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -55026,7 +56277,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -55050,7 +56300,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -55068,7 +56317,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -55085,7 +56333,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -55101,7 +56348,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -55133,12 +56379,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-PIC16!Environment variables!OPTIMIZE
+PIC16
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Environment variables
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+OPTIMIZE
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 _
@@ -55152,7 +56417,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -55164,7 +56428,6 @@ POINTER
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -55184,12 +56447,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-SDCC!Environment variables!OPTIMIZE
+SDCC
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Environment variables
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+OPTIMIZE
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 _
@@ -55203,7 +56485,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 _
 \end_layout
@@ -55215,7 +56496,6 @@ POINTER
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -55245,12 +56525,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-PIC16!Environment variables!NO
+PIC16
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Environment variables
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+NO
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 _
@@ -55263,7 +56562,6 @@ REG
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -55283,12 +56581,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-SDCC!Environment variables!NO
+SDCC
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Environment variables
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+NO
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 _
@@ -55301,7 +56618,6 @@ REG
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -55328,7 +56644,17 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-Preprocessor!PIC16 Macros
+Preprocessor
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+PIC16 Macros
 \end_layout
 
 \end_inset
@@ -55395,12 +56721,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-SDCC!Defines!__SDCC
+SDCC
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Defines
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+__SDCC
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 _
@@ -55440,7 +56785,27 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-PIC16!Defines!pic18fxxxx
+PIC16
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+Defines
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+pic18fxxxx
 \end_layout
 
 \end_inset
@@ -55480,7 +56845,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -55494,12 +56858,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-PIC16!Defines!
+PIC16
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Defines
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 _
@@ -55512,7 +56895,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -55552,12 +56934,31 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-PIC16!Defines!STACK
+PIC16
 \begin_inset ERT
 status collapsed
 
 \begin_layout Plain Layout
+!
+\end_layout
 
+\end_inset
+
+Defines
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+STACK
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
 
 \backslash
 _
@@ -55570,7 +56971,6 @@ MODEL
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -55884,7 +57284,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -55903,7 +57302,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -56088,32 +57486,7 @@ PIC16
 \end_layout
 
 \begin_layout Description
-stack
-\begin_inset Index idx
-range none
-pageformat default
-status collapsed
-
-\begin_layout Plain Layout
-PIC16!Pragmas!
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-#
-\end_layout
-
-\end_inset
-
-pragma stack
-\end_layout
-
-\end_inset
-
- This forces the code generator to initialize the stack & frame pointers at a specific address.
+stack This forces the code generator to initialize the stack & frame pointers at a specific address.
  This is an ad hoc solution for cases where no STACK directive is available in the linker script or gplink is not instructed to create a stack section.
 \begin_inset Newline newline
 \end_inset
@@ -56178,32 +57551,7 @@ If the stack_size field is omitted then a stack is created with the default size
 \end_layout
 
 \begin_layout Description
-code
-\begin_inset Index idx
-range none
-pageformat default
-status collapsed
-
-\begin_layout Plain Layout
-PIC16!Pragmas!
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-#
-\end_layout
-
-\end_inset
-
-pragma code
-\end_layout
-
-\end_inset
-
- Force a function to a static FLASH address.
+code Force a function to a static FLASH address.
 \end_layout
 
 \begin_layout LyX-Code
@@ -56227,32 +57575,7 @@ Example:
 \end_layout
 
 \begin_layout Description
-library
-\begin_inset Index idx
-range none
-pageformat default
-status collapsed
-
-\begin_layout Plain Layout
-PIC16!Pragmas!
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-#
-\end_layout
-
-\end_inset
-
-pragma library
-\end_layout
-
-\end_inset
-
- instructs the linker to use a library module.
+library instructs the linker to use a library module.
 \begin_inset Newline newline
 \end_inset
 
@@ -56511,32 +57834,7 @@ ignore
 \end_layout
 
 \begin_layout Description
-udata
-\begin_inset Index idx
-range none
-pageformat default
-status collapsed
-
-\begin_layout Plain Layout
-PIC16!Pragmas!
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-#
-\end_layout
-
-\end_inset
-
-pragma udata
-\end_layout
-
-\end_inset
-
- The pragma udata instructs the compiler to emit code so that linker will place a variable at a specific memory bank.
+udata The pragma udata instructs the compiler to emit code so that linker will place a variable at a specific memory bank.
 \end_layout
 
 \begin_layout LyX-Code
@@ -56677,32 +57975,7 @@ The linker will recognise the section name set in the pragma statement and will 
 \end_layout
 
 \begin_layout Description
-config
-\begin_inset Index idx
-range none
-pageformat default
-status collapsed
-
-\begin_layout Plain Layout
-PIC16!Pragmas!
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-#
-\end_layout
-
-\end_inset
-
-pragma config
-\end_layout
-
-\end_inset
-
- The pragma config instructs the compiler to emit config directive.
+config The pragma config instructs the compiler to emit config directive.
 \begin_inset Newline newline
 \end_inset
 
@@ -56774,7 +58047,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -56793,7 +58065,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -56841,7 +58112,17 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-PIC16!Header files
+PIC16
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+Header files
 \end_layout
 
 \end_inset
@@ -56897,7 +58178,17 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-PIC16!Libraries
+PIC16
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+Libraries
 \end_layout
 
 \end_inset
@@ -56931,7 +58222,6 @@ Libraries are created with gplib which is part of the gputils package
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sourceforge.net/projects/gputils
 \end_layout
 
@@ -56955,7 +58245,17 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-printf()!PIC16 Floating point support
+printf()
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+PIC16 Floating point support
 \end_layout
 
 \end_inset
@@ -57034,7 +58334,17 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-printf()!PIC16 floating point support
+printf()
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+PIC16 floating point support
 \end_layout
 
 \end_inset
@@ -57095,7 +58405,6 @@ Adding support for a new 16
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 ,
@@ -57230,7 +58539,6 @@ The file format is self-explanatory,
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
  
@@ -57449,7 +58757,17 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-PIC16!stack
+PIC16
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+stack
 \end_layout
 
 \end_inset
@@ -57663,7 +58981,17 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-PIC16!wparam
+PIC16
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+wparam
 \end_layout
 
 \end_inset
@@ -57706,7 +59034,17 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-PIC16!shadowregs
+PIC16
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+shadowregs
 \end_layout
 
 \end_inset
@@ -57911,7 +59249,17 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-PIC16!interrupt
+PIC16
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+interrupt
 \end_layout
 
 \end_inset
@@ -59005,7 +60353,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -59021,7 +60368,6 @@ _
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -59141,7 +60487,17 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-printf()!PIC16
+printf()
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+PIC16
 \end_layout
 
 \end_inset
@@ -59852,7 +61208,17 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-PIC16!stack
+PIC16
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+stack
 \end_layout
 
 \end_inset
@@ -59878,7 +61244,6 @@ It is should be understood that stack is easily consumed when calling complicate
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -60013,7 +61378,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -60039,7 +61403,6 @@ for the high level code use a C-compiler (like f.e.
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -60367,7 +61730,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -60386,7 +61748,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -60440,7 +61801,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -60463,7 +61823,6 @@ newcdb
 status collapsed
 
 \begin_layout Plain Layout
-
 http://ec2drv.sourceforge.net/
 \end_layout
 
@@ -60538,7 +61897,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -60557,7 +61915,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -60569,7 +61926,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -60871,7 +62227,6 @@ raphics File
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sdcc.sourceforge.net/wiki_images/ddd_example.png
 \end_layout
 
@@ -60919,7 +62274,6 @@ sdcc -
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -64379,7 +65733,6 @@ compiler.h (include file)
 status collapsed
 
 \begin_layout Plain Layout
-
 http://svn.code.sf.net/p/sdcc/code/trunk/sdcc/device/include/mcs51/compiler.h
 \end_layout
 
@@ -64392,7 +65745,6 @@ http://svn.code.sf.net/p/sdcc/code/trunk/sdcc/device/include/mcs51/compiler.h
 status collapsed
 
 \begin_layout Plain Layout
-
 http://svn.code.sf.net/p/sdcc/code/trunk/sdcc/device/include/mcs51/cc2510fx.h
 \end_layout
 
@@ -64580,7 +65932,17 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-printf()!parameters
+printf()
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+parameters
 \end_layout
 
 \end_inset
@@ -64598,7 +65960,6 @@ vararg,
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 _
@@ -64636,7 +65997,17 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-printf()!putchar()
+printf()
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+putchar()
 \end_layout
 
 \end_inset
@@ -65818,7 +67189,6 @@ online at:
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sdcc.sourceforge.net/doc/sdccman.pdf
 \end_layout
 
@@ -65873,7 +67243,6 @@ online at:
 status collapsed
 
 \begin_layout Plain Layout
-
 http://svn.code.sf.net/p/sdcc/code/trunk/sdcc/ChangeLog
 \end_layout
 
@@ -65983,7 +67352,6 @@ online at:
 status collapsed
 
 \begin_layout Plain Layout
-
 http://svn.code.sf.net/p/sdcc/code/trunk/sdcc/sdas/doc/asmlnk.txt
 \end_layout
 
@@ -66050,7 +67418,6 @@ online at:
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sdcc.sourceforge.net/wiki/index.php/Proposed_Test_Suite_Design
 \end_layout
 
@@ -66105,7 +67472,6 @@ online at:
 status collapsed
 
 \begin_layout Plain Layout
-
 http://svn.code.sf.net/p/sdcc/code/trunk/sdcc/doc/
 \end_layout
 
@@ -66172,7 +67538,6 @@ online at
 status collapsed
 
 \begin_layout Plain Layout
-
 http://svn.code.sf.net/p/sdcc/code/trunk/sdcc/debugger/README
 \end_layout
 
@@ -66256,7 +67621,6 @@ online at:
 status collapsed
 
 \begin_layout Plain Layout
-
 http://svn.code.sf.net/p/sdcc/code/trunk/sdcc/sim/ucsim/doc/index.html
 \end_layout
 
@@ -66323,7 +67687,6 @@ online at:
 status collapsed
 
 \begin_layout Plain Layout
-
 http://svn.code.sf.net/p/sdcc/code/trunk/sdcc/src/pic16/NOTES
 \end_layout
 
@@ -66399,7 +67762,6 @@ online at:
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sdcc.sourceforge.net/wiki/index.php/CDB_File_Format
 \end_layout
 
@@ -66488,7 +67850,17 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-Communication!wiki
+Communication
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+wiki
 \end_layout
 
 \end_inset
@@ -66515,7 +67887,6 @@ Communication!wiki
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sdcc.sourceforge.net/wiki/
 \end_layout
 
@@ -66551,7 +67922,17 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-Communication!Mailing lists
+Communication
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+Mailing lists
 \end_layout
 
 \end_inset
@@ -66578,7 +67959,6 @@ around 650 subscribers mid 2009
 status collapsed
 
 \begin_layout Plain Layout
-
 https://lists.sourceforge.net/mailman/listinfo/sdcc-user
 \end_layout
 
@@ -66617,7 +67997,6 @@ sdcc-devel mailing list
 status collapsed
 
 \begin_layout Plain Layout
-
 https://lists.sourceforge.net/mailman/listinfo/sdcc-devel
 \end_layout
 
@@ -66641,7 +68020,17 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-Communication!Forums
+Communication
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+Forums
 \end_layout
 
 \end_inset
@@ -66668,7 +68057,6 @@ similar scope as sdcc-user mailing list
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sourceforge.net/p/sdcc/discussion/1865
 \end_layout
 
@@ -66707,7 +68095,6 @@ open discussion forum
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sourceforge.net/p/sdcc/discussion/1864
 \end_layout
 
@@ -66735,7 +68122,17 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-Communication!Trackers
+Communication
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+Trackers
 \end_layout
 
 \end_inset
@@ -66762,7 +68159,6 @@ Communication!Trackers
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sourceforge.net/p/sdcc/_list/tickets
 \end_layout
 
@@ -66798,7 +68194,17 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-Communication!RSS feed
+Communication
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+RSS feed
 \end_layout
 
 \end_inset
@@ -66825,7 +68231,6 @@ stay tuned with most (not all) sdcc activities
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sourceforge.net/export/rss2_keepsake.php?group_id=599
 \end_layout
 
@@ -66860,7 +68265,17 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-Communication!Monitor
+Communication
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+Monitor
 \end_layout
 
 \end_inset
@@ -66872,7 +68287,6 @@ Communication!Monitor
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sourceforge.net/search/?group_id=599
 \end_layout
 
@@ -66986,7 +68400,6 @@ PIC simulator
 status collapsed
 
 \begin_layout Plain Layout
-
 http://www.dattalo.com/gnupic/gpsim.html
 \end_layout
 
@@ -67037,7 +68450,6 @@ GNU PIC utilities
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sourceforge.net/projects/gputils
 \end_layout
 
@@ -67076,7 +68488,6 @@ PIC programmer
 status collapsed
 
 \begin_layout Plain Layout
-
 http://freshmeat.net/projects/flp5/
 \end_layout
 
@@ -67116,7 +68527,6 @@ Tools for Silicon Laboratories JTAG debug adapter,
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sourceforge.net/projects/ec2drv
 \end_layout
 
@@ -67167,7 +68577,6 @@ Formats C source - Master of the white spaces
 status collapsed
 
 \begin_layout Plain Layout
-
 http://directory.fsf.org/GNU/indent.html
 \end_layout
 
@@ -67223,7 +68632,6 @@ Object file conversion,
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sourceforge.net/projects/srecord
 \end_layout
 
@@ -67306,7 +68714,6 @@ cmon51
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sourceforge.net/projects/cmon51
 \end_layout
 
@@ -67357,7 +68764,6 @@ Source code documentation system
 status collapsed
 
 \begin_layout Plain Layout
-
 http://www.doxygen.org
 \end_layout
 
@@ -67397,7 +68803,6 @@ IDE (has anyone tried integrating SDCC & SDCDB?
 status collapsed
 
 \begin_layout Plain Layout
-
 http://www.kdevelop.org
 \end_layout
 
@@ -67438,7 +68843,6 @@ paulmon
 status collapsed
 
 \begin_layout Plain Layout
-
 http://www.pjrc.com/tech/8051/paulmon2.html
 \end_layout
 
@@ -67497,7 +68901,6 @@ nolink "false"
 status collapsed
 
 \begin_layout Plain Layout
-
 http://www.splint.org
 \end_layout
 
@@ -67561,7 +68964,6 @@ SDCDB (debugger)
 status collapsed
 
 \begin_layout Plain Layout
-
 http://www.gnu.org/software/ddd/
 \end_layout
 
@@ -67638,7 +69040,6 @@ instruction cycles (count)
 status collapsed
 
 \begin_layout Plain Layout
-
 http://www.8052.com/users/disasm/
 \end_layout
 
@@ -67714,7 +69115,6 @@ project workspace
 status collapsed
 
 \begin_layout Plain Layout
-
 http://www.cmake.org
 \end_layout
 
@@ -67726,7 +69126,6 @@ http://www.cmake.org
 status collapsed
 
 \begin_layout Plain Layout
-
 http://www.cmake.org/Wiki/CmakeSdcc
 \end_layout
 
@@ -67841,7 +69240,6 @@ C Reference card
 status collapsed
 
 \begin_layout Plain Layout
-
 http://refcards.com/refcards/c/index.html
 \end_layout
 
@@ -67892,7 +69290,6 @@ C FAQ
 status collapsed
 
 \begin_layout Plain Layout
-
 http://www.c-faq.com
 \end_layout
 
@@ -67940,7 +69337,6 @@ C-Standard
 status collapsed
 
 \begin_layout Plain Layout
-
 http://www.open-std.org/jtc1/sc22/wg14/www/standards.html#9899
 \end_layout
 
@@ -67988,7 +69384,6 @@ Extensions for Embedded C
 status collapsed
 
 \begin_layout Plain Layout
-
 http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1021.pdf
 \end_layout
 
@@ -68182,7 +69577,6 @@ DS80C400
 status collapsed
 
 \begin_layout Plain Layout
-
 http://pdfserv.maxim-ic.com/en/an/AN3346.pdf
 \end_layout
 
@@ -68239,7 +69633,6 @@ DS89C4x0
 status collapsed
 
 \begin_layout Plain Layout
-
 http://pdfserv.maxim-ic.com/en/an/AN3477.pdf
 \end_layout
 
@@ -68296,7 +69689,6 @@ IDE
 status collapsed
 
 \begin_layout Plain Layout
-
 http://www.silabs.com/public/documents/tpub_doc/anote/Microcontrollers/en/an198.pdf
 \end_layout
 
@@ -68341,7 +69733,6 @@ Interfacing SDCC to Syn and Textpad
 status collapsed
 
 \begin_layout Plain Layout
-
 http://www.ramtron.com/doc/Products/Microcontroller/Support_Tools.asp
 \end_layout
 
@@ -68386,7 +69777,6 @@ Installing and Configuring SDCC and Crimson Editor
 status collapsed
 
 \begin_layout Plain Layout
-
 http://www.ramtron.com/doc/Products/Microcontroller/Support_Tools.asp
 \end_layout
 
@@ -68431,7 +69821,6 @@ MSC12xx Programming with SDCC
 status collapsed
 
 \begin_layout Plain Layout
-
 http://focus.ti.com/general/docs/lit/getliterature.tsp?literatureNumber=sbaa109&fileType=pdf
 \end_layout
 
@@ -68574,7 +69963,6 @@ The SDCC project is hosted on the SDCC SourceForge site at
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sourceforge.net/projects/sdcc
 \end_layout
 
@@ -68670,7 +70058,17 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-Communication!Bug report
+Communication
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+Bug report
 \end_layout
 
 \end_inset
@@ -68695,7 +70093,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -68714,7 +70111,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -68783,7 +70179,6 @@ Please have a short check that you are using a recent version of SDCC and the bu
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sourceforge.net/p/sdcc/bugs/
 \end_layout
 
@@ -68862,7 +70257,17 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-Communication!Feature request
+Communication
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+Feature request
 \end_layout
 
 \end_inset
@@ -68878,7 +70283,6 @@ Like bug reports feature requests are forwarded to the developer mailing list.
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sourceforge.net/p/sdcc/feature-requests/
 \end_layout
 
@@ -68895,7 +70299,17 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-Communication!Patch submission
+Communication
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+Patch submission
 \end_layout
 
 \end_inset
@@ -68923,7 +70337,6 @@ Patch submission
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sourceforge.net/p/sdcc/patches/
 \end_layout
 
@@ -68981,7 +70394,6 @@ These links should take you directly to the Mailing lists
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sourceforge.net/p/sdcc/mailman/sdcc-user/
 \end_layout
 
@@ -69002,7 +70414,6 @@ Traffic on sdcc-devel and sdcc-user is about 100 mails/month each not counting a
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sourceforge.net/p/sdcc/discussion/
 \end_layout
 
@@ -69028,7 +70439,17 @@ pageformat default
 status collapsed
 
 \begin_layout Plain Layout
-Communication!Mailing lists
+Communication
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+!
+\end_layout
+
+\end_inset
+
+Mailing lists
 \end_layout
 
 \end_inset
@@ -69074,7 +70495,6 @@ Changelog
 status collapsed
 
 \begin_layout Plain Layout
-
 http://svn.code.sf.net/p/sdcc/code/trunk/sdcc/ChangeLog
 \end_layout
 
@@ -69098,7 +70518,6 @@ sdcc -
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -69129,7 +70548,6 @@ Subversion code repository
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sourceforge.net/p/sdcc/code/8805/tree/
 \end_layout
 
@@ -69165,7 +70583,6 @@ The last digit of an official release is zero.
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sdcc.sourceforge.net/snap.php
 \end_layout
 
@@ -69177,7 +70594,6 @@ http://sdcc.sourceforge.net/snap.php
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sdcc.sourceforge.net/snap.php#Source
 \end_layout
 
@@ -69213,7 +70629,6 @@ SDCC Wiki
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sdcc.sourceforge.net/wiki/
 \end_layout
 
@@ -69280,7 +70695,6 @@ Regression test
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sdcc.sourceforge.net/snap.php
 \end_layout
 
@@ -69392,7 +70806,6 @@ The SDCC Open Knowledge Resource
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sdccokr.dl9sec.de/
 \end_layout
 
@@ -69405,7 +70818,6 @@ http://sdccokr.dl9sec.de/
 status collapsed
 
 \begin_layout Plain Layout
-
 http://www.pjrc.com/tech/8051/
 \end_layout
 
@@ -69478,7 +70890,6 @@ have a curriculum that can be extended for years.
 status collapsed
 
 \begin_layout Plain Layout
-
 opencores.org
 \end_layout
 
@@ -69490,7 +70901,6 @@ opencores.org
 status collapsed
 
 \begin_layout Plain Layout
-
 http://www.oregano.at/ip/ip01.htm
 \end_layout
 
@@ -69503,7 +70913,6 @@ http://www.oregano.at/ip/ip01.htm
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sourceforge.net/projects/fpgac/
 \end_layout
 
@@ -69523,7 +70932,6 @@ be able to insert excursions about skills like using a revision control system,
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sourceforge.net/
 \end_layout
 
@@ -69535,7 +70943,6 @@ http://sourceforge.net/
 status collapsed
 
 \begin_layout Plain Layout
-
 http://en.wikipedia.org/wiki/Netiquette
 \end_layout
 
@@ -69567,7 +70974,6 @@ And if there should be a shortage of ideas then you can always point students to
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sourceforge.net/p/sdcc/feature-requests/
 \end_layout
 
@@ -69592,7 +70998,6 @@ their
 status collapsed
 
 \begin_layout Plain Layout
-
 http://www.laptop.org
 \end_layout
 
@@ -70145,7 +71550,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -70167,7 +71571,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 #
@@ -77288,7 +78691,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -77307,7 +78709,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -77450,7 +78851,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -77520,7 +78920,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -77541,7 +78940,6 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -78045,7 +79443,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -78137,7 +79534,6 @@ The second phase involves generating an intermediate code which can be easy mani
 status collapsed
 
 \begin_layout Plain Layout
-
 
 \backslash
 /
@@ -78265,7 +79661,6 @@ wiki
 status open
 
 \begin_layout Plain Layout
-
 https://sourceforge.net/p/sdcc/wiki/Adding%20a%20port/
 \end_layout
 
@@ -78276,7 +79671,6 @@ https://sourceforge.net/p/sdcc/wiki/Adding%20a%20port/
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sourceforge.net/mailarchive/message.php?msg_id=13954144
 \end_layout
 
@@ -80553,7 +81947,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-
 \backslash
 /
 \end_layout
@@ -82475,7 +83868,6 @@ Acknowledgments
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sdcc.sourceforge.net/#Who
 \end_layout
 
@@ -82513,7 +83905,6 @@ Thanks to Sourceforge
 status collapsed
 
 \begin_layout Plain Layout
-
 http://sourceforge.net/
 \end_layout
 

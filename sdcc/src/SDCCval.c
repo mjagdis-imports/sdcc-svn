@@ -506,9 +506,9 @@ void moveNestedInit(initList *deepParent, initList *src)
   *eol = dst;
 }
 
-/*-----------------------------------------------------------------*/
-/* findStructField - find a specific field in a struct definition  */
-/*-----------------------------------------------------------------*/
+/*------------------------------------------------------------------*/
+/* findStructField - find a specific field in a struct definition   */
+/*------------------------------------------------------------------*/
 static int
 findStructField (symbol *fields, symbol *target)
 {
@@ -531,10 +531,59 @@ findStructField (symbol *fields, symbol *target)
 }
 
 /*------------------------------------------------------------------*/
-/* reorderIlist - expands an initializer list to match designated   */
-/*                initializers.                                     */
+/* findStructFieldAt - the member an entry of the reordered list    */
+/*                     initializes, NULL past the last one          */
 /*------------------------------------------------------------------*/
-initList *reorderIlist (sym_link * type, initList * ilist)
+static symbol *
+findStructFieldAt (sym_link * type, int slot)
+{
+  symbol *fields;
+  int i = 0;
+
+  if (!IS_STRUCT (type))
+    return NULL;
+
+  for (fields = SPEC_STRUCT (type)->fields; fields; fields = fields->next)
+    {
+      /* skip past unnamed bitfields */
+      if (IS_BITFIELD (fields->type) && SPEC_BUNNAMED (fields->etype))
+        continue;
+      if (i++ == slot)
+        return fields;
+    }
+  return NULL;
+}
+
+/*------------------------------------------------------------------*/
+/* nextInitSlot - the slot after SLOT a positional initializer goes */
+/*   to. The members promoted out of a non-first alternative of an  */
+/*   anonymous union get none of their own: the union is            */
+/*   initialized through its first alternative (C11 6.7.9p17), so   */
+/*   they are skipped here. A designator can still name one, which  */
+/*   is how printIvalStruct() tells that an alternative other than  */
+/*   the first was picked.                                          */
+/*------------------------------------------------------------------*/
+static int
+nextInitSlot (sym_link * type, int slot)
+{
+  symbol *fields;
+
+  do
+    slot++;
+  while ((fields = findStructFieldAt (type, slot)) && fields->anonunionalias);
+
+  return slot;
+}
+
+/*------------------------------------------------------------------*/
+/* reorderIlistFull - expands an initializer list to match          */
+/*                designated initializers.                          */
+/*   SKIPALIASES is for a caller that initializes an anonymous      */
+/*   union through one alternative and walks past the members       */
+/*   promoted out of the others, the way printIvalStruct() does, so */
+/*   that they consume no initializer of their own.                 */
+/*------------------------------------------------------------------*/
+static initList *reorderIlistFull (sym_link * type, initList * ilist, bool skipaliases)
 {
   initList *iloop, *nlist, **nlistArray;
   symbol *sflds;
@@ -590,7 +639,8 @@ initList *reorderIlist (sym_link * type, initList * ilist)
 
   /* pull together all the initializers into an ordered list */
   iloop = ilist ? ilist->init.deep : NULL;
-  for (idx = 0 ; iloop ; iloop = iloop->next, idx++)
+  for (idx = 0 ; iloop ; iloop = iloop->next,
+                         idx = skipaliases ? nextInitSlot (type, idx) : idx + 1)
     {
       if (iloop->designation)
         {
@@ -681,6 +731,27 @@ initList *reorderIlist (sym_link * type, initList * ilist)
   nlist->designation = ilist->designation;
   nlist->next = ilist->next;
   return nlist;
+}
+
+/*------------------------------------------------------------------*/
+/* reorderIlist - expands an initializer list to match designated   */
+/*                initializers.                                     */
+/*------------------------------------------------------------------*/
+initList *reorderIlist (sym_link * type, initList * ilist)
+{
+  return reorderIlistFull (type, ilist, FALSE);
+}
+
+/*------------------------------------------------------------------*/
+/* reorderIlistIval - the same, for printIval(), which initializes  */
+/*   an anonymous union through one alternative and walks past the  */
+/*   members promoted out of the others, so that they consume no    */
+/*   initializer. The pic back ends emit one initializer per        */
+/*   flattened member instead and keep using reorderIlist().        */
+/*------------------------------------------------------------------*/
+initList *reorderIlistIval (sym_link * type, initList * ilist)
+{
+  return reorderIlistFull (type, ilist, TRUE);
 }
 
 /*------------------------------------------------------------------*/
@@ -1310,7 +1381,7 @@ constIntVal (const char *s)
   double dval;
   long long int llval;
   value *val = newValue ();
-  bool decimal, u_suffix = false, l_suffix = false, ll_suffix = false, wb_suffix = false;
+  bool decimal, u_suffix = false, l_suffix = false, ll_suffix = false, wb_suffix = false, z_suffix = false;
 
   val->type = val->etype = newLink (SPECIFIER);
   SPEC_SCLS (val->type) = S_LITERAL;
@@ -1382,15 +1453,24 @@ constIntVal (const char *s)
     {
       ll_suffix = TRUE;
       p2 += 2;
-      if (strchr (p2, 'l') || strchr (p2, 'L') || strstr (p, "wb") || strstr (p, "WB"))
+      if (strchr (p2, 'l') || strchr (p2, 'L') || strchr (p2, 'z') || strchr (p2, 'Z') || strstr (p, "wb") || strstr (p, "WB"))
         werror (E_INTEGERSUFFIX, p);
     }
   else if ((p2 = strchr (p, 'l')) || (p2 = strchr (p, 'L')))
     {
       l_suffix = TRUE;
       p2++;
-      if (strchr (p2, 'l') || strchr (p2, 'L') || strstr (p, "wb") || strstr (p, "WB"))
+      if (strchr (p2, 'l') || strchr (p2, 'L') || strchr (p2, 'z') || strchr (p2, 'Z') || strstr (p, "wb") || strstr (p, "WB"))
         werror (E_INTEGERSUFFIX, p);
+    }
+  else if ((p2 = strchr (p, 'z')) || (p2 = strchr (p, 'Z')))
+    {
+      z_suffix = TRUE;
+      p2++;
+      if (strchr (p2, 'l') || strchr (p2, 'L') || strchr (p2, 'z') || strchr (p2, 'Z') || strstr (p, "wb") || strstr (p, "WB"))
+        werror (E_INTEGERSUFFIX, p);
+      else if (!options.std_sdcc)
+        werror (W_SIZETCONST_SDCC);
     }
   else if ((p2 = strstr (p, "wb")) || (p2 = strstr (p, "WB")))
     {
@@ -1433,6 +1513,9 @@ constIntVal (const char *s)
     }
   else
     {  
+      if (z_suffix && (TARGET_IS_MCS51 || TARGET_IS_DS390)) // Special case for ptrdiff_t literals, see stddef.h
+        l_suffix = true;
+
       if (decimal) // Choose first of int, long int, long long int that fits.
         {
           if (ll_suffix || dval > 0x7fffffff || dval < -0x80000000ll)
@@ -1557,14 +1640,14 @@ constCharacterVal (unsigned long v, char type)
       SPEC_NOUN (val->type) = V_INT;
       SPEC_USIGN (val->type) = 1;
       SPEC_LONG (val->etype) = 1;
-      SPEC_CVAL (val->type).v_ulong = (TYPE_UDWORD) v;
+      SPEC_CVAL (val->type).v_ulong = (uint32_t) v;
       break;
     case 'u': // wide character constant
       if (!options.std_c11)
         werror (E_WCHAR_CONST_C11);
       SPEC_NOUN (val->type) = V_INT;
       SPEC_USIGN (val->type) = 1;
-      SPEC_CVAL (val->type).v_uint = (TYPE_UWORD) v;
+      SPEC_CVAL (val->type).v_uint = (uint16_t) v;
       break;
     case 'U': // wide character constant
       if (!options.std_c11)
@@ -1572,7 +1655,7 @@ constCharacterVal (unsigned long v, char type)
       SPEC_NOUN (val->type) = V_INT;
       SPEC_USIGN (val->type) = 1;
       SPEC_LONG (val->etype) = 1;
-      SPEC_CVAL (val->type).v_ulong = (TYPE_UDWORD) v;
+      SPEC_CVAL (val->type).v_ulong = (uint32_t) v;
       break;
     case '8': // u8 character constant of type char8_t, a typedef for unsigned char.
       if (!options.std_c23)
@@ -1641,19 +1724,19 @@ constNullptrVal (void)
 }
 
 // TODO: Move this function to SDCCutil?
-static const TYPE_UDWORD *utf_32_from_utf_8 (size_t *utf_32_len, const char *utf_8, size_t utf_8_len)
+static const uint32_t *utf_32_from_utf_8 (size_t *utf_32_len, const char *utf_8, size_t utf_8_len)
 {
   size_t allocated = 0;
-  TYPE_UDWORD *utf_32 = 0;
+  uint32_t *utf_32 = 0;
   unsigned char first_byte;
-  TYPE_UDWORD codepoint;
+  uint32_t codepoint;
   size_t seqlen;
 
   for (*utf_32_len = 0; utf_8_len; (*utf_32_len)++)
     {
       if (allocated == *utf_32_len)
         {
-          utf_32 = realloc (utf_32, sizeof(TYPE_UDWORD) * (*utf_32_len + 16));
+          utf_32 = realloc (utf_32, sizeof(uint32_t) * (*utf_32_len + 16));
           wassert (utf_32);
           allocated = *utf_32_len + 16;
         }
@@ -1687,17 +1770,17 @@ static const TYPE_UDWORD *utf_32_from_utf_8 (size_t *utf_32_len, const char *utf
 }
 
 // TODO: Move this function to SDCCutil?
-static const TYPE_UWORD *utf_16_from_utf_32 (size_t *utf_16_len, const TYPE_UDWORD *utf_32, size_t utf_32_len)
+static const uint16_t *utf_16_from_utf_32 (size_t *utf_16_len, const uint32_t *utf_32, size_t utf_32_len)
 {
   size_t allocated = 0;
-  TYPE_UWORD *utf_16 = 0;
-  TYPE_UDWORD codepoint;
+  uint16_t *utf_16 = 0;
+  uint32_t codepoint;
 
   for (*utf_16_len = 0; utf_32_len; utf_32_len--, utf_32++)
     {
       if (allocated <= *utf_16_len + 2)
         {
-          utf_16 = realloc (utf_16, sizeof(TYPE_UWORD) * (*utf_16_len + 16));
+          utf_16 = realloc (utf_16, sizeof(uint16_t) * (*utf_16_len + 16));
           wassert (utf_16);
           allocated = *utf_16_len + 16;
         }
@@ -1739,7 +1822,8 @@ strVal (const char *s)
   DCL_ARRAY_LENGTH_TYPE (val->type) = ARRAY_LENGTH_KNOWN_CONST;
   val->type->next = val->etype = newLink (SPECIFIER);
   SPEC_SCLS (val->etype) = S_LITERAL;
-  SPEC_CONST (val->etype) = 1;
+  if (options.const_stringlit)
+    SPEC_CONST (val->etype) = 1; // NOTE: this can break _Generic
 
   bool explicit_u8 = s[0] == 'u' && s[1] == '8' && s[2] == '"';
 
@@ -1766,7 +1850,7 @@ strVal (const char *s)
 
       size_t utf_32_size;
       // Convert to UTF-32 next, since converting UTF-32 to UTF-16 is easier than UTF-8 to UTF-16.
-      const TYPE_UDWORD *utf_32 = utf_32_from_utf_8 (&utf_32_size, utf_8, utf_8_size);
+      const uint32_t *utf_32 = utf_32_from_utf_8 (&utf_32_size, utf_8, utf_8_size);
 
       dbuf_free (utf_8);
 
@@ -1781,7 +1865,7 @@ strVal (const char *s)
       else if (s[0] == 'u') // UTF-16 string literal
         {
           size_t utf_16_size;
-          const TYPE_UWORD *utf_16 = utf_16_from_utf_32 (&utf_16_size, utf_32, utf_32_size);
+          const uint16_t *utf_16 = utf_16_from_utf_32 (&utf_16_size, utf_32, utf_32_size);
 
           SPEC_NOUN (val->etype) = V_INT;
           SPEC_USIGN (val->etype) = 1;
@@ -1992,7 +2076,7 @@ charVal (const char *s)
   else if (type) // Wide character constant
     {
       size_t ulen;
-      const TYPE_UDWORD *ustr = utf_32_from_utf_8 (&ulen, s, strlen(s) - 1);
+      const uint32_t *ustr = utf_32_from_utf_8 (&ulen, s, strlen(s) - 1);
       value *val = constCharacterVal (*ustr, type);
       free ((void *)ustr);
       return (val);
@@ -3616,3 +3700,53 @@ valForCastArr (ast * aexpr, sym_link * type)
   val->etype = getSpec (val->type);
   return val;
 }
+
+/*-----------------------------------------------------------------*/
+/* checkParameterTypeList - check that the identifiers used in the */
+/*                          types in the list are declared before  */
+/*-----------------------------------------------------------------*/
+void
+checkParameterTypeList (value *forward_declaration, value *parameters)
+{
+  if (forward_declaration)
+    {
+      changePointer (forward_declaration->type);
+      if (!IS_SPEC (forward_declaration->type) ||
+        SPEC_NOUN (forward_declaration->type) != V_INT &&
+        SPEC_NOUN (forward_declaration->type) != V_CHAR &&
+        SPEC_NOUN (forward_declaration->type) != V_BITINT &&
+        SPEC_NOUN (forward_declaration->type) != V_BOOL)
+        werror (E_PARAM_FWD_DECL_UNSUPPORTED);
+      if (!forward_declaration->sym)
+        werror (E_PARAM_NAME_OMITTED, "", 0);
+      else
+        {
+          checkQualifiers (forward_declaration->sym, forward_declaration->sym->type, false, true);
+          addSymChain (&forward_declaration->sym);
+          bool found = false;
+          for (value *p = parameters; p; p = p->next)
+            if (p->sym && !strcmp (forward_declaration->sym->name, p->sym->name))
+              {
+                found = true;
+                break;
+              }
+          if (!found)
+            werror (E_PARAM_FWD_DECL_NOPARAM, forward_declaration->sym->name);
+        }
+    }
+  for (value *p = parameters; p; p = p->next)
+    {
+      changePointer (p->type);
+      checkQualifiers (p->sym, p->type, false, true);
+      if (p->sym)
+        addSymChain (&p->sym);
+    }
+  if (forward_declaration && forward_declaration->sym)
+    deleteSym (SymbolTab, forward_declaration->sym, forward_declaration->sym->name);
+  for (value *p = parameters; p; p = p->next)
+    {
+      if (p->sym)
+        deleteSym (SymbolTab, p->sym, p->sym->name);
+    }
+}
+

@@ -6,10 +6,9 @@
 
 #ifdef __SDCC
 #pragma std_c99
+#pragma disable_warning 84 /* g() will return an uninitialized struct */
 #endif
 
-// TODO: Enable when sdcc supports struct return!
-#if 0
 struct twelve
 {
   int a;
@@ -58,14 +57,11 @@ f ()
 	}
     }
 }
-#endif
 
 void
 testTortureExecute (void)
 {
-#if 0
   f ();
   return;
-#endif
 }
 

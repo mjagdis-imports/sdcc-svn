@@ -95,12 +95,19 @@ public:
   chars startup_command;
   class cl_mc32 cperiod, ccyc;
   u32_t period, cyc, acyc;
-  bool quiet;
+  bool quiet; // -q
+  bool nowelcome; // -Dnowelcome
+  bool hide_echo; // -Dhideecho
+  bool show_input; // -Dshowinput
+  bool opt_tml; // either -Dhtml or -Dwtml used
+  bool retmain; // -m
+  int retval;
   class cl_console_stdout *ocon;
   int rgdb_port;
   enum hw_cath con_hw_cath;
   int con_hw_id;
   chars con_hw_name;
+  bool measure_speed;
 public:
   cl_app(void);
   virtual ~cl_app(void);
@@ -146,7 +153,10 @@ public: // output functions
   virtual int debug(const char *format, ...);
 
 public:
+  virtual chars get_option(chars name);
   virtual void set_option_s(const char *opt_name, const char *new_value);
+  virtual bool get_option_fc(void);
+  virtual bool get_option_bw(void);
 };
 
 

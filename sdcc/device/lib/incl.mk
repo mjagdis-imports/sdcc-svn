@@ -60,6 +60,10 @@ COMMON_LONG = \
   _modslong.c \
   _modulong.c
 
+COMMON_LONGLONG = \
+  __mululong2ulonglong.c \
+  __mulslong2slonglong.c
+
 COMMON_SDCC = \
   call_once.c \
   isalnum.c \
@@ -116,9 +120,10 @@ COMMON_SDCC = \
   _strncpy.c \
   _strpbrk.c \
   _strrchr.c \
+  strsep.c \
   _strspn.c \
   _strstr.c \
-  _strtok.c \
+  strtok.c \
   memccpy.c \
   _memchr.c \
   _memcmp.c \

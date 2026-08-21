@@ -63,10 +63,10 @@ static char *_ds390_keywords[] =
   "near",
   "pdata",
   "reentrant",
+  "sbit",
   "sfr",
   "sfr16",
   "sfr32",
-  "sbit",
   "using",
   "xdata",
   "_data",
@@ -80,20 +80,17 @@ static char *_ds390_keywords[] =
   NULL
 };
 
-static builtins __ds390_builtins[] =
-{
-  { "__builtin_memcpy_x2x","v",3,{"cx*","cx*","i"}}, /* void __builtin_memcpy_x2x (xdata char *,xdata char *,int) */
-  { "__builtin_memcpy_c2x","v",3,{"cx*","cp*","i"}}, /* void __builtin_memcpy_c2x (xdata char *,code  char *,int) */
-  { "__builtin_memset_x","v",3,{"cx*","c","i"}},     /* void __builtin_memset     (xdata char *,char,int)         */
+static const char __ds390_builtins[] =
+  "void __builtin_memcpy_x2x (__xdata char *, __xdata char *, int) __builtin__;\n"
+  "void __builtin_memcpy_c2x (__xdata char *, __code  char *, int) __builtin__;\n"
+  "void __builtin_memset (__xdata char *, char, int) __builtin__;\n"
   /* __builtin_inp - used to read from a memory mapped port, increment first pointer */
-  { "__builtin_inp","v",3,{"cx*","cx*","i"}},        /* void __builtin_inp        (xdata char *,xdata char *,int) */
-  /* __builtin_inp - used to write to a memory mapped port, increment first pointer */
-  { "__builtin_outp","v",3,{"cx*","cx*","i"}},       /* void __builtin_outp       (xdata char *,xdata char *,int) */
-  { "__builtin_swapw","Us",1,{"Us"}},                /* unsigned short __builtin_swapw (unsigned short) */
-  { "__builtin_memcmp_x2x","c",3,{"cx*","cx*","i"}}, /* void __builtin_memcmp_x2x (xdata char *,xdata char *,int) */
-  { "__builtin_memcmp_c2x","c",3,{"cx*","cp*","i"}}, /* void __builtin_memcmp_c2x (xdata char *,code  char *,int) */
-  { NULL , NULL,0, {NULL}}                           /* mark end of table */
-};
+  "void __builtin_inp (__xdata char *, __xdata char *, int) __builtin__;\n"
+  /* __builtin_outp - used to write to a memory mapped port, increment first pointer */
+  "void __builtin_outp (__xdata char *, __xdata char *, int) __builtin__;\n"
+  "unsigned short __builtin_swapw (unsigned short) __builtin__;\n"
+  "void __builtin_memcmp_x2x (__xdata char *, __xdata char *, int) __builtin__;\n"
+  "void __builtin_memcmp_c2x (__xdata char *, __code  char *, int) __builtin__;\n";
 
 void ds390_assignRegisters (ebbIndex * ebbi);
 
@@ -179,9 +176,7 @@ static void
 _ds390_finaliseOptions (void)
 {
   if (options.noXinitOpt)
-    {
-      port->genXINIT=0;
-    }
+    port->genXINIT=0;
 
   /* Hack-o-matic: if we are using the flat24 model,
    * adjust pointer sizes.
@@ -339,32 +334,30 @@ ds390_genAtomicSupport (struct dbuf_s *oBuf, unsigned int startaddr)
       startaddr += (8 - startaddr % 8);
     }
   // Support routine block may not cross 256B boundary.
-  if (startaddr / 256 != (startaddr + 8 * 4 + 7) / 256)
+  if (startaddr / 256 != (startaddr + 8 * 5 + 6) / 256)
     {
       dbuf_printf (oBuf, "\t.ds\t%d\n", 256 - startaddr % 256);
       startaddr += 256 - startaddr % 256;
     }
 
+  // The following routine just needs to be in jnb range of the below ones,
+  // it doesn't have alignment requirements. Align it anyway for faster
+  // fall through for atomic in idata implementation and size reduction.
+
+  // If the value of the byte at b:dptr is the value of r2, store the value
+  // of r3 into that byte. Return the new value of that byte in acc.
+  // Overwrites r0; reads r2, r3.
+  dbuf_printf (oBuf, "sdcc_atomic_compare_exchange_gptr_impl::\n"
+                     "\tjnb\tb.6, sdcc_atomic_compare_exchange_xdata_impl\n"
+                     "\tmov\tr0, dpl\n"
+                     "\tjb\tb.5, sdcc_atomic_compare_exchange_pdata_impl\n"
+//                   "\tsjmp\tsdcc_atomic_compare_exchange_idata_impl\n"    // fall through
+              );
+
   dbuf_printf (oBuf, "sdcc_atomic_exchange_rollback_start::\n");
 
   // Each routine (except the last one) needs to be 8 bytes long.
   // Restart may happen at bytes 1 to 5 of each routine.
-  dbuf_printf (oBuf, "\tnop\n"
-                     "\tnop\n"
-                     "sdcc_atomic_exchange_pdata_impl:\n"
-                     "\tmovx\ta, @r0\n"
-                     "\tmov\tr3, a\n"
-                     "\tmov\ta, r2\n"
-                     "\tmovx\t@r0, a\n"
-                     "\tsjmp\tsdcc_atomic_exchange_exit\n");
-  dbuf_printf (oBuf, "\tnop\n"
-                     "\tnop\n"
-                     "sdcc_atomic_exchange_xdata_impl:\n"
-                     "\tmovx\ta, @dptr\n"
-                     "\tmov\tr3, a\n"
-                     "\tmov\ta, r2\n"
-                     "\tmovx\t@dptr, a\n"
-                     "\tsjmp\tsdcc_atomic_exchange_exit\n");
   dbuf_printf (oBuf, "sdcc_atomic_compare_exchange_idata_impl:\n"
                      "\tmov\ta, @r0\n"
                      "\tcjne\ta, ar2, .+#5\n"
@@ -384,13 +377,38 @@ ds390_genAtomicSupport (struct dbuf_s *oBuf, unsigned int startaddr)
                      "\tcjne\ta, ar2, .+#5\n"
                      "\tmov\ta, r3\n"
                      "\tmovx\t@dptr, a\n"
-                     "\tret\n");
+                     "\tret\n"
+                     "\tnop\n");
+  dbuf_printf (oBuf, "\tnop\n"
+                     "\tnop\n"
+                     "sdcc_atomic_exchange_pdata_impl:\n"
+                     "\tmovx\ta, @r0\n"
+                     "\tmov\tr3, a\n"
+                     "\tmov\ta, r2\n"
+                     "\tmovx\t@r0, a\n"
+                     "\tsjmp\tsdcc_atomic_exchange_exit\n");
+  dbuf_printf (oBuf, "\tnop\n"
+                     "\tnop\n"
+                     "sdcc_atomic_exchange_xdata_impl:\n"
+                     "\tmovx\ta, @dptr\n"
+                     "\tmov\tr3, a\n"
+                     "\tmov\ta, r2\n"
+                     "\tmovx\t@dptr, a\n"
+//                   "\tsjmp\tsdcc_atomic_exchange_exit\n"          // fall through
+              );
   dbuf_printf (oBuf, "sdcc_atomic_exchange_rollback_end::\n\n");
 
-  // The following two routines just need to be in jnb range of the above ones, they don't have alignment requirements.
+  dbuf_printf (oBuf, "sdcc_atomic_exchange_exit:\n"
+                     "\tmov\tdpl, r3\n"
+                     "\tret\n");
+  // The following routine just needs to be in jnb range of the above ones, it doesn't have alignment requirements.
 
+  dbuf_printf (oBuf, "_atomic_flag_test_and_set::\n"
+                     "\tmov\tr2, #1\n"
+//                   "\tsjmp\tsdcc_atomic_exchange_gptr_impl\n"     // fall through
+              );
   // Store value in r2 into byte at b:dptr, return previous byte at b:dptr in dpl.
-  // Overwrites r0, r2, r3.
+  // Overwrites r0, r3; reads r2.
   dbuf_printf (oBuf, "sdcc_atomic_exchange_gptr_impl::\n"
                      "\tjnb\tb.6, sdcc_atomic_exchange_xdata_impl\n"
                      "\tmov\tr0, dpl\n"
@@ -399,19 +417,7 @@ ds390_genAtomicSupport (struct dbuf_s *oBuf, unsigned int startaddr)
                      "\tmov\ta, r2\n"
                      "\txch\ta, @r0\n"
                      "\tmov\tdpl, a\n"
-                     "\tret\n"
-                     "sdcc_atomic_exchange_exit:\n"
-                     "\tmov\tdpl, r3\n"
                      "\tret\n");
-
-  // If the value of the byte at b:dptr is the value of r2, store the value
-  // of r3 into that byte. Return the new value of that byte in a.
-  // Overwrites r0, r2, r3.
-  dbuf_printf (oBuf, "sdcc_atomic_compare_exchange_gptr_impl::\n"
-                     "\tjnb\tb.6, sdcc_atomic_compare_exchange_xdata_impl\n"
-                     "\tmov\tr0, dpl\n"
-                     "\tjb\tb.5, sdcc_atomic_compare_exchange_pdata_impl\n"
-                     "\tsjmp\tsdcc_atomic_compare_exchange_idata_impl\n");
 }
 
 /* Generate interrupt vector table. */
@@ -496,7 +502,8 @@ _ds390_genIVT (struct dbuf_s * oBuf, symbol ** interrupts, int maxInterrupts)
       nextbyteaddr += options.model == MODEL_FLAT24 ? 4 : 3;
     }
 
-  ds390_genAtomicSupport (oBuf, nextbyteaddr);
+  if (!options.norestartseqatomics)
+    ds390_genAtomicSupport (oBuf, nextbyteaddr);
 
   return true;
 }
@@ -598,11 +605,7 @@ static void _ds390_genXINIT (FILE * of)
 static bool cseCostEstimation (iCode *ic, iCode *pdic)
 {
   operand *result = IC_RESULT(ic);
-  //operand *right  = IC_RIGHT(ic);
-  //operand *left   = IC_LEFT(ic);
   sym_link *result_type = operandType(result);
-  //sym_link *right_type  = (right ? operandType(right) : 0);
-  //sym_link *left_type   = (left  ? operandType(left)  : 0);
 
   /* if it is a pointer then return ok for now */
   if (IC_RESULT(ic) && IS_PTR(result_type))
@@ -622,16 +625,6 @@ static bool cseCostEstimation (iCode *ic, iCode *pdic)
 
     /* for others it is cheaper to do the cse */
     return 1;
-}
-
-bool _ds390_nativeMulCheck(iCode *ic, sym_link *left, sym_link *right)
-{
-  if (IS_BITINT (OP_SYM_TYPE (IC_RESULT(ic))) && SPEC_BITINTWIDTH (OP_SYM_TYPE (IC_RESULT(ic))) % 8)
-    return false;
-
-  return
-    getSize (left) == 1 && getSize (right) == 1 ||
-    options.useAccelerator && getSize (left) == 2 && getSize (right) == 2;
 }
 
 /* Indicate which extended bit operations this port supports */
@@ -665,6 +658,17 @@ oclsExpense (struct memmap *oclass)
     return 1;
 
   return 0;
+}
+
+static bool
+_ds390_nativeMulCheck(iCode *ic, sym_link *left, sym_link *right)
+{
+  if (IS_BITINT (OP_SYM_TYPE (IC_RESULT(ic))) && SPEC_BITINTWIDTH (OP_SYM_TYPE (IC_RESULT(ic))) % 8)
+    return false;
+
+  return
+    getSize (left) == 1 && getSize (right) == 1 ||
+    options.useAccelerator && getSize (left) == 2 && getSize (right) == 2;
 }
 
 static int
@@ -782,8 +786,8 @@ instructionSize(char *inst, char *op1, char *op2)
   return 999;
 }
 
-asmLineNode *
-ds390newAsmLineNode (int currentDPS)
+static asmLineNode *
+newAsmLineNode (int currentDPS)
 {
   asmLineNode *aln;
 
@@ -1003,10 +1007,16 @@ ds390opcodeCompare (const void *key, const void *member)
   return strcmp((const char *)key, ((ds390opcodedata *)member)->name);
 }
 
+static const char* skip_spaces (const char* p)
+{
+  while (*p && isspace(*p)) p++;
+  return p;
+}
+
 static asmLineNode *
 asmLineNodeFromLineNode (lineNode *ln, int currentDPS)
 {
-  asmLineNode *aln = ds390newAsmLineNode(currentDPS);
+  asmLineNode *aln = newAsmLineNode(currentDPS);
   char *op, op1[256], op2[256];
   int opsize;
   const char *p;
@@ -1017,7 +1027,9 @@ asmLineNodeFromLineNode (lineNode *ln, int currentDPS)
 
   p = ln->line;
 
-  while (*p && isspace(*p)) p++;
+  /* extract instruction */
+
+  p = skip_spaces (p);
   for (op = inst, opsize=1; *p; p++)
     {
       if (isspace(*p) || *p == ';' || *p == ':' || *p == '=')
@@ -1031,7 +1043,7 @@ asmLineNodeFromLineNode (lineNode *ln, int currentDPS)
   if (*p == ';' || *p == ':' || *p == '=')
     return aln;
 
-  while (*p && isspace(*p)) p++;
+  p = skip_spaces (p);
   if (*p == '=')
     return aln;
 
@@ -1160,7 +1172,7 @@ PORT ds390_port =
   TARGET_ID_DS390,
   "ds390",
   "DS80C390",                   /* Target name */
-  NULL,
+  NULL,                         /* Processor name */
   {
     glue,
     TRUE,                       /* Emit glue around main */
@@ -1168,7 +1180,7 @@ PORT ds390_port =
     MODEL_SMALL,
     get_model,
   },
-  {
+  {                             /* Assembler */
     _asmCmd,
     NULL,
     "-plosgffwy",               /* Options with debug */
@@ -1186,7 +1198,7 @@ PORT ds390_port =
     NULL,                       /* crt */
     _libs_ds390,                /* libs */
   },
-  {
+  {                             /* Peephole optimizer */
     _defaultRules,
     getInstructionSize,
     getRegsRead,
@@ -1201,27 +1213,25 @@ PORT ds390_port =
   },
   /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float, _BitInt (in bits) */
   { 1, 2, 2, 4, 8, 1, 2, 3, 2, 3, 1, 4, 64 },
-
   /* tags for generic pointers */
   { 0x00, 0x40, 0x60, 0x80 },           /* far, near, xstack, code */
-
   {
-    "XSEG    (XDATA)",
-    "STACK   (DATA)",
-    "CSEG    (CODE)",
-    "DSEG    (DATA)",
-    "ISEG    (DATA)",
-    "PSEG    (PAG,XDATA)",
-    "XSEG    (XDATA)",
+    "XSEG    (XDATA)",          // xstack_name
+    "STACK   (DATA)",           // istack_name
+    "CSEG    (CODE)",           // code_name
+    "DSEG    (DATA)",           // data_name
+    "ISEG    (DATA)",           // idata_name
+    "PSEG    (PAG,XDATA)",      // pdata_name
+    "XSEG    (XDATA)",          // xdata_name
     NULL,                       // xconst_name
-    "BSEG    (BIT)",
-    "RSEG    (DATA)",
-    "GSINIT  (CODE)",
-    "OSEG    (OVR,DATA)",
-    "GSFINAL (CODE)",
-    "HOME    (CODE)",
-    "XISEG   (XDATA)",          // initialized xdata
-    "XINIT   (CODE)",           // a code copy of xiseg
+    "BSEG    (BIT)",            // bit_name
+    "RSEG    (DATA)",           // reg_name
+    "GSINIT  (CODE)",           // static_name
+    "OSEG    (OVR,DATA)",       // overlay_name
+    "GSFINAL (CODE)",           // post_static_name
+    "HOME    (CODE)",           // home_name
+    "XISEG   (XDATA)",          // xidata_name - initialized xdata
+    "XINIT   (CODE)",           // xinit_name - a code copy of xiseg
     "CONST   (CODE)",           // const_name - const data (code or not)
     "CABS    (ABS,CODE)",       // cabs_name - const absolute data (code or not)
     "XABS    (ABS,XDATA)",      // xabs_name - absolute xdata/pdata
@@ -1236,9 +1246,17 @@ PORT ds390_port =
   },
   { NULL, NULL },
   0,                            // ABI revision
-  { +1, 1, 4, 1, 1, 0, 0 },
+  {
+    +1,         /* direction (+1 = stack grows up) */
+    1,          /* bank_overhead (switch between register banks) */
+    4,          /* isr_overhead */
+    1,          /* call_overhead (2 for return address - 1 for pre-incrementing push */
+    1,          /* reent_overhead */
+    0,          /* banked_overhead (switch between code banks) */
+    0           /* offset (sp points directly at last item pushed) */
+  },
   /* ds390 has an 16 bit mul & div */
-  { -1, FALSE },
+  { -1, false, false },
   { ds390_emitDebuggerSymbol },
   {
     255/4,      /* maxCount */
@@ -1267,13 +1285,13 @@ PORT ds390_port =
   _ds390_genInitStartup,
   _ds390_reset_regparm,
   _ds390_regparm,
-  NULL,
-  NULL,
-  _ds390_nativeMulCheck,
+  NULL,                         /* process_pragma */
+  NULL,                         /* getMangledFunctionName */
+  _ds390_nativeMulCheck,        /* hasNativeMulFor */
   hasExtBitOp,                  /* hasExtBitOp */
   oclsExpense,                  /* oclsExpense */
-  FALSE,
-  TRUE,                         /* little endian */
+  FALSE,                        /* use_dw_for_init */
+  TRUE,                         /* little_endian */
   0,                            /* leave lt */
   0,                            /* leave gt */
   1,                            /* transform <= to ! > */
@@ -1284,10 +1302,10 @@ PORT ds390_port =
   cseCostEstimation,
   __ds390_builtins,             /* table of builtin functions */
   GPOINTER,                     /* treat unqualified pointers as "generic" pointers */
-  true,
-  false,
+  true,                         // __far is a subspace of the generic space.
+  false,                        // the generic space is not a subspace of __far.
   1,                            /* reset labelKey to 1 */
-  1,                            /* globals & local static allowed */
+  1,                            /* globals & local statics allowed */
   0,                            /* Number of registers handled in the tree-decomposition-based register allocator in SDCCralloc.hpp */
   PORT_MAGIC
 };
@@ -1463,50 +1481,47 @@ static char *_tininative_keywords[] =
   NULL
 };
 
-static builtins __tininative_builtins[] =
-{
-  { "__builtin_memcpy_x2x","v",3,{"cx*","cx*","i"}}, /* void __builtin_memcpy_x2x (xdata char *,xdata char *,int) */
-  { "__builtin_memcpy_c2x","v",3,{"cx*","cp*","i"}}, /* void __builtin_memcpy_c2x (xdata char *,code  char *,int) */
-  { "__builtin_memset_x","v",3,{"cx*","c","i"}},     /* void __builtin_memset     (xdata char *,char,int)         */
+static const char __tininative_builtins[] =
+  "void __builtin_memcpy_x2x (__xdata char *, __xdata char *, int) __builtin__;"
+  "void __builtin_memcpy_c2x (__xdata char *, __code  char *, int) __builtin__;"
+  "void __builtin_memset (__xdata char *, char, int) __builtin__;"
   /* TINI NatLib */
-  { "NatLib_LoadByte","c",1,{"c"}},                  /* char  Natlib_LoadByte  (0 based parameter number)         */
-  { "NatLib_LoadShort","s",1,{"c"}},                 /* short Natlib_LoadShort (0 based parameter number)         */
-  { "NatLib_LoadInt","l",1,{"c"}},                   /* long  Natlib_LoadLong  (0 based parameter number)         */
-  { "NatLib_LoadPointer","cx*",1,{"c"}},             /* long  Natlib_LoadPointer  (0 based parameter number)      */
+  "char NatLib_LoadByte (char) __builtin__;"
+  "short NatLib_LoadShort (char) __builtin__;"
+  "long NatLib_LoadInt (char) __builtin__;"
+  "xdata char *NatLib_LoadPointer (char) __builtin__;"
   /* TINI StateBlock related */
-  { "NatLib_InstallImmutableStateBlock","c",2,{"vx*","us"}},/* char NatLib_InstallImmutableStateBlock(state block *,int handle) */
-  { "NatLib_InstallEphemeralStateBlock","c",2,{"vx*","us"}},/* char NatLib_InstallEphemeralStateBlock(state block *,int handle) */
-  { "NatLib_RemoveImmutableStateBlock","v",0,{NULL}},/* void NatLib_RemoveImmutableStateBlock() */
-  { "NatLib_RemoveEphemeralStateBlock","v",0,{NULL}},/* void NatLib_RemoveEphemeralStateBlock() */
-  { "NatLib_GetImmutableStateBlock","i",0,{NULL}},   /* int  NatLib_GetImmutableStateBlock () */
-  { "NatLib_GetEphemeralStateBlock","i",0,{NULL}},   /* int  NatLib_GetEphemeralStateBlock () */
+  "char NatLib_InstallImmutableStateBlock (state block *, int handle) __builtin__;"
+  "char NatLib_InstallEphemeralStateBlock (state block *, int handle) __builtin__;"
+  "void NatLib_RemoveImmutableStateBlock (void) __builtin__;"
+  "void NatLib_RemoveEphemeralStateBlock (void) __builtin__;"
+  "int NatLib_GetImmutableStateBlock (void) __builtin__;"
+  "int NatLib_GetEphemeralStateBlock (void) __builtin__;"
   /* Memory manager */
-  { "MM_XMalloc","i",1,{"l"}},                       /* int  MM_XMalloc (long)                */
-  { "MM_Malloc","i",1,{"i"}},                        /* int  MM_Malloc  (int)                 */
-  { "MM_ApplicationMalloc","i",1,{"i"}},             /* int  MM_ApplicationMalloc  (int)      */
-  { "MM_Free","i",1,{"i"}},                          /* int  MM_Free  (int)                   */
-  { "MM_Deref","cx*",1,{"i"}},                       /* char *MM_Free  (int)                  */
-  { "MM_UnrestrictedPersist","c",1,{"i"}},           /* char  MM_UnrestrictedPersist  (int)   */
+  "int MM_XMalloc (long) __builtin__;"
+  "int MM_Malloc (int) __builtin__;"
+  "int MM_ApplicationMalloc (int) __builtin__;"
+  "int MM_Free (int) __builtin__;"
+  "char *MM_Free (int) __builtin__;"
+  "char MM_UnrestrictedPersist (int) __builtin__;"
   /* System functions */
-  { "System_ExecJavaProcess","c",2,{"cx*","i"}},     /* char System_ExecJavaProcess (char *,int) */
-  { "System_GetRTCRegisters","v",1,{"cx*"}},         /* void System_GetRTCRegisters (char *) */
-  { "System_SetRTCRegisters","v",1,{"cx*"}},         /* void System_SetRTCRegisters (char *) */
-  { "System_ThreadSleep","v",2,{"l","c"}},           /* void System_ThreadSleep (long,char)  */
-  { "System_ThreadSleep_ExitCriticalSection","v",2,{"l","c"}},/* void System_ThreadSleep_ExitCriticalSection (long,char)  */
-  { "System_ProcessSleep","v",2,{"l","c"}},          /* void System_ProcessSleep (long,char)  */
-  { "System_ProcessSleep_ExitCriticalSection","v",2,{"l","c"}},/* void System_ProcessSleep_ExitCriticalSection (long,char)  */
-  { "System_ThreadResume","c",2,{"c","c"}},          /* char System_ThreadResume(char,char)  */
-  { "System_SaveJavaThreadState","v",0,{NULL}},      /* void System_SaveJavaThreadState()    */
-  { "System_RestoreJavaThreadState","v",0,{NULL}},   /* void System_RestoreJavaThreadState() */
-  { "System_ProcessYield","v",0,{NULL}},             /* void System_ProcessYield() */
-  { "System_ProcessSuspend","v",0,{NULL}},           /* void System_ProcessSuspend() */
-  { "System_ProcessResume","v",1,{"c"}},             /* void System_ProcessResume(char) */
-  { "System_RegisterPoll","c",1,{"vF*"}},            /* char System_RegisterPoll ((void *func pointer)()) */
-  { "System_RemovePoll","c",1,{"vF*"}},              /* char System_RemovePoll ((void *func pointer)()) */
-  { "System_GetCurrentProcessId","c",0,{NULL}},      /* char System_GetCurrentProcessId() */
-  { "System_GetCurrentThreadId","c",0,{NULL}},       /* char System_GetCurrentThreadId() */
-  { NULL , NULL,0, {NULL}}                           /* mark end of table */
-};
+  "char System_ExecJavaProcess (char *, int) __builtin__;"
+  "void System_GetRTCRegisters (char *) __builtin__;"
+  "void System_SetRTCRegisters (char *) __builtin__;"
+  "void System_ThreadSleep (long, char) __builtin__;"
+  "void System_ThreadSleep_ExitCriticalSection (long,char) __builtin__;"
+  "void System_ProcessSleep (long, char) __builtin__;"
+  "void System_ProcessSleep_ExitCriticalSection (long, char) __builtin__;"
+  "char System_ThreadResume (char, char) __builtin__;"
+  "void System_SaveJavaThreadState (void) __builtin__;"
+  "void System_RestoreJavaThreadState (void) __builtin__;"
+  "void System_ProcessYield (void) __builtin__;"
+  "void System_ProcessSuspend (void) __builtin__;"
+  "void System_ProcessResume (char) __builtin__;"
+  "char System_RegisterPoll ((void *func pointer)()) __builtin__;"
+  "char System_RemovePoll ((void *func pointer)()) __builtin__;"
+  "char System_GetCurrentProcessId (void) __builtin__;"
+  "char System_GetCurrentThreadId (void) __builtin__;";
 
 static const char *_a390Cmd[] =
 {
@@ -1900,8 +1915,8 @@ PORT ds400_port =
   cseCostEstimation,
   __ds390_builtins,             /* table of builtin functions */
   GPOINTER,                     /* treat unqualified pointers as "generic" pointers */
-  true,
-  false,
+  true,                         // __far is a subspace of the generic space.
+  false,                        // the generic space is not a subspace of __far.
   1,                            /* reset labelKey to 1 */
   1,                            /* globals & local static allowed */
   0,                            /* Number of registers handled in the tree-decomposition-based register allocator in SDCCralloc.hpp */

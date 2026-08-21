@@ -117,6 +117,8 @@ deleteIfx (iCode * loop, int key)
     }
   else
     {
+      if (IS_SYMOP (IC_COND (loop)))
+        bitVectUnSetBit (OP_USES (IC_COND (loop)), loop->key);
       loop->prev->next = loop->next;
       loop->next->prev = loop->prev;
     }
@@ -584,8 +586,7 @@ iCodeLabelOptimize (iCode * ic)
 {
   if (!optimize.label1 &&
       !optimize.label2 &&
-      !optimize.label3 &&
-      !optimize.label4)
+      !optimize.label3)
     return ic;
 
   /* build labelreferences */
@@ -613,8 +614,7 @@ iCodeLabelOptimize (iCode * ic)
         change += labelGotoGoto (ic);
 
       /* remove unreference labels */
-      if (optimize.label4)
-        change += labelUnrefLabel (ic);
+      change += labelUnrefLabel (ic);
 
       /* remove unreachable code */
       change += labelUnreach (ic);
@@ -625,3 +625,4 @@ iCodeLabelOptimize (iCode * ic)
 
   return ic;
 }
+

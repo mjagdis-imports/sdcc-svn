@@ -240,7 +240,7 @@ termScanAtFunc (const lineNode *pl, int rIdx)
     ftype = ftype->next;
   if (IFFUNC_ISBANKEDCALL(ftype) && banked_reg)
     return S4O_ABORT;
-  if (FUNC_ARGS (ftype) && getSize (FUNC_ARGS (ftype)->type) > 4)
+  if (mcs51IsParmInCall (ftype, regs8051[rIdx].name))
     return S4O_ABORT;
   if (FUNC_CALLEESAVES(ftype))
     return S4O_CONTINUE;
@@ -885,7 +885,13 @@ mcs51notUsed (const char *what, lineNode *endPl, lineNode *head)
   // If we don't know what it is, assume it might be used.
   // todo: allow a, and support it in removeDeadMove.
   // todo: allow dpl, dph, and support it in removeDeadMove.
-  if (!(what[0] == 'r' && isdigit(what[1])) && !(what[0] == 'a' && what[0] == 'r' && isdigit(what[2]))) // Allow r?
+  // Allow r0-r3 and ar0-ar3
+  int reg = 255;
+  if (what[0] == 'r' && isdigit(what[1]))
+    reg = what[1] - '0';
+  if (what[0] == 'a' && what[1] == 'r' && isdigit(what[2]))
+    reg = what[2] - '0';
+  if (reg >= 4)
     return (false);
 
   _G.head = head;

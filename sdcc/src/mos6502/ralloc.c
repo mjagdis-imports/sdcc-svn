@@ -48,7 +48,7 @@ static struct
 } _G;
 
 /* 6502 registers */
-reg_info regsm6502[] =
+reg_info m6502_regs[] =
   {
     {REG_GPR, A_IDX,   "a",  M6502MASK_A,  NULL, 0, 1},
     {REG_GPR, X_IDX,   "x",  M6502MASK_X,  NULL, 0, 1},
@@ -56,24 +56,23 @@ reg_info regsm6502[] =
     {REG_CND, CND_IDX, "C",  0, NULL, 0, 1},
     {REG_GPR, XA_IDX,  "xa", M6502MASK_XA, NULL, 0, 1},
     //  {REG_GPR, YA_IDX,  "ya", M6502MASK_YA, NULL, 0, 1},
-    {REG_GPR, YX_IDX,  "yx", M6502MASK_YX, NULL, 0, 1},
+    {REG_GPR, XY_IDX,  "xy", M6502MASK_XY, NULL, 0, 1},
     {0,       SP_IDX,  "sp", 0, NULL, 0, 1},
   };
 
 /* Shared with gen.c */
 int m6502_ptrRegReq;             /* one byte pointer register required */
 
-int m6502_nRegs = sizeof(regsm6502)/sizeof(reg_info);
+int m6502_nRegs = sizeof(m6502_regs)/sizeof(reg_info);
 
 reg_info *m6502_reg_a;
 reg_info *m6502_reg_x;
 reg_info *m6502_reg_y;
 reg_info *m6502_reg_xa;
 //reg_info *m6502_reg_ya;
-reg_info *m6502_reg_yx;
+reg_info *m6502_reg_xy;
 reg_info *m6502_reg_sp;
 
-static void m6502SpillThis (symbol *);
 static void updateRegUsage (iCode * ic);
 extern void genm6502Code (iCode *);
 
@@ -87,8 +86,8 @@ m6502_regWithIdx (int idx)
   int i;
 
   for (i = 0; i < m6502_nRegs; i++)
-    if (regsm6502[i].rIdx == idx)
-      return &regsm6502[i];
+    if (m6502_regs[i].rIdx == idx)
+      return &m6502_regs[i];
 
   printf("error: regWithIdx %d not found\n",idx);
   exit (1);
@@ -119,25 +118,25 @@ m6502_freeReg (reg_info * reg)
       if (m6502_reg_a->isFree)
 	m6502_reg_xa->isFree = 1;
       if (m6502_reg_y->isFree)
-	m6502_reg_yx->isFree = 1;
+	m6502_reg_xy->isFree = 1;
       break;
     case Y_IDX:
       if (m6502_reg_x->isFree)
-	m6502_reg_yx->isFree = 1;
+	m6502_reg_xy->isFree = 1;
       break;
     case XA_IDX:
       m6502_reg_x->isFree = 1;
       m6502_reg_a->isFree = 1;
       if (m6502_reg_y->isFree)
-	m6502_reg_yx->isFree = 1;
+	m6502_reg_xy->isFree = 1;
       break;
       //      case YA_IDX:
       //        m6502_reg_y->isFree = 1;
       //        m6502_reg_a->isFree = 1;
       //        if (m6502_reg_x->isFree)
-      //          m6502_reg_yx->isFree = 1;
+      //          m6502_reg_xy->isFree = 1;
       //        break;
-    case YX_IDX:
+    case XY_IDX:
       m6502_reg_y->isFree = 1;
       m6502_reg_x->isFree = 1;
       if (m6502_reg_a->isFree)
@@ -156,7 +155,7 @@ m6502_freeAllRegs()
 {
   int i;
   for (i = 0; i < HW_REG_SIZE; i++)
-      m6502_freeReg (m6502_regWithIdx (i));
+    m6502_freeReg (m6502_regWithIdx (i));
 }
 
 /*-----------------------------------------------------------------*/
@@ -176,24 +175,22 @@ m6502_useReg (reg_info * reg)
       break;
     case X_IDX:
       m6502_reg_xa->isFree = 0;
-      m6502_reg_yx->isFree = 0;
+      m6502_reg_xy->isFree = 0;
       break;
     case Y_IDX:
       //        m6502_reg_ya->aop = NULL;
       //        m6502_reg_ya->isFree = 0;
-      m6502_reg_yx->isFree = 0;
+      m6502_reg_xy->isFree = 0;
       break;
     case XA_IDX:
       m6502_reg_x->isFree = 0;
       m6502_reg_a->isFree = 0;
       break;
       //      case YA_IDX:
-      //        m6502_reg_y->aop = NULL;
       //        m6502_reg_y->isFree = 0;
-      //        m6502_reg_a->aop = NULL;
       //        m6502_reg_a->isFree = 0;
       //        break;
-    case YX_IDX:
+    case XY_IDX:
       m6502_reg_y->isFree = 0;
       m6502_reg_x->isFree = 0;
       break;
@@ -222,14 +219,14 @@ m6502_dirtyReg (reg_info * reg)
     case X_IDX:
       m6502_reg_xa->aop = NULL;
       m6502_reg_xa->isLitConst = 0;
-      m6502_reg_yx->aop = NULL;
-      m6502_reg_yx->isLitConst = 0;
+      m6502_reg_xy->aop = NULL;
+      m6502_reg_xy->isLitConst = 0;
       break;
     case Y_IDX:
       //      m6502_reg_ya->aop = NULL;
       //	m6502_reg_ya->isLitConst = 0;
-      m6502_reg_yx->aop = NULL;
-      m6502_reg_yx->isLitConst = 0;
+      m6502_reg_xy->aop = NULL;
+      m6502_reg_xy->isLitConst = 0;
       break;
     case XA_IDX:
       m6502_reg_x->aop = NULL;
@@ -243,7 +240,7 @@ m6502_dirtyReg (reg_info * reg)
       //        m6502_reg_a->aop = NULL;
       //	m6502_reg_a->isLitConst = 0;
       break;
-    case YX_IDX:
+    case XY_IDX:
       m6502_reg_y->aop = NULL;
       m6502_reg_y->isLitConst = 0;
       m6502_reg_x->aop = NULL;
@@ -262,7 +259,7 @@ m6502_dirtyAllRegs()
 {
   int i;
   for (i = 0; i < HW_REG_SIZE; i++)
-      m6502_dirtyReg (m6502_regWithIdx (i));
+    m6502_dirtyReg (m6502_regWithIdx (i));
 }
 
 /*-----------------------------------------------------------------*/
@@ -398,8 +395,8 @@ createStackSpil (symbol * sym)
 /*-----------------------------------------------------------------*/
 /* spillThis - spills a specific operand                           */
 /*-----------------------------------------------------------------*/
-static void
-m6502SpillThis (symbol * sym)
+void
+m6502_spillThis (symbol * sym)
 {
   int i;
   /* if this is rematerializable or has a spillLocation
@@ -481,7 +478,7 @@ verifyRegsAssigned (operand *op, iCode * ic)
   if (sym->regs[0])
     return;
 
-  m6502SpillThis (sym);
+  m6502_spillThis (sym);
 }
 
 /*-----------------------------------------------------------------*/
@@ -532,7 +529,7 @@ regTypeNum (void)
       if ((sym->liveTo - sym->liveFrom) == 0)
         continue;
 
-      D (D_ALLOC, ("regTypeNum: loop on sym %p\n", sym));
+      D (D_ALLOC, ("regTypeNum: loop on sym %p\n", (void *)sym));
 
       /* if the live range is a temporary */
       if (sym->isitmp)
@@ -578,7 +575,7 @@ regTypeNum (void)
           /* for the first run we don't provide */
           /* registers for true symbols we will */
           /* see how things go                  */
-          D (D_ALLOC, ("regTypeNum: #2 setting num of %p to 0\n", sym));
+          D (D_ALLOC, ("regTypeNum: #2 setting num of %p to 0\n", (void *)sym));
           sym->nRegs = 0;
         }
     }
@@ -653,7 +650,7 @@ packRegsForAssign (iCode * ic, eBBlock * ebp)
       /* We can pack across a function call only if it's a local */
       /* variable or our parameter. Never pack global variables */
       /* or parameters to a function we call. */
-      if ((dic->op == CALL || dic->op == PCALL))
+      if (dic->op == CALL || dic->op == PCALL)
         {
           if (!OP_SYMBOL (IC_RESULT (ic))->ismyparm
               && !OP_SYMBOL (IC_RESULT (ic))->islocal)
@@ -935,35 +932,6 @@ packRegsForSupport (iCode * ic, eBBlock * ebp)
     }
 
   return changes;
-}
-
-/*-----------------------------------------------------------------*/
-/* isBitwiseOptimizable - requirements of JEAN LOUIS VERN          */
-/*-----------------------------------------------------------------*/
-static bool
-isBitwiseOptimizable (iCode * ic)
-{
-  sym_link *ltype = getSpec (operandType (IC_LEFT (ic)));
-  sym_link *rtype = getSpec (operandType (IC_RIGHT (ic)));
-
-  /* bitwise operations are considered optimizable
-     under the following conditions (Jean-Louis VERN)
-
-     x & lit
-     bit & bit
-     bit & x
-     bit ^ bit
-     bit ^ x
-     x   ^ lit
-     x   | lit
-     bit | bit
-     bit | x
-  */
-  if (IS_LITERAL(rtype) ||
-      (IS_BITVAR (ltype) && IN_BITSPACE (SPEC_OCLS (ltype))))
-    return true;
-  else
-    return false;
 }
 
 /*-----------------------------------------------------------------*/
@@ -1339,8 +1307,7 @@ packRegisters (eBBlock ** ebpp, int count)
 	     is defined in the previous instruction and
 	     this is the only usage then
 	     mark the itemp as a conditional */
-	  if ((IS_CONDITIONAL (ic) ||
-	       (IS_BITWISE_OP(ic) && isBitwiseOptimizable (ic))) &&
+	  if ((IS_CONDITIONAL (ic) || IS_BITWISE_OP(ic) ) &&
 	      ic->next && ic->next->op == IFX &&
 	      bitVectnBitsOn (OP_USES(IC_RESULT(ic)))==1 &&
 	      isOperandEqual (IC_RESULT (ic), IC_COND (ic->next)) &&
@@ -1441,13 +1408,13 @@ serialRegMark (eBBlock ** ebbs, int count)
                  to be safe */
               if (_G.blockSpil && sym->liveTo > ebbs[i]->lSeq)
                 {
-                  m6502SpillThis (sym);
+                  m6502_spillThis (sym);
                   continue;
                 }
 
               if (sym->remat)
                 {
-                  m6502SpillThis (sym);
+                  m6502_spillThis (sym);
                   continue;
                 }
 
@@ -1458,7 +1425,7 @@ serialRegMark (eBBlock ** ebbs, int count)
                 }
               else if (!sym->for_newralloc)
                 {
-                  m6502SpillThis (sym);
+                  m6502_spillThis (sym);
                   printf ("Spilt %s due to byte limit.\n", sym->name);
                 }
             }
@@ -1526,7 +1493,7 @@ m6502_assignRegisters (ebbIndex *ebbi)
   m6502_reg_y = m6502_regWithIdx(Y_IDX);
   m6502_reg_xa = m6502_regWithIdx(XA_IDX);
   //  m6502_reg_ya = m6502_regWithIdx(YA_IDX);
-  m6502_reg_yx = m6502_regWithIdx(YX_IDX);
+  m6502_reg_xy = m6502_regWithIdx(XY_IDX);
   m6502_reg_sp = m6502_regWithIdx(SP_IDX);
 
   //  transformPointerSet (ebbs, count);
@@ -1611,13 +1578,13 @@ updateRegUsage (iCode * ic)
   // update the registers in use at the start of this icode
   for (reg=0; reg<m6502_nRegs; reg++)
     {
-      if (regsm6502[reg].isFree)
+      if (m6502_regs[reg].isFree)
         {
-          ic->riu &= ~(regsm6502[reg].mask);
+          ic->riu &= ~(m6502_regs[reg].mask);
         }
       else
         {
-          ic->riu |= (regsm6502[reg].mask);
+          ic->riu |= (m6502_regs[reg].mask);
         }
     }
 }

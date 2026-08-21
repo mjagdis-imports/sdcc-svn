@@ -1596,9 +1596,11 @@ release:
   pic14FreeAsmop (ic->result, NULL, ic, true);
 }
 
-
+#if 0
 /*-----------------------------------------------------------------*/
 /* genCpl - generate code for complement                           */
+/* no longer used; todo: check if something from here could still  */
+/* be useful in genXor, then remove genCpl!                        */
 /*-----------------------------------------------------------------*/
 static void
 genCpl (iCode * ic)
@@ -1640,6 +1642,7 @@ release:
   pic14FreeAsmop (left, NULL, ic, !RESULTONSTACK (ic));
   pic14FreeAsmop (result, NULL, ic, true);
 }
+#endif
 
 /*-----------------------------------------------------------------*/
 /* genUminusFloat - unary minus for floating points                */
@@ -7743,10 +7746,6 @@ genpic14Code (iCode * lic)
         {
         case '!':
           genNot (ic);
-          break;
-
-        case '~':
-          genCpl (ic);
           break;
 
         case UNARYMINUS:

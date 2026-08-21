@@ -1,0 +1,47 @@
+/*
+   bug-3554.c.
+   mem: __data,__idata,__pdata,__xdata
+ */
+
+#include <testfwk.h>
+
+#include <stdint.h>
+
+typedef struct
+{
+	uint8_t data1;
+	uint8_t data2;
+	uint8_t data3;
+	uint16_t data4;
+	uint16_t data5;
+	uint16_t data6;
+} testStructdef_t;
+
+{mem} testStructdef_t test;
+
+uint16_t convertTest(uint8_t ch)
+{
+	uint16_t data;
+	data = (uint16_t) ch;
+	return data;
+}
+
+void initValue(uint8_t ch , testStructdef_t *test)
+{
+	test->data1 = 4;
+	test->data2 = 5;
+	test->data3 = 6;
+	test->data4 = 4;
+	test->data5 = convertTest(ch);
+	test->data6 = test->data5 * 16;
+}
+
+void
+testBug(void)
+{
+	initValue(7, &test);
+	ASSERT (test.data4 == 4);
+	ASSERT (test.data5 == 7);
+	ASSERT (test.data6 == 7 * 16);
+}
+

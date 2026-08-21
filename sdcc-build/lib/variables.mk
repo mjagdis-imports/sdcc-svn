@@ -64,9 +64,9 @@ SVN_ROOT = svn://svn.code.sf.net/p/sdcc/code
 # Individual machines can opt to test all ports each day by overwriting REGTESTARGETS with FULL_REGTESTTARGETS and CROSSREGTESTTARGETS with FULL_CROSSREGTESTTARGETS in their $(HOSTNAME).mk
 # todo: add test-ucr3ka-medium, test-ucr4k-medium, test-ucr2ka-medium (in this order) between rabbit and stm8 once we have stable support for --model-medium in the rabbit ports.
 REGTESTTARGETS_1_0 = test-ds390
-REGTESTTARGETS_2_0 = test-mcs51-medium test-mcs51-small-stack-auto test-hc08           test-ucz80       test-ez80-z80     test-ucr800                             test-ucr2ka test-ucr4k  test-stm8-large test-pdk15-stack-auto test-f8  test-uc6502            
+REGTESTTARGETS_2_0 = test-mcs51-medium test-mcs51-small-stack-auto test-hc08           test-ucz80       test-ucez80       test-ucr800                             test-ucr2ka test-ucr4k  test-stm8-large test-pdk15-stack-auto test-f8  test-uc6502            
 REGTESTTARGETS_2_1 = test-mcs51-small  test-mcs51-large-stack-auto test-s08            test-ucz80-resiy test-ucz180       test-ucz80-undoc test-ucz80-unsafe-read test-ucr2k  test-ucr5k  test-stm8       test-pdk15            test-f8l test-uc65c02
-REGTESTTARGETS_2_2 = test-mcs51-large  test-mcs51-huge             test-s08-stack-auto test-ucz80n      test-ucz180-resiy test-ucgbz80     test-tlcs90            test-ucr3ka test-ucr6k  test-pdk14                     #test-uc6502-stack-auto enable when it passes
+REGTESTTARGETS_2_2 = test-mcs51-large  test-mcs51-huge             test-s08-stack-auto test-ucz80n      test-ucz180-resiy test-ucgbz80     test-tlcs90            test-ucr3ka test-ucr6k  test-pdk14                     test-uc6502-stack-auto
 DAYMOD = $(shell date +%j | awk '{print $$0%3}')
 ifeq ($(strip $(DAYMOD)),0)
 THIRD_CROSSREGTESTTARGETS = $(REGTESTTARGETS_1_0) $(REGTESTTARGETS_2_0)
@@ -84,7 +84,10 @@ REGTESTTARGETS = $(THIRD_REGTESTTARGETS)
 # Directory for regression test log file
 REGTESTDIR = $(HTDOCSDIR)/regression_test_results/$(TARGET_PLATFORM)
 # Regression test log file
-REGTESTLOG = $(REGTESTDIR)/regression-test-$(TARGET_PLATFORM)-$(SNAPSHOTID).log
+REGTESTLOG = $(REGTESTDIR)/regression-test-$(TARGET_PLATFORM)-$(SNAPSHOTID)-$(HOSTNAME).log
+
+RANDTESTNUM = 0
+RANDREGTESTLOG = $(REGTESTDIR)/rand-regression-test-$(TARGET_PLATFORM)-$(SNAPSHOTID)-$(HOSTNAME).log
 
 # Directory for regression test log file
 CHLOGDIR = $(HTDOCSDIR)/changelog_heads
@@ -108,8 +111,8 @@ TARBALLBASE = staging
 # The directory that the tarballs will finally go into
 TARBALLDIR = $(STAGINGBASE)/$(TARBALLBASE)
 else
-# Format is snapshots/target/sdcc-target-date-revision.tar.bz2
-BUILDNAME = snapshot-$(TARGET_PLATFORM)-$(SNAPSHOTID)
+# Format is snapshots/target/sdcc-target-date-revision-hostname.tar.bz2
+BUILDNAME = snapshot-$(TARGET_PLATFORM)-$(SNAPSHOTID)-$(HOSTNAME)
 TARBALLBASE = snapshots
 TARBALLDIR = $(SNAPSHOTDIR)/$(TARGET_PLATFORM)
 endif
@@ -127,3 +130,4 @@ $(SRCDIR):
 	mkdir -p $(SRCDIR)
 
 dirs: $(STAMPDIR) $(ORIGDIR) $(SRCDIR)
+

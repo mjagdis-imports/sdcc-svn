@@ -940,7 +940,7 @@ PORT hc08_port =
   0,                            /* leave == */
   false,                        /* No array initializer support. */
   cseCostEstimation,
-  NULL,                         /* no builtin functions */
+  "",                           /* no builtin functions */
   GPOINTER,                     /* treat unqualified pointers as "generic" pointers */
   true,
   false,
@@ -1090,7 +1090,7 @@ PORT s08_port =
   0,                            /* leave == */
   false,                        /* No array initializer support. */
   cseCostEstimation,
-  NULL,                         /* no builtin functions */
+  "",                           /* no builtin functions */
   GPOINTER,                     /* treat unqualified pointers as "generic" pointers */
   true,
   false,

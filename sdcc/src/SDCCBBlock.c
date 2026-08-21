@@ -37,10 +37,11 @@ struct _dumpFiles dumpFiles[] = {
   {DUMP_GCSE, ".dumpgcse", NULL},
   {DUMP_DEADCODE, ".dumpdeadcode", NULL},
   {DUMP_LOOP, ".dumploop", NULL},
+  {DUMP_GENCONSTPROP1, ".dumpgenconstprop_1", NULL},
   {DUMP_LOOPG, ".dumploopg", NULL},
   {DUMP_LOOPD, ".dumploopd", NULL},
   {DUMP_LOSPRE, ".dumplospre", NULL},
-  {DUMP_GENCONSTPROP, ".dumpgenconstprop", NULL},
+  {DUMP_GENCONSTPROP2, ".dumpgenconstprop_2", NULL},
   {DUMP_RANGE, ".dumprange", NULL},
   {DUMP_PACK, ".dumppack", NULL},
   {DUMP_RASSGN, ".dumprassgn", NULL},
@@ -781,7 +782,7 @@ iCodeFromeBBlock (eBBlock ** ebbs, int count)
       if (ebbs[i]->sch == NULL)
         continue;
 
-      if (ebbs[i]->noPath && optimize.label4 && (ebbs[i]->entryLabel != entryLabel && ebbs[i]->entryLabel != returnLabel))
+      if (ebbs[i]->noPath && (ebbs[i]->entryLabel != entryLabel && ebbs[i]->entryLabel != returnLabel))
         {
           iCode *ic = NULL;
           bool foundNonlabel = 0;

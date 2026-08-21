@@ -1,0 +1,146 @@
+name: Cross-compile for i686 MinGW-w64
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Install MinGW-w64 i686 toolchain
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update
+          sudo apt-get install -y \
+            zlib1g-dev \
+            mingw-w64 \
+            mingw-w64-i686-dev \
+            gcc-mingw-w64-i686-posix \
+            g++-mingw-w64-i686-posix \
+            libz-mingw-w64-dev \
+            gputils \
+            wine wine32
+      
+      - name: Verify toolchain
+        run: i686-w64-mingw32-gcc-posix --version
+
+      - name: install includes
+        run: |
+          echo "working dir: "
+          pwd
+          mkdir include
+          ls -l
+          echo "include: "
+          cd include
+          pwd
+          ls -l
+          export BOOST_VERSION=1.89.0
+          export BOOST_URL="https://github.com/boostorg/boost/releases/download/boost-${BOOST_VERSION}/boost-${BOOST_VERSION}-b2-nodocs.7z" 
+          wget -q "${BOOST_URL}"
+          7z x "boost-${BOOST_VERSION}-b2-nodocs.7z"
+          mv boost-${BOOST_VERSION}/boost .
+          git clone https://github.com/freetdi/gala.git
+          echo "# include:"
+          ls -l
+          echo "# boost:"
+          ls -l boost
+          echo "# gala:"
+          ls -l gala
+          cd ..
+
+      - name: Build native
+        continue-on-error: true
+        run: |
+           cd sdcc
+           echo "sdcc: "
+           ls -l
+           echo "-----: "
+           CFLAGS="-O2 -I $(realpath ../include) " \
+           CXXFLAGS="-O2 -I $(realpath ../include) -std=c++20 " \
+            ./configure   || true
+           make -k -j 2
+           [ -e device/lib/build ] && [ ! -e device/lib/build-save ] && mv device/lib/build device/lib/build-save
+           make clean
+           
+      - name: Upload native config.log
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-config-log-${{ github.sha }}
+          path: |
+            sdcc/config.log
+          
+      - name: Build for i686 MinGW-w64
+        continue-on-error: true
+        run: |
+          echo "working dir: "
+          pwd
+          ls -l
+          echo "#### preparing configure: "
+          echo "cd sddc"
+          cd sdcc
+          echo "working dir: "
+          pwd
+          export CROSSCOMPILING=1
+          export PREFIX=/sdcc
+          export CC_FOR_BUILD=gcc
+          export SDCCCONFIGUREFLAGS="--prefix=$PREFIX --datarootdir=/sdcc \
+            docdir=$datarootdir/doc \
+            include_dir_suffix=include \
+            non_free_include_dir_suffix=non-free/include \
+            lib_dir_suffix=lib \
+            non_free_lib_dir_suffix=non-free/lib \
+            sdccconf_h_dir_separator=\\\\ \
+             --disable-device-lib 
+            "
+          export EXEEXTENSION=.exe
+          export TARGETCXXFLAGS="-s -O2 -I $(realpath ../include) --static -std=c++20"
+          export TARGETCFLAGS="-s -O2 -I $(realpath ../include) --static"
+          export TARGETLDFLAGS="-s -Wl,--stack,67108864 -static -static-libgcc -static-libstdc++"
+          export HOST=i686-w64-mingw32
+          export CXX=i686-w64-mingw32-g++-posix
+          export CC=i686-w64-mingw32-gcc-posix
+          export TARGETCXX=i686-w64-mingw32-g++-posix
+          export TARGETCC=i686-w64-mingw32-gcc-posix
+          echo "sdcc: "
+          ls -l
+          echo "vars: "
+          echo $TARGETCPPFLAGS
+          echo $TARGETCFLAGS
+          echo $TARGETCXXFLAGS
+          echo $TARGETLDFLAGS
+          echo $SDCCCONFIGUREFLAGS
+          echo $HOST
+          echo "-----: "
+          CPPFLAGS="$TARGETCPPFLAGS" \
+          CFLAGS="$TARGETCFLAGS" \
+          CXXFLAGS="$TARGETCXXFLAGS" \
+          LDFLAGS="$TARGETLDFLAGS" \
+            ./configure $SDCCCONFIGUREFLAGS --host="$HOST" || true
+          echo "make: "
+          make clean
+          [ -e device/lib/build-save ] && [ ! -e device/lib/build ] && mv device/lib/build-save device/lib/build
+          make -k -j 2
+          cd src
+          echo "try sdcc.exe:"
+          wine sdcc.exe || true
+          echo "----"
+
+      - name: Upload i686 config.log
+        uses: actions/upload-artifact@v4
+        with:
+          name: mingw-i686-config-log-${{ github.sha }}
+          path: |
+            sdcc/config.log
+                
+      - name: Upload i686 binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: mingw-i686-binaries-${{ github.sha }}
+          path: |
+            **/*.exe
+            sdcc/device/lib/build/**
+          if-no-files-found: error

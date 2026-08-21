@@ -20,7 +20,7 @@ func GetFunc(void) __naked
     mov dptr,#_foo
 #ifdef __SDCC_MODEL_HUGE
     mov B,#_foo>>16
-    ljmp __sdcc_banked_ret
+    ljmp sdcc_banked_ret
 #else
     ret
 #endif

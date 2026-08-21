@@ -24,6 +24,7 @@
 
 #ifdef _WIN32
 #include <io.h>
+#include <fcntl.h>
 #else
 #include <unistd.h>
 #include <libgen.h>
@@ -143,6 +144,8 @@ char buffer[PATH_MAX * 2];
 #define OPTION_DATA_SEG             "--dataseg"
 #define OPTION_DOLLARS_IN_IDENT     "--fdollars-in-identifiers"
 #define OPTION_SIGNED_CHAR          "--fsigned-char"
+#define OPTION_CONST_STRINGLIT      "--fconst-stringlit"
+#define OPTION_CONST_CODE           "--fconst-code"
 #define OPTION_USE_NON_FREE         "--use-non-free"
 #define OPTION_PEEP_RETURN          "--peep-return"
 #define OPTION_NO_PEEP_RETURN       "--no-peep-return"
@@ -155,6 +158,8 @@ char buffer[PATH_MAX * 2];
 #define OPTION_DUMP_GRAPHS          "--dump-graphs"
 #define OPTION_INCLUDE              "--include"
 #define OPTION_NO_GENCONSTPROP      "--nogenconstprop"
+#define OPTION_NO_PURITY            "--nopurity"
+#define OPTION_NO_SIDECHANNELS      "--nosidechannels"
 
 #define OPTION_SMALL_MODEL          "--model-small"
 #define OPTION_MEDIUM_MODEL         "--model-medium"
@@ -187,6 +192,7 @@ static const OPTION optionsTable[] = {
   {0,   OPTION_USE_STDOUT, NULL, "send errors to stdout instead of stderr"},
   {0,   "--nostdlib", &options.nostdlib, "Do not include the standard library directory in the search path"},
   {0,   "--nostdinc", &options.nostdinc, "Do not include the standard include directory in the search path"},
+  {0,   "--norestartseqatomics", &options.norestartseqatomics, "Omit restartable sequence support routines for atomics"},
   {0,   OPTION_LESS_PEDANTIC, NULL, "Disable some of the more pedantic warnings"},
   {0,   OPTION_DISABLE_WARNING, NULL, "<nnnn> Disable specific warning"},
   {0,   OPTION_WERROR, NULL, "Treat the warnings as errors"},
@@ -195,6 +201,8 @@ static const OPTION optionsTable[] = {
   {0,   OPTION_STD, NULL, "Determine the language standard (c90, c99, c11, c23, c2y, sdcc89 etc.)"},
   {0,   OPTION_DOLLARS_IN_IDENT, &options.dollars_in_ident, "Permit '$' as an identifier character"},
   {0,   OPTION_SIGNED_CHAR, &options.signed_char, "Make \"char\" signed by default"},
+  {0,   OPTION_CONST_STRINGLIT, &options.const_stringlit, "Make string literals const, like in C++"},
+  {0,   OPTION_CONST_CODE, &options.const_code, "Make objects in read-only __code space implicitly const"},
   {0,   OPTION_USE_NON_FREE, &options.use_non_free, "Search / include non-free licensed libraries and header files"},
 
   {0,   NULL, NULL, "Code generation options"},
@@ -223,6 +231,7 @@ static const OPTION optionsTable[] = {
   {0,   "--no-reg-params", &options.noRegParams, "On some ports, disable passing some parameters in registers"},
   {0,   "--nostdlibcall", &optimize.noStdLibCall, "Disable optimization of calls to standard library"},
   {0,   "--nooverlay", &options.noOverlay, "Disable overlaying leaf function auto variables"},
+  {0,   OPTION_NO_PURITY, NULL, "Disable optimizations of pure functions"},
   {0,   OPTION_NO_GCSE, NULL, "Disable the GCSE optimisation"},
   {0,   OPTION_NO_LOSPRE, NULL, "Disable lospre"},
   {0,   OPTION_NO_GENCONSTPROP, NULL, "Disable generalized constant propagation"},
@@ -236,6 +245,7 @@ static const OPTION optionsTable[] = {
   {0,   OPTION_NO_PEEP_RETURN, NULL, "Disable peephole optimization for return instructions"},
   {0,   OPTION_PEEP_FILE, &options.peep_file, "<file> use this extra peephole file", CLAT_STRING},
   {0,   OPTION_ALLOW_UNSAFE_READ, NULL, "Allow optimizations to read any memory location anytime"},
+  {0,   OPTION_NO_SIDECHANNELS, NULL, "Disable optimizations likely to introduce side-channels"},
 
   {0,   NULL, NULL, "Internal debugging options"},
   {0,   OPTION_DUMP_AST, &options.dump_ast, "Dump front-end AST before generating i-code"},
@@ -656,6 +666,7 @@ setDefaultOptions (void)
   options.model = port->general.default_model;
   options.nostdlib = 0;
   options.nostdinc = 0;
+  options.norestartseqatomics = false;
   options.verbose = 0;
   options.std_sdcc = 1;         /* enable SDCC language extensions */
   options.std_c95 = 1;
@@ -678,13 +689,16 @@ setDefaultOptions (void)
   optimize.label1 = 1;
   optimize.label2 = 1;
   optimize.label3 = 1;
-  optimize.label4 = 1;
   optimize.loopInvariant = 1;
   optimize.loopInduction = 1;
   options.max_allocs_per_node = 3000;
-  optimize.lospre = 1;
-  optimize.allow_unsafe_read = 0;
-  optimize.genconstprop = 1;
+  optimize.purity = true;
+  optimize.nosidechannels = false;
+  optimize.lospre = true;
+  optimize.genconstprop = true;
+
+  // Except unsafe reads.
+  optimize.allow_unsafe_read = false;
 
   /* now for the ports */
   port->setDefaultOptions ();
@@ -1210,7 +1224,6 @@ parseCmdLine (int argc, char **argv)
           if (strcmp (argv[i], OPTION_NO_LABEL_OPT) == 0)
             {
               optimize.label2 = 0;
-              optimize.label4 = 0;
               continue;
             }
 
@@ -1234,15 +1247,27 @@ parseCmdLine (int argc, char **argv)
               continue;
             }
 
+          if (strcmp (argv[i], OPTION_NO_PURITY) == 0)
+            {
+              optimize.purity = false;
+              continue;
+            }
+
           if (strcmp (argv[i], OPTION_NO_LOSPRE) == 0)
             {
-              optimize.lospre = 0;
+              optimize.lospre = false;
+              continue;
+            }
+
+          if (strcmp (argv[i], OPTION_NO_SIDECHANNELS) == 0)
+            {
+              optimize.nosidechannels = true;
               continue;
             }
 
           if (strcmp (argv[i], OPTION_ALLOW_UNSAFE_READ) == 0)
             {
-              optimize.allow_unsafe_read = 1;
+              optimize.allow_unsafe_read = true;
               continue;
             }
 
@@ -1957,6 +1982,8 @@ linkEdit (char **envp)
         {
           WRITE_SEG_LOC ("_CODE", options.code_loc);
           WRITE_SEG_LOC ("_DATA", options.data_loc);
+          if (TARGET_RABBIT_LIKE)
+            WRITE_SEG_LOC ("_XDATA", options.xdata_loc);
         }
 
       /* If the port has any special linker area declarations, get 'em */
@@ -2739,7 +2766,7 @@ doPrintSearchDirs (void)
 static void
 sig_handler (int signal)
 {
-  char *sig_string;
+  const char *sig_string;
 
   switch (signal)
     {
@@ -2878,13 +2905,34 @@ main (int argc, char **argv, char **envp)
 
   if (fullSrcFileName || options.c1mode)
     {
-      preProcess (envp);
-
       initSymt ();
       initiCode ();
       initCSupport ();
       initBuiltIns ();
       initPeepHole ();
+
+      // Emit preamble for declarations for port-specific built-in functions.
+      unsigned L;
+      if (port->c_preamble && (L = strlen (port->c_preamble))!=0)
+        {
+          int p[2];
+          FILE *preamble;
+#ifdef _WIN32
+          wassert (!_pipe (p, L+1, _O_BINARY));
+#else
+          wassert (!pipe (p));
+#endif
+          preamble = fdopen (p[1], "w");
+          wassert (preamble);
+          fprintf (preamble, "%s", port->c_preamble);
+          fclose (preamble);
+          yyin = fdopen (p[0], "r");
+          wassert (yyin);
+          yyparse ();
+          fclose (yyin);
+        }
+
+      preProcess (envp); // Sets yyin to pipe from preprocessor
 
       if (options.verbose)
         printf ("sdcc: Generating code...\n");
@@ -2915,7 +2963,7 @@ main (int argc, char **argv, char **envp)
               if (sym->level)
                 continue;
               // Check for arrays of unknown size that get size 1 due to an implicit initializer.
-              if (IS_ARRAY (sym->type) && DCL_ARRAY_LENGTH_TYPE (sym->type) == ARRAY_LENGTH_UNKNOWN)
+              if (IS_ARRAY (sym->type) && !IS_EXTERN (sym->etype) && DCL_ARRAY_LENGTH_TYPE (sym->type) == ARRAY_LENGTH_UNKNOWN)
                 {
                   wassert (!DCL_ELEM (sym->type));
                   werrorfl (sym->fileDef, sym->lineDef, W_INCOMPLETE_ARRAY_IMPLICIT_1, sym->name);

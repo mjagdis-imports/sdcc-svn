@@ -1,6 +1,6 @@
 /** Null character in string tests.
 
-     storage: __data, __xdata, __code,
+     storage: __data, __xdata, __code const,
 */
 #include <testfwk.h>
 

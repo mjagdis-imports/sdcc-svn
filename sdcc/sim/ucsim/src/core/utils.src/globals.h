@@ -40,7 +40,6 @@ extern double app_start_at;
 extern char delimiters[];
 
 extern struct id_element error_type_names[];
-//extern char *case_string(enum letter_case lcase, const char *str);
 
 extern const char *warranty;
 extern const char *copying;
@@ -66,6 +65,7 @@ extern struct cpu_entry cpus_rxk[];
 extern struct cpu_entry cpus_st7[];
 extern struct cpu_entry cpus_xa[];
 extern struct cpu_entry cpus_z80[];
+extern struct cpu_entry cpus_tlcs[];
 
 extern struct cpu_collection cpus_coll[];
 

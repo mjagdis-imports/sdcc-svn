@@ -166,13 +166,11 @@ show_error_cmd_print_node(class cl_console_base *con,
     con->dd_printf(" ");
   const char *name= node->get_name("unknown");
   class cl_error_class *ec= (class cl_error_class *)(node);
-  char *str;
   con->dd_printf("%s: %s [%s/%s]\n",
-		 str= case_string(case_case, ec->get_type_name()),
+		 ec->get_type_name(),
 		 name, get_id_string(error_on_off_names,
 				     ec->get_on()),
 		 (ec->is_on())?"ON":"OFF");
-  free(str);
   class cl_base *c= node->first_child();
   while (c)
     {
@@ -260,12 +258,12 @@ COMMAND_DO_WORK_APP(cl_show_console)
       con->dd_printf("%d %s %s(%d) ", cn->get_id(), cn->get_name(),
 		     cn->prevent_quit()?"PrevQuit":"", cn->prev_quit);
       int f= cn->get_flags();
-      con->dd_printf("%c", 'D'|((f&CONS_DEBUG)?0:0x20));
-      con->dd_printf("%c", 'F'|((f&CONS_FROZEN)?0:0x20));
-      con->dd_printf("%c", 'A'|((!(f&CONS_INACTIVE))?0:0x20));
-      con->dd_printf("%c", 'W'|((!(f&CONS_NOWELCOME))?0:0x20));
-      con->dd_printf("%c", 'I'|((f&CONS_INTERACTIVE)?0:0x20));
-      con->dd_printf("%c", 'E'|((f&CONS_ECHO)?0:0x20));
+      con->dd_printf("%c", 'd'^((f&CONS_DEBUG)?0x20:0));
+      con->dd_printf("%c", 'f'^((f&CONS_FROZEN)?0x20:0));
+      con->dd_printf("%c", 'a'^((f&CONS_INACTIVE)?0x20:0));
+      con->dd_printf("%c", 'w'^((f&CONS_NOWELCOME)?0x20:0));
+      con->dd_printf("%c", 'i'^((f&CONS_INTERACTIVE)?0x20:0));
+      con->dd_printf("%c", 'e'^((f&CONS_ECHO)?0x20:0));
       con->dd_printf("\n");
       class cl_f *ff= cn->get_fin();
       con->dd_printf(" <");

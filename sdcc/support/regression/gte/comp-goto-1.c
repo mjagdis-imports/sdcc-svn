@@ -127,7 +127,7 @@ insn_t program[2 + 1];
 void *malloc ();
 
 int
-main ()
+main (void)
 {
   environment_t env;
   insn_t insn;
@@ -163,5 +163,5 @@ main ()
   exit (0);
 }
 #else
-main(){ exit (0); }
+void main(void){ exit (0); }
 #endif

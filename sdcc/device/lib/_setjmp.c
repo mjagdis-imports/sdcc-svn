@@ -37,7 +37,8 @@
 int __setjmp (jmp_buf buf)
 {
     unsigned char sp, esp;
-    unsigned long lsp;
+    unsigned int lsp;
+    unsigned char __xdata * xsp;
 
     /* registers would have been saved on the
        stack anyway so we need to save SP
@@ -46,31 +47,35 @@ int __setjmp (jmp_buf buf)
         sp = SP;
         esp = ESP;
     }
+    *buf++ = sp;
+    *buf++ = esp;
     lsp = sp;
-    lsp |= (unsigned int)(esp << 8);
-    lsp |= 0x400000;
-    *buf++ = lsp;
-    *buf++ = lsp >> 8;
-    *buf++ = *((unsigned char __xdata *) lsp - 0);
-    *buf++ = *((unsigned char __xdata *) lsp - 1);
-    *buf++ = *((unsigned char __xdata *) lsp - 2);
+    lsp |= esp << 8;
+    xsp = (unsigned char __xdata *) (0x400000 | lsp);
+    *buf = *xsp;
+    *++buf = *--xsp;
+    *++buf = *--xsp;
     return 0;
 }
 
 int longjmp (jmp_buf buf, int rv)
 {
-    unsigned long lsp;
+    unsigned char sp, esp;
+    unsigned int lsp;
+    unsigned char __xdata * xsp;
 
-    lsp = *buf++;
-    lsp |= (unsigned int)(*buf++ << 8);
-    lsp |= 0x400000;
-    *((unsigned char __xdata *) lsp - 0) = *buf++;
-    *((unsigned char __xdata *) lsp - 1) = *buf++;
-    *((unsigned char __xdata *) lsp - 2) = *buf++;
+    sp = *buf++;
+    esp = *buf++;
     __critical {
-        SP = lsp;
-        ESP = lsp >> 8;
+        SP = sp;
+        ESP = esp;
     }
+    lsp = sp;
+    lsp |= esp << 8;
+    xsp = (unsigned char __xdata *) (0x400000 | lsp);
+    *xsp = *buf;
+    *--xsp = *++buf;
+    *--xsp = *++buf;
     return rv ? rv : 1;
 }
 
@@ -129,7 +134,7 @@ ___setjmp:
 ;     genNearPointerGet
 ;     genPointerSet
 ;     genGenPointerSet
-	mov	r0,sp
+	mov	r0,a
 	mov	a,@r0
 	lcall	__gptrput
 	inc	dptr
@@ -168,7 +173,7 @@ ___setjmp:
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'longjmp'
 ;------------------------------------------------------------
-;rv                        Allocated to stack - offset -2
+;rv                        Allocated to stack - offset -2 / r2 r3
 ;buf                       Allocated to registers dptr b
 ;lsp                       Allocated to registers r5
 ;------------------------------------------------------------
@@ -204,16 +209,17 @@ _longjmp:
 	lcall	__gptrget
 	mov	_bp,a
 	inc	dptr
-;../../device/lib/_setjmp.c:196:lsp = *buf++;
+;../../device/lib/_setjmp.c:196:lsp = (unsigned char __idata *) *buf++;
 ;     genPointerGet
 ;     genGenPointerGet
 	lcall	__gptrget
 	inc	dptr
-;     genAssign
-	mov	r5,a
-;../../device/lib/_setjmp.c:197:*((unsigned char __data *) lsp) = *buf++;
 ;     genCast
 	mov	r0,a
+;../../device/lib/_setjmp.c:197:SP = (unsigned char) lsp;
+;     genAssign
+	mov	sp,a
+;../../device/lib/_setjmp.c:198:*lsp = *buf++;
 ;     genPointerGet
 ;     genGenPointerGet
 	lcall	__gptrget
@@ -221,7 +227,7 @@ _longjmp:
 ;     genPointerSet
 ;     genNearPointerSet
 	mov	@r0,a
-;../../device/lib/_setjmp.c:198:*((unsigned char __data *) lsp - 1) = *buf;
+;../../device/lib/_setjmp.c:199:*--lsp = *buf;
 ;     genMinus
 ;     genMinusDec
 	dec	r0
@@ -233,7 +239,7 @@ _longjmp:
 	mov	@r0,a
 #ifdef __SDCC_MODEL_HUGE
 	inc	dptr
-;../../device/lib/_setjmp.c:199:*((unsigned char __data *) lsp - 2) = *buf;
+;../../device/lib/_setjmp.c:200:*--lsp = *buf;
 ;     genMinus
 ;     genMinusDec
 	dec	r0
@@ -244,9 +250,6 @@ _longjmp:
 ;     genNearPointerSet
 	mov	@r0,a
 #endif
-;../../device/lib/_setjmp.c:200:SP = lsp;
-;     genAssign
-	mov	sp,r5
 ;../../device/lib/_setjmp.c:201:return rv ? rv : 1;
 ;     genAssign
 	mov	dph,r2
@@ -300,18 +303,17 @@ ___setjmp:
 	mov	a,sp
 	lcall	__gptrput
 	inc	dptr
-;../../device/lib/_setjmp.c:127:*buf++ = *((unsigned char __data *) SP  );
+;../../device/lib/_setjmp.c:127:lsp = (unsigned char __idata *) SP;
 ;     genCast
 	mov	r0,sp
+;../../device/lib/_setjmp.c:128:*buf = *lsp;
 ;     genPointerGet
 ;     genNearPointerGet
 	mov	a,@r0
 ;     genPointerSet
 ;     genGenPointerSet
 	lcall	__gptrput
-	inc	dptr
-;../../device/lib/_setjmp.c:128:*buf++ = *((unsigned char __data *)SP - 1);
-;     genCast
+;../../device/lib/_setjmp.c:129:*++buf = *--lsp;
 ;     genMinus
 ;     genMinusDec
 	dec	r0
@@ -320,11 +322,10 @@ ___setjmp:
 	mov	a,@r0
 ;     genPointerSet
 ;     genGenPointerSet
+	inc	dptr
 	lcall	__gptrput
 #ifdef __SDCC_MODEL_HUGE
-	inc	dptr
-;../../device/lib/_setjmp.c:129:*buf++ = *((unsigned char __data *)SP - 2);
-;     genCast
+;../../device/lib/_setjmp.c:130:*++buf = *--lsp;
 ;     genMinus
 ;     genMinusDec
 	dec	r0
@@ -333,9 +334,10 @@ ___setjmp:
 	mov	a,@r0
 ;     genPointerSet
 ;     genGenPointerSet
+	inc	dptr
 	lcall	__gptrput
 #endif
-;../../device/lib/_setjmp.c:130:return 0;
+;../../device/lib/_setjmp.c:131:return 0;
 ;     genRet
 	mov	dptr,#0x0000
 	_RETURN
@@ -343,7 +345,7 @@ ___setjmp:
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'longjmp'
 ;------------------------------------------------------------
-;rv                        Allocated to stack - offset -3
+;rv                        Allocated to stack - offset -3 / r2 r3
 ;buf                       Allocated to registers dptr b
 ;lsp                       Allocated to registers r5
 ;------------------------------------------------------------
@@ -378,51 +380,43 @@ _longjmp:
 	inc	dptr
 ;     genAssign
 	mov	_bp,a
-;../../device/lib/_setjmp.c:31:lsp = *buf++;
+;../../device/lib/_setjmp.c:31:lsp = (unsigned char __idata *) *buf++;
 ;     genPointerGet
 ;     genGenPointerGet
 	lcall	__gptrget
 	inc	dptr
-;     genAssign
-	mov	r5,a
-;../../device/lib/_setjmp.c:32:*((unsigned char __data *) lsp) = *buf++;
 ;     genCast
 	mov	r0,a
+;../../device/lib/_setjmp.c:32:SP = (unsigned char) lsp;
+;     genCast
+	mov	sp,a
+;../../device/lib/_setjmp.c:33:*lsp = *buf;
 ;     genPointerGet
 ;     genGenPointerGet
 	lcall	__gptrget
-	inc	dptr
 ;     genPointerSet
 ;     genNearPointerSet
 	mov	@r0,a
-;../../device/lib/_setjmp.c:33:*((unsigned char __data *) lsp - 1) = *buf;
-;     genCast
-;     genMinus
-;     genMinusDec
-	dec	r0
+;../../device/lib/_setjmp.c:34:*--lsp = *++buf;
 ;     genPointerGet
 ;     genGenPointerGet
+	inc	dptr
 	lcall	__gptrget
 ;     genPointerSet
 ;     genNearPointerSet
+	dec	r0
 	mov	@r0,a
 #ifdef __SDCC_MODEL_HUGE
-	inc	dptr
-;../../device/lib/_setjmp.c:34:*((unsigned char __data *) lsp - 2) = *buf;
-;     genCast
-;     genMinus
-;     genMinusDec
-	dec	r0
+;../../device/lib/_setjmp.c:35:*--lsp = *++buf;
 ;     genPointerGet
 ;     genGenPointerGet
+	inc	dptr
 	lcall	__gptrget
 ;     genPointerSet
 ;     genNearPointerSet
+	dec	r0
 	mov	@r0,a
 #endif
-;../../device/lib/_setjmp.c:35:SP = lsp;
-;     genAssign
-	mov	sp,r5
 ;../../device/lib/_setjmp.c:36:return rv ? rv : 1;
 ;     genAssign
 	mov	dph,r2
@@ -447,37 +441,41 @@ extern unsigned char __data bpx;
 
 int __setjmp (jmp_buf buf)
 {
+    unsigned char * p = buf;
+    unsigned char __idata * lsp;
     /* registers would have been saved on the
        stack anyway so we need to save SP
        and the return address */
 #ifdef __SDCC_USE_XSTACK
-    *buf++ = spx;
-    *buf++ = bpx;
+    *p++ = spx;
+    *p++ = bpx;
 #endif
-    *buf++ = SP;
-    *buf++ = *((unsigned char __idata *) SP - 0);
-    *buf++ = *((unsigned char __idata *) SP - 1);
+    lsp = (unsigned char __idata *) SP;
+    *p++ = (unsigned char) lsp;
+    *p = *lsp;
+    *++p = *--lsp;
 #ifdef __SDCC_MODEL_HUGE
-    *buf++ = *((unsigned char __idata *) SP - 2);
+    *++p = *--lsp;
 #endif
     return 0;
 }
 
 int longjmp (jmp_buf buf, int rv)
 {
-    unsigned char lsp;
+    unsigned char * p = buf;
+    unsigned char __idata * lsp;
 
 #ifdef __SDCC_USE_XSTACK
-    spx = *buf++;
-    bpx = *buf++;
+    spx = *p++;
+    bpx = *p++;
 #endif
-    lsp = *buf++;
-    *((unsigned char __idata *) lsp - 0) = *buf++;
-    *((unsigned char __idata *) lsp - 1) = *buf++;
+    lsp = (unsigned char __idata *) *p++;
+    SP = (unsigned char) lsp;
+    *lsp = *p;
+    *--lsp = *++p;
 #ifdef __SDCC_MODEL_HUGE
-    *((unsigned char __idata *) lsp - 2) = *buf++;
+    *--lsp = *++p;
 #endif
-    SP = lsp;
     return rv ? rv : 1;
 }
 

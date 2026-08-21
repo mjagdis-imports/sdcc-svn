@@ -2,7 +2,7 @@
 
 int a[2];
 
-f (int i)
+void f (int i)
 {
   for (; i < INT_MAX; i++)
     {
@@ -12,7 +12,7 @@ f (int i)
     }
 }
 
-main ()
+void main (void)
 {
   a[0] = a[1] = 0;
   f (0);

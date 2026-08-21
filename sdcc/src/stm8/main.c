@@ -406,6 +406,8 @@ hasExtBitOp (int op, sym_link *left, int right)
           return (true);
         if ((size <= 2 || size == 4) && lbits == right * 2)
           return (true);
+        if (size > 2 && (right < 12 || lbits - right < 12))
+          return (true);
       }
       return (false);
     }
@@ -601,16 +603,16 @@ PORT stm8_port =
   hasExtBitOp,                  /* hasExtBitOp */
   NULL,                         /* oclsExpense */
   TRUE,
-  FALSE,                        /* little endian */
-  0,                            /* leave lt */
-  0,                            /* leave gt */
-  1,                            /* transform <= to ! > */
-  1,                            /* transform >= to ! < */
+  false,                        // not little endian - STM8 is big endian.
+  0,                            // leave lt
+  0,                            // leave gt
+  1,                            // transform <= to ! >
+  1,                            // transform >= to ! <
   false,                        // leave !=
   false,                        // leave ==
   false,                        // Array initializer support
-  0,                            /* no CSE cost estimation yet */
-  NULL,                         /* builtin functions */
+  0,                            // no CSE cost estimation yet
+  "",                           // builtin functions
   GPOINTER,                     /* treat unqualified pointers as "generic" pointers */
   false,                        // there is no __far yet, and thus no pointers into it.
   false,                        // there is no __far yet, and thus no pointers into it.

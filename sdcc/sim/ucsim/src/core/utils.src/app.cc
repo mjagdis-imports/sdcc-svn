@@ -73,6 +73,12 @@ cl_app::cl_app(void)
   in_files= new cl_ustrings(2, 2, "input files");
   options= new cl_options();
   quiet= false;
+  nowelcome= false;
+  hide_echo= false;
+  show_input= false;
+  opt_tml= false;
+  retmain= false;
+  retval= 0;
   if (app_start_at == 0)
     app_start_at= dnow();
   srnd(0);
@@ -83,6 +89,7 @@ cl_app::cl_app(void)
   con_hw_cath= HW_DUMMY;
   con_hw_id= -1;
   con_hw_name= "";
+  measure_speed= 0;
 }
 
 cl_app::~cl_app(void)
@@ -245,7 +252,7 @@ cl_app::run(void)
 	{
 	  acyc++;
 	  if (sim->state & SIM_QUIT)
-	    done= 1;
+	      done= 1;
 	  else if (sim->state & SIM_GO)
 	    done= run_go();
 	  else if (sim->state & SIM_STARTEMU)
@@ -261,8 +268,8 @@ cl_app::run(void)
 	}
       //commander->check();
     }
-    
-  return(0);
+
+  return retmain?sim->uc->sim_stop_result():0;
 }
 
 int
@@ -342,12 +349,16 @@ print_help(const char *name)
 #define DOPT
 #endif
   printf("%s: %s\n", name, VERSIONSTR);
-  printf("Usage: %s [-bBEgGhHlPqVvw] [-a nr] [-c file] [-C cfg_file] " DOPT "\n"
+  printf("Usage: %s [-AbBEgGhHlmPqVvw] [-a nr] [-c file] [-C cfg_file] " DOPT "\n"
 	 "       [-e command] [-I if_optionlist] " KOPT " [-o colorlist]\n"
 	 "       [-p prompt] [-R seed] [-s file] [-S optionlist]\n"
 	 "       [-t CPU] [-U uartnr] [-u hw] [-X freq[k|M]] " ZOPT "\n"
 	 "\n"
 	 "       [files...]\n", name);
+  /*
+    -D devopt   Options for developers only
+       		cpu_speed Measure and print speed of machine
+  */
   printf
     (
      /*
@@ -356,6 +367,7 @@ print_help(const char *name)
       */
      "Options:\n"
      "  -a nr        Specify size of variable space (default=256)\n"
+     "  -A           Force use colored output\n"
      "  -b           Black & white (non-color) theme\n"
      "  -B           Beep on breakpoints\n"
      "  -c file      Open command console on `file' (use `-' for std in/out)\n"
@@ -374,6 +386,7 @@ print_help(const char *name)
      "                 out=file            specify output file for IO\n"
      "  -k portnum   Listen portnum for serial I/O (obsolete, use -S)\n"
      "  -l           Use light theme (default is dark)\n"
+     "  -m           Return value of simulated main()\n"
      "  -o colors    `colors' is a list of color specification: what=colspec,...\n"
      "               where colspec is : separated list of color options\n"
      "               e.g.: prompt=b:white:black (bold white on black)\n"
@@ -440,16 +453,38 @@ static const char *I_opts[]= {
   NULL
 };
 
+enum {
+  DOPT_CPU_SPEED= 0,
+  DOPT_NOWELCOME= 1,
+  DOPT_HIDEECHO = 2,
+  DOPT_SHOWINPUT= 3,
+  DOPT_HTML     = 4,
+  DOPT_WTML     = 5,
+  DOPT_ERROR
+};
+
+static const char *D_opts[]= {
+  /*DOPT_CPU_SPEED*/	"cpu_speed",
+  /*DOPT_NOWELCOME*/    "nowelcome",
+  /*DOPT_HIDEECHO */    "hideecho",
+  /*DOPT_SHOWINPUT*/	"showinput",
+  /*DOPT_HTML     */	"html",
+  /*DOPT_WTML     */    "wtml",
+  NULL
+};
+
+
 int
 cl_app::proc_arguments(int argc, char *argv[])
 {
   int i, c;
   char opts[100], *cp, *subopts, *value;
-  char *cpu_type= NULL;
+  chars cpu_type;
   bool /*s_done= false,*/ k_done= false;
   //bool S_i_done= false, S_o_done= false;
-
-  strcpy(opts, "qc:C:e:p:PX:vVt:s:S:I:a:whHgGEJo:blBR:U:u:_");
+  bool force_colors= false;
+  
+  strcpy(opts, "Aqc:C:D:e:p:PX:vVt:s:S:I:a:whHgGEJo:blBR:U:u:_");
 #ifdef SOCKET_AVAIL
   strcat(opts, "Z:r:k:z:d:");
 #endif
@@ -548,6 +583,10 @@ cl_app::proc_arguments(int argc, char *argv[])
 		    "parameter of -p as default prompt\n");
 	  break;
 	}
+      case 'A':
+	options->set_value("force_colors", this, bool(true));
+	force_colors= true;
+	break;
       case 'b':
 	{
 	  if (!options->set_value("black_and_white", this, bool(true)))
@@ -598,17 +637,16 @@ cl_app::proc_arguments(int argc, char *argv[])
 	break;
       case 't':
 	{
-	  if (cpu_type)
-	    free(cpu_type);
-	  cpu_type= case_string(case_upper, optarg);
-	  if (!options->set_value("cpu_type", this, /*optarg*/cpu_type))
+	  cpu_type= optarg;
+	  cpu_type.uppercase();
+	  if (!options->set_value("cpu_type", this, cpu_type.cstr()))
 	    fprintf(stderr, "Warning: No \"cpu_type\" option found to set "
 		    "parameter of -t as type of controller\n");
 	  if (cpus)
 	    {
 	      int i= 0;
 	      while ((cpus[i].type_str != NULL) &&
-		     (strcasecmp(cpu_type, cpus[i].type_str) != 0))
+		     !cpu_type.iequal(cpus[i].type_str))
 		i++;
 	      if (cpus[i].type_str == NULL)
 		{
@@ -668,6 +706,55 @@ cl_app::proc_arguments(int argc, char *argv[])
 	rgdb_port= strtol(optarg, 0, 0);
 	break;
 #endif
+      case 'D':
+	{
+	  int so;
+	  subopts= optarg;
+	  while (*subopts != 0)
+	    {
+	      so= get_sub_opt(&subopts, D_opts, &value);
+	      switch (so)
+		{
+		case DOPT_ERROR:
+		  fprintf(stderr, "No value for -D suboption\n");
+		  exit(1);
+		  break;
+		case DOPT_CPU_SPEED:
+		  measure_speed= 1;
+		  break;
+		case DOPT_NOWELCOME:
+		  nowelcome= true;
+		  break;
+		case DOPT_HIDEECHO:
+		  hide_echo= true;
+		  break;
+		case DOPT_SHOWINPUT:
+		  show_input= true;
+		  break;
+		case DOPT_HTML:
+		  nowelcome= true;
+		  hide_echo= true;
+		  show_input= true;
+		  force_colors= true;
+		  opt_tml= true;
+		  options->set_value("force_colors", this, bool(true));
+		  break;
+		case DOPT_WTML:
+		  hide_echo= true;
+		  show_input= true;
+		  force_colors= true;
+		  opt_tml= true;
+		  options->set_value("force_colors", this, bool(true));
+		  break;
+		default:
+		  /* Unknown suboption. */
+		  fprintf(stderr, "Unknown suboption `%s' for -D\n", value);
+		  exit(1);
+		  break;
+		}
+	    }
+	  break;
+	}
       case 'S':
 	{
 	  char *iname= NULL, *oname= NULL;
@@ -889,7 +976,7 @@ cl_app::proc_arguments(int argc, char *argv[])
 	}
       case 'o':
 	{
-	  const chars s= optarg;
+	  chars s= optarg;
 	  chars opt= s.token(",");
 	  while (opt.nempty())
 	    {
@@ -906,6 +993,7 @@ cl_app::proc_arguments(int argc, char *argv[])
 	}
       case 'l':
 	set_option_s("color_bg", "bwhite");
+	set_option_s("color_fg", "black");
 	set_option_s("color_prompt", "green:bwhite");
 	set_option_s("color_prompt_console", "blue:bwhite");
 	set_option_s("color_command", "blue:bwhite");
@@ -933,6 +1021,9 @@ cl_app::proc_arguments(int argc, char *argv[])
 	set_option_s("color_btn_off", "black:bwhite");
 	set_option_s("color_sw_on", "bcyan:bwhite");
 	set_option_s("color_sw_off", "black:bwhite");
+	break;
+      case 'm':
+	retmain= true;
 	break;
       case 'B':
 	if (!options->set_value("beep_break", this, (bool)true))
@@ -980,7 +1071,9 @@ cl_app::proc_arguments(int argc, char *argv[])
       default:
 	exit(c);
       }
-
+  if (force_colors)
+    options->set_value("black_and_white", this, bool(false));
+  
   for (i= optind; i < argc; i++)
     in_files->add(argv[i]);
 
@@ -1234,6 +1327,12 @@ cl_app::mk_options(void)
   o->init();
   o->set_value((bool)false);
   
+  options->new_option(o= new cl_bool_option(this, "force_colors",
+					    "Force use colored output (-A)"));
+  o->init();
+  bool fc= false;
+  o->set_value((bool)fc);
+  
   options->new_option(o= new cl_bool_option(this, "black_and_white",
 					    "Non-color console (-b)"));
   o->init();
@@ -1346,6 +1445,11 @@ cl_app::mk_options(void)
 					      "Default background color"));
   o->init();
   o->set_value("black");
+  
+  options->new_option(o= new cl_string_option(this, "color_fg",
+					      "Default foreground color"));
+  o->init();
+  o->set_value("white");
   
   options->new_option(o= new cl_string_option(this, "color_prompt_console",
 					      "Color of console number in prompt"));
@@ -1532,6 +1636,21 @@ cl_app::debug(const char *format, ...)
 }
 
 
+chars
+cl_app::get_option(chars name)
+{
+  chars r;
+  class cl_option *o= options->get_option(name.cstr());
+  if (o)
+    {
+      char *s= NULL;
+      o->get_value(&s);
+      if (s && *s)
+	r= s;
+    }
+  return r;
+}
+
 void
 cl_app::set_option_s(const char *opt_name, const char *new_value)
 {
@@ -1541,5 +1660,30 @@ cl_app::set_option_s(const char *opt_name, const char *new_value)
       o->set_value(new_value);
     }
 }
+
+
+bool
+cl_app::get_option_fc(void)
+{
+  class cl_option *c= options->get_option("force_colors");
+  if (!c)
+    return false;
+  bool fc;
+  c->get_value(&fc);
+  return fc;
+}
+
+
+bool
+cl_app::get_option_bw(void)
+{
+  class cl_option *c= options->get_option("black_and_white");
+  if (!c)
+    return false;
+  bool bw;
+  c->get_value(&bw);
+  return bw;
+}
+
 
 /* End of utils.src/app.cc */

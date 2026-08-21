@@ -334,9 +334,9 @@ interpretLine (lineNode **pl, char *buff, bool back)
             }
           else if (port->peep.getSize)
             {
-              dist += port->peep.getSize((*pl));
+              dist += port->peep.getSize(*pl);
 #if 0
-              fprintf(stderr, "Line: %s, dist: %i, total: %i\n", pl->line, port->peep.getSize(pl), dist);
+              fprintf(stderr, "Line: \"%s\" dist: %i, total: %i\n", (*pl)->line, port->peep.getSize(*pl), dist);
 #endif
             }
           else
@@ -508,15 +508,14 @@ FBYNAME (optimizeReturn)
 /*-----------------------------------------------------------------*/
 FBYNAME (labelIsReturnOnly)
 {
-  /* assumes that %5 pattern variable has the label name */
   const char *label, *p;
   const lineNode *pl;
   int len;
-  char * retInst;
+  const char *retInst;
 
   /* Don't optimize jumps in a jump table; a more generic test */
   if (currPl->ic && currPl->ic->op == JUMPTABLE)
-    return FALSE;
+    return false;
 
   if (!(label = getPatternVar (vars, &cmdLine)))
     {
@@ -562,17 +561,17 @@ FBYNAME (labelIsReturnOnly)
   if (TARGET_HC08_LIKE || TARGET_MOS6502_LIKE)
     retInst = "rts";
 
-  if (strncmp(p, retInst,strlen(retInst)) != 0)
-    return FALSE;
+  if (strncmp (p, retInst, strlen (retInst)))
+    return false;
 
-  p+=strlen(retInst);
-  while(*p && ISCHARSPACE(*p))
+  p += strlen (retInst);
+  while (*p && ISCHARSPACE (*p))
     p++;
 
-  if(*p==0 || *p==';')
-    return TRUE;
+  if(*p == 0 || *p== ';')
+    return true;
 
-  return FALSE;
+  return false;
 }
 
 /*-----------------------------------------------------------------*/
@@ -587,8 +586,8 @@ FBYNAME (labelIsUncondJump)
   const lineNode *pl;
   bool found = FALSE;
   int len;
-  char * jpInst = NULL;
-  char * jpInst2 = NULL;
+  const char *jpInst = NULL;
+  const char *jpInst2 = NULL;
 
   label = hTabItemWithKey (vars, 5);
   if (!label)
@@ -694,9 +693,9 @@ FBYNAME (labelIsUncondJump)
 
   if (TARGET_Z80_LIKE)
     {
-      while (q>p && *q!=',')
+      while (q>p && *q != ',')
         q--;
-      if (*q==',')
+      if (*q == ',')
         return false; /* conditional jump */
     }
 
@@ -2604,7 +2603,7 @@ FBYNAME (notInJumpTable)
 
 static const struct ftab
 {
-  char *fname;
+  const char *fname;
   int (*func) (hTab *, lineNode *, lineNode *, lineNode *, char *);
 }
 ftab[] =                                            // sorted on the number of times used

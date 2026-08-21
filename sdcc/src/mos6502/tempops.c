@@ -30,31 +30,38 @@
 #include "gen.h"
 #include "dbuf_string.h"
 
-static bool fast_save = false;
+static reg_info *save_reg = NULL;
 
 bool
-fastSaveA()
+m6502_fastSaveAi(reg_info *reg)
 {
-  if(m6502_reg_y->isFree && m6502_reg_y->isDead)
+  if(reg->isFree && reg->isDead)
     {
-      transferRegReg(m6502_reg_a, m6502_reg_y, true);
-      fast_save = true;
+      m6502_transferRegReg(m6502_reg_a, reg, true);
+      save_reg = reg;
     }
   else
     {
       storeRegTemp(m6502_reg_a, true);
-      fast_save = false;
+      save_reg = NULL;
     }
   return true;
 }
 
 bool
-fastRestoreA()
+m6502_fastSaveA()
 {
-  if(fast_save)
-    transferRegReg(m6502_reg_y, m6502_reg_a, true);
+  return m6502_fastSaveAi(m6502_reg_y);
+}
+
+bool
+m6502_fastRestoreA()
+{
+  if(save_reg)
+    m6502_transferRegReg(save_reg, m6502_reg_a, true);
   else
-    loadRegTemp(m6502_reg_a);
+    m6502_loadRegTemp(m6502_reg_a);
+
   return true;
 }
 
@@ -66,10 +73,10 @@ fastRestoreA()
  * @param reg pointer for the register to save
  * @param freereg free the register if true
  *************************************************************************/
-static void
-storeRegTempi(reg_info * reg, bool freereg, bool force)
+bool
+m6502_storeRegTempi(reg_info * reg, bool freereg, bool force)
 {
-  emitComment (REGOPS, "  storeRegTemp(%s) %s", reg ? reg->name : "-", freereg ? "free" : "");
+  m6502_emitComment (REGOPS, "  storeRegTemp(%s) %s", reg ? reg->name : "-", freereg ? "free" : "");
 
   int regidx = reg->rIdx;
   char storeOp[4] = "st?";
@@ -84,29 +91,30 @@ storeRegTempi(reg_info * reg, bool freereg, bool force)
       _S.tempAttr[_S.tempOfs].literalValue=reg->litConst;
       _S.tempAttr[_S.tempOfs].aop=reg->aop;
       _S.tempAttr[_S.tempOfs].aopofs=reg->aopofs;
+      _S.tempAttr[_S.tempOfs].stackOffset=reg->stackOffset;
       if(reg->isLitConst && !force)
         {
-        emitComment(REGOPS|VVDBG, "  %s: virtual store literal 0x%02x",__func__,
-                      reg->litConst);
+	  m6502_emitComment(REGOPS|VVDBG, "  %s: virtual store literal 0x%02x",__func__,
+			    (unsigned char)reg->litConst);
         }
       else if(reg->aop && !force && (reg->aop->type==AOP_DIR || reg->aop->type==AOP_EXT) )
         {
-          emitComment(REGOPS|VVDBG, "  %s: virtual store %s+%d",__func__,
-                      reg->aop->aopu.aop_dir, reg->aopofs);
+          m6502_emitComment(REGOPS|VVDBG, "  %s: virtual store %s+%d",__func__,
+			    reg->aop->aopu.aop_dir, reg->aopofs);
         }
       else 
         {    
-        emit6502op (storeOp, TEMPFMT, _S.tempOfs);
+	  m6502_emitOp (storeOp, TEMPFMT, _S.tempOfs);
         }
       _S.tempOfs++;
       break;
     case XA_IDX:
-      storeRegTempi (m6502_reg_a, freereg, force);
-      storeRegTempi (m6502_reg_x, freereg, force);
+      m6502_storeRegTempi (m6502_reg_a, freereg, force);
+      m6502_storeRegTempi (m6502_reg_x, freereg, force);
       break;
-    case YX_IDX:
-      storeRegTempi (m6502_reg_x, freereg, force);
-      storeRegTempi (m6502_reg_y, freereg, force);
+    case XY_IDX:
+      m6502_storeRegTempi (m6502_reg_y, freereg, force);
+      m6502_storeRegTempi (m6502_reg_x, freereg, force);
       break;
     default:
       emitcode("ERROR", "%s : bad reg %02x (%s)", __func__, regidx, reg->name);
@@ -118,54 +126,8 @@ storeRegTempi(reg_info * reg, bool freereg, bool force)
 
   if(_S.tempOfs > NUM_TEMP_REGS)
     emitcode("ERROR", "storeRegTemp(): overflow");
-}
 
-
-void
-storeRegTemp (reg_info * reg, bool freereg)
-{
-  storeRegTempi (reg, freereg, false);
-}
-
-void
-storeRegTempAlways (reg_info * reg, bool freereg)
-{
-  storeRegTempi (reg, freereg, true);
-}
-
-
-/**************************************************************************
- * Store register onto the REGTEMP stack if register is alive
- *
- * @param reg pointer for the register to save
- * @return true if the register was saved
- *************************************************************************/
-bool
-storeRegTempIfSurv (reg_info *reg)
-{
-  if (!reg->isDead)
-    {
-      storeRegTemp (reg, true);
-      return true;
-    }
-  return false;
-}
-
-/**************************************************************************
- * Store register onto the REGTEMP stack if register is in use
- *
- * @param reg pointer for the register to save
- * @return true if the register was saved
- *************************************************************************/
-bool
-storeRegTempIfUsed (reg_info *reg)
-{
-  if (!reg->isFree)
-    {
-      storeRegTemp (reg, true);
-      return true;
-    }
-  return false;
+  return true;
 }
 
 /**************************************************************************
@@ -174,18 +136,23 @@ storeRegTempIfUsed (reg_info *reg)
  * @param reg pointer for the register to save
  *************************************************************************/
 void
-loadRegTempAt (reg_info * reg, int offset)
+m6502_loadRegTempAt (reg_info * reg, int offset)
 {
   char loadOp[4] = "ld?";
   
   if (offset<0 || offset>_S.tempOfs)
-    emitcode("ERROR", " %s - called with illegal offset %d (tempOfs=%d)", __func__, offset, _S.tempOfs);
+    {
+      emitcode("ERROR", " %s - called with illegal offset %d (tempOfs=%d)", __func__, offset, _S.tempOfs);
+      return;
+    }
 
   if(_S.tempAttr[offset].isLiteral)
     {
-      loadRegFromConst(reg, _S.tempAttr[offset].literalValue);
+      m6502_loadRegFromConst(reg, _S.tempAttr[offset].literalValue);
       return;
     }
+
+  m6502_dirtyReg (reg);
 
   switch (reg->rIdx)
     {
@@ -195,20 +162,29 @@ loadRegTempAt (reg_info * reg, int offset)
       loadOp[2]=reg->name[0];
       if(_S.tempAttr[offset].aop && (_S.tempAttr[offset].aop->type==AOP_DIR || _S.tempAttr[offset].aop->type==AOP_EXT))
         {
-          emitComment(REGOPS|VVDBG, "  %s: should load from %s+%d", __func__,
-                      _S.tempAttr[offset].aop->aopu.aop_dir, _S.tempAttr[offset].aopofs);
-          emit6502op (loadOp, "%s(%s+%d)", (_S.tempAttr[offset].aop->type==AOP_DIR)?"*":"",
-           _S.tempAttr[offset].aop->aopu.aop_dir, _S.tempAttr[offset].aopofs );
+          m6502_emitComment(REGOPS|VVDBG, "  %s: should load from %s+%d", __func__,
+			    _S.tempAttr[offset].aop->aopu.aop_dir, _S.tempAttr[offset].aopofs);
+          if(_S.tempAttr[offset].aop->type==AOP_DIR)
+	    m6502_emitOp (loadOp, "*(%s+%d)",
+			  _S.tempAttr[offset].aop->aopu.aop_dir, _S.tempAttr[offset].aopofs );
+          else
+	    m6502_emitOp (loadOp, "(%s+%d)",
+			  _S.tempAttr[offset].aop->aopu.aop_dir, _S.tempAttr[offset].aopofs );
         }
       else
-      emit6502op (loadOp, TEMPFMT, offset);
+        {
+          m6502_emitOp (loadOp, TEMPFMT, offset);
+        }
       break;
     default:
       emitcode("ERROR","%s - called with illegal regidx %d", __func__, reg->rIdx);
     }
   
+  reg->aop=_S.tempAttr[offset].aop;
+  reg->aopofs=_S.tempAttr[offset].aopofs;
+  reg->stackOffset=_S.tempAttr[offset].stackOffset;
+
   m6502_useReg (reg);
-  m6502_dirtyReg (reg);
 }
 
 /**************************************************************************
@@ -217,11 +193,14 @@ loadRegTempAt (reg_info * reg, int offset)
  * @param reg pointer for the register to save
  *************************************************************************/
 void
-loadRegTemp (reg_info * reg)
+m6502_loadRegTemp (reg_info * reg)
 {
 
   if(_S.tempOfs==0)
-    emitcode("ERROR", "%s - temp stack is empty", __func__);
+    {
+      emitcode("ERROR", "%s - temp stack is empty", __func__);
+      return;
+    }
 
   // pop off stack, unused
   if (reg == NULL)
@@ -235,15 +214,15 @@ loadRegTemp (reg_info * reg)
     case A_IDX:
     case X_IDX:
     case Y_IDX:
-      loadRegTempAt(reg, --_S.tempOfs);
+      m6502_loadRegTempAt(reg, --_S.tempOfs);
       return;
     case XA_IDX:
-      loadRegTemp(m6502_reg_x);
-      loadRegTemp(m6502_reg_a);
+      m6502_loadRegTemp(m6502_reg_x);
+      m6502_loadRegTemp(m6502_reg_a);
       break;
-    case YX_IDX:
-      loadRegTemp(m6502_reg_y);
-      loadRegTemp(m6502_reg_x);
+    case XY_IDX:
+      m6502_loadRegTemp(m6502_reg_x);
+      m6502_loadRegTemp(m6502_reg_y);
       break;
     default:
       emitcode("ERROR", "%s - called with illegal regidx %d", __func__, reg->rIdx);
@@ -262,10 +241,10 @@ loadRegTemp (reg_info * reg)
  * @param load register if true otherwise free the register
  *************************************************************************/
 void
-loadOrFreeRegTemp (reg_info * reg, bool needpull)
+m6502_loadOrFreeRegTemp (reg_info * reg, bool needpull)
 {
   if (needpull)
-    loadRegTemp (reg);
+    m6502_loadRegTemp (reg);
   else
     m6502_freeReg (reg);
 }
@@ -278,14 +257,14 @@ loadOrFreeRegTemp (reg_info * reg, bool needpull)
  * @param load register if true otherwise free the register
  *************************************************************************/
 void
-loadRegTempNoFlags (reg_info * reg, bool needpull)
+m6502_loadRegTempNoFlags (reg_info * reg, bool needpull)
 {
   if (needpull)
     {
       int tempflag=_S.lastflag;
-      emit6502op("php", "");
-      loadRegTemp (reg);
-      emit6502op("plp", "");
+      m6502_emitOp("php", "");
+      m6502_loadRegTemp (reg);
+      m6502_emitOp("plp", "");
       _S.lastflag=tempflag;
     }
   else
@@ -295,30 +274,44 @@ loadRegTempNoFlags (reg_info * reg, bool needpull)
 }
 
 void
-emitRegTempOp( char *op, int offset)
+m6502_emitRegTempOp(const char *op, int offset)
 {
+
   if (offset<0 || offset>=_S.tempOfs)
-    emitcode("ERROR", " %s - called with illegal offset %d (tempOfs=%d)", __func__, offset, _S.tempOfs);
+    {
+      emitcode("ERROR", " %s - called with illegal offset %d (tempOfs=%d)", __func__, offset, _S.tempOfs);
+      return;
+    }
+
+  if(!strcmp(op,"asl") || !strcmp(op,"lsr") || !strcmp(op,"rol") || !strcmp(op,"ror") )
+    m6502_dirtyRegTemp (offset);
+
+  // prevent const optimization for "bit" on the plain 6502
+  if(!strcmp(op,"bit") && _S.tempAttr[offset].isLiteral && !IS_MOS65C02)
+    m6502_dirtyRegTemp (offset);
 
   if(_S.tempAttr[offset].isLiteral)
     {
-      emit6502op(op, IMMDFMT, _S.tempAttr[offset].literalValue );
+      m6502_emitOp(op, IMMDFMT, _S.tempAttr[offset].literalValue );
     }
   else if(_S.tempAttr[offset].aop && (_S.tempAttr[offset].aop->type==AOP_DIR || _S.tempAttr[offset].aop->type==AOP_EXT))
     {
-      emitComment(REGOPS|VVDBG, "  %s: %s with %s+%d", __func__,
-                     op, _S.tempAttr[offset].aop->aopu.aop_dir, _S.tempAttr[offset].aopofs);
-      emit6502op (op, "%s(%s+%d)", (_S.tempAttr[offset].aop->type==AOP_DIR)?"*":"",
-           _S.tempAttr[offset].aop->aopu.aop_dir, _S.tempAttr[offset].aopofs );
+      m6502_emitComment(REGOPS|VVDBG, "  %s: %s with %s+%d", __func__,
+			op, _S.tempAttr[offset].aop->aopu.aop_dir, _S.tempAttr[offset].aopofs);
+      m6502_emitOp (op, "%s(%s+%d)", (_S.tempAttr[offset].aop->type==AOP_DIR)?"*":"",
+		    _S.tempAttr[offset].aop->aopu.aop_dir, _S.tempAttr[offset].aopofs );
     }
   else
     {
-      emit6502op(op, TEMPFMT, offset);
+      m6502_emitOp(op, TEMPFMT, offset);
+      //      if(!strcmp(op,"asl") || !strcmp(op,"lsr") || !strcmp(op,"rol") || !strcmp(op,"ror")
+      //         || !strcmp(op,"inc") || !strcmp(op,"dec") )
+      //      m6502_dirtyRegTemp (offset);
     }
 }
 
 void
-dirtyRegTemp (int offset)
+m6502_dirtyRegTemp (int offset)
 {
   _S.tempAttr[offset].isLiteral=false;
   _S.tempAttr[offset].aop=NULL;

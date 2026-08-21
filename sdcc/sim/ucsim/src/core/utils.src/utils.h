@@ -38,6 +38,33 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "fiocl.h"
 
 
+enum col_ctype_t
+  {
+   ct_none= 0,
+   ct_bold= 0x01,
+   ct_faint= 0x02,
+   ct_italic= 0x04,
+   ct_underl= 0x08,
+   ct_dunderl= 0x10,
+   ct_crossed= 0x20,
+   ct_overl= 0x40,
+   ct_blink= 0x80
+  };
+
+class cl_color_name: public cl_base
+{
+public:
+  bool ok;
+  int color;
+  bool bright;
+  bool rgb;
+  int red, green, blue;
+ public:
+  cl_color_name(void);
+  virtual void init(chars n);
+};
+
+
 //#define TRACE printf
 #define TRACE   1 ? (void)0 : (*(void (*)(const char *, ...))0)
 
@@ -53,21 +80,10 @@ extern char *vformat_string(const char *format, va_list ap);
 extern char *format_string(const char *format, ...);
 extern void print_char_octal(char c, FILE *f);
 extern const char *object_name(class cl_base *o);
-extern char *case_string(enum letter_case lcase, const char *str);
 extern chars cbin(long data, int bits);
 
 extern int strispn(char *s, char c);
-extern bool strend(const char *search_in, const char *what);
 extern bool valid_sym_name(char *s);
-extern bool filename_has_ext(class cl_f *f, const char *ext);
-extern bool is_hex_file(class cl_f *f);
-extern bool is_asc_file(class cl_f *f);
-extern bool is_p2h_file(class cl_f *f);
-extern bool is_omf_file(class cl_f *f);
-extern bool is_cdb_file(class cl_f *f);
-extern bool is_s19_file(class cl_f *f);
-extern bool is_map_file(class cl_f *f);
-
 extern chars colopt2ansiseq(char *opt);
 
 extern double strtoscale(const char *s, const char **units = 0);

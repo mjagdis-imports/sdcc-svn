@@ -587,6 +587,9 @@ struct cpu_entry cpus_i8085[]=
 struct cpu_entry cpus_m6800[]=
   {
     {"M6800", CPU_M6800, 0, "M6800", ""},
+    {"6800" , CPU_M6800, 0, "M6800", ""},
+    {"M6801", CPU_M6801, 0, "M6801", ""},
+    {"6801" , CPU_M6801, 0, "M6801", ""},
 
     {NULL, CPU_NONE, 0, "", ""}
   };
@@ -641,6 +644,9 @@ struct cpu_entry cpus_mos6502[]=
     {"C02S"	, CPU_65C02S, 0		, "MOS65C02S", ""},
     {"CS"	, CPU_65C02S, 0		, "MOS65C02S", ""},
     {"S"	, CPU_65C02S, 0		, "MOS65C02S", ""},
+    {"HUC6280"  , CPU_HUC6280, 0	, "HUC6280", "" },
+    {"HUC"	, CPU_HUC6280, 0	, "HUC6280", "" },
+    {"6280"	, CPU_HUC6280, 0	, "HUC6280", "" },
     
     {NULL, CPU_NONE, 0, "", ""}
   };
@@ -721,6 +727,11 @@ struct cpu_entry cpus_rxk[]=
     {"R6K"	, CPU_R6K , 0, "Rabbit 6000", ""},
     {"6K"	, CPU_R6K , 0, "Rabbit 6000", ""},
     {"6"	, CPU_R6K , 0, "Rabbit 6000", ""},
+    {"R2KSDCC"	, (enum cpu_type)(CPU_RXK_SDCC|CPU_R2K) , 0, "Rabbit 2000", ""},
+    {"R3KASDCC"	, (enum cpu_type)(CPU_RXK_SDCC|CPU_R3KA) , 0, "Rabbit 3000A", ""},
+    {"R4KSDCC"	, (enum cpu_type)(CPU_RXK_SDCC|CPU_R4K) , 0, "Rabbit 4000", ""},
+    {"R5KSDCC"	, (enum cpu_type)(CPU_RXK_SDCC|CPU_R5K) , 0, "Rabbit 5000", ""},
+    {"R6KSDCC"	, (enum cpu_type)(CPU_RXK_SDCC|CPU_R6K) , 0, "Rabbit 6000", ""},
     {NULL, CPU_NONE, 0, "", ""}
   };
 
@@ -757,6 +768,21 @@ struct cpu_entry cpus_z80[]=
     {NULL, CPU_NONE, 0, "", ""}
   };
 
+
+struct cpu_entry cpus_tlcs[]=
+  {
+    { "TLCS90"		, CPU_TLCS90, 0, "TLCS-90", "" },
+    { "90"		, CPU_TLCS90, 0, "TLCS-90", "" },
+
+    { "TLCS870C"	, CPU_TLCS870C , 0, "TLCS-870C" , "" },
+    { "C"		, CPU_TLCS870C , 0, "TLCS-870C" , "" },
+    { "TLCS870C1"	, CPU_TLCS870C1, 0, "TLCS-870C1", "" },
+    { "C1"		, CPU_TLCS870C1, 0, "TLCS-870C1" , "" },
+
+    {NULL, CPU_NONE, 0, "", ""}
+  };
+
+
 struct cpu_collection cpus_coll[]=
   {
     { "mcs51"	, "ucsim_51"		, cpus_51	},
@@ -778,6 +804,7 @@ struct cpu_collection cpus_coll[]=
     { "st7"	, "ucsim_st7"		, cpus_st7	},
     { "xa"	, "ucsim_xa"		, cpus_xa	},
     { "z80"	, "ucsim_z80"		, cpus_z80	},
+    { "tlcs"    , "ucsim_tlcs"          , cpus_tlcs     },
     
     { NULL, NULL, NULL }
   };

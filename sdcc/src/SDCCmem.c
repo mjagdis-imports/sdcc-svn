@@ -636,20 +636,22 @@ allocGlobal (symbol *sym)
 /* allocParms - parameters are always passed on stack              */
 /*-----------------------------------------------------------------*/
 void
-allocParms (value *val, bool smallc, bool dynamicc)
+allocParms (value *val, struct sym_link *ftype)
 {
   value *lval;
   int pNum = 1;
   int stackParamSizeAdjust = 0;
+  bool smallc = IFFUNC_ISSMALLC (ftype);
+  bool dynamicc = IFFUNC_ISDYNAMICC (ftype);
 
   if (smallc)
     {
       for (lval = val; lval; lval = lval->next)
-      {
-        if (IS_REGPARM (lval->etype) && !dynamicc)
-          continue;
-        stackParamSizeAdjust += getSize (lval->type) + (getSize (lval->type) == 1);
-      }
+        {
+          if (IS_REGPARM (lval->etype) && !dynamicc)
+            continue;
+          stackParamSizeAdjust += getSize (lval->type) + (getSize (lval->type) == 1);
+        }
     }
   stackPtr += stackParamSizeAdjust;
 
@@ -771,6 +773,38 @@ allocParms (value *val, bool smallc, bool dynamicc)
 
   stackPtr -= stackParamSizeAdjust;
 
+  // Create placeholder for variable arguments - needed to implement ISO C 23 va_start macro.
+  if (IFFUNC_HASVARARGS (ftype))
+    {
+      symbol *sym = newSymbol ("__va_start", LEVEL_UNIT);
+      sym->type = newLink (DECLARATOR);
+      DCL_TYPE (sym->type) = ARRAY;
+      DCL_ARRAY_LENGTH_TYPE (sym->type) = ARRAY_LENGTH_UNSPECIFIED;
+      DCL_ELEM (sym->type) = 0;
+      DCL_ELEM_AST (sym->type) = NULL;
+      sym->type->next = newCharLink ();
+      SPEC_USIGN (sym->type->next) = 1;
+      sym->etype = getSpec (sym->type);
+      sym->onStack = 1;
+      sym->_isparm = 1;
+      sym->ismyparm = 1;
+      addSymChain (&sym);
+      
+      if (options.useXstack)
+        {
+          SPEC_OCLS (sym->etype) = xstack;
+          SPEC_STAK (sym->etype) = sym->stack = xstackPtr - 1;
+        }
+      else
+        {
+          SPEC_OCLS (sym->etype) = istack;
+          if ((port->stack.direction > 0) != smallc)
+            SPEC_STAK (sym->etype) = sym->stack = stackPtr - (FUNC_REGBANK (currFunc->type) ? port->stack.bank_overhead : 0) - 1;
+          else
+            SPEC_STAK (sym->etype) = sym->stack = stackPtr;
+        }
+    }
+
   return;
 }
 
@@ -796,9 +830,10 @@ deallocParms (value *val)
       if (!lval->sym->isref)
         {
           lval->sym->allocreq = 0;
+          if (!(currFunc && IFFUNC_HASVARARGS (currFunc->type))) // Do not warn for unused parameters in functions with variable arguments, since C standards before C23 required at least one non-variable argument for va_start.
             werror (W_NO_REFERENCE,
                     currFunc ? currFunc->name : "(unknown)",
-                    "function argument", lval->sym->name);
+                    "function parameter", lval->sym->name);
         }
 
       /* move the rname if any to the name for both val & sym */
@@ -969,7 +1004,7 @@ deallocLocal (symbol *csym)
             stackPtr -= getSize (sym->type);
         }
       /* if not used give a warning */
-      if (!sym->isref && !IS_STATIC (sym->etype))
+      if (!sym->isref && !sym->istmp && !IS_STATIC (sym->etype))
         werror (W_NO_REFERENCE,
                 currFunc ? currFunc->name : "(unknown)",
                 "local variable", sym->name);
@@ -1040,7 +1075,7 @@ allocVariables (symbol *symChain)
           /* check if the typedef already exists */
           csym = findSym (TypedefTab, NULL, sym->name);
           if (csym && csym->level == sym->level &&
-            !(options.std_c11 && compareTypeExact (sym->type, csym->type, -1))) /* typedef to same type not allowed before ISO C11 */
+            !(options.std_c11 && compareTypeExact (sym->type, csym->type, -1, true))) /* typedef to same type not allowed before ISO C11 */
             werror (E_DUPLICATE_TYPEDEF, sym->name);
 
           SPEC_EXTR (sym->etype) = 0;
@@ -1059,7 +1094,7 @@ allocVariables (symbol *symChain)
       /* function then do args processing        */
       if (funcInChain (csym->type))
         {
-          processFuncArgs (csym, NULL);
+          processFunc (csym, NULL);
         }
 
       /* if this is an extern variable then change */

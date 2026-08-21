@@ -246,8 +246,8 @@ f8_genInitStartup (FILE *of)
   if (optimize.codeSpeed)
     {
       fprintf (of, "\tld\txl, zl\n");
-      fprintf (of, "\tbool\txl\n");
-      fprintf (of, "\tjrz\t#00001$\n");
+      fprintf (of, "\tsrl\txl\n");
+      fprintf (of, "\tjrnc\t#00001$\n");
       fprintf (of, "\tclr\txl\n");
       fprintf (of, "\tld (s_DATA - 1, z), xl\n");
       fprintf (of, "\taddw z, #-1\n");
@@ -276,8 +276,8 @@ f8_genInitStartup (FILE *of)
   if (optimize.codeSpeed)
     {
       fprintf (of, "\tld\txl, zl\n");
-      fprintf (of, "\tbool\txl\n");
-      fprintf (of, "\tjrz\t#00004$\n");
+      fprintf (of, "\tsrl\txl\n");
+      fprintf (of, "\tjrnc\t#00004$\n");
       fprintf (of, "\tld\txl, (s_INITIALIZER - 1, z)\n");
       fprintf (of, "\tld\t(s_INITIALIZED - 1, z), xl\n");
       fprintf (of, "\taddw z, #-1\n");
@@ -362,11 +362,13 @@ hasExtBitOp (int op, sym_link *left, int right)
         unsigned int lbits = bitsForType (left);
         if (lbits % 8)
           return (false);
-        if (!TARGET_IS_F8L && size == 1)
+        if ((!TARGET_IS_F8L || right <= 4) && size == 1)
           return (true);
         if (!TARGET_IS_F8L && size == 2 && right % 8 <= 3)
           return (true);
         if ((!TARGET_IS_F8L && size <= 2 || size == 4) && lbits == right * 2)
+          return (true);
+        if (size > 2 && (right < 12 || lbits - right < 12))
           return (true);
       }
       return (false);
@@ -496,8 +498,8 @@ PORT f8_port =
      0,                         /* sp points to next free stack location */
   },     
   { 
-    -1,                         /* shifts never use support routines */
-    false,                      /* don't use support routine for int x int -> long multiplication */
+    -1,                         // shifts never use support routines
+    true,                       // has support routine for int x int -> long multiplication
   },
   { f8_emitDebuggerSymbol,
     {
@@ -552,9 +554,9 @@ PORT f8_port =
   false,                        // leave !=
   false,                        // leave ==
   false,                        // Array initializer support
-  0,                            /* no CSE cost estimation yet */
-  NULL,                         /* builtin functions */
-  GPOINTER,                     /* treat unqualified pointers as "generic" pointers */
+  0,                            // no CSE cost estimation yet */
+  "",                           // builtin functions
+  GPOINTER,                     // treat unqualified pointers as "generic" pointers
   false,                        // there is no __far, and thus no pointers into it.
   false,                        // there is no __far, and thus no pointers into it.
   1,                            /* reset labelKey to 1 */
@@ -723,9 +725,9 @@ PORT f8l_port =
   false,                        // leave !=
   false,                        // leave ==
   false,                        // Array initializer support
-  0,                            /* no CSE cost estimation yet */
-  NULL,                         /* builtin functions */
-  GPOINTER,                     /* treat unqualified pointers as "generic" pointers */
+  0,                            // no CSE cost estimation yet
+  "",                           // builtin functions
+  GPOINTER,                     // treat unqualified pointers as "generic" pointers
   false,                        // there is no __far, and thus no pointers into it.
   false,                        // there is no __far, and thus no pointers into it.
   1,                            /* reset labelKey to 1 */

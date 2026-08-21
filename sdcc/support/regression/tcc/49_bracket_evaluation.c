@@ -6,11 +6,11 @@ struct point
    double y;
 };
 
-struct point point_array[100];
+struct point point_array[7];
 
 int main()
 {
-   int my_point = 10;
+   int my_point = 6;
 
    point_array[my_point].x = 12.34;
    point_array[my_point].y = 56.78;

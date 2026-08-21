@@ -1,7 +1,7 @@
 ;-------------------------------------------------------------------------
 ;   _fslt.s - routine for floating point comparison
 ;
-;   Copyright (C) 2025, Gabriele Gorla
+;   Copyright (C) 2025-2026, Gabriele Gorla
 ;
 ;   This library is free software; you can redistribute it and/or modify it
 ;   under the terms of the GNU General Public License as published by the
@@ -34,79 +34,72 @@
 	.globl ___fslt
 
 ;--------------------------------------------------------
-; local aliases
-;--------------------------------------------------------
-	.define res0  "___SDCC_m6502_ret0"
-	.define res1  "___SDCC_m6502_ret1"
-	.define res2  "___SDCC_m6502_ret2"
-	.define res3  "___SDCC_m6502_ret3"
-	.define s1    "___SDCC_m6502_ret4"
-	.define exp1  "___SDCC_m6502_ret5"
-	.define s2    "___SDCC_m6502_ret6"
-	.define exp2  "___SDCC_m6502_ret7"
-
-;--------------------------------------------------------
 ; code
 ;--------------------------------------------------------
 	.area CODE
-;------------------------------------------------------------
 
 ___fslt:
-	ldy	#0x00
-	sty	*res0
-	jsr 	___fs_unpack_2P
-
-	lda 	*exp1
-	ora 	*exp2
-	bne 	not_denorm
-	ora	*(___fslt_PARM_1 + 0)
-	ora	*(___fslt_PARM_2 + 0)
+	lda	*(___fslt_PARM_1 + 3)
+	ora	*(___fslt_PARM_2 + 3)
+        and	#0x7f
+	bne	not_zero
+	ora 	*(___fslt_PARM_1 + 2)
+	ora 	*(___fslt_PARM_2 + 2)
+;	bne	not_zero
 	ora	*(___fslt_PARM_1 + 1)
 	ora	*(___fslt_PARM_2 + 1)
-	ora	*(___fslt_PARM_1 + 2)
-	ora	*(___fslt_PARM_2 + 2)
-	beq 	ret
-not_denorm:
-	lda	*s1
-	eor 	*s2
-	beq 	same_sign
-	lda 	*s1
-	beq 	ret
-	lda 	#0x01
-ret:
+	ora	*(___fslt_PARM_1 + 0)
+	ora	*(___fslt_PARM_2 + 0)
+	beq 	reta
+not_zero:
+	lda	*(___fslt_PARM_1 + 3)
+	eor	*(___fslt_PARM_2 + 3)
+	bpl	same_sign
+	lda	*(___fslt_PARM_1 + 3)
+rets:
+	bpl	ret0
+ret1:
+	lda	#0x01
+reta:
 	rts
 
 same_sign:
-	lda 	*s1
-	beq 	both_pos
-	inc 	*res0
+	sec
+	lda	*(___fslt_PARM_1 + 3)
+	bpl	both_pos
+
+; both neg
+	lda	*(___fslt_PARM_2 + 3)
+	sbc	*(___fslt_PARM_1 + 3)
+	bne	retv
+	sec
+	lda	*___fslt_PARM_2
+	sbc	*___fslt_PARM_1
+	lda	*(___fslt_PARM_2 + 1)
+	sbc	*(___fslt_PARM_1 + 1)
+	lda	*(___fslt_PARM_2 + 2)
+	sbc	*(___fslt_PARM_1 + 2)
+	lda	*(___fslt_PARM_2 + 3)
+	sbc	*(___fslt_PARM_1 + 3)
+retv:
+	bvc	rets
+	bpl	ret1
+ret0:
+	lda	#0x00
+	rts
+
 both_pos:
+;	lda	*(___fslt_PARM_1 + 3)
+	sbc	*(___fslt_PARM_2 + 3)
+	bne	retv
 	sec
 	lda	*___fslt_PARM_1
 	sbc	*___fslt_PARM_2
-	sta	*___fslt_PARM_1
 	lda	*(___fslt_PARM_1 + 1)
 	sbc	*(___fslt_PARM_2 + 1)
-	sta	*(___fslt_PARM_1 + 1)
 	lda	*(___fslt_PARM_1 + 2)
 	sbc	*(___fslt_PARM_2 + 2)
-	sta	*(___fslt_PARM_1 + 2)
 	lda	*(___fslt_PARM_1 + 3)
 	sbc	*(___fslt_PARM_2 + 3)
-	sta	*(___fslt_PARM_1 + 3)
-	bvc	00150$
-	bpl	00149$
-	bmi	00109$
-00150$:
-	bpl	00109$
-00149$:
-	iny
-00109$:
-	lda	*___fslt_PARM_1
-	ora	*(___fslt_PARM_1 + 1)
-	ora	*(___fslt_PARM_1 + 2)
-	ora	*(___fslt_PARM_1 + 3)
-	beq 	ret
-	tya
-	eor 	*res0
-	rts
+	jmp	retv
+

@@ -167,6 +167,7 @@ designation *newDesignation(int, void *);
 designation *revDesignation (designation *);
 designation *copyDesignation (designation *);
 initList *reorderIlist (sym_link *, initList *);
+initList *reorderIlistIval (sym_link *, initList *);
 value *valFromType (sym_link *);
 value *constFloatVal (const char *);
 value *constFixed16x16Val (const char *);
@@ -181,7 +182,9 @@ unsigned long double2ul (double val);
 unsigned char byteOfVal (value *, int);
 int csdOfVal (int *topbit, int *nonzero, unsigned long long *csd_add, unsigned long long *csd_sub, value *val, unsigned long long mask);
 int isEqualVal (value *, int);
-TYPE_TARGET_ULONGLONG ullFromLit (sym_link * lit);
-value * valRecastLitVal (sym_link * dtype, value * val);
+TYPE_TARGET_ULONGLONG ullFromLit (sym_link *lit);
+value *valRecastLitVal (sym_link * dtype, value *val);
+void checkParameterTypeList (value *forward_declaration, value *parameters);
 
 #endif
+

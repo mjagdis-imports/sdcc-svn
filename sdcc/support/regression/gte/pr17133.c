@@ -1,5 +1,7 @@
 /* suppress warning W_NONPTR2_GENPTR, pointer is not dereferenced */
 #pragma disable_warning 127
+/* suppress warning W_PTR2INT_NOREPRESENT, pointer is not dereferenced */
+#pragma disable_warning 322
 
 extern void abort (void);
 

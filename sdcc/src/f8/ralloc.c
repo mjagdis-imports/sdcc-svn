@@ -41,7 +41,8 @@ static struct
 #define D(_a, _s)
 #endif
 
-/** noOverLap - will iterate through the list looking for over lap
+#if 0 // not used, prevent warning
+/** noOverLap - will iterate through the list looking for overlap
  */
 static int
 noOverLap (set *itmpStack, symbol *fsym)
@@ -64,6 +65,7 @@ noOverLap (set *itmpStack, symbol *fsym)
     }
   return 1;
 }
+#endif
 
 /*-----------------------------------------------------------------*/
 /* createStackSpil - create a location on the stack to spil        */
@@ -348,7 +350,7 @@ packRegsForAssign (iCode *ic, eBBlock *ebp)
   // Optimize out short-lived extra temporary.
   else if ((dic->op == CAST ||
     dic->op == UNARYMINUS || dic->op == '+' || dic->op == '-' || dic->op == '*' || dic->op == '%' ||
-    dic->op == '~' || dic->op == '^' || dic->op == '|' || dic->op == BITWISEAND ||
+    dic->op == '^' || dic->op == '|' || dic->op == BITWISEAND ||
     dic->op == LEFT_OP || dic->op == RIGHT_OP ||
     dic->op == ROT || dic->op == GETABIT) &&
     dic->next == ic && IS_ITEMP (IC_RESULT (ic)))

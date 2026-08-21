@@ -102,11 +102,11 @@ bool uselessDecl = true;
 %token TYPEDEF EXTERN STATIC AUTO REGISTER CONSTEXPR CODE EEPROM INTERRUPT SFR SFR16 SFR32 ADDRESSMOD
 %token AT SBIT REENTRANT USING  XDATA DATA IDATA PDATA ELLIPSIS CRITICAL
 %token NONBANKED BANKED SHADOWREGS SD_WPARAM
-%token SD_BOOL SD_CHAR SD_SHORT SD_INT SD_LONG SIGNED UNSIGNED SD_FLOAT DOUBLE FIXED16X16 SD_CONST VOLATILE SD_VOID BIT
+%token SD_BOOL SD_CHAR SD_SHORT SD_INT SD_LONG SIGNED UNSIGNED SD_FLOAT DOUBLE FIXED16X16 SD_CONST VOLATILE SD_VOID BIT OPTIONAL
 %token COMPLEX IMAGINARY
 %token STRUCT UNION ENUM RANGE SD_FAR
 %token CASE DEFAULT IF ELSE SWITCH WHILE DO FOR GOTO CONTINUE BREAK RETURN
-%token NAKED JAVANATIVE OVERLAY TRAP
+%token NAKED JAVANATIVE OVERLAY TRAP BUILTIN
 %token <yystr> STRING_LITERAL INLINEASM FUNC
 %token IFX ADDRESS_OF GET_VALUE_AT_ADDRESS SET_VALUE_AT_ADDRESS SPIL UNSPIL GETABIT GETBYTE GETWORD
 %token BITWISEAND UNARYMINUS IPUSH IPUSH_VALUE_AT_ADDRESS IPOP PCALL ENDFUNCTION JUMPTABLE
@@ -252,10 +252,17 @@ postfix_expression
 
                         /* add the specifier list to the id */
                         symbol *sym1 = prepareDeclarationSymbol(NULL, $2, sym);
-                        /* implicitly make the symbol a constexpr if the initializer allows it */
+                        /* implicitly make the symbol a constexpr if the initializer allows it.
+                           This is the compiler's own inference, not something the program wrote,
+                           so record that: a constexpr the program declares is const (C23
+                           6.7.2p6), while a compound literal without a storage class has the
+                           type written in it and nothing more (C11 6.5.2.5p4). */
                         sym1->etype = getSpec(sym1->type);
                         if (constExprTree(list2expr(sym1->ival)))
-                          SPEC_CONSTEXPR(sym1->etype) = 1;
+                          {
+                            SPEC_CONSTEXPR(sym1->etype) = 1;
+                            SPEC_IMPLICIT_CONSTEXPR(sym1->etype) = 1;
+                          }
 
                         /* mark as temporary symbol for compound literal, so that gatherImplicitVariables
                            can attach it to a block, and add the temporary symbol to the symbol table */
@@ -308,8 +315,22 @@ unary_expression
    | DEC_OP unary_expression        { $$ = newNode (DEC_OP, NULL, $2); }
    | unary_operator cast_expression
        {
+         // &* is ignored except for removing the _Optional qualifier.
          if ($1 == '&' && IS_AST_OP ($2) && $2->opval.op == '*' && $2->right == NULL)
-           $$ = $2->left;
+           {
+             $$ = $2->left;
+             sym_link *type = typeofOp ($$);
+             if (isOptional (type->next))
+               {
+                 type = copyLinkChain (type);
+                 if (IS_DECL (type->next))
+                   DCL_PTR_OPTIONAL (type->next) = false;
+                 else
+                   SPEC_OPTIONAL (type->next) = false;
+                 $$ = newNode (CAST, newAst_LINK(type), $$);
+                 $$->values.cast.semDeref = true;
+               }
+           }
          else if ($1 == '*' && IS_AST_OP ($2) && $2->opval.op == '&' && $2->right == NULL)
            $$ = $2->left;
          else
@@ -406,7 +427,7 @@ conditional_expr
                      }
    | logical_or_expr '?' { seqPointNo++;} ':' conditional_expr
                      {
-                        if (!options.std_sdcc)
+                        if (!options.std_c2y && !options.std_sdcc)
                           werror (E_SYNTAX_ERROR);
                         $$ = newNode(':',$1,$5);
                         $$ = newNode('?',$1,$$);
@@ -520,6 +541,7 @@ declaration
                  addSym (StructTab, sdef, sdef->tag, sdef->level, currBlockno, false);
                  uselessDecl = false;
                }
+             checkQualifiers (sdef->tagsym, $1, false, false);
            }
          if (uselessDecl)
            werror(W_USELESS_DECL);
@@ -802,27 +824,17 @@ typeof_specifier
        $$ = $3;
      }
    | TYPEOF_UNQUAL '(' expression ')'
-     {
-       $$ = typeofOp ($3);
-       wassert ($$);
-       wassert (IS_SPEC ($$));
-       SPEC_CONST ($$) = 0;
-       SPEC_RESTRICT ($$) = 0;
-       SPEC_VOLATILE ($$) = 0;
-       SPEC_ATOMIC ($$) = 0;
-       SPEC_ADDRSPACE ($$) = 0;
-     }
+      {
+        $$ = typeofOp ($3);
+        wassert ($$);
+        removeQualifiers ($$);
+      }
    | TYPEOF_UNQUAL '(' type_name ')'
-     {
-       checkTypeSanity ($3, "(typeof_unqual)");
-       $$ = $3;
-       wassert (IS_SPEC ($$));
-       SPEC_CONST ($$) = 0;
-       SPEC_RESTRICT ($$) = 0;
-       SPEC_VOLATILE ($$) = 0;
-       SPEC_ATOMIC ($$) = 0;
-       SPEC_ADDRSPACE ($$) = 0;
-     }
+      {
+        checkTypeSanity ($3, "(typeof_unqual)");
+        $$ = $3;
+        removeQualifiers ($$);
+      }
 
 struct_or_union_specifier
    : struct_or_union attribute_specifier_sequence_opt opt_stag
@@ -904,8 +916,8 @@ struct_or_union_specifier
 
           /* Create a structdef   */
           $3->fields = reverseSyms($6);        /* link the fields */
-          $3->size = compStructSize($1, $3);   /* update size of  */
-          promoteAnonStructs ($1, $3);
+          $3->size = compStructSize($3);       /* update size of  */
+          promoteAnonStructs ($3);
 
           if ($3->redefinition) // Since C23, multiple definitions for struct / union are allowed, if they are compatible and have the same tags. The current standard draft N3047 allows redeclarations of unions to have a different order of the members. We don't. The rule in N3047 is now considered a mistake by many, and will hopefully be changed to the SDCC behaviour via a national body comment for the final version of the standard.
             {
@@ -1243,10 +1255,14 @@ type_qualifier
                   $$=newLink(SPECIFIER);
                   SPEC_VOLATILE($$) = 1;
                }
-   | ATOMIC  {
+   | ATOMIC    {
                   $$=newLink(SPECIFIER);
                   SPEC_ATOMIC($$) = 1;
                   werror (E_ATOMIC_UNSUPPORTED);
+               }
+   | OPTIONAL  {
+                  $$=newLink(SPECIFIER);
+                  SPEC_OPTIONAL($$) = true;
                }
    | ADDRSPACE_NAME {
                   $$=newLink(SPECIFIER);
@@ -1395,6 +1411,7 @@ array_declarator
        DCL_TYPE(p) = ARRAY;
        DCL_ARRAY_LENGTH_TYPE (p) = ARRAY_LENGTH_UNEVALUATED;
        DCL_ELEM_AST (p) = $5;
+       DCL_STATIC_ARRAY_PARAM (p) = true;
 
        if ($4)
          {
@@ -1424,6 +1441,7 @@ array_declarator
        DCL_TYPE(p) = ARRAY;
        DCL_ARRAY_LENGTH_TYPE (p) = ARRAY_LENGTH_UNEVALUATED;
        DCL_ELEM_AST (p) = $5;
+       DCL_STATIC_ARRAY_PARAM (p) = true;
 
        DCL_PTR_CONST(p) = SPEC_CONST ($3);
        DCL_PTR_RESTRICT(p) = SPEC_RESTRICT ($3);
@@ -1534,8 +1552,9 @@ function_declarator
 
           wassert (funcType);
 
-          FUNC_HASVARARGS(funcType) = IS_VARG($4);
-          FUNC_ARGS(funcType) = reverseVal($4);
+          FUNC_HASVARARGS(funcType) = !$4 || IS_VARG($4);
+          if ($4)
+            FUNC_ARGS(funcType) = $4;
 
           FUNC_SDCCCALL(funcType) = -1;
 
@@ -1633,6 +1652,7 @@ pointer
                  DCL_PTR_CONST($1) = SPEC_CONST($2);
                  DCL_PTR_VOLATILE($1) = SPEC_VOLATILE($2);
                  DCL_PTR_RESTRICT($1) = SPEC_RESTRICT($2);
+                 DCL_PTR_OPTIONAL($1) = SPEC_OPTIONAL($2);
                  DCL_PTR_ADDRSPACE($1) = SPEC_ADDRSPACE($2);
              }
              else
@@ -1671,6 +1691,7 @@ pointer
                  DCL_PTR_CONST($1) = SPEC_CONST($2);
                  DCL_PTR_VOLATILE($1) = SPEC_VOLATILE($2);
                  DCL_PTR_RESTRICT($1) = SPEC_RESTRICT($2);
+                 DCL_PTR_OPTIONAL($1) = SPEC_OPTIONAL($2);
                  DCL_PTR_ADDRSPACE($1) = SPEC_ADDRSPACE($2);
                  switch (SPEC_SCLS($2)) {
                  case S_XDATA:
@@ -1732,13 +1753,43 @@ type_qualifier_list_opt
 
 parameter_type_list
   : parameter_list
+    {
+      $$ = reverseVal ($1);
+      checkParameterTypeList (NULL, $$);
+    }
+  | ELLIPSIS
+    {
+      if (!options.std_c23)
+        werror (W_VARARG_ONLY_C23);
+      $$ = NULL;
+    }
   | parameter_list ',' ELLIPSIS
-         {
-           if (IS_VOID ($1->type))
-             werror (E_VOID_SHALL_BE_LONELY);
-           $1->vArgs = 1;
-         }
-        ;
+    {
+      if (IS_VOID ($1->type))
+        werror (E_VOID_SHALL_BE_LONELY);
+      $$ = reverseVal ($1);
+      $$->vArgs = 1;
+      checkParameterTypeList (NULL, $$);
+    }
+  | parameter_declaration ';' parameter_list
+    {
+       if (!options.std_sdcc)
+        werror (W_PARAM_FWD_DECL);
+      $$ = reverseVal ($3);
+      checkParameterTypeList ($1, $$);
+    }
+  | parameter_declaration ';' parameter_list ',' ELLIPSIS
+    {
+      if (!options.std_sdcc)
+        werror (W_PARAM_FWD_DECL);
+      if (IS_VOID ($3->type))
+        werror (E_VOID_SHALL_BE_LONELY);
+      $$ = reverseVal ($3);
+      $$->vArgs = 1;
+      checkParameterTypeList ($1, $$);
+    }
+    
+  ;
 
 parameter_list
    : parameter_declaration
@@ -1895,7 +1946,7 @@ function_abstract_declarator
           DCL_TYPE(p) = FUNCTION;
 
           FUNC_HASVARARGS(p) = IS_VARG($4);
-          FUNC_ARGS(p) = reverseVal($4);
+          FUNC_ARGS(p) = $4;
 
           /* nest level was incremented to take care of the parms  */
           NestLevel -= LEVEL_UNIT;
@@ -2497,7 +2548,8 @@ external_declaration
           if ($1 && $1->type && IS_REGISTER (getSpec ($1->type)))
             werror (W_REGISTER_EXTERNAL_DECL);
           addSymChain (&$1);
-          allocVariables ($1);
+          if (!($1 && $1->type && IFFUNC_ISBUILTIN ($1->type)))
+            allocVariables ($1);
           cleanUpLevel (SymbolTab, 1);
         }
    | addressmod
@@ -2646,6 +2698,9 @@ function_attribute
                         $$ = newLink (SPECIFIER);
                         FUNC_INTNO($$) = INTNO_TRAP;
                         FUNC_ISISR($$) = 1;
+                     }
+   |  BUILTIN        {  $$ = newLink (SPECIFIER);
+                        FUNC_ISBUILTIN ($$) = 1;
                      }
    |  SMALLC         {  $$ = newLink (SPECIFIER);
                         FUNC_ISSMALLC($$) = 1;

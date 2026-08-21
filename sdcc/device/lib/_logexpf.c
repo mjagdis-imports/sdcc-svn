@@ -13,7 +13,7 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License 
+   You should have received a copy of the GNU General Public License
    along with this library; see the file COPYING. If not, write to the
    Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA.
@@ -93,7 +93,7 @@ void _fs_cordic_rshift_r765_unsigned(void) __naked
 	__endasm;
 }
 
-__code unsigned char _fs_natural_log_table[] = {
+const unsigned char _fs_natural_log_table[] = {
 0xFF, 0x42, 0x2E, 0x16,         // 0.693147180560
 0xF6, 0x91, 0xF9, 0x0C,         // 0.405465108108
 0xF2, 0xFD, 0x23, 0x07,         // 0.223143551314

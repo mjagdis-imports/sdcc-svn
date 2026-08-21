@@ -554,7 +554,7 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
     return(false);
 
   // For some iCodes, we can handle anything.
-  if(ic->op == '~' || ic->op == IPUSH || ic->op == SEND || ic->op == LABEL || ic->op == GOTO ||
+  if(ic->op == IPUSH || ic->op == SEND || ic->op == LABEL || ic->op == GOTO ||
     ic->op == '^' || ic->op == '|' || ic->op == BITWISEAND || ic->op == UNARYMINUS && IS_FLOAT (operandType (ic->left)) || ic->op == '!' ||
     ic->op == EQ_OP || ic->op == NE_OP ||
     ic->op == GETABIT || ic->op == GETBYTE || ic->op == GETWORD ||
@@ -562,6 +562,9 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
     ic->op == ROT && (getSize(operandType(IC_RESULT (ic))) == 1 || operand_in_reg(result, ia, i, G) && IS_OP_LITERAL (IC_RIGHT (ic)) && operandLitValueUll (IC_RIGHT (ic)) * 2 == bitsForType (operandType (IC_LEFT (ic)))) ||
     ic->op == LEFT_OP || ic->op == RIGHT_OP ||
     ic->op == RECEIVE || ic->op == '=' && !POINTER_SET (ic) || ic->op == CAST || ic->op == GET_VALUE_AT_ADDRESS)
+    return(true);
+
+  if ((ic->op == '-' || ic->op == UNARYMINUS) && !IS_SM83)
     return(true);
 
   // Can use non-destructive cp on < (> might swap operands).
@@ -573,11 +576,11 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
   const cfg_dying_t &dying = G[i].dying;
   const bool dying_A = result_in_A || dying.find(ia.registers[REG_A][1]) != dying.end() || dying.find(ia.registers[REG_A][0]) != dying.end();
 
-  if((ic->op == '+' || ic->op == '-' && !operand_in_reg(right, REG_A, ia, i, G) || ic->op == UNARYMINUS && !IS_SM83) &&
+  if((ic->op == '+' || ic->op == '-' && !operand_in_reg(right, REG_A, ia, i, G)) &&
     getSize(operandType(IC_RESULT(ic))) == 1 && dying_A)
     return(true);
 
-  if((ic->op == '+' || ic->op == '-' && !operand_in_reg(right, REG_A, ia, i, G) || ic->op == UNARYMINUS && !IS_SM83) && // First byte of input and last byte of output may be in A.
+  if((ic->op == '+' || ic->op == '-' && !operand_in_reg(right, REG_A, ia, i, G)) && // First byte of input and last byte of output may be in A.
     IS_ITEMP(result) && dying_A &&
     (IS_ITEMP(left) || IS_OP_LITERAL(left) || operand_on_stack(left, a, i, G)) &&
     (!right || IS_ITEMP(right) || IS_OP_LITERAL(right) || operand_on_stack(right, a, i, G)))
@@ -715,7 +718,7 @@ static bool HLinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
 #endif
 
   // For some iCodes, code generation can handle anything.
-  if(ic->op == '~' || ic->op == CALL || ic->op == RETURN || ic->op == LABEL || ic->op == GOTO ||
+  if(ic->op == CALL || ic->op == RETURN || ic->op == LABEL || ic->op == GOTO ||
     ic->op == '^' || ic->op == '|' || ic->op == BITWISEAND ||
     ic->op == ADDRESS_OF ||
     ic->op == GETBYTE || ic->op == GETWORD ||
@@ -988,7 +991,6 @@ static bool IYinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
     !(IC_LEFT(ic) && IS_TRUE_SYMOP(IC_LEFT(ic))) &&
     (ic->op == '|' ||
     ic->op == '^' ||
-    ic->op == '~' ||
     ic->op == BITWISEAND))
     return(true);
 
@@ -1201,7 +1203,6 @@ static float instruction_cost(const assignment &a, unsigned short int i, const G
       
     // Exact cost:
     case '!':
-    case '~':
     case UNARYMINUS:
     case '+':
     case '-':
@@ -1586,6 +1587,11 @@ void move_parms(void)
 
       val->sym->stack -= 2;
     }
+
+  // Handle the placeholder for variable arguments
+  symbol *sym;
+  if(currFunc && IFFUNC_HASVARARGS (currFunc->type) && (sym = (symbol *)(findSym (SymbolTab, NULL, "__va_start"))))
+    sym->stack -= 2;
 }
   
 iCode *z80_ralloc2_cc(ebbIndex *ebbi)
@@ -1604,7 +1610,7 @@ iCode *z80_ralloc2_cc(ebbIndex *ebbi)
   iCode *ic = create_cfg(control_flow_graph, conflict_graph, ebbi);
 
   if (optimize.genconstprop)
-    recomputeValinfos (ic, ebbi, "_2");
+    recomputeValinfos (ic, ebbi, "_3");
 
   should_omit_frame_ptr = omit_frame_ptr(control_flow_graph);
   move_parms();
