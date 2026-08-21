@@ -63,7 +63,7 @@ int8_t ya_loadb(const char **args)
     if (args[1] == NULL || args[2] == NULL) {
     } else {
         if (args[3] == NULL) {
-            dest = (uint8_t *)0x0100;
+            dest = (uint8_t __xdata *)0x0100;
         } else {
             dest = (uint8_t *)strtoul(args[3], NULL, 16);
         }

@@ -656,7 +656,6 @@ void testSerpent (void)
 #if !defined(__SDCC_f8) // Bug #3907.
 #ifndef LACK_OF_MEMORY
   SerpentContext context;
-  unsigned char scratch[16];
   unsigned int i;
 
   for (i = 0; test_data[i].key_length; i++)
@@ -665,12 +664,14 @@ void testSerpent (void)
 #ifndef __SDCC_ds390 // Bug #3905
 #if !defined(__SDCC_stm8) // Bug #3906
 #if defined(OP_encrypt)
+      unsigned char scratch[16];
       serpentEncryptBlock(&context, test_data[i].text_plain, scratch);
       ASSERT (!memcmp (scratch, test_data[i].text_cipher, sizeof (scratch)));
 #endif
 #endif
 
 #if defined(OP_decrypt)
+      unsigned char scratch[16];
       serpentDecryptBlock(&context, test_data[i].text_cipher, scratch);
       ASSERT (!memcmp (scratch, test_data[i].text_plain, sizeof (scratch)));
 #endif

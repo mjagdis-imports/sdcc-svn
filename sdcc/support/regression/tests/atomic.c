@@ -7,6 +7,13 @@
 #include <stdatomic.h>
 #include <stdbool.h>
 
+#ifndef __SDCC_NONBANKED
+#define __SDCC_NONBANKED
+#endif
+
+typedef void (*atomic_flag_clear_pfn_t) (volatile atomic_flag *object) __SDCC_NONBANKED;
+typedef _Bool (*atomic_flag_test_and_set_pfn_t) (volatile atomic_flag *object) __SDCC_NONBANKED;
+
 atomic_flag f1 = ATOMIC_FLAG_INIT;
 atomic_flag f2;
 struct { int a; atomic_flag f; } s = {0, ATOMIC_FLAG_INIT};
@@ -27,6 +34,20 @@ void testAtomic(void)
 	ASSERT(atomic_flag_test_and_set(&s.f) == true);
 	atomic_flag_clear(&s.f);
 	ASSERT(atomic_flag_test_and_set(&s.f) == false);
+
+#if !defined(atomic_flag_clear)
+	const atomic_flag_clear_pfn_t atomic_flag_clear_pfn = &atomic_flag_clear;
+	atomic_flag_clear_pfn(&s.f);
+#elif !defined(atomic_flag_test_and_set)
+	atomic_flag_clear(&s.f);
+#endif
+
+#if !defined(atomic_flag_test_and_set)
+	const atomic_flag_test_and_set_pfn_t atomic_flag_test_and_set_pfn = &atomic_flag_test_and_set;
+	ASSERT(atomic_flag_test_and_set_pfn(&s.f) == false);
+	ASSERT(atomic_flag_test_and_set_pfn(&s.f) == true);
+#endif
+
 #endif
 }
 

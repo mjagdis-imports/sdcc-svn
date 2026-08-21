@@ -76,6 +76,7 @@ unsigned long long int wcstoull(const wchar_t *nptr, wchar_t **endptr, int base)
     {
     case L'-':
       neg = true;
+//      [[ fallthrough ]];
     case L'+':
       ptr++;
     }
@@ -131,7 +132,9 @@ unsigned long long int wcstoull(const wchar_t *nptr, wchar_t **endptr, int base)
       if (ret < oldret)
         range_error = true;
       ret += (unsigned char)digit;
-#warning INEXACT RANGE ERROR CHECK WILL NOT REPORT ALL OVERFLOWS (fix by implementing ckd_mul and ckd_add for unsigned long long)
+      if (ret < oldret)
+        range_error = true;
+//#warning INEXACT RANGE ERROR CHECK WILL NOT REPORT ALL OVERFLOWS (fix by implementing ckd_mul and ckd_add for unsigned long long)
 #endif
     }
 

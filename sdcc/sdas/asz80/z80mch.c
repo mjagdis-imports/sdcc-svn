@@ -64,7 +64,7 @@ static int ez80_adl = 0;
  * Z80 Opcode Cycle Pages
  */
 
-static char  z80pg1[256] = {
+static const char  z80pg1[256] = {
 /*--*--* 0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F */
 /*--*--* -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - */
 /*00*/   4,10, 7, 6, 4, 4, 7, 4, 4,11, 7, 6, 4, 4, 7, 4,
@@ -85,7 +85,7 @@ static char  z80pg1[256] = {
 /*F0*/  11,10,10, 4,17,11, 7,11,11, 6,10, 4,17,P5, 7,11
 };
 
-static char  z80pg2[256] = {  /* P2 == CB */
+static const char  z80pg2[256] = {  /* P2 == CB */
 /*--*--* 0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F */
 /*--*--* -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - */
 /*00*/   8, 8, 8, 8, 8, 8,15, 8, 8, 8, 8, 8, 8, 8,15, 8,
@@ -169,7 +169,7 @@ static const char  z80pg6[256] = {  /* P6 == FD CB &&  P6 == DD CB */
 /*F0*/  UN,UN,UN,UN,UN,UN,23,UN,UN,UN,UN,UN,UN,UN,23,UN
 };
 
-static char *z80Page[7] = {
+static const char *z80Page[7] = {
     z80pg1, z80pg2, z80pg3, z80pg4,
     z80pg3, z80pg6, z80pg6
 };
@@ -178,7 +178,7 @@ static char *z80Page[7] = {
  * HD64180 / Z180  Opcode Cycle Pages
  */
 
-static char  hd64pg1[256] = {
+static const char  hd64pg1[256] = {
 /*--*--* 0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F */
 /*--*--* -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - */
 /*00*/   3, 9, 7, 4, 4, 4, 6, 3, 4, 7, 6, 4, 4, 4, 6, 3,
@@ -199,7 +199,7 @@ static char  hd64pg1[256] = {
 /*F0*/  10, 9, 9, 3,16,11, 6,11,10, 4, 9, 3,16,P5, 6,11
 };
 
-static char  hd64pg2[256] = {  /* P2 == CB */
+static const char  hd64pg2[256] = {  /* P2 == CB */
 /*--*--* 0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F */
 /*--*--* -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - */
 /*00*/   7, 7, 7, 7, 7, 7,13, 7, 7, 7, 7, 7, 7, 7,13, 7,
@@ -213,14 +213,14 @@ static char  hd64pg2[256] = {  /* P2 == CB */
 /*80*/   7, 7, 7, 7, 7, 7,13, 7, 7, 7, 7, 7, 7, 7,13, 7,
 /*90*/   7, 7, 7, 7, 7, 7,13, 7, 7, 7, 7, 7, 7, 7,13, 7,
 /*A0*/   7, 7, 7, 7, 7, 7,13, 7, 7, 7, 7, 7, 7, 7,13, 7,
-/*B0*/   7, 7, 7, 7, 7, 7,13, 7, 7, 7, 7, 7, 7, 7,13, 7, 
+/*B0*/   7, 7, 7, 7, 7, 7,13, 7, 7, 7, 7, 7, 7, 7,13, 7,
 /*C0*/   7, 7, 7, 7, 7, 7,13, 7, 7, 7, 7, 7, 7, 7,13, 7,
 /*D0*/   7, 7, 7, 7, 7, 7,13, 7, 7, 7, 7, 7, 7, 7,13, 7,
 /*E0*/   7, 7, 7, 7, 7, 7,13, 7, 7, 7, 7, 7, 7, 7,13, 7,
 /*F0*/   7, 7, 7, 7, 7, 7,13, 7, 7, 7, 7, 7, 7, 7,13, 7
 };
 
-static char  hd64pg3[256] = {  /* P3 == DD */
+static const char  hd64pg3[256] = {  /* P3 == DD */
 /*--*--* 0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F */
 /*--*--* -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - */
 /*00*/  UN,UN,UN,UN,UN,UN,UN,UN,UN,10,UN,UN,UN,UN,UN,UN,
@@ -241,7 +241,7 @@ static char  hd64pg3[256] = {  /* P3 == DD */
 /*F0*/  UN,UN,UN,UN,UN,UN,UN,UN,UN, 7,UN,UN,UN,UN,UN,UN
 };
 
-static char  hd64pg4[256] = {  /* P4 == ED */
+static const char  hd64pg4[256] = {  /* P4 == ED */
 /*--*--* 0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F */
 /*--*--* -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - */
 /*00*/  12,13,UN,UN, 7,UN,UN,UN,12,13,UN,UN, 7,UN,UN,UN,
@@ -262,7 +262,7 @@ static char  hd64pg4[256] = {  /* P4 == ED */
 /*F0*/  UN,UN,UN,UN,UN,UN,UN,UN,UN,UN,UN,UN,UN,UN,UN,UN
 };
 
-static char  hd64pg5[256] = {  /* P5 == FD */
+static const char  hd64pg5[256] = {  /* P5 == FD */
 /*--*--* 0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F */
 /*--*--* -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - */
 /*00*/  UN,UN,UN,UN,UN,UN,UN,UN,UN,10,UN,UN,UN,UN,UN,UN,
@@ -283,7 +283,7 @@ static char  hd64pg5[256] = {  /* P5 == FD */
 /*F0*/  UN,UN,UN,UN,UN,UN,UN,UN,UN, 7,UN,UN,UN,UN,UN,UN
 };
 
-static char  hd64pg6[256] = {  /* P6 == DD CB */
+static const char  hd64pg6[256] = {  /* P6 == DD CB */
 /*--*--* 0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F */
 /*--*--* -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - */
 /*00*/  UN,UN,UN,UN,UN,UN,19,UN,UN,UN,UN,UN,UN,UN,19,UN,
@@ -304,7 +304,7 @@ static char  hd64pg6[256] = {  /* P6 == DD CB */
 /*F0*/  UN,UN,UN,UN,UN,UN,19,UN,UN,UN,UN,UN,UN,UN,19,UN
 };
 
-static char  hd64pg7[256] = {  /* P7 == FD CB */
+static const char  hd64pg7[256] = {  /* P7 == FD CB */
 /*--*--* 0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F */
 /*--*--* -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - */
 /*00*/  UN,UN,UN,UN,UN,UN,19,UN,UN,UN,UN,UN,UN,UN,19,UN,
@@ -325,7 +325,7 @@ static char  hd64pg7[256] = {  /* P7 == FD CB */
 /*F0*/  UN,UN,UN,UN,UN,UN,19,UN,UN,UN,UN,UN,UN,UN,19,UN
 };
 
-static char *hd64Page[7] = {
+static const char *hd64Page[7] = {
     hd64pg1, hd64pg2, hd64pg3, hd64pg4,
     hd64pg5, hd64pg6, hd64pg7
 };
@@ -1898,7 +1898,7 @@ machine(struct mne *mp)
 			outab(0xED);
                         outab(op | (e2.e_addr<<3));
 			break;
-                }       
+                }
                 aerr();
 		break;
 
@@ -2094,7 +2094,7 @@ struct expr *esp;
 {
 
 // Pokus napsat zapis parametru 16/24-bit 'jinak'...
-        if (ez80_adl && !(sfx & M_IS) || !ez80_adl && (sfx & M_IL)) { 
+        if (ez80_adl && !(sfx & M_IS) || !ez80_adl && (sfx & M_IL)) {
                 outr3b(esp, R_ADL);
         } else {
                 outrw(esp, 0);

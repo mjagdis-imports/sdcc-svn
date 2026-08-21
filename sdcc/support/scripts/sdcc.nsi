@@ -1170,6 +1170,8 @@ ${Section} Uninstall SECUNINSTALL
 
   Delete "$INSTDIR\lib\src\r2ka\*.s"
 
+  Delete "$INSTDIR\lib\src\r3ka\*.s"
+
   Delete "$INSTDIR\lib\src\r4k\*.s"
 
   Delete "$INSTDIR\lib\src\r5k\*.s"
@@ -1313,6 +1315,9 @@ ${Section} Uninstall SECUNINSTALL
 
   Delete "$INSTDIR\lib\mos6502\*.rel"
   Delete "$INSTDIR\lib\mos6502\*.lib"
+
+  Delete "$INSTDIR\lib\mos6502-stack-auto\*.rel"
+  Delete "$INSTDIR\lib\mos6502-stack-auto\*.lib"
 
   Delete "$INSTDIR\lib\z80n\*.rel"
   Delete "$INSTDIR\lib\z80n\*.lib"

@@ -122,9 +122,11 @@ void __printf(const char *szFormat, ...);
 # define __pdata __data
 #endif
 
+void _initEmu(void);
+_Noreturn void _exitEmu(void);
 void __fail (__code const char *szMsg, __code const char *szCond, __code const char *szFile, int line);
+void _putchar(char c);
 void __prints (const char *s);
-void __printd (int n);
 #ifndef TARGET_VERY_LOW_MEMORY
 void __printu (unsigned int n);
 #endif

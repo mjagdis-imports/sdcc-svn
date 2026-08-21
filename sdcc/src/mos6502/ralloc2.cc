@@ -157,7 +157,7 @@ static bool XAinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
      ic->op == GETABIT ||
      ic->op == GETBYTE ||
      ic->op == GETWORD ||
-     ic-> op == ROT ||
+     ic->op == ROT ||
      ic->op == LEFT_OP ||
      ic->op == RIGHT_OP ||
      //ic->op == '=' ||  /* both regular assignment and POINTER_SET safe */
@@ -441,7 +441,7 @@ static float instruction_cost(const assignment &a, unsigned short int i, const G
 #endif
 
   if(ic->generated)
-      return(0.0f);
+    return(0.0f);
 
   if(!XAinst_ok(a, i, G, I))
     return(std::numeric_limits<float>::infinity());

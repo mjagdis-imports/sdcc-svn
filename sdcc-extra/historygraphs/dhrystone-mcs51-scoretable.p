@@ -1,11 +1,12 @@
+# Configure for SDCC target
 set output "dhrystone-mcs51-score.svg"
-set terminal svg size 640,480
-set style data lines
-set key bottom right
-set xlabel "revision"
-set ylabel "Dhrystones per second"
-set arrow from 9618, 6070 to 9618, 6060
-set label "3.6.0" at 9618, 6070
+datafile = "dhrystone-mcs51-scoretable"
+
+# Configure arrow length (to make the plot look nice)
+arrowlength = 10
+
+set arrow from 9618, 6060+arrowlength to 9618, 6060
+set label "3.6.0" at 9618, 6060+arrowlength
 set arrow from 10233, 6073 to 10233, 6063
 set label "3.7.0" at 10233, 6073
 set arrow from 10582, 5983 to 10582, 5973
@@ -22,7 +23,8 @@ set arrow from 14208, 6026 to 14208, 6016
 set label "4.3.0" at 14208, 6026
 set arrow from 14648, 6292 to 14648, 6282
 set label "4.4.0" at 14648, 6292
-set arrow from 15246, 6101 to 15246, 6091
-set label "4.5.0" at 15246, 6101
-plot "dhrystone-mcs51-scoretable" using 1:4 title "default", "dhrystone-mcs51-scoretable" using 1:2 title "size", "dhrystone-mcs51-scoretable" using 1:3 title "speed"
+set arrow from 15246, 6091+arrowlength to 15246, 6091
+set label "4.5.0" at 15246, 6091+arrowlength
+set arrow from 16640, 6067+arrowlength to 16640, 6067
+set label "4.6.0" at 16640, 6067+arrowlength
 

@@ -506,9 +506,9 @@ void moveNestedInit(initList *deepParent, initList *src)
   *eol = dst;
 }
 
-/*-----------------------------------------------------------------*/
-/* findStructField - find a specific field in a struct definition  */
-/*-----------------------------------------------------------------*/
+/*------------------------------------------------------------------*/
+/* findStructField - find a specific field in a struct definition   */
+/*------------------------------------------------------------------*/
 static int
 findStructField (symbol *fields, symbol *target)
 {
@@ -531,10 +531,59 @@ findStructField (symbol *fields, symbol *target)
 }
 
 /*------------------------------------------------------------------*/
-/* reorderIlist - expands an initializer list to match designated   */
-/*                initializers.                                     */
+/* findStructFieldAt - the member an entry of the reordered list    */
+/*                     initializes, NULL past the last one          */
 /*------------------------------------------------------------------*/
-initList *reorderIlist (sym_link * type, initList * ilist)
+static symbol *
+findStructFieldAt (sym_link * type, int slot)
+{
+  symbol *fields;
+  int i = 0;
+
+  if (!IS_STRUCT (type))
+    return NULL;
+
+  for (fields = SPEC_STRUCT (type)->fields; fields; fields = fields->next)
+    {
+      /* skip past unnamed bitfields */
+      if (IS_BITFIELD (fields->type) && SPEC_BUNNAMED (fields->etype))
+        continue;
+      if (i++ == slot)
+        return fields;
+    }
+  return NULL;
+}
+
+/*------------------------------------------------------------------*/
+/* nextInitSlot - the slot after SLOT a positional initializer goes */
+/*   to. The members promoted out of a non-first alternative of an  */
+/*   anonymous union get none of their own: the union is            */
+/*   initialized through its first alternative (C11 6.7.9p17), so   */
+/*   they are skipped here. A designator can still name one, which  */
+/*   is how printIvalStruct() tells that an alternative other than  */
+/*   the first was picked.                                          */
+/*------------------------------------------------------------------*/
+static int
+nextInitSlot (sym_link * type, int slot)
+{
+  symbol *fields;
+
+  do
+    slot++;
+  while ((fields = findStructFieldAt (type, slot)) && fields->anonunionalias);
+
+  return slot;
+}
+
+/*------------------------------------------------------------------*/
+/* reorderIlistFull - expands an initializer list to match          */
+/*                designated initializers.                          */
+/*   SKIPALIASES is for a caller that initializes an anonymous      */
+/*   union through one alternative and walks past the members       */
+/*   promoted out of the others, the way printIvalStruct() does, so */
+/*   that they consume no initializer of their own.                 */
+/*------------------------------------------------------------------*/
+static initList *reorderIlistFull (sym_link * type, initList * ilist, bool skipaliases)
 {
   initList *iloop, *nlist, **nlistArray;
   symbol *sflds;
@@ -590,7 +639,8 @@ initList *reorderIlist (sym_link * type, initList * ilist)
 
   /* pull together all the initializers into an ordered list */
   iloop = ilist ? ilist->init.deep : NULL;
-  for (idx = 0 ; iloop ; iloop = iloop->next, idx++)
+  for (idx = 0 ; iloop ; iloop = iloop->next,
+                         idx = skipaliases ? nextInitSlot (type, idx) : idx + 1)
     {
       if (iloop->designation)
         {
@@ -681,6 +731,27 @@ initList *reorderIlist (sym_link * type, initList * ilist)
   nlist->designation = ilist->designation;
   nlist->next = ilist->next;
   return nlist;
+}
+
+/*------------------------------------------------------------------*/
+/* reorderIlist - expands an initializer list to match designated   */
+/*                initializers.                                     */
+/*------------------------------------------------------------------*/
+initList *reorderIlist (sym_link * type, initList * ilist)
+{
+  return reorderIlistFull (type, ilist, FALSE);
+}
+
+/*------------------------------------------------------------------*/
+/* reorderIlistIval - the same, for printIval(), which initializes  */
+/*   an anonymous union through one alternative and walks past the  */
+/*   members promoted out of the others, so that they consume no    */
+/*   initializer. The pic back ends emit one initializer per        */
+/*   flattened member instead and keep using reorderIlist().        */
+/*------------------------------------------------------------------*/
+initList *reorderIlistIval (sym_link * type, initList * ilist)
+{
+  return reorderIlistFull (type, ilist, TRUE);
 }
 
 /*------------------------------------------------------------------*/

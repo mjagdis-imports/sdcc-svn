@@ -1,6 +1,6 @@
 /*
    bug3389647.c
-   memory: __code, _STATMEM
+   memory: __code const, _STATMEM
 */
 
 #include <testfwk.h>

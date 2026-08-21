@@ -65,6 +65,8 @@ extern void displayAll  (context *);
 extern int cmdListModules (char *s, context *cctxt);
 extern int cmdListFunctions (char *s, context *cctxt);
 extern int cmdListSymbols (char *s, context *cctxt);
+extern char *cmdGetPrompt (void);
+extern int cmdGetConfirm (void);
 
 extern void setMainContext( void);
 extern function *needExtraMainFunction(void);

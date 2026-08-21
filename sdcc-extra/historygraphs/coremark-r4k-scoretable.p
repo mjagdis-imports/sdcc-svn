@@ -1,8 +1,10 @@
+# Configure for SDCC target
 set output "coremark-r4k-score.svg"
-set terminal svg size 640,480
-set style data lines
-set key bottom right
-set xlabel "revision"
-set ylabel "Coremark iterations / s"
-plot "coremark-r4k-scoretable" using 1:4 title "default", "coremark-r4k-scoretable" using 1:2 title "size", "coremark-r4k-scoretable" using 1:3 title "speed"
+datafile = "coremark-r4k-scoretable"
+
+# Configure arrow length (to make the plot look nice)
+arrowlength = 0.1
+
+set arrow from 16640, 3.997+arrowlength to 16640, 3.997
+set label "4.6.0" at 16640, 3.997+arrowlength
 

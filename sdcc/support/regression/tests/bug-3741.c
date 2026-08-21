@@ -1,4 +1,5 @@
 /** bug-3741.c: A segfault at compile time that only happens on some systems?
+    It is caused by boost 1.71-1.78 (maybe more) fixed in boost 1.79
 */
 
 #include <testfwk.h>

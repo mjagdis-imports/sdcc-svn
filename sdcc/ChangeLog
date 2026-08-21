@@ -1,3 +1,947 @@
+2026-08-18 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* debugger/mcs51/cmd.c: applied patch #452, Thanks Mark Symonds,
+	  also fixed asm mode and corrected lineno
+	* debugger/mcs51/sdcdb.c: documented "show version", "set confirm" & "set prompt"
+	  and put them in completionCmdShow()
+	  (readCdb) fix reading module name
+	  (usage, parseCmdLine): added many models, renamed ucsim_xx executables
+
+2026-08-17 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* debugger/mcs51/simi.c: applied patch #445, Thanks Mark Symonds
+
+	* debugger/mcs51/cmd.c,
+	* debugger/mcs51/cmd.h,
+	* debugger/mcs51/sdcdb.c: applied slightly modified patch #269
+	  Thanks Peter Dons Tychsen
+
+2026-08-16 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/peep.c:
+	  Fix handling of jsr and rti.
+	* src/mos6502/peeph.def:
+	  Check for register overwrite first.
+	  Add BITNOT rule.
+	  Rename several peephole rules.
+
+2026-08-15 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/peep.c:
+	  Fix bug #4036
+	* src/mos6502/gen.c:
+	  Fix regression failure in gcc-torture-execute-20030714-1 with --nogenconstprop
+
+2026-08-15 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* src/mcs51/peeph.def: removed unused rule 131
+
+2026-08-15 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c,
+	  support/regression/test/bug-4053.c:
+	  Fix bug #4053.
+
+2026-08-14 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c:
+	  Use ZP pointer instead of DPTR when possible in genPackbits and genUnpackBits.
+	* src/mos6502/gen.c:
+	  Use absolute addressing instead of DPTR when possible in genPointerPush.
+
+2026-08-14 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* Merge fuzzing branch.
+
+2026-08-13 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  support/regression/tests/bug-4053.c:
+	  Fix bug #4053.
+
+2026-08-13 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* src/mos6502/gen.c (genPackBits): bugfix uninitialized use of mask,
+	  lots of coding standard changes like space before '(' and no use of TAB
+	* src/mos6502/genlshift.c (genlsh16): silence warning for unused xloc,
+	  lots of coding standard changes like space before '(' and no use of TAB
+
+2026-08-13 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/Makefile.in:
+	  Fix fuzzing for out-of-tree regression testing.
+
+2026-08-10 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* Merge fuzzing branch.
+
+2026-08-09 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* src/mcs51/gen.c (cheapMove): fixed "mov a,a" & "movx ARn,@Ri"
+	  (findOpRegInOtherOp): added helper for finding register overlap
+	  (genCast): fixed bug 3554 cast with overlapping registers
+	* support/regression/tests/bug-3554.c.in: new, added
+	* support/regression/tests/reentrant.c.in: prevent div2n stack overflow
+
+2026-08-09 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* src/SDCCutil.c:
+	  Rename "Mac OS X" to "macOS" (except for PPC) via patch #503 by John Brandwood.
+
+2026-08-09 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* src/SDCC.y,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  support/regression/tests/bug-4044.c:
+	  Fix compound literal const-ness bug #4044 via patch #511 by Howard M. Harte.
+
+2026-08-09 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* src/SDCCast.c,
+	  src/SDCCglue.c,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  src/SDCCval.c,
+	  src/SDCCval.h,
+	  support/regression/MakeList,
+	  support/regression/tests/bug-2840.c,
+	  support/regression/tests/bug-3393-designated.c,
+	  support/regression/tests/bug-3393.c,
+	  support/regression/tests/compound-literal.c:
+	  Fix bug #3393 and bug #2840 in anonymous union initialization via patch #508 by Howard M. Harte.
+
+2026-08-09 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* device/lib/ds390/setjmp.c: synchronize with device/lib/_setjmp.c
+	* device/lib/mcs51/Makefile.in,
+	* device/lib/mcs51/__sdcc_atomic_maybe_rollback.asm: removed double underscore
+	    to move out of C name space
+	* device/lib/ds390/atomic_flag_clear.c,
+	* device/lib/mcs51/atomic_flag_clear.asm: bugfix: accepts a generic pointer
+	* support/regression/tests/atomic.c: test non-inlined versions through
+	    function pointers, NB: host may have them as macros
+	* device/lib/pic16/configure,
+	* device/non-free/lib/pic14/configure,
+	* device/non-free/lib/pic16/configure: removed 3 second sleep
+	* src/ds390/main.h (ds390newAsmLineNode): removed prototype
+	* src/f8/ralloc.c (noOverLap): fix unused warning
+	* src/mcs51/peeph.def (rule 257.b): changed replacement to ljmp to also
+	    catch sjmp->ljmp, let rule 112.b handle the rest
+	* src/mos6502/main.c (m6502_genAssemblerStart): added initial .area list
+
+2026-08-09 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* device/lib/ds390/Makefile.in: removed atomic_flag_test_and_set
+	* device/lib/ds390/atomic_flag_test_and_set.c: deleted, is generated
+	* device/lib/ds390/__sdcc_atomic_maybe_rollback.c: removed double underscore
+	    to move out of C name space
+	* src/ds390/gen.c (genEndFunction): added call to sdcc_atomic_maybe_rollback,
+	    do not generate epilogue for noreturn function
+	* src/ds390/main.c: generate _atomic_flag_test_and_set
+	* support/regression/tests/bug-3997.c: fixed warning 322
+	* support/regression/tests/gcc-torture-execute-loop-2c.c,
+	* support/regression/tests/gcc-torture-execute-loop-2d.c: suppress warning 322
+
+2026-08-08 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdcc/support/regression/Makefile.in:
+	  Fuzzing infrastructure fix.
+
+2026-08-08 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* device/lib/mcs51/atomic_flag_test_and_set.asm: deleted, is generated
+	* device/lib/mcs51/Makefile.in: removed atomic_flag_test_and_set
+	* device/lib/bpx.c, device/lib/_bpx.c: renamed for consistency
+	* device/lib/Makefile.in: renamed bpx to _bpx
+	* support/regression/tests/bug1678803.c,
+	* support/regression/tests/bug1712928.c,
+	* device/include/asm/mcs51/features.h,
+	* device/include/mcs51/cc2530.h,
+	* device/lib/mcs51/crtbank.asm,
+	* doc/sdccman.lyx,
+	* src/mcs51/gen.c (genCall, genPcall): applied modified patch #501 to add
+	    sdcc_banked_jump, thanks Oleg Endo,
+	    renamed __sdcc_banked* to sdcc_banked* to move them out of C namespace,
+	  (genFunction): renamed i to adjust/xadjust for clarity,
+	  (genEndFunction): do not generate epilogue for noreturn function
+	* src/mcs51/peeph.def: moved rules 401.x to 410.x,
+	    added new rules 401.x from patch #501
+	* src/mcs51/gen.c (emitpop): accept all register forms and indirections
+	* device/lib/_setjmp.c: optimized ds390 code,
+	  (mcs51 longjmp): bugfix, must set SP earlier for banked return to
+	    allocate stack space
+	* support/regression/MakeList: mcs51 enabled test bug3381400,
+	    mcs51 stack-auto disabled qct_0080-arrays, due to insufficient stack space
+	* support/regression/fwk/include/testfwk.h: add _initEmu, _exitEmu & _putchar
+	* support/regression/fwk/lib/testfwk.c: removed _initEmu, _exitEmu & _putchar
+	    prototypes
+	* support/regression/tests/bug3381400.c: disabled warning for this terrible
+	    code
+	* support/regression/tests/loop.c.in: added LOW_MEMORY macro to enable
+	    testing on mcs51 large & huge
+	* support/regression/tests/reentrant.c.in: use less recursion for mcs51 to
+	    prevent stack overflow
+
+2026-08-07 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* src/SDCC.y,
+	* src/SDCCsymt.h,
+	* src/SDCCsymt.c (compStructSize, promoteAnonStructs): removed parameter su,
+	  use sdef->type instead
+
+2026-08-06 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdcc/support/regression/Makefile.in:
+	  Fuzzing infrastructure fix.
+
+2026-08-06 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* Merge fuzzing branch.
+
+2026-08-05 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/Makefile.in:
+	  Fuzzing infrastructure fix.
+
+2026-08-02 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* src/SDCCast.c,
+	  support/regression/tests/compound-literal.c:
+	  Fix compound literals in declaration initializers via patch #509 by Howard M. Harte.
+
+2026-08-01 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* src/mcs51/gen.c (genUnpackDBits): added to handle bitfields in direct
+	    addressable data storgae space
+	  (genDataPointerGet): added Ifx just in case,
+	    call genUnpackDBits() for bitfields
+	  (genNearPointerGet): call genDataPointerGet() also for bitfields unless post-inc,
+	    use IPOINTER for idata
+	* support/regression/fwk/lib/testfwk.c (__printu): bugfix buf size for >16 bit int
+	* support/regression/tests/bug-4039.c: make inline functions static as there
+	  are no external definitions and aarch64-linux-gnu chooses not to inline
+
+2026-07-31 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* support/regression/tests/bug-3393.c: fix stm8, hc08 & s08 endianness
+
+2026-07-30 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.h,
+	  src/mos6502/gen.c:
+	  Really implement smarter tsxUseful().
+	* src/mos6502/genlshift.c,
+	  src/mos6502/genrshift.c:
+	  Minor cleanup up of shifts.
+	* src/mos6502/gen.c:
+	  Improve genPackBits().
+	* src/mos6502/genrshift.c:
+	  Optimize shifts of constants.
+
+2026-07-30 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* Makefile.in: add bin/ to PKGS
+	* src/SDCCglue.c: removed redundant checks to fix warnings
+	* src/mcs51/gen.c (genPackDBits): added to handle bitfields in direct
+	    addressable data storage space
+	  (genDataPointerSet): call genPackDBits() for bitfields
+	  (genNearPointerSet): call genDataPointerSet() also for bitfields,
+	    use IPOINTER for idata
+	* support/regression/tests/bug-3393.c: fixed operator precedence bug
+	* support/sdbinutils/libsframe/doc/sframe-spec.info: removed intermediate output
+
+2026-07-29 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.h,
+	  src/mos6502/gen.c:
+	  Implement smarter tsxUseful().
+	* src/mos6502/peeph.def:
+	  Fix reorder copy rules.
+
+2026-07-29 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* device/lib/ds390/rtc390.c: fix warning 356 by changing __code to const
+	* src/SDCCast.c (createIvalStruct): applied modified patch #506 by Howard M.
+	  Harte, mostly fixes bug #3393
+	* src/SDCCglue.c (printIvalStruct): improved hack to handle non-first larger
+	  union fields
+	* src/SDCCutil.c (is_UCN_valid_in_identifier): remove unused function when
+	  libu8ident is available
+	  (decode_UCNs_to_utf8, process_identifier): fix warnings
+	* support/cpp/gcc/diagnostic.cc (fancy_abort): fix warning
+	* support/cpp/libcpp/lex.cc (forms_identifier_p): suppress warnings
+	* support/regression/MakeList: exclude gte_pr58277-2 for mcs51-*-stack-auto
+	  for lack of memory,
+	  enable qct_0051-inits for all targets,
+	  enable tcc_49_bracket_evaluation for all mcs51,
+	  removed non-existent EXCLUDE_mcs51-stack-auto
+	* support/regression/gte/20001111-1.c: fix warnings in this horendous code
+	* support/regression/gte/20020206-2.c,
+	* support/regression/gte/20030109-1.c,
+	* support/regression/gte/931004-12.c,
+	* support/regression/gte/960802-1.c,
+	* support/regression/gte/comp-goto-1.c,
+	* support/regression/gte/loop-2b.c,
+	* support/regression/gte/pr58277-2.c,
+	* support/regression/qct/0051-inits.c,
+	* support/regression/tests/bug-716242.c,
+	* support/regression/tests/bug-868103.c.in,
+	* support/regression/tests/bug1856409.c.in,
+	* support/regression/tests/bug3389647.c.in,
+	* support/regression/tests/gcc-torture-execute-20041112-1.c,
+	* support/regression/tests/gcc-torture-execute-20050929-1.c,
+	* support/regression/tests/gcc-torture-execute-930526-1.c,
+	* support/regression/tests/gcc-torture-execute-960116-1.c,
+	* support/regression/tests/genericintrinsicnaddr.c,
+	* support/regression/tests/genptrs.c,
+	* support/regression/tests/nullstring.c.in,
+	* support/regression/tests/serpent.c.in,
+	* support/regression/tests/zeropad.c.in: fix warnings
+	* support/regression/gte/980526-2.c,
+	* support/regression/gte/pr103255.c,
+	* support/regression/gte/pr17133.c,
+	* support/regression/tests/compound-literal.c,
+	* support/regression/tests/dhrystone.c,
+	* support/regression/tests/gcc-torture-execute-920428-1.c,
+	* support/regression/tests/gcc-torture-execute-950710-1.c: suppress warnings
+	* support/regression/tcc/49_bracket_evaluation.c: shrink point_array to enable more targets
+	* support/regression/tests/absolute.c.in: changed __code to __code const,
+	  disabled for r2k, r2ka, r4k, r5k & r6k,
+	  added double casting to suppress warning 322, W_PTR2INT_NOREPRESENT,
+	  shouldn't an explicit cast prevent this warning like it does for int's?
+	* support/regression/tests/bug-2854.c: point somewhere in ram
+	* support/regression/tests/bug-3393.c: added bitfields,
+	  still fails with multiple bitfield-containing structs in a union !
+	  test both globals and locals
+	* support/regression/tests/bug1115321.c,
+	* support/regression/tests/float_single.c.in: changed check from SDCC to __SDCC
+	* support/regression/tests/gcc-torture-execute-20050111-1.c,
+	* support/regression/tests/gcc-torture-execute-990804-1.c: perform ASSERT
+
+2026-07-28 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c:
+	  Fix bug #4038
+	* src/mos6502/peeph.def:
+	  Add LXA2 rule.
+
+2026-07-28 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  support/regression/tests/bug-4047.c:
+	  Fix bug #4047.
+
+2026-07-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCsymt.h,
+	  src/SDCCast.c,
+	  src/SDCCmem.c,
+	  support/valdiag/tests/bug-4040.c:
+	  Fix bug #4040.
+	* src/SDCClabel.c,
+	  src/SDCCcse.c:
+	  Fix bug #4045.
+
+2026-07-27 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* device/lib/_logexpf.c: fix warning 356: W_NONCONST_CODE_OBJ
+	* device/lib/_setjmp.c: suppress warning 353: W_ARRAY_PARAM_LENGTH
+	* device/lib/atanf.c: fix warning 356: W_NONCONST_CODE_OBJ
+	* device/lib/strtoul.c,
+	* device/lib/strtoull.c,
+	* device/lib/wcstoul.c,
+	* device/lib/wcstoull.c: added fallthrough comment,
+	    improved overflow check and stop SHOUTING
+	* sdas/asz80/z80mch.c: make all luts const to fix discarded const qualifier
+	* src/SDCCmain.c: fix format not a string literal
+	* src/SDCCopt.c: fix decrement of boolean expression
+	* src/mcs51/gen.c (genPointerPush): fix PPOINTER case
+	* src/mcs51/main.c (mcs51_genAtomicSupport): reordered to save a few bytes
+	* src/mcs51/peep.c (mcs51notUsed): fix bug mentioned in patch #495
+	* src/stm8/gen.c: commented out unused asmop_mone
+
+2026-07-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/bug-3393.c:
+	  Test for bug #3393 (disabled for now, fix is not in repo yet), derived from code sample by Howard M. Harte.
+
+2026-07-26 Gabriele Gorla <gorlik@yahoo.com>
+
+	* device/lib/mos6502/_fsadd.s,
+	  device/lib/mos6502/_fsmul.s:
+	  Improve floating point addition and multiplication.
+
+2026-07-25 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx:
+	  Improve build documentation in particular wrt. libu8ident.
+	* src/z80/peeph.def,
+	  support/regression/tests/bug-4046.c:
+	  Fix bug #4046.
+
+2026-07-24 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/genplus.c,
+	  src/mos6502/genminus.c:
+	  Improve add/sub with literal.
+	* src/mos6502/genplus.c,
+	  src/mos6502/genminus.c,
+	  src/mos6502/genlshift.c,
+	  src/mos6502/gen.c:
+	  Skip bytes in add/sub when 0.
+	* src/mos6502/peeph.def:
+	  Reorganize several peephole rules.
+
+2026-07-23 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* support/regression/tests/snprintf.c.in: replaced __printd() by __printu(),
+	  fixed warning by making var_code const
+	* support/regression/fwk/lib/testfwk.c: removed last use of __printd()
+	* support/regression/fwk/include/testfwk.h: removed __printd() prototype
+
+2026-07-23 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/fwk/lib/testfwk.c:
+	  Remove unused printd (see also bug #3864).
+
+2026-07-22 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* support/sdbinutils/libctf/doc/ctf-spec.info: removed intermediate output
+	* support/sdbinutils/bfd/po/da.gmo,
+	  support/sdbinutils/bfd/po/es.gmo,
+	  support/sdbinutils/bfd/po/fi.gmo,
+	  support/sdbinutils/bfd/po/fr.gmo,
+	  support/sdbinutils/bfd/po/hr.gmo,
+	  support/sdbinutils/bfd/po/id.gmo,
+	  support/sdbinutils/bfd/po/ja.gmo,
+	  support/sdbinutils/bfd/po/ka.gmo,
+	  support/sdbinutils/bfd/po/ms.gmo,
+	  support/sdbinutils/bfd/po/pt.gmo,
+	  support/sdbinutils/bfd/po/ro.gmo,
+	  support/sdbinutils/bfd/po/ru.gmo,
+	  support/sdbinutils/bfd/po/rw.gmo,
+	  support/sdbinutils/bfd/po/sr.gmo,
+	  support/sdbinutils/bfd/po/sv.gmo,
+	  support/sdbinutils/bfd/po/tr.gmo,
+	  support/sdbinutils/bfd/po/uk.gmo,
+	  support/sdbinutils/bfd/po/vi.gmo,
+	  support/sdbinutils/bfd/po/zh_CN.gmo: removed intermediate output products
+	* support/sdbinutils/opcodes/po/da.gmo,
+	  support/sdbinutils/opcodes/po/de.gmo,
+	  support/sdbinutils/opcodes/po/es.gmo,
+	  support/sdbinutils/opcodes/po/fi.gmo,
+	  support/sdbinutils/opcodes/po/fr.gmo,
+	  support/sdbinutils/opcodes/po/ga.gmo,
+	  support/sdbinutils/opcodes/po/id.gmo,
+	  support/sdbinutils/opcodes/po/it.gmo,
+	  support/sdbinutils/opcodes/po/ka.gmo,
+	  support/sdbinutils/opcodes/po/nl.gmo,
+	  support/sdbinutils/opcodes/po/pt_BR.gmo,
+	  support/sdbinutils/opcodes/po/ro.gmo,
+	  support/sdbinutils/opcodes/po/sr.gmo,
+	  support/sdbinutils/opcodes/po/sv.gmo,
+	  support/sdbinutils/opcodes/po/tr.gmo,
+	  support/sdbinutils/opcodes/po/uk.gmo,
+	  support/sdbinutils/opcodes/po/vi.gmo,
+	  support/sdbinutils/opcodes/po/zh_CN.gmo: removed intermediate output products
+
+2026-07-21 Gabriele Gorla <gorlik@yahoo.com>
+
+	* device/lib/mos6502/fsmul.s,
+	  device/lib/mos6502/fslt.s:
+	  Improve fslt.
+
+2026-07-20 Gabriele Gorla <gorlik@yahoo.com>
+
+	* device/lib/mos6502/sinf.s,
+	  device/lib/mos6502/cosf.s,
+	  device/lib/mos6502/_floatlib.s:
+	  Implement sinf and cosf in assembly.
+
+2026-07-20 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  support/regression/tests/bug-4039.c:
+	  Fix bug #4039.
+
+2026-07-18 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* device/lib/stm8/setjmp.s,
+	  device/lib/stm8-large/setjmp.s:
+	  Fix bug #4023.
+
+2026-07-17 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCopt.c:
+	  Fix leftover debug iCode dump.
+
+2026-07-17 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* Merge nosidechannels branch.
+
+2026-07-15 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/genlshift.c,
+	  src/mos6502/genrshift.c:
+	  Improve shifts with constant.
+
+2026-07-12 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/genlshift.c:
+	  Special case left shift by 8.
+
+2026-07-12 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.h,
+	  src/mos6502/gen.c,
+	  src/mos6502/peeph.def,
+	  src/mos6502/genlshift.c:
+	  Refactor genlsh16().
+	* src/mos6502/genrshift.c:
+	  Avoid double saving X.
+
+2026-07-10 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCopt.c,
+	  support/regression/tests/bug-3998.c,
+	  support/valdiag/tests/_Optional.c:
+	  Fix bug #3998.
+
+2026-07-04 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/genbuiltin.c,
+	  device/include/math.h,
+	  device/lib/fabsf.c,
+	  src/mos6502/gen.c,
+	  src/mos6502/gen.h,
+	  src/mos6502/main.c,
+	  src/mos6502/ralloc2.cc:
+	  Implement __builtin_fabsf
+	* src/mos6502/stackops.c:
+	  Fix bug #4030.
+	* src/mos6502/gen.c:
+	  Don't unecessarily dirty double registers in m6502_transferRegReg().
+	* src/mos6502/peep.c,
+	  src/mos6502/peeph.def:
+	  Implement notUsed() for registers and update peephole rules to match.
+	* src/mos6502/peeph.def:
+	  Add AND followed by AND rule.
+
+2026-07-05 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/gen.c:
+	  Fix bug #4035.
+
+2026-07-04 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/main.c:
+	  Always do CSE.
+	* src/mos6502/gen.c,
+	  src/mos6502/peeph.def:
+	  Improve m6502_genCopy().
+	* src/mos6502/ralloc.c:
+	  Make all bitwise operation optimizable.
+
+2026-07-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/stm8/gen.c:
+	  Fix bug #4032.
+
+2026-07-04 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c:
+	  Improve handling of AOP_LIT in m6502_accopWithAop. Use register tracking in genCmpEQorNE.
+	* src/mos6502/gen.c:
+	  Improve genPointerSet().
+	* src/mos6502/peep.c:
+	  Cosmetic changes.
+
+2026-07-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Fix an invalid warning in z80-related codegen.
+
+2026-07-04 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c,
+	  src/mos6502/peeph.def:
+	  Improve m6502_copy when srcsize==1.
+
+2026-07-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/mcs51/peeph.def:
+	  Remove peephole rule 130, which should not be necessaryy if codgen works correctly.
+	* support/regression/tests/far_arithmetic.c.in:
+	  Disable part of a test for pdk15, where it fails due to lack of code memory.
+	* support/regression/tests/string.c:
+	  Disable part of a test for mcs51 small model, where it fails due to lack of data memory.
+
+2026-07-03 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c:
+	  Only preserve used registers before a call.
+
+2026-07-02 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/peep.c:
+	  Fix bug #4028.
+
+2026-06-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Fix bug #4026.
+
+2026-06-25 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCdflow.h,
+	  src/SDCCgenconstprop.cc,
+	  src/SDCCopt.c,
+	  src/*/gen.c:
+	  Fix bug #4025.
+
+2026-06-24 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/stm8/gen.c:
+	  Fix bug #4020.
+	* src/f8/gen.c:
+	  Fix bug #4022.
+	* src/z80/gen.c:
+	  Fix bug #4021.
+
+2026-06-23 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* Merge fuzzing branch.
+
+2026-06-23 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/stm8/gen.c:
+	  Fix bug #4019.
+
+2026-06-23 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCBBlock.c,
+	  src/SDCCglobl.h,
+	  src/SDCClabel.c,
+	  src/SDCCmain.c:
+	  Remove effect of --nolabelopt on unreachable labels. Too much of SDCC can't really handle unreachable basic blocks.
+	*  support/regression/ports/*/spec.mk:
+	  Fix default enable of --nosidechannels in some regression test targets.
+
+2026-06-23 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/randport.c:
+	  Include --nosidechannels option in fuzzing.
+
+2026-06-23 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/asconaead128.c.in,
+	  support/regression/tests/asconhash256.c.in:
+	  Disable test parts that fail due to known bug #4018.
+	* src/z80/gen.c:
+	  Fix use of neg instruction in sm83 port.
+
+2026-06-23 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx,
+	  src/mcs51/gen.c:
+	  Control f8 codegen aspects by --nosidechannels: comparisons.
+
+2026-06-22 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* Merge nosidechannels branch.
+
+2026-06-22 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* Merge next branch.
+
+2026-06-22 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdcc/.version:
+	  Bump version for --nosidechannels (and corresponding #pragma) functionality.
+
+2026-06-22 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdcc/.version:
+	  Bump version for post -4.6.0 development.
+	* sdcc/support/scripts/repack_release.sh:
+	  Disable 32-bit Windows deliverables processing.
+
+2026-06-22 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sim/ucsim/src/sims/f8.src/f8cl.h:
+	  Fix f8 flag bit order.
+
+2026-06-22 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/scripts/sdcc.nsi:
+	  Fix for Windows uninstaller leaving a few files.
+
+2026-06-21 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCast.c,
+	  src/SDCCicode.c,
+	  src/SDCCopt.c,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h:
+	  Fix RFE #1029.
+	* src/z80/peep.c:
+	  Fix bug #4015.
+	* src/f8/peep.c:
+	  Fix bug #4016.
+	* support/regression/tests/bug-2959.c:
+	  Don't use nop in test for targets that don't have it.
+	* src/f8/gen.c:
+	  Fix use of non-f8l f8 instruction sllw in f8l port.
+
+2026-06-20 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/hc08/gen.c,
+	  src/z80/gen.c:
+	  Fixes for --nosidechannel codegen.
+	  src/z80/peeph-r2k.def:
+	  Fix a peephole optimizer rule bug triggered by --nosidechannel Rabbit codegen.
+
+2026-06-19 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/gen.c:
+	  Control f8 codegen aspects by --nosidechannels: equality comparisons.
+	* doc/sdccman.lyx:
+	  Document which operations on mcs51 generic pointers might leak information.
+
+2026-06-18 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx,
+	  src/mcs51/gen.c:
+	  Control mcs51 codegen aspects by --nosidechannels: addition, subtraction, right shift, casts, bit-field reads, comparisons.
+
+2026-06-18 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx,
+	  src/f8/gen.c,
+	  src/hc08/gen.c,
+	  src/z80/gen.c:
+	  Control hc08, s08, f8, z80-related, codegen aspects by --nosidechannels: reads of signed bit-fields, signed casts, comparisons.
+
+2026-06-14 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/stm8/gen.c,
+	  doc/sdccman.lyx:
+	  Control z80-related codegen aspects by --nosidechannels: Comparisons.
+
+2026-06-13 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/stm8/gen.c,
+	  src/stm8/peeph.def,
+	  doc/sdccman.lyx:
+	  Control stm8 codegen aspects by --nosidechannels: Comparisons.
+
+2026-06-12 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/stm8/gen.c:
+	  Control stm8 codegen aspects by --nosidechannels: Equality comparisons.
+
+2026-06-12 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/stm8/peeph.def:
+	  Optimize some push / pop cases.
+	* src/z80/gen.c:
+	  Optimize some pointer reads.
+
+2026-06-12 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* Merge next branch.
+
+2026-06-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/ds390/gen.c,
+	  src/hc08/gen.c,
+	  src/mcs51/gen.c,
+	  src/pic14/gen.c:
+	  #if 0 unused genCpl.
+
+2026-06-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  support/regression/tests/bug-4007.c:
+	  Fix bug #4007.
+
+2026-06-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  support/regression/tests/bug-4008.c:
+	  Fix bug #4008.
+
+2026-06-10 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/peep.c:
+	  Fix bug #4009.
+
+2026-06-08 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c:
+	  Fix bug #3999.
+	* src/mos6502/gen.c:
+	  Fix bug #3993.
+
+2026-06-08 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* device/lib/ds390/__sdcc_atomic_maybe_rollback.c,
+	* device/lib/mcs51/__sdcc_atomic_maybe_rollback.asm: Fix nested interrupt bug mentioned
+	  in RFE #624 by applying modified patch from Oleg Endo, thanks!
+
+2026-06-08 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/gen.c,
+	  src/z80/gen.c,
+	  doc/sdccman.lyx:
+	  Control f8, f8l, z80-related codegen aspects by --nosidechannels: Reads of signed bit-fields, signed casts.
+
+2026-06-07 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/stm8/gen.c,
+	  doc/sdccman.lyx:
+	  Check more details of stm8 codegen for side channels, document results.
+
+2026-06-06 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/stm8/gen.c,
+	  doc/sdccman.lyx:
+	  Control stm8 codegen aspects by --nosidechannels: Rotation.
+
+2026-06-06 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCopt.c,
+	  support/regression/tests/bug-3998.c:
+	  Disable one change from recent next branch merge that caused regression in diagnostics.
+
+2026-06-05 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx:
+	  Document pdk side-channels.
+
+2026-06-05 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx:
+	  Document hc08/s08 side-channels.
+
+2026-06-05 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCmain.c:
+	  Fix --nosidechannels command-line option handling.
+	* doc/sdccman.lyx,
+	  src/z80/gen.c:
+	  Control some mcs51 codegen aspects by --nosidechannels: Negation. Document remaining mcs51 side-channels.
+
+2026-06-05 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* Merge next branch.
+
+2026-06-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx:
+	  Document f8(l) side-channels.
+
+2026-06-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx,
+	  src/z80/gen.c:
+	  Control some z80 codegen aspects by --nosidechannels: Addition, right shift (leaking left operand). Document remaining z80 side-channels.
+
+2026-06-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx,
+	  src/stm8/gen.c:
+	  Control some stm8 codegen aspects by --nosidechannels: Addition, subtraction, div hw bug workaround, right shift (leaking left operand). Document remaining stm8 side-channels.
+
+2026-06-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx,
+	  src/SDCC.lex,
+	  src/SDCCglobl.h,
+	  src/SDCCmain.c:
+	  Infrastructure for command-line-option and #pragma to avoid introducing side-channels.
+	* src/SDCCicode.c:
+	  Disable some optimizations of divisions by powers of two for --nosidechannels.
+	* src/SDCCicode.c:
+	  Mostly use jump tables to implement switch statements for --nosidechannels.
+
+2026-06-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/Makefile.in,
+	  support/regression/randport.c:
+	  Basic documentation for fuzzing infrastructure.
+
+2026-06-03 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCopt.c,
+	  support/regression/tests/bug-3998.c:
+	  Fix bug #3998.
+
+2026-06-03 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCBBlock.c:
+	  Fix dump filenames (iCode vs graph dump for generalized constant propagation).
+
+2026-06-02 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  support/regression/tests/bug-3997.c:
+	  Fix bug #3997.
+	* support/regression/tests/bug-3988.c:
+	  Fix bug description comment.
+
+2026-06-01 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/Makefile.in:
+	  Workaround for bug #3996.
+	* support/regression/randport.c:
+	  Include further optimization options in command-line fuzzing.
+
+2026-05-29 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdcc/support/regression/Makefile.in:
+	  Mark clean target of regression testing as phony.
+	* src/z80/gen.c:
+	  Fix bug #3994.
+	* src/mcs51/gen.c:
+	  Fix bug #3995.
+
+2026-05-28 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/MakeList,
+	  support/regression/Makefile.in,
+	  support/regression/randport.c,
+	  support/regression/randseq.c:
+	  Improve infrastructure for randomized regression testing (command-line option fuzzing).
+
+2026-05-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/Makefile.in,
+	  support/regression/randseq.c,
+	  support/regression/randport.c:
+	  Infrastructure for randomized regression testing (command-line option fuzzing).
+
+2026-05-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdcc/support/regression/Makefile.in:
+	  Update/fix description of dependencies for regression testing.
+
+2026-05-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdcc/support/regression/Makefile.in:
+	  --mmos6502 --stack-auto has been stable for a while, include it in default target for regression testing.
+
+2026-05-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/MakeList:
+	  Fix typo in host test exclusion.
+
+2026-05-25 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/MakeList:
+	  Fix typo in host test exclusion.
+
 2026-05-23 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* sdcc/support/regression/MakeList:
@@ -20,39 +964,39 @@
 
 2026-05-17 Gabriele Gorla <gorlik@yahoo.com>
 
-    * device/lib/mos65c02/labs.s:
-      Really checking in labs.s.
-    * src/mos6502/gen.c,
-      src/mos6502/tempops.c:
-      Fix small performance regression from r16535.
-    * tests/smallserpent.c.in:
-      Disable warning 147.
-    * src/mos6502/gen.c,
-      src/mos6502/genor.c,
-      src/mos6502/genminus.c:
-      Comsetic changes.
+	* device/lib/mos65c02/labs.s:
+	  Really checking in labs.s.
+	* src/mos6502/gen.c,
+	  src/mos6502/tempops.c:
+	  Fix small performance regression from r16535.
+	* tests/smallserpent.c.in:
+	  Disable warning 147.
+	* src/mos6502/gen.c,
+	  src/mos6502/genor.c,
+	  src/mos6502/genminus.c:
+	  Cosmetic changes.
 
 2026-05-16 Gabriele Gorla <gorlik@yahoo.com>
 
 	* support/regression/tests/serpent.c.in:
-      Disable warning 147.
+	  Disable warning 147.
 	* support/regression/tests/bug-3129.c,
-      support/regression/MakeList:
-      Disable bug-3129 for mos6502 (stack too small).
-    * src/mos6502/gen.c,
-      src/mos6502/gen.h,
-      src/mos6502/genand.c,
-      src/mos6502/genlshift.c,
-      src/mos6502/genminus.c,
-      src/mos6502/genor.c,
-      src/mos6502/genplus.c,
-      src/mos6502/genrot.c,
-      src/mos6502/genrshift.c,
-      src/mos6502/genxor.c,
-      src/mos6502/ralloc.h,
-      src/mos6502/stackops.c,
-      src/mos6502/tempops.c:
-      Fix bug #3851
+	  support/regression/MakeList:
+	  Disable bug-3129 for mos6502 (stack too small).
+	* src/mos6502/gen.c,
+	  src/mos6502/gen.h,
+	  src/mos6502/genand.c,
+	  src/mos6502/genlshift.c,
+	  src/mos6502/genminus.c,
+	  src/mos6502/genor.c,
+	  src/mos6502/genplus.c,
+	  src/mos6502/genrot.c,
+	  src/mos6502/genrshift.c,
+	  src/mos6502/genxor.c,
+	  src/mos6502/ralloc.h,
+	  src/mos6502/stackops.c,
+	  src/mos6502/tempops.c:
+	  Fix bug #3851
 
 2026-05-16 Philipp Klaus Krause <philipp@colecovision.eu>
 
@@ -154,11 +1098,11 @@
 	* device/lib/mos6502/_fsadd.s:
 	  Minor code cleanups.
 	* src/mos6502/gen.h,
-      src/mos6502/gen.c,
-      src/mos6502/genrot.c,
-      src/mos6502/genminus.c,
-      src/mos6502/ralloc2.cc:
-      Remove dead code and small cosmetic fixes.
+	  src/mos6502/gen.c,
+	  src/mos6502/genrot.c,
+	  src/mos6502/genminus.c,
+	  src/mos6502/ralloc2.cc:
+	  Remove dead code and small cosmetic fixes.
 
 2026-05-05 Philipp Klaus Krause <philipp@colecovision.eu>
 
@@ -182,26 +1126,26 @@
 	* support/cpp
 	  Bump to release/gcc-13.
 	* support/cpp/gcc/config/i386/xm-cygwin.h,
-      support/cpp/gcc/config/i386/xm-djgpp.h,
-      support/cpp/gcc/config/i386/xm-mingw32.h,
-      support/cpp/gcc/config/i386/xmmintrin.h
-      Add various config/i386/xm*h,
-      in an attempt to fix mingw build etc.
+	  support/cpp/gcc/config/i386/xm-djgpp.h,
+	  support/cpp/gcc/config/i386/xm-mingw32.h,
+	  support/cpp/gcc/config/i386/xmmintrin.h
+	  Add various config/i386/xm*h,
+	  in an attempt to fix mingw build etc.
 
 2026-05-03 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/mos6502/gen.h,
-      src/mos6502/gen.c,
-      src/mos6502/genand.c,
-      src/mos6502/genlshift.c,
-      src/mos6502/genminus.c,
-      src/mos6502/genor.c,
-      src/mos6502/genplus.c,
-      src/mos6502/genrot.c,
-      src/mos6502/genrshift.c,
-      src/mos6502/genxor.c,
-      src/mos6502/tempops.c:
-      Add m6502_ prefix to several non static functions.
+	  src/mos6502/gen.c,
+	  src/mos6502/genand.c,
+	  src/mos6502/genlshift.c,
+	  src/mos6502/genminus.c,
+	  src/mos6502/genor.c,
+	  src/mos6502/genplus.c,
+	  src/mos6502/genrot.c,
+	  src/mos6502/genrshift.c,
+	  src/mos6502/genxor.c,
+	  src/mos6502/tempops.c:
+	  Add m6502_ prefix to several non static functions.
 	* src/mos6502/stackops.c:
 	  Small stack operations optimizations.
 
@@ -248,9 +1192,9 @@
 	  src/hc08/ralloc2.cc:
 	  Fix several typos.
 	* src/mos6502/genplus.c:
-      Fix corner case in genPlusInc().
+	  Fix corner case in genPlusInc().
 	* src/mos6502/gen.c:
-      Free registers in genEndFunction for void functions.
+	  Free registers in genEndFunction for void functions.
 
 2026-05-01 Philipp Klaus Krause <philipp@colecovision.eu>
 
@@ -317,18 +1261,18 @@
 2026-04-24 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/mos6502/gen.c,
-          src/mos6502/gen.h,
-          src/mos6502/genand.c,
-          src/mos6502/genlshift.c,
-          src/mos6502/genminus.c,
-          src/mos6502/genor.c,
-          src/mos6502/genplus.c,
-          src/mos6502/genrot.c,
-          src/mos6502/genrshift.c,
-          src/mos6502/genxor.c,
-          src/mos6502/stackops.c,
-          src/mos6502/tempops.c:
-          Add m6502_ prefix to several non static functions.
+	  src/mos6502/gen.h,
+	  src/mos6502/genand.c,
+	  src/mos6502/genlshift.c,
+	  src/mos6502/genminus.c,
+	  src/mos6502/genor.c,
+	  src/mos6502/genplus.c,
+	  src/mos6502/genrot.c,
+	  src/mos6502/genrshift.c,
+	  src/mos6502/genxor.c,
+	  src/mos6502/stackops.c,
+	  src/mos6502/tempops.c:
+	    Add m6502_ prefix to several non static functions.
 
 2026-04-22 Gabriele Gorla <gorlik@yahoo.com>
 
@@ -338,9 +1282,9 @@
 2026-04-21 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/mos6502/genand.c,
-        src/mos6502/genor.c,
-        src/mos6502/genxor.c:
-        Free accumulator in the generic loop.
+	  src/mos6502/genor.c,
+	  src/mos6502/genxor.c:
+	    Free accumulator in the generic loop.
 
 2026-04-20 Philipp Klaus Krause <philipp@colecovision.eu>
 
@@ -363,11 +1307,11 @@
  	* src/mos6502/gen.c:
  	  Add AOP_SOF to m6502_aopCanShift().
    	* src/mos6502/genand.c:
-          Add special case for bit 7 on the stack.
+	  Add special case for bit 7 on the stack.
    	* device/lib/mos6502-stack-auto/_muluchar.s:
-          Implement muluchar in assembly.
+	  Implement muluchar in assembly.
    	* src/mos6502/genlshift.c:
-          Only save X when not dead.
+	  Only save X when not dead.
 
 2026-04-17 Philipp Klaus Krause <philipp@colecovision.eu>
 
@@ -546,19 +1490,19 @@
 
    	* src/mos6502/gen.c:
    	  Dirty Y when it is a target of a genPointerGet operation.
-    * src/mos6502/ralloc.h,
-      src/mos6502/ralloc.c,      
-      src/mos6502/ralloc2.cc,      
-      src/mos6502/gen.c:
-      Small code cleanups.
-    * device/lib/mos6502/crt0.s,
-      device/lib/mos6502/fabsf.s,
-      src/mos6502/gen.c,
-      src/mos6502/gen.h,
-      src/mos6502/genand.c,
-      src/mos6502/genrshift.c,
-      src/mos6502/genxor.c:
-      More code cleanups.
+	* src/mos6502/ralloc.h,
+	  src/mos6502/ralloc.c,
+	  src/mos6502/ralloc2.cc,
+	  src/mos6502/gen.c:
+	  Small code cleanups.
+	* device/lib/mos6502/crt0.s,
+	  device/lib/mos6502/fabsf.s,
+	  src/mos6502/gen.c,
+	  src/mos6502/gen.h,
+	  src/mos6502/genand.c,
+	  src/mos6502/genrshift.c,
+	  src/mos6502/genxor.c:
+	  More code cleanups.
    	* src/mos6502/gen.c:
    	  Refactor storeConstToAop().
 
@@ -655,29 +1599,29 @@
 
 2026-03-16 Gabriele Gorla <gorlik@yahoo.com>
 
-    * device/lib/mos6502/_divsint.s,
-      device/lib/mos6502/_divslong.s,
-      device/lib/mos6502/_divuchar.s,
-      device/lib/mos6502/_modslong.s,
-      device/lib/mos6502/_moduchar.s,
-      device/lib/mos6502/ldiv.s,
-      device/lib/mos65c02/abs.s,
-      device/lib/mos65c02/_divsint.s,
-      device/lib/mos65c02/_divslong.s,
-      device/lib/mos65c02/_divuchar.s,
-      device/lib/mos65c02/_divuint.s,
-      device/lib/mos65c02/_divulong.s,
-      device/lib/mos65c02/_modsint.s,
-      device/lib/mos65c02/_modslong.s,
-      device/lib/mos65c02/_moduchar.s,
-      device/lib/mos65c02/_moduint.s,
-      device/lib/mos65c02/_modulong.s,
-      device/lib/mos65c02/div.s,
-      device/lib/mos65c02/labs.s,
-      device/lib/mos65c02/ldiv.s:
-      Implement mul/div in asssembly for mos65c02.
-    * sdas/as6500/r65mcch.c:
-      Integrate 32bit address patch from gbdk-2020.
+	* device/lib/mos6502/_divsint.s,
+	  device/lib/mos6502/_divslong.s,
+	  device/lib/mos6502/_divuchar.s,
+	  device/lib/mos6502/_modslong.s,
+	  device/lib/mos6502/_moduchar.s,
+	  device/lib/mos6502/ldiv.s,
+	  device/lib/mos65c02/abs.s,
+	  device/lib/mos65c02/_divsint.s,
+	  device/lib/mos65c02/_divslong.s,
+	  device/lib/mos65c02/_divuchar.s,
+	  device/lib/mos65c02/_divuint.s,
+	  device/lib/mos65c02/_divulong.s,
+	  device/lib/mos65c02/_modsint.s,
+	  device/lib/mos65c02/_modslong.s,
+	  device/lib/mos65c02/_moduchar.s,
+	  device/lib/mos65c02/_moduint.s,
+	  device/lib/mos65c02/_modulong.s,
+	  device/lib/mos65c02/div.s,
+	  device/lib/mos65c02/labs.s,
+	  device/lib/mos65c02/ldiv.s:
+	  Implement mul/div in asssembly for mos65c02.
+	* sdas/as6500/r65mcch.c:
+	  Integrate 32bit address patch from gbdk-2020.
 
 2026-03-16 Philipp Klaus Krause <philipp@colecovision.eu>
 
@@ -1068,7 +2012,7 @@
 	  Special case SOF in genrsh16().
    	* src/mos6502/genminus.c:
 	  Special case SOF in genMinusDec().
-      
+
 2026-02-22 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* support/sdbinutils:
@@ -1558,8 +2502,8 @@
    	  src/mos6502/gen.c,
    	  src/mos6502/tempops.c:
    	  Improve genPointerGet().
-    * support/regression/test/asconhash256.c.in:
-      Disabling failing big endian targets.
+	* support/regression/test/asconhash256.c.in:
+	  Disabling failing big endian targets.
    	  
 2026-01-19 Philipp Klaus Krause <philipp@colecovision.eu>
 
@@ -1621,85 +2565,85 @@
    	* support/regression/ports/uc6502/spec.mk,
    	  support/regression/ports/uc6502-stack-auto/spec.mk:
 	  Enable stack checking in uCsim.
-    * support/regression/fwk/include/testfwk.h,
-      support/regression/test/blake2s.c,
-      support/regression/test/bug-2855.c,
-      support/regression/test/bug-3129.c,
-      support/regression/test/bug-3831.c,
-      support/regression/test/bug3379723.c,
-      support/regression/test/div.c,
-      support/regression/test/falcon-ntt.c,
-      support/regression/test/gcc-torture-execute-20000412-2.c,
-      support/regression/test/gcc-torture-execute-20000603-1.c,
-      support/regression/test/gcc-torture-execute-20000731-1.c,
-      support/regression/test/gcc-torture-execute-20001017-1.c,
-      support/regression/test/gcc-torture-execute-20001121-1.c,
-      support/regression/test/gcc-torture-execute-20010118-1.c,
-      support/regression/test/gcc-torture-execute-20010129-1.c,
-      support/regression/test/gcc-torture-execute-20011217-1.c,
-      support/regression/test/gcc-torture-execute-20020225-2.c,
-      support/regression/test/gcc-torture-execute-20021118-2.c,
-      support/regression/test/gcc-torture-execute-20021120-1.c,
-      support/regression/test/gcc-torture-execute-20030209-1.c,
-      support/regression/test/gcc-torture-execute-20030916-1.c,
-      support/regression/test/gcc-torture-execute-20031214-1.c,
-      support/regression/test/gcc-torture-execute-20040831-1.c,
-      support/regression/test/gcc-torture-execute-20071030-1.c,
-      support/regression/test/gcc-torture-execute-20100430-1.c,
-      support/regression/test/gcc-torture-execute-20100708-1.c,
-      support/regression/test/gcc-torture-execute-920625-1.c,
-      support/regression/test/gcc-torture-execute-920710-1.c,
-      support/regression/test/gcc-torture-execute-921112-1.c,
-      support/regression/test/gcc-torture-execute-921124-1.c,
-      support/regression/test/gcc-torture-execute-921208-1.c,
-      support/regression/test/gcc-torture-execute-930614-1.c,
-      support/regression/test/gcc-torture-execute-930614-2.c,
-      support/regression/test/gcc-torture-execute-930628-1.c,
-      support/regression/test/gcc-torture-execute-930702-1.c,
-      support/regression/test/gcc-torture-execute-930818-1.c,
-      support/regression/test/gcc-torture-execute-980205.c,
-      support/regression/test/gcc-torture-execute-980604-1.c,
-      support/regression/test/gcc-torture-execute-990117-1.c,
-      support/regression/test/gcc-torture-execute-990513-1.c,
-      support/regression/test/gcc-torture-execute-990829-1.c,
-      support/regression/test/gcc-torture-execute-991112-1.c,
-      support/regression/test/gcc-torture-execute-cvt.c,
-      support/regression/test/gcc-torture-execute-float-floor.c,
-      support/regression/test/gcc-torture-execute-func-ptr-1.c,
-      support/regression/test/gcc-torture-execute-loop-8.c,
-      support/regression/test/gcc-torture-execute-pr23941.c,
-      support/regression/test/gcc-torture-execute-pr28982a.c,
-      support/regression/test/gcc-torture-execute-pr33870-1.c,
-      support/regression/test/gcc-torture-execute-pr33870.c,
-      support/regression/test/gcc-torture-execute-pr39501.c,
-      support/regression/test/gcc-torture-execute-pr47538.c,
-      support/regression/test/gcc-torture-execute-pr60017.c,
-      support/regression/test/gcc-torture-execute-pr64979.c,
-      support/regression/test/gcc-torture-execute-pr68390.c,
-      support/regression/test/gcc-torture-execute-ssad-run.c,
-      support/regression/test/gcc-torture-execute-stdarg-1.c,
-      support/regression/test/gcc-torture-execute-stdarg-2.c,
-      support/regression/test/gcc-torture-execute-stdarg-3.c,
-      support/regression/test/gcc-torture-execute-stdarg-4.c,
-      support/regression/test/gcc-torture-execute-struct-ret-1.c,
-      support/regression/test/gcc-torture-execute-usad-run.c,
-      support/regression/test/gcc-torture-execute-va-arg-12.c,
-      support/regression/test/gcc-torture-execute-va-arg-15.c,
-      support/regression/test/gcc-torture-execute-va-arg-16.c,
-      support/regression/test/gcc-torture-execute-va-arg-17.c,
-      support/regression/test/gcc-torture-execute-va-arg-18.c,
-      support/regression/test/gcc-torture-execute-va-arg-26.c,
-      support/regression/test/lonesha256.c,
-      support/regression/test/p99-conformance.c,
-      support/regression/test/sha3-256.c,
-      support/regression/test/z88dk.c,
-      support/regression/test/z88dk_callee.c:
-      Cleanup several warning in the regression suite.
-    * support/regression/test/serpent.c.in,
-      support/regression/test/smallserpent.c.in:
-      Enable serpent for mos6502.
-    * support/regression/test/asconhash256.c.in:
-      Enable working tests for mos6502.
+	* support/regression/fwk/include/testfwk.h,
+	  support/regression/test/blake2s.c,
+	  support/regression/test/bug-2855.c,
+	  support/regression/test/bug-3129.c,
+	  support/regression/test/bug-3831.c,
+	  support/regression/test/bug3379723.c,
+	  support/regression/test/div.c,
+	  support/regression/test/falcon-ntt.c,
+	  support/regression/test/gcc-torture-execute-20000412-2.c,
+	  support/regression/test/gcc-torture-execute-20000603-1.c,
+	  support/regression/test/gcc-torture-execute-20000731-1.c,
+	  support/regression/test/gcc-torture-execute-20001017-1.c,
+	  support/regression/test/gcc-torture-execute-20001121-1.c,
+	  support/regression/test/gcc-torture-execute-20010118-1.c,
+	  support/regression/test/gcc-torture-execute-20010129-1.c,
+	  support/regression/test/gcc-torture-execute-20011217-1.c,
+	  support/regression/test/gcc-torture-execute-20020225-2.c,
+	  support/regression/test/gcc-torture-execute-20021118-2.c,
+	  support/regression/test/gcc-torture-execute-20021120-1.c,
+	  support/regression/test/gcc-torture-execute-20030209-1.c,
+	  support/regression/test/gcc-torture-execute-20030916-1.c,
+	  support/regression/test/gcc-torture-execute-20031214-1.c,
+	  support/regression/test/gcc-torture-execute-20040831-1.c,
+	  support/regression/test/gcc-torture-execute-20071030-1.c,
+	  support/regression/test/gcc-torture-execute-20100430-1.c,
+	  support/regression/test/gcc-torture-execute-20100708-1.c,
+	  support/regression/test/gcc-torture-execute-920625-1.c,
+	  support/regression/test/gcc-torture-execute-920710-1.c,
+	  support/regression/test/gcc-torture-execute-921112-1.c,
+	  support/regression/test/gcc-torture-execute-921124-1.c,
+	  support/regression/test/gcc-torture-execute-921208-1.c,
+	  support/regression/test/gcc-torture-execute-930614-1.c,
+	  support/regression/test/gcc-torture-execute-930614-2.c,
+	  support/regression/test/gcc-torture-execute-930628-1.c,
+	  support/regression/test/gcc-torture-execute-930702-1.c,
+	  support/regression/test/gcc-torture-execute-930818-1.c,
+	  support/regression/test/gcc-torture-execute-980205.c,
+	  support/regression/test/gcc-torture-execute-980604-1.c,
+	  support/regression/test/gcc-torture-execute-990117-1.c,
+	  support/regression/test/gcc-torture-execute-990513-1.c,
+	  support/regression/test/gcc-torture-execute-990829-1.c,
+	  support/regression/test/gcc-torture-execute-991112-1.c,
+	  support/regression/test/gcc-torture-execute-cvt.c,
+	  support/regression/test/gcc-torture-execute-float-floor.c,
+	  support/regression/test/gcc-torture-execute-func-ptr-1.c,
+	  support/regression/test/gcc-torture-execute-loop-8.c,
+	  support/regression/test/gcc-torture-execute-pr23941.c,
+	  support/regression/test/gcc-torture-execute-pr28982a.c,
+	  support/regression/test/gcc-torture-execute-pr33870-1.c,
+	  support/regression/test/gcc-torture-execute-pr33870.c,
+	  support/regression/test/gcc-torture-execute-pr39501.c,
+	  support/regression/test/gcc-torture-execute-pr47538.c,
+	  support/regression/test/gcc-torture-execute-pr60017.c,
+	  support/regression/test/gcc-torture-execute-pr64979.c,
+	  support/regression/test/gcc-torture-execute-pr68390.c,
+	  support/regression/test/gcc-torture-execute-ssad-run.c,
+	  support/regression/test/gcc-torture-execute-stdarg-1.c,
+	  support/regression/test/gcc-torture-execute-stdarg-2.c,
+	  support/regression/test/gcc-torture-execute-stdarg-3.c,
+	  support/regression/test/gcc-torture-execute-stdarg-4.c,
+	  support/regression/test/gcc-torture-execute-struct-ret-1.c,
+	  support/regression/test/gcc-torture-execute-usad-run.c,
+	  support/regression/test/gcc-torture-execute-va-arg-12.c,
+	  support/regression/test/gcc-torture-execute-va-arg-15.c,
+	  support/regression/test/gcc-torture-execute-va-arg-16.c,
+	  support/regression/test/gcc-torture-execute-va-arg-17.c,
+	  support/regression/test/gcc-torture-execute-va-arg-18.c,
+	  support/regression/test/gcc-torture-execute-va-arg-26.c,
+	  support/regression/test/lonesha256.c,
+	  support/regression/test/p99-conformance.c,
+	  support/regression/test/sha3-256.c,
+	  support/regression/test/z88dk.c,
+	  support/regression/test/z88dk_callee.c:
+	  Cleanup several warning in the regression suite.
+	* support/regression/test/serpent.c.in,
+	  support/regression/test/smallserpent.c.in:
+	  Enable serpent for mos6502.
+	* support/regression/test/asconhash256.c.in:
+	  Enable working tests for mos6502.
 
 2026-01-17 Philipp Klaus Krause <philipp@colecovision.eu>
 
@@ -1740,7 +2684,7 @@
   	  src/mos6502/gen.c,
   	  src/mos6502/genrot.c:
   	  Split rotate code into its own file.
-   	     	  
+
 2026-01-15 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCast.c,
@@ -1940,7 +2884,7 @@
   	* src/mos6502/gen.c:
 	  Refactor of genCmpEqNeq() for ifx==false.
 	  Add m6502 prefix to several functions.
-      
+
 2025-12-26 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* support/regression/tests/funcptrcmp.c.in:
@@ -3977,7 +4921,6 @@
 
 2025-06-26 Philipp Klaus Krause <philipp@colecovision.eu>
 
-<<<<<<< .working
 	* src/SDCCgenconstprop.cc,
 	  src/SDCCglue.c,
 	  src/SDCCmem.c,
@@ -8109,7 +9052,7 @@
 	* src/SDCCglue.c,
 	* src/SDCCmain.c: moved syntax_only & no_assemble into options
 	* src/SDCCopt.c(eBBlockFromiCode): do not call assignRegisters() for
-	    --syntax-only
+	  --syntax-only
 
 2023-08-15 Maarten Brock <sourceforge.brock AT dse.nl>
 
@@ -8279,7 +9222,7 @@
 	* _gptrget.c,
 	* _gptrgetc.c,
 	* _gptrput.c: applied patch #464, Thanks Konstantin Kim
-	    also fixed/improved non-active SDCC_MODEL_MEDIUM variants of this lib
+	  also fixed/improved non-active SDCC_MODEL_MEDIUM variants of this lib
 
 2023-07-21 Benedikt Freisen <b.freisen AT gmx.net>
 

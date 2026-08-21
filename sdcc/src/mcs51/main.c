@@ -44,16 +44,16 @@ static char _defaultRules[] =
 #define OPTION_STACK_SIZE           "--stack-size"
 
 static OPTION _mcs51_options[] =
-  {
-    { 0, OPTION_SMALL_MODEL, NULL, "internal data space is used (default)"},
-    { 0, OPTION_MEDIUM_MODEL, NULL, "external paged data space is used"},
-    { 0, OPTION_LARGE_MODEL, NULL, "external data space is used"},
-    { 0, OPTION_HUGE_MODEL, NULL, "functions are banked, data in external space"},
-    { 0, OPTION_STACK_SIZE,  &options.stack_size, "Tells the linker to allocate this space for stack", CLAT_INTEGER },
-    { 0, "--acall-ajmp",     &options.acall_ajmp, "Use acall/ajmp instead of lcall/ljmp" },
-    { 0, "--no-ret-without-call", &options.no_ret_without_call, "Do not use ret independent of acall/lcall" },
-    { 0, NULL }
-  };
+{
+  { 0, OPTION_SMALL_MODEL, NULL, "internal data space is used (default)"},
+  { 0, OPTION_MEDIUM_MODEL, NULL, "external paged data space is used"},
+  { 0, OPTION_LARGE_MODEL, NULL, "external data space is used"},
+  { 0, OPTION_HUGE_MODEL, NULL, "functions are banked, data in external space"},
+  { 0, OPTION_STACK_SIZE,  &options.stack_size, "Tells the linker to allocate this space for stack", CLAT_INTEGER },
+  { 0, "--acall-ajmp",     &options.acall_ajmp, "Use acall/ajmp instead of lcall/ljmp" },
+  { 0, "--no-ret-without-call", &options.no_ret_without_call, "Do not use ret independent of acall/lcall" },
+  { 0, NULL }
+};
 
 /* list of key words used by msc51 */
 static char *_mcs51_keywords[] =
@@ -259,32 +259,30 @@ mcs51_genAtomicSupport (struct dbuf_s *oBuf, unsigned int startaddr)
       startaddr += (8 - startaddr % 8);
     }
   // Support routine block may not cross 256B boundary.
-  if (startaddr / 256 != (startaddr + 8 * 4 + 7) / 256)
+  if (startaddr / 256 != (startaddr + 8 * 5 + 6) / 256)
     {
       dbuf_printf (oBuf, "\t.ds\t%d\n", 256 - startaddr % 256);
       startaddr += 256 - startaddr % 256;
     }
 
+  // The following routine just needs to be in jnb range of the below ones,
+  // it doesn't have alignment requirements. Align it anyway for faster
+  // fall through for atomic in idata implementation and size reduction.
+
+  // If the value of the byte at b:dptr is the value of r2, store the value
+  // of r3 into that byte. Return the new value of that byte in acc.
+  // Overwrites r0; reads r2, r3.
+  dbuf_printf (oBuf, "sdcc_atomic_compare_exchange_gptr_impl::\n"
+                     "\tjnb\tb.6, sdcc_atomic_compare_exchange_xdata_impl\n"
+                     "\tmov\tr0, dpl\n"
+                     "\tjb\tb.5, sdcc_atomic_compare_exchange_pdata_impl\n"
+//                   "\tsjmp\tsdcc_atomic_compare_exchange_idata_impl\n"    // fall through
+              );
+
   dbuf_printf (oBuf, "sdcc_atomic_exchange_rollback_start::\n");
 
   // Each routine (except the last one) needs to be 8 bytes long.
   // Restart may happen at bytes 1 to 5 of each routine.
-  dbuf_printf (oBuf, "\tnop\n"
-                     "\tnop\n"
-                     "sdcc_atomic_exchange_pdata_impl:\n"
-                     "\tmovx\ta, @r0\n"
-                     "\tmov\tr3, a\n"
-                     "\tmov\ta, r2\n"
-                     "\tmovx\t@r0, a\n"
-                     "\tsjmp\tsdcc_atomic_exchange_exit\n");
-  dbuf_printf (oBuf, "\tnop\n"
-                     "\tnop\n"
-                     "sdcc_atomic_exchange_xdata_impl:\n"
-                     "\tmovx\ta, @dptr\n"
-                     "\tmov\tr3, a\n"
-                     "\tmov\ta, r2\n"
-                     "\tmovx\t@dptr, a\n"
-                     "\tsjmp\tsdcc_atomic_exchange_exit\n");
   dbuf_printf (oBuf, "sdcc_atomic_compare_exchange_idata_impl:\n"
                      "\tmov\ta, @r0\n"
                      "\tcjne\ta, ar2, .+#5\n"
@@ -304,13 +302,38 @@ mcs51_genAtomicSupport (struct dbuf_s *oBuf, unsigned int startaddr)
                      "\tcjne\ta, ar2, .+#5\n"
                      "\tmov\ta, r3\n"
                      "\tmovx\t@dptr, a\n"
-                     "\tret\n");
+                     "\tret\n"
+                     "\tnop\n");
+  dbuf_printf (oBuf, "\tnop\n"
+                     "\tnop\n"
+                     "sdcc_atomic_exchange_pdata_impl:\n"
+                     "\tmovx\ta, @r0\n"
+                     "\tmov\tr3, a\n"
+                     "\tmov\ta, r2\n"
+                     "\tmovx\t@r0, a\n"
+                     "\tsjmp\tsdcc_atomic_exchange_exit\n");
+  dbuf_printf (oBuf, "\tnop\n"
+                     "\tnop\n"
+                     "sdcc_atomic_exchange_xdata_impl:\n"
+                     "\tmovx\ta, @dptr\n"
+                     "\tmov\tr3, a\n"
+                     "\tmov\ta, r2\n"
+                     "\tmovx\t@dptr, a\n"
+//                   "\tsjmp\tsdcc_atomic_exchange_exit\n"          // fall through
+              );
   dbuf_printf (oBuf, "sdcc_atomic_exchange_rollback_end::\n\n");
 
-  // The following two routines just need to be in jnb range of the above ones, they don't have alignment requirements.
+  dbuf_printf (oBuf, "sdcc_atomic_exchange_exit:\n"
+                     "\tmov\tdpl, r3\n"
+                     "\tret\n");
+  // The following routine just needs to be in jnb range of the above ones, it doesn't have alignment requirements.
 
+  dbuf_printf (oBuf, "_atomic_flag_test_and_set::\n"
+                     "\tmov\tr2, #1\n"
+//                   "\tsjmp\tsdcc_atomic_exchange_gptr_impl\n"     // fall through
+              );
   // Store value in r2 into byte at b:dptr, return previous byte at b:dptr in dpl.
-  // Overwrites r0, r2, r3.
+  // Overwrites r0, r3; reads r2.
   dbuf_printf (oBuf, "sdcc_atomic_exchange_gptr_impl::\n"
                      "\tjnb\tb.6, sdcc_atomic_exchange_xdata_impl\n"
                      "\tmov\tr0, dpl\n"
@@ -319,19 +342,7 @@ mcs51_genAtomicSupport (struct dbuf_s *oBuf, unsigned int startaddr)
                      "\tmov\ta, r2\n"
                      "\txch\ta, @r0\n"
                      "\tmov\tdpl, a\n"
-                     "\tret\n"
-                     "sdcc_atomic_exchange_exit:\n"
-                     "\tmov\tdpl, r3\n"
                      "\tret\n");
-
-  // If the value of the byte at b:dptr is the value of r2, store the value
-  // of r3 into that byte. Return the new value of that byte in a.
-  // Overwrites r0, r2, r3.
-  dbuf_printf (oBuf, "sdcc_atomic_compare_exchange_gptr_impl::\n"
-                     "\tjnb\tb.6, sdcc_atomic_compare_exchange_xdata_impl\n"
-                     "\tmov\tr0, dpl\n"
-                     "\tjb\tb.5, sdcc_atomic_compare_exchange_pdata_impl\n"
-                     "\tsjmp\tsdcc_atomic_compare_exchange_idata_impl\n");
 }
 
 /* Generate interrupt vector table. */
@@ -436,7 +447,8 @@ static bool cseCostEstimation (iCode *ic, iCode *pdic)
   sym_link *result_type = operandType(result);
 
   /* if it is a pointer then return ok for now */
-  if (IC_RESULT(ic) && IS_PTR(result_type)) return 1;
+  if (IC_RESULT(ic) && IS_PTR(result_type))
+    return 1;
 
   /* if bitwise | add & subtract then no since mcs51 is pretty good at it
      so we will cse only if they are local (i.e. both ic & pdic belong to
@@ -444,8 +456,10 @@ static bool cseCostEstimation (iCode *ic, iCode *pdic)
   if (IS_BITWISE_OP(ic) || ic->op == '+' || ic->op == '-')
     {
       /* then if they are the same Basic block then ok */
-      if (ic->eBBlockNum == pdic->eBBlockNum) return 1;
-      else return 0;
+      if (ic->eBBlockNum == pdic->eBBlockNum)
+        return 1;
+      else
+        return 0;
     }
 
   /* for others it is cheaper to do the cse */
@@ -635,39 +649,39 @@ typedef struct mcs51operanddata
 mcs51operanddata;
 
 static mcs51operanddata mcs51operandDataTable[] =
-  {
-    {"a",    A_IDX,   -1},
-    {"ab",   A_IDX,   B_IDX},
-    {"ac",   CND_IDX, -1},
-    {"acc",  A_IDX,   -1},
-    {"ar0",  R0_IDX,  -1},
-    {"ar1",  R1_IDX,  -1},
-    {"ar2",  R2_IDX,  -1},
-    {"ar3",  R3_IDX,  -1},
-    {"ar4",  R4_IDX,  -1},
-    {"ar5",  R5_IDX,  -1},
-    {"ar6",  R6_IDX,  -1},
-    {"ar7",  R7_IDX,  -1},
-    {"b",    B_IDX,   -1},
-    {"c",    CND_IDX, -1},
-    {"cy",   CND_IDX, -1},
-    {"dph",  DPH_IDX, -1},
-    {"dpl",  DPL_IDX, -1},
-    {"dptr", DPL_IDX, DPH_IDX},
-    {"f0",   CND_IDX, -1},
-    {"f1",   CND_IDX, -1},
-    {"ov",   CND_IDX, -1},
-    {"p",    CND_IDX, -1},
-    {"psw",  CND_IDX, -1},
-    {"r0",   R0_IDX,  -1},
-    {"r1",   R1_IDX,  -1},
-    {"r2",   R2_IDX,  -1},
-    {"r3",   R3_IDX,  -1},
-    {"r4",   R4_IDX,  -1},
-    {"r5",   R5_IDX,  -1},
-    {"r6",   R6_IDX,  -1},
-    {"r7",   R7_IDX,  -1},
-  };
+{
+  {"a",    A_IDX,   -1},
+  {"ab",   A_IDX,   B_IDX},
+  {"ac",   CND_IDX, -1},
+  {"acc",  A_IDX,   -1},
+  {"ar0",  R0_IDX,  -1},
+  {"ar1",  R1_IDX,  -1},
+  {"ar2",  R2_IDX,  -1},
+  {"ar3",  R3_IDX,  -1},
+  {"ar4",  R4_IDX,  -1},
+  {"ar5",  R5_IDX,  -1},
+  {"ar6",  R6_IDX,  -1},
+  {"ar7",  R7_IDX,  -1},
+  {"b",    B_IDX,   -1},
+  {"c",    CND_IDX, -1},
+  {"cy",   CND_IDX, -1},
+  {"dph",  DPH_IDX, -1},
+  {"dpl",  DPL_IDX, -1},
+  {"dptr", DPL_IDX, DPH_IDX},
+  {"f0",   CND_IDX, -1},
+  {"f1",   CND_IDX, -1},
+  {"ov",   CND_IDX, -1},
+  {"p",    CND_IDX, -1},
+  {"psw",  CND_IDX, -1},
+  {"r0",   R0_IDX,  -1},
+  {"r1",   R1_IDX,  -1},
+  {"r2",   R2_IDX,  -1},
+  {"r3",   R3_IDX,  -1},
+  {"r4",   R4_IDX,  -1},
+  {"r5",   R5_IDX,  -1},
+  {"r6",   R6_IDX,  -1},
+  {"r7",   R7_IDX,  -1},
+};
 
 static int
 mcs51operandCompare (const void *key, const void *member)
@@ -748,52 +762,52 @@ typedef struct mcs51opcodedata
 mcs51opcodedata;
 
 static mcs51opcodedata mcs51opcodeDataTable[] =
-  {
-    {"acall","j", "",   "",   ""},
-    {"add",  "",  "w",  "rw", "r"},
-    {"addc", "",  "rw", "rw", "r"},
-    {"ajmp", "j", "",   "",   ""},
-    {"anl",  "",  "",   "rw", "r"},
-    {"cjne", "j", "w",  "r",  "r"},
-    {"clr",  "",  "",   "w",  ""},
-    {"cpl",  "",  "",   "rw", ""},
-    {"da",   "",  "rw", "rw", ""},
-    {"dec",  "",  "",   "rw", ""},
-    {"div",  "",  "w",  "rw", ""},
-    {"djnz", "j", "",  "rw",  ""},
-    {"inc",  "",  "",   "rw", ""},
-    {"jb",   "j", "",   "r",  ""},
-    {"jbc",  "j", "",  "rw",  ""},
-    {"jc",   "j", "",   "",   ""},
-    {"jmp",  "j", "",  "",    ""},
-    {"jnb",  "j", "",   "r",  ""},
-    {"jnc",  "j", "",   "",   ""},
-    {"jnz",  "j", "",  "",    ""},
-    {"jz",   "j", "",  "",    ""},
-    {"lcall","j", "",   "",   ""},
-    {"ljmp", "j", "",   "",   ""},
-    {"mov",  "",  "",   "w",  "r"},
-    {"movc", "",  "",   "w",  "r"},
-    {"movx", "",  "",   "w",  "r"},
-    {"mul",  "",  "w",  "rw", ""},
-    {"nop",  "",  "",   "",   ""},
-    {"orl",  "",  "",   "rw", "r"},
-    {"pop",  "",  "",   "w",  ""},
-    {"push", "",  "",   "r",  ""},
-    {"ret",  "j", "",   "",   ""},
-    {"reti", "j", "",   "",   ""},
-    {"rl",   "",  "",   "rw", ""},
-    {"rlc",  "",  "rw", "rw", ""},
-    {"rr",   "",  "",   "rw", ""},
-    {"rrc",  "",  "rw", "rw", ""},
-    {"setb", "",  "",   "w",  ""},
-    {"sjmp", "j", "",   "",   ""},
-    {"subb", "",  "rw", "rw", "r"},
-    {"swap", "",  "",   "rw", ""},
-    {"xch",  "",  "",   "rw", "rw"},
-    {"xchd", "",  "",   "rw", "rw"},
-    {"xrl",  "",  "",   "rw", "r"},
-  };
+{
+  {"acall","j", "",   "",   ""},
+  {"add",  "",  "w",  "rw", "r"},
+  {"addc", "",  "rw", "rw", "r"},
+  {"ajmp", "j", "",   "",   ""},
+  {"anl",  "",  "",   "rw", "r"},
+  {"cjne", "j", "w",  "r",  "r"},
+  {"clr",  "",  "",   "w",  ""},
+  {"cpl",  "",  "",   "rw", ""},
+  {"da",   "",  "rw", "rw", ""},
+  {"dec",  "",  "",   "rw", ""},
+  {"div",  "",  "w",  "rw", ""},
+  {"djnz", "j", "",  "rw",  ""},
+  {"inc",  "",  "",   "rw", ""},
+  {"jb",   "j", "",   "r",  ""},
+  {"jbc",  "j", "",  "rw",  ""},
+  {"jc",   "j", "",   "",   ""},
+  {"jmp",  "j", "",  "",    ""},
+  {"jnb",  "j", "",   "r",  ""},
+  {"jnc",  "j", "",   "",   ""},
+  {"jnz",  "j", "",  "",    ""},
+  {"jz",   "j", "",  "",    ""},
+  {"lcall","j", "",   "",   ""},
+  {"ljmp", "j", "",   "",   ""},
+  {"mov",  "",  "",   "w",  "r"},
+  {"movc", "",  "",   "w",  "r"},
+  {"movx", "",  "",   "w",  "r"},
+  {"mul",  "",  "w",  "rw", ""},
+  {"nop",  "",  "",   "",   ""},
+  {"orl",  "",  "",   "rw", "r"},
+  {"pop",  "",  "",   "w",  ""},
+  {"push", "",  "",   "r",  ""},
+  {"ret",  "j", "",   "",   ""},
+  {"reti", "j", "",   "",   ""},
+  {"rl",   "",  "",   "rw", ""},
+  {"rlc",  "",  "rw", "rw", ""},
+  {"rr",   "",  "",   "rw", ""},
+  {"rrc",  "",  "rw", "rw", ""},
+  {"setb", "",  "",   "w",  ""},
+  {"sjmp", "j", "",   "",   ""},
+  {"subb", "",  "rw", "rw", "r"},
+  {"swap", "",  "",   "rw", ""},
+  {"xch",  "",  "",   "rw", "rw"},
+  {"xchd", "",  "",   "rw", "rw"},
+  {"xrl",  "",  "",   "rw", "r"},
+};
 
 static int
 mcs51opcodeCompare (const void *key, const void *member)
@@ -890,30 +904,31 @@ asmLineNodeFromLineNode (lineNode *ln)
   return aln;
 }
 
-static int
-getInstructionSize (lineNode *line)
+static void
+initializeAsmLineNode (lineNode *line)
 {
   if (!line->aln)
     line->aln = (asmLineNodeBase *) asmLineNodeFromLineNode (line);
+}
 
+static int
+getInstructionSize (lineNode *line)
+{
+  initializeAsmLineNode (line);
   return line->aln->size;
 }
 
 static bitVect *
 getRegsRead (lineNode *line)
 {
-  if (!line->aln)
-    line->aln = (asmLineNodeBase *) asmLineNodeFromLineNode (line);
-
+  initializeAsmLineNode (line);
   return line->aln->regsRead;
 }
 
 static bitVect *
 getRegsWritten (lineNode *line)
 {
-  if (!line->aln)
-    line->aln = (asmLineNodeBase *) asmLineNodeFromLineNode (line);
-
+  initializeAsmLineNode (line);
   return line->aln->regsWritten;
 }
 
@@ -1062,7 +1077,7 @@ PORT mcs51_port =
     1,          /* call_overhead (2 for return address - 1 for pre-incrementing push */
     1,          /* reent_overhead */
     1,          /* banked_overhead (switch between code banks) */
-    0           /* sp points directly at last item pushed */
+    0           /* offset (sp points directly at last item pushed) */
   },
   { -1, false, false },         // Neither int x int -> long nor unsigned long x unsigned char -> unsigned long long multiplication support routine.
   { mcs51_emitDebuggerSymbol },

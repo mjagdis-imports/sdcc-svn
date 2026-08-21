@@ -871,12 +871,12 @@ printIvalType (symbol * sym, sym_link * type, initList * ilist, struct dbuf_s *o
           for (i = (le ? 0 : size - 1); le ? (i < size) : (i > -1); i += (le ? 1 : -1))
             {
               if (i == 0)
-			    if (val->name && strlen (val->name) > 0)
+			    if (strlen (val->name) > 0)
                   dbuf_printf (oBuf, "%s", val->name);
 				else
                   dbuf_printf (oBuf, "#0x00");
               else if (0 < i && i < top)
-			    if (val->name && strlen (val->name) > 0)
+			    if (strlen (val->name) > 0)
                   dbuf_printf (oBuf, "(%s >> %d)", val->name, i * 8);
 				else
                   dbuf_printf (oBuf, "#0x00");
@@ -992,7 +992,7 @@ printIvalBitFields (symbol ** sym, initList ** ilist, struct dbuf_s *oBuf)
   unsigned long long ival = 0;
   unsigned size = 0;
   unsigned bit_start = 0;
-  unsigned long int bytes_written = 0;
+  unsigned int bytes_written = 0;
 
   while (lsym && IS_BITFIELD (lsym->type))
     {
@@ -1055,6 +1055,72 @@ printIvalBitFields (symbol ** sym, initList ** ilist, struct dbuf_s *oBuf)
 }
 
 /*-----------------------------------------------------------------*/
+/* printIvalPad - one byte of storage that got no initializer      */
+/*-----------------------------------------------------------------*/
+static void
+printIvalPad (struct dbuf_s *oBuf)
+{
+  dbuf_tprintf (oBuf, "\t!db !constbyte\n", 0);
+}
+
+/*-----------------------------------------------------------------*/
+/* fieldHasIval - does this member consume an entry of the         */
+/*                initializer list?  Unnamed bitfields do not.     */
+/*-----------------------------------------------------------------*/
+static bool
+fieldHasIval (symbol *field)
+{
+  return !(IS_BITFIELD (field->type) && SPEC_BUNNAMED (field->etype));
+}
+
+/*-----------------------------------------------------------------*/
+/* designatedAlternative - an anonymous union is initialized       */
+/*   through its first alternative, which is what the walk in      */
+/*   printIvalStruct() emits. A designated initializer can pick    */
+/*   another one instead ({.d = 5}), and reorderIlistIval() fills  */
+/*   a promoted member's slot only in that case. If the union      */
+/*   starting at SFLDS has one, return that member, its            */
+/*   initializer, and the field the union ends before.             */
+/*-----------------------------------------------------------------*/
+static symbol *
+designatedAlternative (symbol *sflds, initList *iloop, initList **ilist, symbol **after)
+{
+  symbol *f, *desig = NULL;
+  initList *desigilist = NULL;
+  int base = -1;
+
+  for (f = sflds; f; f = f->next)
+    {
+      if (!f->anonunionalias)
+        {
+          if (base >= 0)
+            break;              /* the first member past the union */
+        }
+      else
+        {
+          if (base < 0 || (int) f->offset < base)
+            base = (int) f->offset;
+          /* only a member whose bytes can be emitted on their own */
+          if (iloop && iloop->type != INIT_HOLE && !IS_BITFIELD (f->type))
+            {
+              desig = f;
+              desigilist = iloop;
+            }
+        }
+      if (fieldHasIval (f))
+        iloop = iloop ? iloop->next : NULL;
+    }
+
+  /* only when sflds is where that union starts */
+  if (!desig || base != (int) sflds->offset)
+    return NULL;
+
+  *ilist = desigilist;
+  *after = f;
+  return desig;
+}
+
+/*-----------------------------------------------------------------*/
 /* printIvalStruct - generates initial value for structures        */
 /*-----------------------------------------------------------------*/
 static void
@@ -1089,12 +1155,18 @@ printIvalStruct (symbol *sym, sym_link *type, initList *ilist, struct dbuf_s *oB
           iloop = iloop->next;
           sflds = sflds->next;
         }
+      /* a member promoted out of an anonymous struct sits at an offset of
+         its own, so the bytes before it get no initializer */
+      for (size = sflds->offset; size > 0; size--)
+        {
+          printIvalPad (oBuf);
+        }
       printIval (sym, sflds->type, iloop, oBuf, 1);
       /* pad out with zeros if necessary */
-      size = getSize(type) - getSize(sflds->type);
+      size = getSize(type) - sflds->offset - getSize(sflds->type);
       for ( ; size > 0 ; size-- )
         {
-          dbuf_tprintf (oBuf, "\t!db !constbyte\n", 0);
+          printIvalPad (oBuf);
         }
       /* advance past holes to find out if there were excess initializers */
       do
@@ -1107,28 +1179,65 @@ printIvalStruct (symbol *sym, sym_link *type, initList *ilist, struct dbuf_s *oB
   else
     {
       // Hack to avoid the hack below (the one that fixed bug #2643) breaking zero-length bit-fields as first member of a struct (bug #3542).
-      if(IS_BITFIELD (sflds->type) && !SPEC_BLEN (sflds->etype))
+      //FIXME: shouldn't this be a while ?
+      if (IS_BITFIELD (sflds->type) && !SPEC_BLEN (sflds->etype))
         sflds = sflds->next;
+
+      unsigned int written = 0;     /* bytes emitted = offset of the next byte */
 
       while (sflds)
         {
           unsigned int oldoffset = sflds->offset;
+          initList *desigilist = NULL;
+          symbol *after = NULL;
+          symbol *desig = designatedAlternative (sflds, iloop, &desigilist, &after);
 
-          if (IS_BITFIELD (sflds->type))
-            printIvalBitFields (&sflds, &iloop, oBuf);
+          if (desig)
+            {
+              // A designator picked an alternative of this anonymous union
+              // other than the first one, so emit the union through that
+              // member: the bytes before it get no initializer, and the ones
+              // after it are left to the padding below.
+              for ( ; written < (unsigned int) desig->offset; written++)
+                printIvalPad (oBuf);
+              printIval (sym, desig->type, desigilist, oBuf, 1);
+              written += getSize (desig->type);
+              for ( ; sflds != after; sflds = sflds->next)
+                if (fieldHasIval (sflds))
+                  iloop = iloop ? iloop->next : NULL;
+            }
+          else if (IS_BITFIELD (sflds->type))
+            written += printIvalBitFields (&sflds, &iloop, oBuf);
           else
             {
               printIval (sym, sflds->type, iloop, oBuf, 1);
+              written += getSize (sflds->type);
               sflds = sflds->next;
               iloop = iloop ? iloop->next : NULL;
             }
 
-          // Handle members from anonymous unions. Just a hack to fix bug #2643.
-          while (sflds && sflds->offset == oldoffset)
+          // Handle members from anonymous unions. The offset test is the hack
+          // that fixed bug #2643; anonunionalias additionally catches an
+          // alternative that is a struct larger than the one written above,
+          // whose later members carry offsets of their own. A promoted member
+          // has an initializer of its own only when a designator named it,
+          // which the branch above dealt with, so consume its slot here
+          // rather than counting on a hole turning up at the end.
+          while (sflds && (sflds->anonunionalias || sflds->offset == oldoffset))
             {
+              if (!sflds->anonunionalias)
+                skip_holes++;
+              else if (fieldHasIval (sflds))
+                iloop = iloop ? iloop->next : NULL;
               sflds = sflds->next;
-              skip_holes++;
             }
+
+          // A skipped alternative can be bigger than the one written above,
+          // so pad up to the next field - or to the end of the struct - and
+          // keep the following members at their own offsets.
+          unsigned int nextoffset = sflds ? (unsigned int) sflds->offset : (unsigned int) getSize (type);
+          for ( ; written < nextoffset; written++)
+            printIvalPad (oBuf);
         }
 
       while (skip_holes && iloop && iloop->type == INIT_HOLE)
@@ -1529,7 +1638,7 @@ printIvalCharPtr (symbol *sym, sym_link *type, value *val, struct dbuf_s *oBuf)
    */
   size = getSize (type);
 
-  if (val->name && strlen (val->name))
+  if (strlen (val->name))
     {
       if (size == 1)            /* This appears to be Z80 specific?? */
         {
@@ -1802,7 +1911,7 @@ printIval (symbol * sym, sym_link * type, initList * ilist, struct dbuf_s *oBuf,
 {
   /* Handle designated initializers */
   if (ilist && ilist->type==INIT_DEEP)
-    ilist = reorderIlist (type, ilist);
+    ilist = reorderIlistIval (type, ilist);
 
   /* If this is a hole, substitute an appropriate initializer. */
   if (ilist && ilist->type == INIT_HOLE)

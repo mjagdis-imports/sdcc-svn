@@ -772,24 +772,6 @@ replace {
 	jc	%0
 } if notVolatile %1 %2 %3
 
-replace {
-	mov	r%1,@r%2
-} by {
-	;	Peephole 130	changed target address mode r%1 to ar%1
-	mov	ar%1,@r%2
-}
-
-replace {
-	mov	a,%1
-	subb	a,#0x01
-	mov	%2,a
-	mov	%1,%2
-} by {
-	;	Peephole 131	optimized decrement (not caring for c)
-	dec	%1
-	mov	%2,%1
-}
-
 // ideally the optimizations of rules 132.x should be done in genCmpXX
 replace {
 	clr	c
@@ -4137,9 +4119,9 @@ replace restart {
 replace restart {
 	sjmp	%5
 } by {
-	sjmp	%6
+	ljmp	%6
 	; peephole 257.b jumped to %6 directly instead of via %5.
-} if labelIsUncondJump(), labelInRange(%6), notSame(%5 %6), labelRefCountChange(%5 -1), labelRefCountChange(%6 +1)
+} if labelIsUncondJump(), notSame(%5 %6), labelRefCountChange(%5 -1), labelRefCountChange(%6 +1)
 
 replace restart {
 	jz	%5
@@ -5083,7 +5065,6 @@ replace {
 } by {
 	;	Peephole 400.b	replaced lcall/ret with ljmp
 	ljmp	%1
-	;
 } if optimizeReturn(), notSame(%1 '_longjmp'), labelRefCount(%2 0)
 
 // applies to f.e. scott-bool1.c
@@ -5098,11 +5079,39 @@ replace {
 	ret
 } if optimizeReturn(), notSame(%1 '_longjmp')
 
+replace {
+	lcall	sdcc_banked_call
+	ljmp	sdcc_banked_ret
+} by {
+	;	Peephole 401.a	replaced banked_call/banked_ret with banked_jump
+	ljmp	sdcc_banked_jump
+} if optimizeReturn()
+
+replace {
+	lcall	sdcc_banked_call
+%2:
+	ljmp	sdcc_banked_ret
+} by {
+	;	Peephole 401.b	replaced banked_call/banked_ret with banked_jump
+	ljmp	sdcc_banked_jump
+} if optimizeReturn(), labelRefCount(%2 0)
+
+replace {
+	lcall	sdcc_banked_call
+%2:
+	ljmp	sdcc_banked_ret
+} by {
+	;	Peephole 401.c	replaced banked_call with banked_jump
+	ljmp	sdcc_banked_jump
+%2:
+	ljmp	sdcc_banked_ret
+} if optimizeReturn()
+
 // for programs less than 2k
 replace {
 	lcall	%1
 } by {
-	;	Peephole 401.a	replaced lcall with acall
+	;	Peephole 410.a	replaced lcall with acall
 	acall	%1
 } if useAcallAjmp
 
@@ -5110,7 +5119,7 @@ replace {
 replace {
 	ljmp	%1
 } by {
-	;	Peephole 401.b	replaced ljmp with ajmp
+	;	Peephole 410.b	replaced ljmp with ajmp
 	ajmp	%1
 } if useAcallAjmp
 

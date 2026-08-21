@@ -7359,7 +7359,7 @@ SDCC can be built for various host platforms using the instructions provided bel
 \end_layout
 
 \begin_layout Subsection
-Building SDCC on Linux
+Building SDCC on Linux and BSD 
 \begin_inset CommandInset label
 LatexCommand label
 name "subsec:Building-SDCC-on-Linux"
@@ -7444,17 +7444,66 @@ Change directory into the main SDCC directory,
 Type
 \series default
  
-\family sans
-\series bold
-"./configure
-\family default
-\series default
-".
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+./configure
+\end_layout
+
+\end_inset
+
  This configures the package for compilation on your system.
- When the treedec library is available,
+\end_layout
+
+\begin_layout Itemize
+SDCC needs the boost libraries.
+ On typical GNU/Linux distributions,
+ they are in the search path,
+ on typical BSD they are not,
+ requiring e.g.
+ 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+CXX="c++ -I/usr/local/include" CC=cc ./configure
+\end_layout
+
+\end_inset
+
+ instead.
+\end_layout
+
+\begin_layout Itemize
+The pic14 and pic16 ports require gputils.
+ If they are not available,
+ and PIC support is not needed,
+ you can instead use 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+./configure –disable-pic14-port –disable-pic16-port
+\end_layout
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Itemize
+When the treedec library is available,
  it should be found and used automatically (improving the compilation time / code quality trade-off).
  As of SDCC 3.7.0,
  the current develop branch from https://github.com/freetdi/tdlib is a suitable version of treedec.
+\end_layout
+
+\begin_layout Itemize
+When the libu8ident library is available,
+ it should be found and used automatically (improving diagnostics and standard-compliance for non-ASCII characters in identifiers).
+ As of SDCC 4.6.0,
+ the 0.4 release from https://github.com/rurban/libu8ident is a suitable version of libu8ident.
 \end_layout
 
 \begin_layout Enumerate
@@ -7463,13 +7512,19 @@ Type
 Type
 \series default
  
-\family sans
-\series bold
-"make
-\family default
-\series default
-"
 \series medium
+
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+
+\series medium
+make
+\end_layout
+
+\end_inset
+
 .
 
 \series default
@@ -7483,11 +7538,15 @@ Type
 Type
 \series default
  
-\family sans
-\series bold
-"make install"
-\family default
-\series default
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+make install
+\end_layout
+
+\end_inset
+
  as root
 \series medium
 .
@@ -15985,6 +16044,68 @@ status collapsed
 \end_inset
 
  Disable the optimization of calls to the standard library.
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-nosidechannels
+\begin_inset Index idx
+range none
+pageformat default
+status open
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-nosidechannels
+\end_layout
+
+\end_inset
+
+
+\series default
+ Disable optimizations that are likely to introduce side-channels,
+ which could leak information about the data being processed (in particular timing and energy-use side-channels).
+ While SDCC can try to avoid introducing side-channels,
+ the option cannot remove side-channels introduced by the programmer.
+ Machine-independent code transformations affected by this option include:
+\end_layout
+
+\begin_layout Itemize
+The optimization of divisions of signed operands by powers of two into shifts is disabled.
+\end_layout
+
+\begin_layout Itemize
+When a switch statement has more than two cases,
+ jump tables are preferred over match-and-jump sequences.
+\end_layout
+
+\begin_layout Standard
+Also see the documentation for the individual ports for port-specific details on side-channels.
 \end_layout
 
 \begin_layout Subsection
@@ -40509,6 +40630,38 @@ pragma nooverlay
 \begin_layout Itemize
 
 \series bold
+nosidechannels
+\series default
+
+\begin_inset Index idx
+range none
+pageformat default
+status open
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+#
+\end_layout
+
+\end_inset
+
+pragma nosidechannels
+\end_layout
+
+\end_inset
+
+ - the compiler will avoid introducing side channels that could leak information on the processed data (e.g.
+ timing or energy side-channels).
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
 max_allocs_per_node
 \series default
  <value>
@@ -44242,10 +44395,9 @@ SiLabs C8051F120 example
 \end_inset
 
 Usually the hardware uses some sfr (an output port or an internal sfr) to select a bank and put it in the banked area of the memory map.
- The selected bank usually becomes active immediately upon assignment to this sfr and when running inside a bank it will switch out this code it is currently running.
- Therefor you cannot jump or call directly from one bank to another and need to use a so-called trampoline in the common area.
- For SDCC an example trampoline is in crtbank.asm and you may need to change it to your 8051 derivative or schematic.
- The presented code is written for the C8051F120.
+ The selected bank usually becomes active immediately upon assignment to this sfr and when running inside a bank it will switch out the code it is currently running.
+ Therefore it is not possible to jump or call directly from one bank to another and a so-called trampoline function in the common area is needed.
+ For SDCC an example trampoline for the C8051F120 is in crtbank.asm and you may need to change it to match your 8051 derivative or schematic.
 \begin_inset Newline newline
 \end_inset
 
@@ -44254,18 +44406,25 @@ Usually the hardware uses some sfr (an output port or an internal sfr) to select
 \end_inset
 
 When calling a banked function SDCC will put the LSB of the functions address in register R0,
- the MSB in R1 and the bank in R2 and then call this trampoline 
+ the MSB in R1, the bank in R2 and then call the trampoline
 \emph on
-__sdcc_banked_call
+sdcc_banked_call
 \emph default
 .
- The current selected bank is saved on the stack,
- the new bank is selected and an indirect jump is made.
- When the banked function returns it jumps to 
+ The trampoline function should save the currently selected bank on the stack,
+ select the new bank and do an indirect jump to the target address.
+ When a banked function returns SDCC will emit a jump to
 \emph on
-__sdcc_banked_ret
+sdcc_banked_ret
 \emph default
- which restores the previous bank and returns to the caller.
+ which should restore the previous bank and return to the caller.
+ For regular jumps across banks
+\emph on
+ sdcc_banked_jump
+ \emph default
+ is used instead, which is not supposed to save the currently selected bank
+ but rather just switch to the new bank and do the jump. Such jumps might be
+ used for optimizing tail calls and no-return calls.
 \end_layout
 
 \begin_layout Subsubsection
@@ -48892,6 +49051,38 @@ The compiling and linking procedure remains the same,
  _bp is the stack frame pointer and is used to compute the offset into the stack for parameters and local variables.
 \end_layout
 
+\begin_layout Subsection
+Side channels
+\end_layout
+
+\begin_layout Standard
+The command line option and pragma to avoid the introduction of side channels are supported in the backend.
+ However,
+ some side channels remain even when using it;
+ these include:
+\end_layout
+
+\begin_layout Itemize
+Division,
+ modulo and multiplication operations can leak operand data.
+\end_layout
+
+\begin_layout Itemize
+Shift operations can leak right operand data.
+\end_layout
+
+\begin_layout Itemize
+Equality comparisons can leak operand data.
+\end_layout
+
+\begin_layout Itemize
+Reads and writes via pointers can leak which intrinsic named address spaces the pointers point into.
+\end_layout
+
+\begin_layout Itemize
+Floating-point operations (except unary minus) can leak operand data.
+\end_layout
+
 \begin_layout Section
 DS400 port
 \end_layout
@@ -52574,6 +52765,35 @@ For banked functions,
  all parameters are passed on the stack.
 \end_layout
 
+\begin_layout Subsection
+Side channels
+\end_layout
+
+\begin_layout Standard
+The command line option and pragma to avoid the introduction of side channels are supported in the backend.
+ However,
+ some side channels remain even when using it;
+ these include:
+\end_layout
+
+\begin_layout Itemize
+Division,
+ modulo,
+ and multiplication operations can leak operand data.
+\end_layout
+
+\begin_layout Itemize
+Shift operations can leak right operand data.
+\end_layout
+
+\begin_layout Itemize
+Comparisons can leak operand data in the sm83 backend.
+\end_layout
+
+\begin_layout Itemize
+Floating-point operations (except unary minus) can leak operand data.
+\end_layout
+
 \begin_layout Section
 The HC08 and S08 ports
 \end_layout
@@ -52623,6 +52843,30 @@ HC08
 \end_inset
 
  startup code follows the same scheme as the MCS51 startup code.
+\end_layout
+
+\begin_layout Subsection
+Side channels
+\end_layout
+
+\begin_layout Standard
+The command line option and pragma to avoid the introduction of side channels are supported in the backend.
+ However,
+ some side channels remain even when using it;
+ these include:
+\end_layout
+
+\begin_layout Itemize
+Division,
+ modulo and multiplication operations can leak operand data.
+\end_layout
+
+\begin_layout Itemize
+Shift operations can leak right operand data.
+\end_layout
+
+\begin_layout Itemize
+Floating-point operations (except unary minus) can leak operand data.
 \end_layout
 
 \begin_layout Section
@@ -52772,6 +53016,29 @@ For compatibility with the Cosmic STM8 compiler,
  and are called using callf.
 \end_layout
 
+\begin_layout Subsection
+Side channels
+\end_layout
+
+\begin_layout Standard
+The command line option and pragma to avoid the introduction of side channels are supported in the backend.
+ However,
+ some side channels remain even when using it;
+ these include:
+\end_layout
+
+\begin_layout Itemize
+Division and modulo operations can leak operand data
+\end_layout
+
+\begin_layout Itemize
+Shift operations can leak right operand data
+\end_layout
+
+\begin_layout Itemize
+Floating-point operations (except unary minus) can leak operand data
+\end_layout
+
 \begin_layout Section
 The f8 port
 \end_layout
@@ -52791,6 +53058,29 @@ If the the function does not have variable arguments,
  yx (32 bit) or use a hidden extra pointer parameter pointing to the location (anything wider than 32 bit,
  and all struct / union).
  The stack is not adjusted for the parameters by the callee (thus the caller has to do this instead).
+\end_layout
+
+\begin_layout Subsection
+Side channels
+\end_layout
+
+\begin_layout Standard
+The command line option and pragma to avoid the introduction of side channels are supported in the backend.
+ However,
+ some side channels remain even when using it;
+ these include:
+\end_layout
+
+\begin_layout Itemize
+Division and modulo operations can leak operand data.
+\end_layout
+
+\begin_layout Itemize
+Shift operations can leak right operand data.
+\end_layout
+
+\begin_layout Itemize
+Floating-point operations (except unary minus) can leak operand data.
 \end_layout
 
 \begin_layout Section
@@ -52929,6 +53219,48 @@ The compiler can pass segment location to the linker.
 \begin_layout Standard
 –xram-loc:
  start address of the data segment
+\end_layout
+
+\begin_layout Section
+The PDK13,
+ PDK14,
+ PDK15 ports
+\end_layout
+
+\begin_layout Subsection
+Side channels
+\end_layout
+
+\begin_layout Standard
+The command line option and pragma to avoid the introduction of side channels are supported in the backend.
+ However,
+ some side channels remain even when using it;
+ these include:
+\end_layout
+
+\begin_layout Itemize
+Division,
+ modulo and multiplication operations can leak operand data.
+\end_layout
+
+\begin_layout Itemize
+Shift operations can leak right operand data.
+\end_layout
+
+\begin_layout Itemize
+Reads from signed bit-fields can leak the sign bit.
+\end_layout
+
+\begin_layout Itemize
+Signed casts can leak the sign of the operand.
+\end_layout
+
+\begin_layout Itemize
+Comparisons can leak operand data.
+\end_layout
+
+\begin_layout Itemize
+Floating-point operations (except unary minus) can leak operand data.
 \end_layout
 
 \begin_layout Section

@@ -163,6 +163,18 @@ genPlusInc (iCode * ic)
 		  return true;  
 		}
 	    }
+	  // Use X or Y as scratch register for mem = mem + 1
+	  else if (!dst_reg && AOP_TYPE(result)!=AOP_SOF && AOP_TYPE(left)!=AOP_SOF)
+	    {
+	      reg_info *scratch = m6502_getFreeIdxReg();
+	      if (scratch && scratch->isDead)
+		{
+		  m6502_loadRegFromAop (scratch, AOP(left), 0);
+		  m6502_rmwWithReg (OPINCDEC, scratch);
+		  m6502_storeRegToAop (scratch, AOP(result), 0);
+		  return true;
+		}
+	    }
 	}
       return false;
     }
@@ -305,6 +317,7 @@ m6502_genPlus (iCode * ic)
   if ( IS_AOP_XA(AOP(result)) && is_right_byte && !maskedtopbyte && AOP_TYPE(right) != AOP_SOF) 
     {
       symbol *skipInc = m6502_safeNewiTempLabel (NULL);
+
       m6502_loadRegFromAop (m6502_reg_xa, AOP(left), 0);
       INIT_CARRY();
       m6502_accopWithAop (OPCODE, AOP(right), 0);
@@ -318,6 +331,7 @@ m6502_genPlus (iCode * ic)
   if ( IS_AOP_XA(AOP(result)) && !maskedtopbyte && IS_AOP_A(AOP(left)) && AOP_TYPE(right) != AOP_SOF) 
     {
       symbol *skipInc = m6502_safeNewiTempLabel (NULL);
+
       INIT_CARRY();
       m6502_accopWithAop (OPCODE, AOP(right), 0);
       m6502_loadRegFromAop (m6502_reg_x, AOP(right), 1);
@@ -333,6 +347,7 @@ m6502_genPlus (iCode * ic)
       m6502_emitComment (TRACEGEN|VVDBG, "    %s: XA = XA + SOF", __func__);
       storeRegTemp(m6502_reg_x, true);
       int xloc = m6502_getLastTempOfs();
+
       INIT_CARRY();
       m6502_accopWithAop (OPCODE, AOP (right), 0);
       m6502_fastSaveA();
@@ -357,6 +372,7 @@ m6502_genPlus (iCode * ic)
 
       savea = fastSaveAIfSurv();
       storeRegTemp(m6502_reg_x, true);
+
       m6502_emitTSX();
       m6502_loadRegFromAop (m6502_reg_a, AOP(left), 0);
       INIT_CARRY();
@@ -391,8 +407,13 @@ m6502_genPlus (iCode * ic)
 
   for(offset=0; offset<size; offset++)
     {
-      m6502_loadRegFromAop (m6502_reg_a, AOP(left), offset);
+      if (opskip && AOP_TYPE (right) == AOP_LIT 
+          && (byteOfVal (AOP (right)->aopu.aop_lit, offset) == 0x00)
+          && m6502_sameRegs (AOP (left), AOP (result)) 
+          && !IS_AOP_XA (AOP(result)) )
+        continue;
 
+      m6502_loadRegFromAop (m6502_reg_a, AOP(left), offset);
 
       if (!opskip || AOP_TYPE (right) != AOP_LIT || (byteOfVal (AOP (right)->aopu.aop_lit, offset) != 0x00) )
 	{
@@ -412,8 +433,10 @@ m6502_genPlus (iCode * ic)
 	{
 	  m6502_emitComment (TRACEGEN|VVDBG, "  %s - save offset=%d", __func__, offset);
           m6502_fastSaveA();
+
           if(savea)
             emitcode("ERROR", " %s - needpulla && delayedstore == true ", __func__);
+
 	  savea = true;
 	}
       else

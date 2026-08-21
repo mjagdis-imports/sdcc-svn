@@ -125,6 +125,7 @@ struct m6502_state_t
   int funcHasBasePtr;
   int stackPushes;
   //  int baseStackPushes;
+  iCode *sic;
   set *sendSet;
   int tempOfs;
   unsigned carryValid:1;
@@ -146,6 +147,7 @@ extern asmop m6502_tsxaop;
 extern unsigned fReturnSizeM6502;
 extern bool m6502_assignment_optimal;
 extern struct m6502_state_t _S;
+extern const char m6502_builtins[];
 
 extern const char *IMMDFMT; // = "#0x%02x";
 extern const char *TEMPFMT_IND; // = "[REGTEMP+%d]";
@@ -176,6 +178,8 @@ reg_info* m6502_getDeadByteReg();
 reg_info* m6502_getFreeByteReg();
 reg_info* m6502_getFreeIdxReg();
 void m6502_copy (operand * result, operand * source);
+bool m6502_keepTSX();
+bool m6502_tsxUseful();
 
 
 // code emit
@@ -199,6 +203,7 @@ void m6502_storeRegToFullAop (reg_info *reg, asmop *aop, bool isSigned);
 void m6502_rmwWithReg (char *rmwop, reg_info * reg);
 reg_info* m6502_findRegAop (asmop * aop, int loffset);
 
+void m6502_storeRegToDPTR(reg_info *reg, int dofs);
 void m6502_storeConstToAop (int c, asmop * aop, int loffset);
 void m6502_transferAopAop (asmop * srcaop, int srcofs, asmop * dstaop, int dstofs);
 void m6502_storeRegToAop (reg_info *reg, asmop * aop, int loffset);
@@ -241,6 +246,7 @@ int  m6502_getLastTempOfs();
 
 // gen functions
 //void m6502_genCode (iCode *ic);
+void m6502_genBuiltIn (iCode *ic);
 void m6502_genIfxJump (iCode * ic, char *jval);
 void m6502_genOr (iCode * ic, iCode * ifx);
 void m6502_genXor (iCode * ic, iCode * ifx);

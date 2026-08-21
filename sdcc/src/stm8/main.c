@@ -603,11 +603,11 @@ PORT stm8_port =
   hasExtBitOp,                  /* hasExtBitOp */
   NULL,                         /* oclsExpense */
   TRUE,
-  FALSE,                        /* little endian */
-  0,                            /* leave lt */
-  0,                            /* leave gt */
-  1,                            /* transform <= to ! > */
-  1,                            /* transform >= to ! < */
+  false,                        // not little endian - STM8 is big endian.
+  0,                            // leave lt
+  0,                            // leave gt
+  1,                            // transform <= to ! >
+  1,                            // transform >= to ! <
   false,                        // leave !=
   false,                        // leave ==
   false,                        // Array initializer support

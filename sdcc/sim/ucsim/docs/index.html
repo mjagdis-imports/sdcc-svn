@@ -3,8 +3,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <title>Microcontroller Simulator</title>
+    <link rel="stylesheet" href="ucsim.css">
   </head>
-  <body style="    background-color: white;">
+
+  <body>
+
     [ <a href="news.html">News</a> ]
     [ <a href="#download">Download</a> (<a href="https://github.com/danieldrotos/ucsim/releases/latest">latest</a>) ]
     [ <a href="#install">Installation</a> ]
@@ -13,7 +16,7 @@
     
     <p> </p>
 
-    <pre><tt><font size="+1">
+    <pre class="logo"><font size="+1">
         _____     _           
        / ____|   (_)          
  _   _| |     ___ _ _ __ ___  
@@ -22,9 +25,9 @@
 \ ._,_|\_____|___/_|_| |_| |_|
 | |                           
 |_|                           
-    </font></tt></pre>
+    </font></pre>
     
-    <h1>Software simulator for microcontrollers</h1>
+    <h1>Instruction Set Simulator (ISS) for microcontrollers</h1>
     
     <p><b><i>&micro;Csim</i></b> can be used to simulate
       microcontrollers. It supports
@@ -49,7 +52,7 @@
 	<a href="https://github.com/Steve-Teal/eforth-misc16">MISC16</a>)</li>
       </ul>
       
-      It can run on Linux, Windows, OSX, BSD, and other systems.</p>
+      It runs on Linux, Windows, OSX, BSD, and other systems.</p>
 
     <p>See <a href="news.html">what's new</a> in current version.</p>
       
@@ -59,8 +62,8 @@
     places:</p>
       
       
-	
-    <p><b><i>&micro;Csim</i> site.</b> Standalone source package is
+    <ul>
+    <li><b><i>&micro;Csim</i> site.</b> Standalone source package is
       available on the <i>&micro;Csim</i> web site:
 	
       <a href="https://github.com/danieldrotos/ucsim/releases">https://github.com/danieldrotos/ucsim/releases</a></p>
@@ -69,26 +72,31 @@
 	architectures) packages for all Debian based Linux
 	distributions, Windows installer and standalone Windows
 	package.</p>
-	  
+    </li>
 
-    <p><b>SDCC homepage.</b> <i>&micro;Csim</i> is part of the SDCC
+    <li><b>SDCC homepage.</b> <i>&micro;Csim</i> is part of the SDCC
         (Small Device C Compiler) project. You can download source of
         SDCC or precompiled binaries
         from <a href="http://sdcc.sf.net">http://sdcc.sf.net</a>.
         Please note, that SDCC binary package contains
         limited <i>&micro;Csim</i>, including simulators for SDCC
-        ports only.</p>
+      ports only.
+    </li>
 	
-    <p>Older versions are available from the archive
-	  site: <a href="http://mazsola.iit.uni-miskolc.hu/ucsim/archive">http://mazsola.iit.uni-miskolc.hu/ucsim/download</a></p>
-	  
+    <li>Older versions are available from the <b>archive
+      site</b>: <a href="http://mazsola.iit.uni-miskolc.hu/ucsim/archive">http://mazsola.iit.uni-miskolc.hu/ucsim/download</a>
+    </li>
+</ul>
+
 	      
       <p><!-- INSTALL --></p>
       
       <h2><a name="install">How to install</a></h2>
+
+      <h3>Use precompiled binary packages</h3>
       
       <p>UNIX version is distributed in source, as well as
-	in pre-compiled debian stable packages for i386 and amd64
+	in pre-compiled debian packages for i386 and amd64
 	architectures.</p>
 
       <p>Windows version distributed as a setup executable and as a
@@ -188,7 +196,40 @@
     <ul>
 	    <li><a href="stm8/index.html">STM8</a></li>
     </ul>
-    <h2><a name="dev">Developers</a></h2>
+
+    
+    <h2>Authors and contributors</h2>
+    
+Daniel Drotos,
+<br>Gunar Holm,
+<br>Sandeep Dutta,
+<br>Salvador Eduardo Tropea,
+<br>Josef Wolf,
+<br>Stephane Meyer,
+<br>Larry Doolittle,
+<br>Timothy Hurman,
+<br>Karl-Max Wagner,
+<br>Edmar Wienskoski Jr,
+<br>Alexandre Frey,
+<br>Kaido Karner,
+<br>Kalr Bongers,
+<br>Alexis Pavlov,
+<br>Davine Zanni,
+<br>Anton Persson,
+<br>Nicolas Lesser,
+<br>Mike Jagdis,
+<br>Jiri Simek,
+<br>Zbynek Krivka,
+<br>Vaclav Peroutka,
+<br>Valentin Dudouyt,
+<br>Erik Petrich,
+<br>Leland Morrison,
+<br>Johan Knol,
+Neil Johnson.
+
+
+    <h2><a name="dev">For developers</a></h2>
+
     <ul>
       <li><a href="testing.html">Regression Testing</a></li>
     </ul>

@@ -77,6 +77,8 @@ ast *optimizeGetByte (ast *, RESULT_TYPE);
 ast *optimizeGetWord (ast *, RESULT_TYPE);
 static ast *backPatchLabels (ast *, symbol *, symbol *);
 static void copyAstLoc (ast *, ast *);
+static ast *gatherAutoInit (symbol *, ast *, int *);
+void gatherImplicitVariables (ast *, ast *);
 void PA (ast * t);
 int inInitMode = 0;
 memmap *GcurMemmap = NULL;      /* points to the memmap that's currently active */
@@ -740,7 +742,7 @@ resolveSymbols (ast *tree)
 
     /* If entering a block with symbols defined, mark the symbols in-scope */
     /* before continuing down the tree, and mark them out-of-scope again   */
-    /* on the way back up */ 
+    /* on the way back up */
     if (tree->type == EX_OP && tree->opval.op == BLOCK && tree->values.sym)
       {
         symbol * sym = tree->values.sym;
@@ -759,7 +761,7 @@ resolveSymbols (ast *tree)
           }
         return tree;
       }
-      
+
 resolveChildren:
   resolveSymbols (tree->left);
   resolveSymbols (tree->right);
@@ -1188,6 +1190,47 @@ moveNestedInit (initList *src)
 }
 
 /*-----------------------------------------------------------------*/
+/* fieldStartBit, fieldEndBit - bit extent of a field within its   */
+/*   struct. A byte offset cannot tell a member promoted out of an */
+/*   anonymous union from bitfields that legitimately share one    */
+/*   storage unit, because both share a byte offset. In bits they  */
+/*   separate: consecutive bitfields start where the previous one  */
+/*   ended, an alternative of a union starts where the union does. */
+/*-----------------------------------------------------------------*/
+static unsigned
+fieldStartBit (symbol *field)
+{
+  return field->offset * 8 + (IS_BITFIELD (field->type) ? SPEC_BSTR (field->etype) : 0);
+}
+
+static unsigned
+fieldEndBit (symbol *field)
+{
+  if (IS_BITFIELD (field->type))
+    return fieldStartBit (field) + SPEC_BLEN (field->etype);
+  return (field->offset + getSize (field->type)) * 8;
+}
+
+/*-----------------------------------------------------------------*/
+/* overlapsInitialized - does FIELD share storage with a member an */
+/*   explicit designator already initialized?  Those bits are the  */
+/*   union's active alternative and must not be zeroed over. A     */
+/*   field always overlaps itself, so a designated member answers  */
+/*   yes for its own storage.                                      */
+/*-----------------------------------------------------------------*/
+static bool
+overlapsInitialized (symbol *fields, set *initialized, symbol *field)
+{
+  symbol *f;
+
+  for (f = fields; f; f = f->next)
+    if (isinSet (initialized, f) &&
+        fieldStartBit (f) < fieldEndBit (field) && fieldStartBit (field) < fieldEndBit (f))
+      return true;
+  return false;
+}
+
+/*-----------------------------------------------------------------*/
 /* findStructField - find a specific field in a struct definition  */
 /*-----------------------------------------------------------------*/
 static symbol *
@@ -1221,6 +1264,14 @@ createIvalStruct (ast *sym, sym_link *type, initList *ilist, ast *rootValue)
   set *initialized_fields = newSet ();
 
   // Handle designated initializers first.
+  /* An initializer after a designated one initializes the member that
+     follows the designated member (C11 6.7.9p17), not the first member of
+     the struct, so remember where the positional walk below resumes. */
+  symbol *resume = NULL;
+  /* a union takes a single initializer, so a designator is the whole list
+     for it and only the zero fill below is left to do */
+  bool uniondesig = false;
+
   for (;iloop && iloop->designation; iloop = iloop->next)
     {
       symbol *sflds;
@@ -1247,20 +1298,108 @@ createIvalStruct (ast *sym, sym_link *type, initList *ilist, ast *rootValue)
               break;
             }
         }
-      
+
       sflds->implicit = 1;
       lAst = newNode (PTR_OP, newNode ('&', sym, NULL), newAst_VALUE (symbolVal (sflds)));
       lAst = decorateType (resolveSymbols (lAst), RESULT_TYPE_NONE, true);
       rast = decorateType (resolveSymbols (createIval (lAst, sflds->type, iloop, rast, rootValue, 1)), RESULT_TYPE_NONE, true);
       addSet (&initialized_fields, sflds);
+      resume = sflds->next;
 
       if (SPEC_STRUCT (type)->type == UNION)
-        goto release;
+        {
+          uniondesig = true;
+          break;
+        }
     }
 
+  /* An anonymous union is initialized through one alternative only, so the
+     bytes of it that alternative does not reach get no initializer - but
+     C11 6.7.9p19 still zeroes them, being sub-objects that were not
+     initialized explicitly. Static storage already reads as zero, and its
+     __xinit_ image is padded; automatic storage needs the stores emitting,
+     and they go first so that the real initializers below overwrite the
+     leading part. */
+  if (AST_SYMBOL (rootValue)->islocal && !SPEC_STAT (etype))
+    {
+      symbol *run = SPEC_STRUCT (type)->fields;
+
+      while (run)
+        {
+          symbol *f, *runend;
+          unsigned unionstart, covered;
+          bool designated = false;
+
+          if (!run->anonunionalias)
+            {
+              run = run->next;
+              continue;
+            }
+
+          /* [run, runend) is the row of members promoted out of one union */
+          unionstart = fieldStartBit (run);
+          covered = unionstart;
+
+          /* how far the alternative the union is initialized through
+             reaches: the unmarked fields of this union, just before the
+             row. A designator picking an alternative instead is left
+             alone entirely. */
+          for (f = SPEC_STRUCT (type)->fields; f != run; f = f->next)
+            {
+              if (fieldStartBit (f) < unionstart)
+                continue;
+              if (isinSet (initialized_fields, f))
+                designated = true;
+              else if (fieldEndBit (f) > covered)
+                covered = fieldEndBit (f);
+            }
+          for (runend = run; runend && runend->anonunionalias; runend = runend->next)
+            if (isinSet (initialized_fields, runend))
+              designated = true;
+
+          /* TYPE is itself the union when the row was promoted out of an
+             anonymous struct of its own. Only one member of it is ever
+             initialized, so a designator naming one of the row leaves the
+             alternative ahead of the row uninitialized after all. */
+          if (designated && SPEC_STRUCT (type)->type == UNION)
+            covered = unionstart;
+
+          for (f = run; f != runend; f = f->next)
+            {
+              if (IS_BITFIELD (f->type) && SPEC_BUNNAMED (f->etype))
+                continue;
+              if (fieldEndBit (f) <= covered)
+                continue;
+              /* Storage an explicit designator initialized is never zeroed
+                 over, wherever in the object that designator was. It cannot
+                 be gated on a designator having been seen in or before this
+                 row: a nested anonymous union splits one union's members
+                 into several rows, so the designator may sit in a row this
+                 walk has not reached yet. */
+              if (overlapsInitialized (SPEC_STRUCT (type)->fields, initialized_fields, f))
+                continue;
+              f->implicit = 1;
+              lAst = newNode (PTR_OP, newNode ('&', sym, NULL), newAst_VALUE (symbolVal (f)));
+              lAst = decorateType (resolveSymbols (lAst), RESULT_TYPE_NONE, true);
+              rast = decorateType (resolveSymbols (createIval (lAst, f->type, NULL, rast, rootValue, 1)), RESULT_TYPE_NONE, true);
+              covered = fieldEndBit (f);
+            }
+          run = runend;
+        }
+    }
+
+  if (uniondesig)
+    goto release;
+
   // Handle the rest and fill in the gaps.
+  unsigned prevEnd = 0;             /* end bit of the last field initialized below */
+  bool positional = (resume == NULL);   /* has the walk reached the resume point? */
+
   for (symbol *sflds = SPEC_STRUCT (type)->fields; sflds; sflds = sflds->next)
     {
+      if (sflds == resume)
+        positional = true;
+
       if (isinSet (initialized_fields, sflds)) // Already initalized by designated initializer
         continue;
 
@@ -1268,17 +1407,49 @@ createIvalStruct (ast *sym, sym_link *type, initList *ilist, ast *rootValue)
       if (sflds && IS_BITFIELD (sflds->type) && SPEC_BUNNAMED (sflds->etype))
         continue;
 
+      /* promoteAnonStructs() flattens the members of an anonymous union
+         into the enclosing struct, so they all carry the same offset.
+         Brace elision initializes such a union once, through its first
+         member; the siblings aliasing storage that was just initialized
+         must not consume an initializer of their own. Comparing bit
+         extents rather than byte offsets keeps bitfields in: several of
+         them legitimately share a byte, but each starts where the
+         previous one ended, so only a real alias starts before prevEnd.
+         An alternative that is a struct larger than the first continues
+         past prevEnd and so cannot be recognized by extent at all; those
+         members carry anonunionalias from promoteAnonStructs().
+         overlapsInitialized() covers the case a designator creates: it
+         names the union's active alternative, and the alternative the walk
+         would otherwise initialize shares that storage, so writing it here
+         would write over the value the designator asked for. */
+      if (sflds->anonunionalias || fieldStartBit (sflds) < prevEnd ||
+          overlapsInitialized (SPEC_STRUCT (type)->fields, initialized_fields, sflds))
+        {
+          if (fieldEndBit (sflds) > prevEnd)
+            prevEnd = fieldEndBit (sflds);
+          continue;
+        }
+
+      /* A member ahead of the resume point takes no initializer of its own;
+         it is only zeroed, which static storage already is. */
+      if (!positional)
+        {
+          if (!AST_SYMBOL (rootValue)->islocal || SPEC_STAT (etype))
+            continue;
+        }
       /* if we have come to end */
-      if (!iloop && (!AST_SYMBOL (rootValue)->islocal || SPEC_STAT (etype)))
+      else if (!iloop && (!AST_SYMBOL (rootValue)->islocal || SPEC_STAT (etype)))
         break;
 
       /* initialize this field */
       sflds->implicit = 1;
       lAst = newNode (PTR_OP, newNode ('&', sym, NULL), newAst_VALUE (symbolVal (sflds)));
       lAst = decorateType (resolveSymbols (lAst), RESULT_TYPE_NONE, true);
-      rast = decorateType (resolveSymbols (createIval (lAst, sflds->type, iloop, rast, rootValue, 1)), RESULT_TYPE_NONE, true);
+      rast = decorateType (resolveSymbols (createIval (lAst, sflds->type, positional ? iloop : NULL, rast, rootValue, 1)), RESULT_TYPE_NONE, true);
       addSet (&initialized_fields, sflds);
-      iloop = iloop ? iloop->next : NULL;
+      prevEnd = fieldEndBit (sflds);
+      if (positional)
+        iloop = iloop ? iloop->next : NULL;
 
       /* Unions can only initialize a single field */
       if (SPEC_STRUCT (type)->type == UNION)
@@ -1623,14 +1794,17 @@ initAggregates (symbol *sym, initList *ival, ast *wid)
 
 /*-----------------------------------------------------------------*/
 /* gatherAutoInit - creates assignment expressions for initial     */
-/*                  values                                         */
+/*                  values. BLOCK is the block AUTOCHAIN belongs   */
+/*                  to, or NULL, and takes the temporary symbols   */
+/*                  of any compound literals the initializers hold */
 /*-----------------------------------------------------------------*/
 static ast *
-gatherAutoInit (symbol * autoChain)
+gatherAutoInit (symbol * autoChain, ast * block, int *stack)
 {
   ast *init = NULL;
   ast *work;
   symbol *sym;
+  int oldInitMode = inInitMode;
 
   inInitMode = 1;
   for (sym = autoChain; sym; sym = sym->next)
@@ -1710,6 +1884,32 @@ gatherAutoInit (symbol * autoChain)
             }
           setAstFileLine (work, sym->fileDef, sym->lineDef);
 
+          /* The initializer may hold a compound literal. Its temporary
+             symbol only becomes reachable now that the initializer list
+             has been turned into a tree, which is after the pass that puts
+             such symbols into their block has run, so it would otherwise
+             be left with neither storage nor a name. Attach it here, and
+             put its own initializer in front of the one that reads it -
+             not in front of the whole block, which would run it before a
+             variable of this block its initializer may name. */
+          if (block)
+            {
+              symbol **decl = &(block->values.sym);
+
+              while (*decl)
+                decl = &((*decl)->next);
+              gatherImplicitVariables (work, block);
+              if (*decl)
+                {
+                  ast *litInit;
+
+                  *stack += allocVariables (*decl);
+                  litInit = gatherAutoInit (*decl, block, stack);
+                  if (litInit)
+                    work = newNode (NULLOP, litInit, work);
+                }
+            }
+
           // if this is a constexpr, keep the ival for compile-time evaluation
           if (!(IS_CONSTEXPR (sym->etype)))
             sym->ival = NULL;
@@ -1719,7 +1919,7 @@ gatherAutoInit (symbol * autoChain)
             init = work;
         }
     }
-  inInitMode = 0;
+  inInitMode = oldInitMode;
   return init;
 }
 
@@ -1828,7 +2028,7 @@ processBlockVars (ast * tree, int *stack, int action)
       if (action == ALLOCATE)
         {
           *stack += allocVariables (tree->values.sym);
-          autoInit = gatherAutoInit (tree->values.sym);
+          autoInit = gatherAutoInit (tree->values.sym, tree, stack);
 
           /* if there are auto inits then do them */
           if (autoInit)
@@ -1860,7 +2060,7 @@ processBlockVars (ast * tree, int *stack, int action)
           sym = sym->next;
         }
     }
-    
+
   return tree;
 }
 
@@ -2609,7 +2809,7 @@ isInitiallyTrue (ast *initExpr, ast * condExpr)
     return FALSE;
 
   /* Replace the symbol with its initial value and see if the condition */
-  /* simplifies to a non-zero (TRUE) literal value */      
+  /* simplifies to a non-zero (TRUE) literal value */
   condExpr = copyAst (condExpr);
   if (replLoopSymByVal (condExpr, sym, AST_VALUE (initExpr)))
     {
@@ -2673,7 +2873,7 @@ createDoFor (symbol * trueLabel, symbol * continueLabel, symbol * falseLabel,
     }
   else
     loopExpr = createLabel (continueLabel, loopExpr);
-   
+
   /* now start putting them together */
   forTree = newNode (NULLOP, initExpr, forBody);
   forTree = newNode (NULLOP, forTree, loopExpr);
@@ -2759,8 +2959,8 @@ getResultTypeFromType (sym_link * type)
 
 /*    BOOL and single bit BITFIELD are not interchangeable!
  *    There must be a cast to do this safely, in which case
- *    the previous IS_BOOLEAN test will handle it. 
-      
+ *    the previous IS_BOOLEAN test will handle it.
+
       if (blen <= 1)
         return RESULT_TYPE_BOOL;
 */
@@ -3008,7 +3208,7 @@ gatherImplicitVariables (ast *tree, ast *block)
 
   /* If entering a block with symbols defined, mark the symbols in-scope */
   /* before continuing down the tree, and mark them out-of-scope again   */
-  /* on the way back up */ 
+  /* on the way back up */
   if (tree->type == EX_OP && tree->opval.op == BLOCK && tree->values.sym)
     {
       symbol * sym = tree->values.sym;
@@ -3162,7 +3362,7 @@ void
 checkPtrCast (sym_link *newType, sym_link *orgType, bool implicit, bool orgIsNullPtrConstant)
 {
   int errors = 0;
-  
+
   if (IS_ARRAY (orgType))
     {
       value *val;
@@ -3215,7 +3415,7 @@ checkPtrCast (sym_link *newType, sym_link *orgType, bool implicit, bool orgIsNul
             }
           else if (IS_GENPTR (newType) && IS_VOID (newType->next)) // cast to void* is always allowed
             {
-              if (IS_FUNCPTR (orgType)) 
+              if (IS_FUNCPTR (orgType))
                 errors += werror (FUNCPTRSIZE > GPTRSIZE ? E_INCOMPAT_PTYPES : W_INCOMPAT_PTYPES);
             }
           else if (IS_GENPTR (orgType) && IS_VOID (orgType->next)) // cast from void* is always allowed - as long as we cast to a pointer to an object type
@@ -3248,7 +3448,7 @@ checkPtrCast (sym_link *newType, sym_link *orgType, bool implicit, bool orgIsNul
           // UB up to C23, constraint violation in C2y (N3712), but we make it a warning only, so we can keep our implemenation-defined behavior.
           if (IS_INTEGRAL (newType) && !IS_BOOLEAN (newType) && bitsForType (newType) < bitsForType (orgType))
             errors += werror (W_PTR2INT_NOREPRESENT);
-          
+
           if (implicit)         // sneaky
             {
               if (IS_INTEGRAL (newType))
@@ -3530,7 +3730,7 @@ optStdLibCall (ast *tree, RESULT_TYPE resulttype)
 
       symbol *memcpy_sym = findSym (SymbolTab, NULL, !strcmp(funcname, "__builtin_strcpy") ? "__builtin_memcpy" : "__memcpy");
 
-      if(!memcpy_sym)
+      if (!memcpy_sym)
         return;
 
       ast *lengthparm = newAst_VALUE (valCastLiteral (newIntLink(), strlength, strlength));
@@ -3544,7 +3744,7 @@ optStdLibCall (ast *tree, RESULT_TYPE resulttype)
       node->left->lineno = parm->lineno;
       node->left->filename = node->left->left->filename = parm->filename;
       node->left = decorateType (node->left, RESULT_TYPE_GPTR, true);
-      
+
       node->right = lengthparm;
       node->decorated = 1;
       parms->right = node;
@@ -3574,7 +3774,7 @@ rewriteAstNodeOp (ast *tree, int op, ast *left, ast *right)
   tree->left = left;
   tree->right = right;
   tree->decorated = 0;
-  
+
   rewriteAstJoinSideEffects (tree, oLeft, oRight);
 }
 
@@ -3594,7 +3794,7 @@ rewriteAstNodeVal (ast *tree, value *val)
   tree->right = NULL;
   TETYPE (tree) = getSpec (TTYPE (tree) = tree->opval.val->type);
   tree->decorated = 0;
-  
+
   rewriteAstJoinSideEffects (tree, oLeft, oRight);
 }
 
@@ -3621,6 +3821,7 @@ rewriteStructAssignment (ast *tree)
   copyAstLoc (params, tree);
 
   /* create call to the appropriate memcpy function */
+  symbol *builtin_memcpy = findSym (SymbolTab, NULL, "__builtin_memcpy") ? findSym (SymbolTab, NULL, "__builtin_memcpy") : findSym (SymbolTab, NULL, "__memcpy");
   ast *ast_memcpy = newAst_VALUE (symbolVal (builtin_memcpy));
   copyAstLoc (ast_memcpy, tree);
   ast *call = newNode (CALL, ast_memcpy, params);
@@ -3829,7 +4030,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
       resultTypeProp = getLeftResultType (tree, resultTypeProp);
     else
       resultTypeProp = RESULT_TYPE_OTHER;
-      
+
     switch (tree->opval.op)
       {
       case '?':
@@ -3909,7 +4110,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           int arrayIndex = (int) ulFromVal (valFromType (RETYPE (tree)));
           int arraySize = DCL_ELEM (LTYPE (tree));
           int arrayLimit = findingAddressOf ? arraySize+1 : arraySize;
-          
+
           if (arraySize && arrayIndex >= arrayLimit)
             {
               werrorfl (tree->filename, tree->lineno, W_IDX_OUT_OF_BOUNDS, arrayIndex, arraySize);
@@ -4117,7 +4318,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           if (otree != tree)
             return decorateType (otree, RESULT_TYPE_NONE, reduceTypeAllowed);
 
-          /* if right is a literal and has the same size with left, 
+          /* if right is a literal and has the same size with left,
              then also sync their signedness to avoid unnecessary cast */
           if (IS_LITERAL (RTYPE (tree)) && getSize (RTYPE (tree)) == getSize (LTYPE (tree)))
             SPEC_USIGN (RTYPE (tree)) = SPEC_USIGN (LTYPE (tree));
@@ -4146,7 +4347,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           werrorfl (tree->filename, tree->lineno, E_ILLEGAL_ADDR, "address of bit variable");
           goto errorTreeReturn;
         }
-        
+
       if (LETYPE (tree) && SPEC_SCLS (LETYPE (tree)) == S_SFR && !port->mem.sfrupointer)
         {
           werror (E_SFR_POINTER);
@@ -4171,7 +4372,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
         }
 
       p = newLink (DECLARATOR);
-      
+
       if (!LETYPE (tree))
         {
           DCL_TYPE (p) = POINTER;
@@ -4205,7 +4406,8 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
       if (IS_AST_SYM_VALUE (tree->left))
         {
           AST_SYMBOL (tree->left)->addrtaken = 1;
-          // Do not require allocated space for static variables in inline function definitions for which no code will be emitted. Allocated space will be requested if and where it gets inlined.
+          // Do not require allocated space for static variables in inline function definitions for which no code will be emitted.
+          // Allocated space will be requested if and where it gets inlined.
           AST_SYMBOL (tree->left)->allocreq =
             !(AST_SYMBOL (tree->left)->level && currFunc && FUNC_ISINLINE (currFunc->type) && !IS_EXTERN (getSpec (currFunc->type)) && !IS_STATIC (getSpec (currFunc->type)));
         }
@@ -4357,7 +4559,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
         }
 
       /* OR / XOR char with literal integral, try to reduce integral to CHAR if it fits in a CHAR */
-      if (reduceTypeAllowed && 
+      if (reduceTypeAllowed &&
           !TARGET_PDK_LIKE && // Temporary fix to avoid bug #3259 - Wrong opcodes
           IS_AST_LIT_VALUE (tree->right) &&
           IS_INTEGRAL (RTYPE (tree)) &&
@@ -4375,7 +4577,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
             }
         }
 
-      /* if right is a literal and has the same size with left, 
+      /* if right is a literal and has the same size with left,
          then also sync their signedness to avoid unnecessary cast */
       if (IS_LITERAL (RTYPE (tree)) && getSize (RTYPE (tree)) == getSize (LTYPE (tree)))
         SPEC_USIGN (RTYPE (tree)) = SPEC_USIGN (LTYPE (tree));
@@ -4611,7 +4813,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
               TETYPE (tree) = TTYPE (tree) = tree->opval.val->type;
               return tree;
             }
-          
+
           TRVAL (tree) = LRVAL (tree) = 1;
           if (reduceTypeAllowed)
               COPYTYPE (TTYPE (tree), TETYPE (tree), LTYPE (tree));
@@ -5691,7 +5893,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
       if (IS_LITERAL (LTYPE (tree)))
         {
           ast * heir;
-          
+
           ++noAlloc;
           tree->right = decorateType (tree->right, resultTypeProp, reduceTypeAllowed);
           --noAlloc;
@@ -5700,7 +5902,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
             heir = tree->right->left;
           else
             heir = tree->right->right;
-            
+
           heir = decorateType (heir, resultTypeProp, reduceTypeAllowed);
           if (IS_LITERAL (TETYPE (heir)))
             TTYPE (heir) = valRecastLitVal (TTYPE (tree->right), valFromType (TETYPE (heir)))->type;
@@ -5835,7 +6037,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
             fprintf (stderr, "\n");
             goto errorTreeReturn;
           }
-        
+
         tree = found_expr;
       }
       return tree;
@@ -6838,7 +7040,7 @@ createFor (symbol * trueLabel, symbol * continueLabel, symbol * falseLabel,
 
   /* attach condition label to condition */
   condExpr = createLabel (condLabel, condExpr);
-  
+
   /* attach continue to forLoop expression & attach */
   /* goto the forcond @ and of loopExpression       */
   loopExpr = newNode (NULLOP, loopExpr, newNode (GOTO, newAst_VALUE (symbolVal (condLabel)), NULL));
@@ -6854,7 +7056,7 @@ createFor (symbol * trueLabel, symbol * continueLabel, symbol * falseLabel,
   forTree = newNode (NULLOP, initExpr, condExpr);
   forTree = newNode (NULLOP, forTree, forBody);
   forTree = newNode (NULLOP, forTree, loopExpr);
-  
+
   /* the break label is already in the tree as a sibling */
   /* to the original FOR node this tree is replacing */
   return forTree;
@@ -7542,6 +7744,7 @@ expandInlineFuncs (ast * tree, ast * block)
               /* {{inline_function_code}}, retsym                         */
 
               retsym = inlineTempVar (func->type->next, block->level);
+              retsym->istmp = true;
               SPEC_SCLS (retsym->etype) = S_FIXED;
               inlineAddDecl (retsym, block, TRUE, TRUE);
             }

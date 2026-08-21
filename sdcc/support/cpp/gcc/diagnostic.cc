@@ -2254,7 +2254,7 @@ fancy_abort (const char *file, int line, const char *function)
   if (global_dc->printer == NULL)
     {
       /* Print the error message.  */
-      fnotice (stderr, diagnostic_kind_text[DK_ICE]);
+      fnotice (stderr, "%s", diagnostic_kind_text[DK_ICE]);
       fnotice (stderr, "in %s, at %s:%d", function, trim_filename (file), line);
       fputc ('\n', stderr);
 

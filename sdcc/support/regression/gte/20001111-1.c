@@ -1,3 +1,8 @@
+/* This is horendous code. Why is some arbitrary integer assigned to an unused pointer without casting?
+   But let's at least suppress the warnings.
+*/
+#pragma disable_warning 127
+#pragma disable_warning 154
 
 static int next_buffer = 0;
 void bar (void);
@@ -8,7 +13,6 @@ long
 foo (unsigned int offset)
 {
   unsigned i, buffer;
-  int x;
   char *data;
 
   i = u;
@@ -21,7 +25,6 @@ foo (unsigned int offset)
     bar ();
   buffer = next_buffer;
   return buffer * 0xce2f + offset;
-
 }
 
 void
