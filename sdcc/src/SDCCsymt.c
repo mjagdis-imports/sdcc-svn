@@ -2641,7 +2641,7 @@ computeTypeOr (sym_link *etype1, sym_link *etype2, sym_link *reType)
 {
   /* sanity check */
   wassert ((IS_CHAR (etype1) || IS_BOOLEAN (etype1)) &&
-          (IS_CHAR (etype2) || IS_BOOLEAN (etype2)));
+           (IS_CHAR (etype2) || IS_BOOLEAN (etype2)));
 
   if (SPEC_USIGN (etype1) == SPEC_USIGN (etype2))
     {
@@ -3119,16 +3119,16 @@ compareFuncType (sym_link *dest, sym_link *src)
     return 0;
 
   if (IFFUNC_ISZ88DK_FASTCALL (dest) != IFFUNC_ISZ88DK_FASTCALL (src) ||
-    IFFUNC_ISZ88DK_CALLEE (dest) != IFFUNC_ISZ88DK_CALLEE (src))
+      IFFUNC_ISZ88DK_CALLEE (dest) != IFFUNC_ISZ88DK_CALLEE (src))
     return 0;
 
   if (IFFUNC_ISRAISONANCE (dest) != IFFUNC_ISRAISONANCE (src) ||
-    IFFUNC_ISCOSMIC (dest) != IFFUNC_ISCOSMIC (src) ||
-    IFFUNC_ISIAR (dest) != IFFUNC_ISIAR (src))
+      IFFUNC_ISCOSMIC (dest) != IFFUNC_ISCOSMIC (src) ||
+      IFFUNC_ISIAR (dest) != IFFUNC_ISIAR (src))
     return 0;
 
   if (FUNC_SDCCCALL (dest) >= 0 && FUNC_SDCCCALL (src) >= 0 &&
-    FUNC_SDCCCALL (dest) != FUNC_SDCCCALL (src))
+      FUNC_SDCCCALL (dest) != FUNC_SDCCCALL (src))
     return 0;
 
   for (i = 0; i < 9; i++)
@@ -3261,7 +3261,7 @@ compareType (sym_link *dest, sym_link *src, bool ignoreimplicitintrinsic)
             }
 
           if (DCL_TYPE (src) == DCL_TYPE (dest) ||
-              ((IS_PTR (src) && ignoreimplicitintrinsic && DCL_TYPE_IMPLICITINTRINSIC (src) || IS_GENPTR (src)) &&
+              ((IS_PTR (src)  && ignoreimplicitintrinsic && DCL_TYPE_IMPLICITINTRINSIC (src)  || IS_GENPTR (src)) &&
                (IS_PTR (dest) && ignoreimplicitintrinsic && DCL_TYPE_IMPLICITINTRINSIC (dest) || IS_GENPTR (dest))))
             {
               if (IS_FUNC (src))
