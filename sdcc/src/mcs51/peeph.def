@@ -292,6 +292,82 @@ replace {
 //	inc	r%1
 //}
 
+// from genlshFixed
+replace {
+	add	a,#%2
+	mov	r%1,a
+	inc	r%1
+	inc	r%1
+	inc	r%1
+	inc	r%1
+	inc	r%1
+	inc	r%1
+	mov	a,@r0
+} by {
+	;	Peephole 104.a	optimized increment
+	add	a,#(%2 + 6)
+	mov	r%1,a
+	mov	a,@r0
+}
+
+replace {
+	add	a,#%2
+	mov	r%1,a
+	inc	r%1
+	inc	r%1
+	inc	r%1
+	inc	r%1
+	inc	r%1
+	mov	a,@r0
+} by {
+	;	Peephole 104.b	optimized increment
+	add	a,#(%2 + 5)
+	mov	r%1,a
+	mov	a,@r0
+}
+
+replace {
+	add	a,#%2
+	mov	r%1,a
+	inc	r%1
+	inc	r%1
+	inc	r%1
+	inc	r%1
+	mov	a,@r0
+} by {
+	;	Peephole 104.c	optimized increment
+	add	a,#(%2 + 4)
+	mov	r%1,a
+	mov	a,@r0
+}
+
+replace {
+	add	a,#%2
+	mov	r%1,a
+	inc	r%1
+	inc	r%1
+	inc	r%1
+	mov	a,@r0
+} by {
+	;	Peephole 104.d	optimized increment
+	add	a,#(%2 + 3)
+	mov	r%1,a
+	mov	a,@r0
+}
+
+replace {
+	add	a,#%2
+	mov	r%1,a
+	inc	r%1
+	inc	r%1
+	mov	a,@r0
+} by {
+	;	Peephole 104.e	optimized increment
+	add	a,#(%2 + 2)
+	mov	r%1,a
+	mov	a,@r0
+}
+
 replace {
 	mov	%1,a
 	mov	a,%1
@@ -695,6 +771,83 @@ replace {
 	sjmp	%4
 %3:
 } if labelRefCount %3 4
+
+replace {
+	cjne	%1,%2,%3
+	setb	c
+	sjmp	%4
+%3:
+	clr	c
+%4:
+	mov	%5,c
+} by {
+	;	Peephole 116.a	jump optimization (carry not set)
+	clr	%5
+	cjne	%1,%2,%3
+	setb	%5
+%3:
+} if labelRefCount(%3 1), labelRefCount(%4 1), labelRefCountChange(%4 -1)
+
+replace {
+	cjne	%1,%2,%3
+	cjne	%10,%11,%3
+	setb	c
+	sjmp	%4
+%3:
+	clr	c
+%4:
+	mov	%5,c
+} by {
+	;	Peephole 116.b	jump optimization (carry not set)
+	clr	%5
+	cjne	%1,%2,%3
+	cjne	%10,%11,%3
+	setb	%5
+%3:
+} if labelRefCount(%3 2), labelRefCount(%4 1), labelRefCountChange(%4 -1)
+
+// does not appear in regression tests
+//replace {
+//	cjne	%1,%2,%3
+//	cjne	%10,%11,%3
+//	cjne	%12,%13,%3
+//	setb	c
+//	sjmp	%4
+//%3:
+//	clr	c
+//%4:
+//	mov	%5,c
+//} by {
+//	;	Peephole 116.c	jump optimization (carry not set)
+//	clr	%5
+//	cjne	%1,%2,%3
+//	cjne	%10,%11,%3
+//	cjne	%12,%13,%3
+//	setb	%5
+//%3:
+//} if labelRefCount(%3 3), labelRefCount(%4 1), labelRefCountChange(%4 -1)
+
+replace {
+	cjne	%1,%2,%3
+	cjne	%10,%11,%3
+	cjne	%12,%13,%3
+	cjne	%14,%15,%3
+	setb	c
+	sjmp	%4
+%3:
+	clr	c
+%4:
+	mov	%5,c
+} by {
+	;	Peephole 116.d	jump optimization (carry not set)
+	clr	%5
+	cjne	%1,%2,%3
+	cjne	%10,%11,%3
+	cjne	%12,%13,%3
+	cjne	%14,%15,%3
+	setb	%5
+%3:
+} if labelRefCount(%3 4), labelRefCount(%4 1), labelRefCountChange(%4 -1)
 
 replace {
 	push	psw

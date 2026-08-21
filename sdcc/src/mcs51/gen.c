@@ -12896,7 +12896,7 @@ genCast (iCode * ic)
       goto release;
     }
 
-  /* if the either is of type pointer */
+  /* if either is of type pointer */
   if ((IS_PTR (ctype) || IS_PTR (rtype)) && !IS_INTEGRAL (rtype))
     {
       int p_type;
@@ -12997,7 +12997,13 @@ genCast (iCode * ic)
   /* if unsigned or not an integral type */
   if (!IS_SPEC (rtype) || SPEC_USIGN (rtype) || AOP_TYPE (right) == AOP_CRY)
     {
-      while (size--)
+      if (size > 1)
+        {
+          emitcode ("clr", "a");
+          while (size--)
+            opPut(result, "a", offset++);
+        }
+      else
         {
           opPut(result, zero, offset++);
         }

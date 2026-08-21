@@ -1933,9 +1933,13 @@ FBYNAME (notSame)
   while ((op1 = setFirstItem (operands)))
     {
       deleteSetItem (&operands, (void*)op1);
+      if (TARGET_MCS51_LIKE && op1[0] == 'a' && op1[1] == 'r' && isdigit(op1[2]))
+        op1++;
 
       for (op2 = setFirstItem (operands); op2; op2 = setNextItem (operands))
         {
+          if (TARGET_MCS51_LIKE && op2[0] == 'a' && op2[1] == 'r' && isdigit(op2[2]))
+            op2++;
           if (strcmp (op1, op2) == 0)
             {
               deleteSet (&operands);
@@ -1959,24 +1963,28 @@ FBYNAME (same)
     operands = setFromConditionArgs(cmdLine, vars);
 
     if (!operands)
-    {
+      {
         fprintf(stderr,
             "*** internal error: same peephole restriction"
             " malformed: %s\n", cmdLine);
         return FALSE;
-    }
+      }
 
     operands = reverseSet(operands);
 
     match = setFirstItem(operands);
+    if (TARGET_MCS51_LIKE && match[0] == 'a' && match[1] == 'r' && isdigit(match[2]))
+      match++;
     for (op = setNextItem(operands); op; op = setNextItem(operands))
-    {
+      {
+        if (TARGET_MCS51_LIKE && op[0] == 'a' && op[1] == 'r' && isdigit(op[2]))
+          op++;
         if (strcmp(match, op) == 0)
-        {
+          {
             deleteSet(&operands);
             return TRUE;
-        }
-    }
+          }
+      }
 
     deleteSet(&operands);
     return FALSE;
