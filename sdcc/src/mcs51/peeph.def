@@ -772,17 +772,6 @@ replace {
 	jc	%0
 } if notVolatile %1 %2 %3
 
-replace {
-	mov	a,%1
-	subb	a,#0x01
-	mov	%2,a
-	mov	%1,%2
-} by {
-	;	Peephole 131	optimized decrement (not caring for c)
-	dec	%1
-	mov	%2,%1
-}
-
 // ideally the optimizations of rules 132.x should be done in genCmpXX
 replace {
 	clr	c

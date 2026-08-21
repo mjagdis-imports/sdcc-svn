@@ -1,3 +1,58 @@
+2026-08-18 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* debugger/mcs51/cmd.c: applied patch #452, Thanks Mark Symonds,
+	  also fixed asm mode and corrected lineno
+	* debugger/mcs51/sdcdb.c: documented "show version", "set confirm" & "set prompt"
+	  and put them in completionCmdShow()
+	  (readCdb) fix reading module name
+	  (usage, parseCmdLine): added many models, renamed ucsim_xx executables
+
+2026-08-17 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* debugger/mcs51/simi.c: applied patch #445, Thanks Mark Symonds
+
+	* debugger/mcs51/cmd.c,
+	* debugger/mcs51/cmd.h,
+	* debugger/mcs51/sdcdb.c: applied slightly modified patch #269
+	  Thanks Peter Dons Tychsen
+
+2026-08-16 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/peep.c:
+	  Fix handling of jsr and rti.
+	* src/mos6502/peeph.def:
+	  Check for register overwrite first.
+	  Add BITNOT rule.
+	  Rename several peephole rules.
+
+2026-08-15 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/peep.c:
+	  Fix bug #4036
+	* src/mos6502/gen.c:
+	  Fix regression failure in gcc-torture-execute-20030714-1 with --nogenconstprop
+
+2026-08-15 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* src/mcs51/peeph.def: removed unused rule 131
+
+2026-08-15 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c,
+	  support/regression/test/bug-4053.c:
+	  Fix bug #4053.
+
+2026-08-14 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c:
+	  Use ZP pointer instead of DPTR when possible in genPackbits and genUnpackBits.
+	* src/mos6502/gen.c:
+	  Use absolute addressing instead of DPTR when possible in genPointerPush.
+
+2026-08-14 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* Merge fuzzing branch.
+
 2026-08-13 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/z80/gen.c,

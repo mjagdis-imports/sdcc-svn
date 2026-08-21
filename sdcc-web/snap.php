@@ -183,11 +183,11 @@ function green_bar($text, $name)
 
 function file_name_to_snapshot_id($fname)
 {
-  $ret = preg_replace('/sdcc-snapshot-([^-]+-[^-]+-[^ ]+-\d{8}-\d+)\..*/', '$1', $fname);
+  $ret = preg_replace('/sdcc-snapshot-([^-]+-[^-]+-[^ ]+-\d{8}-\d+-[a-z0-9-]+)\..*/', '$1', $fname);
   if ($ret === $fname) {
-    $ret = preg_replace('/sdcc-snapshot-([^-]+-[^ ]+-\d{8}-\d+)\..*/', '$1', $fname);
+    $ret = preg_replace('/sdcc-snapshot-([^-]+-[^ ]+-\d{8}-\d+-[a-z0-9-]+)\..*/', '$1', $fname);
     if ($ret === $fname)
-      $ret = preg_replace('/.*-([^-]+-[^-]+-[^ ]+-\d{8}-\d+)\..*/', '$1', $fname);
+      $ret = preg_replace('/.*-([^-]+-[^-]+-[^ ]+-\d{8}-\d+-[a-z0-9-]+)\..*/', '$1', $fname);
   }
 
   return $ret;
@@ -254,6 +254,8 @@ function display_files($descdir, $lsDir, $cldir, $rtdir, $subdir)
     echo "<th align=\"left\"><font color=\"#660000\" face=\"Arial,Helvetica,Geneva,Swiss,SunSans-Regular\">CL</font></th>";
   if ($rtdir)
     echo "<th align=\"left\"><font color=\"#660000\" face=\"Arial,Helvetica,Geneva,Swiss,SunSans-Regular\">RT</font></th>";
+   if ($rtdir)
+    echo "<th align=\"left\"><font color=\"#660000\" face=\"Arial,Helvetica,Geneva,Swiss,SunSans-Regular\">RRT</font></th>";
   echo "</tr>\n";
 
   # set the default timezone to use. Available since PHP 5.1
@@ -279,6 +281,7 @@ function display_files($descdir, $lsDir, $cldir, $rtdir, $subdir)
 
     # Regression test
     $rt = '&nbsp;';
+    $rrt = '&nbsp;';
     if ($rtdir) {
       $rtpath = $rtdir . '/' . $subdir . '/regression-test-' . file_name_to_snapshot_id($file_name[$i]) . '.log';
       if (is_file($rtpath)) {
@@ -290,12 +293,12 @@ function display_files($descdir, $lsDir, $cldir, $rtdir, $subdir)
           $rtIcon = '18dot2a.gif';
         $rt = "<a href=\"$rtpathp\"><img src=\"/images/$rtIcon\" border=\"0\" alt=\"Regression Test Log\" /></a>";
       }
-      $rrtpath = $rrtdir . '/' . $subdir . '/rand-regression-test-' . file_name_to_snapshot_id($file_name[$i]) . '.log';
-      if (is_file($rtpath)) {
+      $rrtpath = $rtdir . '/' . $subdir . '/rand-regression-test-' . file_name_to_snapshot_id($file_name[$i]) . '.log';
+      if (is_file($rrtpath)) {
         $rrtpathp = preg_replace("/\s/", "%20", $rrtpath);
         $failed = rt_failed($rrtpathp);
         if (isset($failed))
-          $rrtIcon = $failed ? '18dot2a.gif' : '18dot4a.gif';
+          $rrtIcon = $failed ? '18dot1a.gif' : '18dot4a.gif';
         else
           $rrtIcon = '18dot2a.gif';
         $rrt = "<a href=\"$rrtpathp\"><img src=\"/images/$rrtIcon\" border=\"0\" alt=\"Regression Test Log\" /></a>";

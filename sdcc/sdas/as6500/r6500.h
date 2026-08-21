@@ -1,7 +1,7 @@
 /* r6500.h */
 
 /*
- *  Copyright (C) 1995-2025  Alan R. Baldwin
+ *  Copyright (C) 1995-2026  Alan R. Baldwin
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -67,6 +67,16 @@ struct adsym
 #define	S_Y	3
 
 /*
+ * Machine Extensions
+ */
+#define	S_SDP		80
+#define	S_CPU		82
+#define	X_R6500		31
+#define	X_R65F11	32
+#define X_R65C00	33
+#define	X_R65C02	34
+
+/*
  * Addressing types
  */
 #define S_IMMED	40
@@ -117,13 +127,6 @@ struct adsym
 /*
  * machine dependent functions
  */
-#define	S_SDP		80
-#define	S_CPU		82
-
-#define	X_R6500		31
-#define	X_R65F11	32
-#define X_R65C00	33
-#define	X_R65C02	34
 
 	/* r65adr.c */
 extern	struct	adsym	axy[];
@@ -134,7 +137,7 @@ extern	int		srch(char *str);
 	/* r65mch.c */
 extern	struct  area	*zpg;
 extern	void		machine(struct mne *mp);
-extern	int		mchpcr(struct expr *esp);
+extern	int		mchpcr(struct expr *esp, int *v, int n);
 extern	void		mcherr(int c, char *str);
 extern	void		mchwrn(char *str);
 extern	void		minit(void);

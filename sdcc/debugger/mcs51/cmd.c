@@ -40,6 +40,8 @@ static module *list_mod = NULL;
 
 EXTERN_STACK_DCL(callStack,function *,1024)
 
+static char *version= "SDCDB " SDCDB_VERSION "\n";
+
 #if defined(__APPLE__) && defined(__MACH__)
 static char *copying=
 {" GNU GENERAL PUBLIC LICENSE Version 2"};
@@ -334,9 +336,12 @@ static  int printOrSetSymValue (symbol *sym, context *cctxt,
                                 int flg, int dnum, int fmt,
                                 char *rs, char *val, char cmp);
 
-int srcMode = SRC_CMODE ;
-set *dispsymbols = NULL   ; /* set of displayable symbols */
-static int currentFrame = 0;        /* actual displayed frame     */
+int srcMode = SRC_CMODE;
+set *dispsymbols = NULL;                /* set of displayable symbols */
+static int currentFrame = 0;            /* actual displayed frame     */
+static char prompt[100] = "(sdcdb) ";   /* current prompt             */
+static int confirm = 1;                 /* current confirm setting    */
+
 /*-----------------------------------------------------------------*/
 /* funcWithName - returns function with name                       */
 /*-----------------------------------------------------------------*/
@@ -381,7 +386,7 @@ DEFSETFUNC(symWithAddr)
 }
 
 /*-----------------------------------------------------------------*/
-/* setBPatModLine - set break point at the line specified for the  */
+/* setBPatModLine - set break point at the line specified          */
 /*-----------------------------------------------------------------*/
 static void setBPatModLine (module *mod, int line, char bpType)
 {
@@ -393,7 +398,7 @@ static void setBPatModLine (module *mod, int line, char bpType)
   if (line < 0)
       return;
 
-  if(!mod)
+  if (!mod)
     {
       fprintf(stderr, "Internal error: NULL module\n");
       return;
@@ -425,7 +430,6 @@ static void setBPatModLine (module *mod, int line, char bpType)
               setBreakPoint (mod->cLines[next_line]->addr, CODE, bpType,
                              userBpCB, mod->c_name, next_line);
               return;
-//            break;
             }
         }
       else
@@ -435,7 +439,6 @@ static void setBPatModLine (module *mod, int line, char bpType)
               setBreakPoint (mod->asmLines[next_line]->addr, CODE, bpType,
                              userBpCB, mod->asm_name, next_line);
               return;
-//            break;
             }
         }
     }
@@ -451,6 +454,15 @@ static void setBPatModLine (module *mod, int line, char bpType)
 /*-----------------------------------------------------------------*/
 static void clearBPatModLine (module *mod, int line)
 {
+  if (line < 0)
+      return;
+
+  if (!mod)
+    {
+      fprintf(stderr, "Internal error: NULL module\n");
+      return;
+    }
+
   /* look for the first executable line after the line
      specified & get the break point there */
   if (srcMode == SRC_CMODE && line > mod->ncLines)
@@ -460,10 +472,10 @@ static void clearBPatModLine (module *mod, int line)
       return;
     }
 
-  if (srcMode == SRC_AMODE && line > mod->ncLines)
+  if (srcMode == SRC_AMODE && line > mod->nasmLines)
     {
       fprintf(stderr, "No line %d in file \"%s\".\n",
-              line, mod->c_name);
+              line, mod->asm_name);
       return;
     }
 
@@ -473,7 +485,7 @@ static void clearBPatModLine (module *mod, int line)
     {
       if (srcMode == SRC_CMODE)
         {
-          if (mod->cLines[line]->addr)
+          if (mod->cLines[line]->addr != INT_MAX)
             {
               clearUSERbp (mod->cLines[line]->addr);
               break;
@@ -481,7 +493,7 @@ static void clearBPatModLine (module *mod, int line)
         }
       else
         {
-          if (mod->asmLines[line]->addr)
+          if (mod->asmLines[line]->addr != INT_MAX)
             {
               clearUSERbp (mod->asmLines[line]->addr);
               break;
@@ -1067,8 +1079,8 @@ static int commonSetUserBp(char *s, context *cctxt, char bpType)
   if (!strchr(s, ':') && isdigit(*s))
     {
       /* get the lineno */
-      int line = atoi(s) -1;
-      Dprintf (D_break, ("commonSetUserBp: b) line:%d \n", line));
+      int line = atoi(s) - 1;
+      Dprintf (D_break, ("commonSetUserBp: b) line:%d \n", line+1));
       if (line < 0)
         {
           fprintf(stdout, "linenumber <= 0\n");
@@ -1094,7 +1106,7 @@ static int commonSetUserBp(char *s, context *cctxt, char bpType)
             }
           else
             {
-              setBPatModLine(cctxt->func->mod,line, bpType);
+              setBPatModLine(cctxt->func->mod, line, bpType);
             }
         }
       else
@@ -1137,8 +1149,9 @@ static int commonSetUserBp(char *s, context *cctxt, char bpType)
       /* case c) filename:lineno */
       if (isdigit(*(bp+1)))
         {
-          Dprintf (D_break, ("commonSetUserBp: c) line:%d \n", atoi(bp+1)));
-          setBPatModLine (mod, atoi(bp+1)-1, bpType);
+          int line = atoi(bp+1) - 1;
+          Dprintf (D_break, ("commonSetUserBp: c) line:%d \n", line+1));
+          setBPatModLine (mod, line, bpType);
           goto ret;
         }
       /* case d) filename:function */
@@ -1228,7 +1241,7 @@ int cmdJump (char *s, context *cctxt)
   if (isdigit(*s))
     {
       /* get the lineno */
-      int line = atoi(s) -1;
+      int line = atoi(s) - 1;
       if (!cctxt || !cctxt->func || !cctxt->func->mod)
         {
           fprintf (stderr, "Function not defined.\n");
@@ -1356,8 +1369,45 @@ int cmdSetOption (char *s, context *cctxt)
       return 0;
     }
 
+  if (strncmp(s, "confirm ", 8) == 0)
+    {
+      s = trim_left(s+8);
+      s = trim_right(s);
+      if (strcmp(s, "on") == 0)
+        confirm = 1;
+      else if (strcmp(s, "off") == 0)
+        confirm = 0;
+      else
+        fprintf(stderr, "'set confirm %s' not valid\n", s);
+      return 0;
+    }
+
+  if (strncmp(s, "prompt ", 7) == 0)
+    {
+      strncpy(prompt, s+7, sizeof(prompt));
+      /* make sure prompt is terminated */
+      prompt[sizeof(prompt)-1] = 0;
+      return 0;
+    }
+
   fprintf (stderr, "'set %s' command not yet implemented\n", s);
   return 0;
+}
+
+/*-----------------------------------------------------------------*/
+/* cmdGetPompt - Get the current prompt                            */
+/*-----------------------------------------------------------------*/
+char *cmdGetPrompt(void)
+{
+  return prompt;
+}
+
+/*-----------------------------------------------------------------*/
+/* cmdGetConfirm - Get the current confirm setting                 */
+/*-----------------------------------------------------------------*/
+int cmdGetConfirm(void)
+{
+  return confirm;
 }
 
 /*-----------------------------------------------------------------*/
@@ -3332,7 +3382,7 @@ int cmdClrUserBp (char *s, context *cctxt)
   if (isdigit (*s))
     {
       /* get the lineno */
-      int line = atoi (s);
+      int line = atoi(s) - 1;
 
       /* if current context not present then we must get the module
          which has main & set the break point @ line number provided
@@ -3371,7 +3421,8 @@ int cmdClrUserBp (char *s, context *cctxt)
       /* case c) filename:lineno */
       if (isdigit (*(bp+1)))
         {
-          clearBPatModLine (mod, atoi (bp+1));
+          int line = atoi(bp+1) - 1;
+          clearBPatModLine (mod, line);
           goto ret;
         }
       /* case d) filename:function */
@@ -3560,5 +3611,13 @@ int cmdShow (char *s, context *cctxt)
       return 0;
     }
 
+
+  if (strcmp (s, "version") == 0)
+    {
+      fputs (version, stdout);
+      return 0;
+    }
+
   return 0;
 }
+

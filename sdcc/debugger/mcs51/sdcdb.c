@@ -200,7 +200,7 @@ struct cmdtab
       NULL
     },
     { "show"     ,  cmdShow       , completionCmdShow,
-      "show <copying warranty>\tcopying & distribution terms, warranty"
+      "show <copying warranty version>\tcopying & distribution terms, warranty"
     },
     { "set"      ,  cmdSetOption  , completionCmdSetOption,
       "set <srcmode>\ttoggle between c/asm.\nset variable <var> = >value\tset variable to new value"
@@ -416,6 +416,7 @@ static int readCdb (FILE *file)
           bp += 2;
           currl->line = Safe_malloc(strlen(bp)+1);
           strcpy(currl->line, bp);
+          trim(currl->line);
         }
 
       if (!(bp = fgets(buffer, sizeof(buffer), file)))
@@ -1367,7 +1368,7 @@ char *completionCmdShow(const char *text, int state)
       if (completionHelper_GetCurrTokenNumber() != 1)
           return NULL;
     }
-  return completionCompleteFromStrList(text, state, "copying\0warranty\0");
+  return completionCompleteFromStrList(text, state, "copying\0warranty\0version\0");
 }
 
 // readline completion function for "la" command
@@ -1515,7 +1516,7 @@ char *completionCmdSetOption(const char *text, int state)
 #ifdef SDCDB_DEBUG
                 "debug\0"
 #endif
-                "srcmode\0listsize\0variable\0");
+                "srcmode\0listsize\0variable\0confirm\0prompt\0");
       case 2:
         return completionSymbolName(text, state);
 
@@ -1548,7 +1549,7 @@ char *completionMain(const char *text, int state)
 
           for (i=0; i < (sizeof(cmdTab)/sizeof(struct cmdtab)) ; i++)
             {
-              if (!strncmp(rl_line_buffer+start,cmdTab[i].cmd,len) &&
+              if (!strncmp(rl_line_buffer+start, cmdTab[i].cmd, len) &&
                   cmdTab[i].cmd[len] == '\0')
                 {
                   compl_func = cmdTab[i].completion_func;
@@ -1565,6 +1566,26 @@ char *completionMain(const char *text, int state)
 #endif  /* HAVE_READLINE_COMPLETITION */
 
 /*-----------------------------------------------------------------*/
+/* commandGets - Get a command line using gets()                   */
+/*-----------------------------------------------------------------*/
+static int commandGets(FILE *cmdfile)
+{
+  if ( cmdfile == stdin )
+    {
+      if (sim_cmd_mode)
+        printf("(sim) ");
+      else
+        fprintf(stdout, "%s", cmdGetPrompt());
+      fflush(stdout);
+    }
+
+  if (fgets(cmdbuff, sizeof(cmdbuff), cmdfile) == NULL)
+    return 1;
+  
+  return 0;
+}
+
+/*-----------------------------------------------------------------*/
 /* commandLoop - the main command loop or loop over command file   */
 /*-----------------------------------------------------------------*/
 static void commandLoop(FILE *cmdfile)
@@ -1573,6 +1594,7 @@ static void commandLoop(FILE *cmdfile)
 #ifdef HAVE_LIBREADLINE
   char *line_read;
 
+  int is_tty = cmdfile == stdin && isatty(STDIN_FILENO);
   FILE *old_rl_instream, *old_rl_outstream;
   actualcmdfile = cmdfile;
 
@@ -1595,54 +1617,53 @@ static void commandLoop(FILE *cmdfile)
 
   while (1)
     {
-      if ( cmdfile == stdin )
+      /* If not attached to a TTY and confirm is disabled, read using gets as we are not interactive */
+      if (!is_tty && !cmdGetConfirm())
         {
-          if (sim_cmd_mode)
-            line_read = (char*)readline ("(sim) ");
+          if (commandGets(cmdfile))
+            break;
+        }
+      else
+        {
+          if (cmdfile == stdin)
+            {
+              if (sim_cmd_mode)
+                line_read = (char*)readline ("(sim) ");
+              else
+                line_read = (char*)readline (cmdGetPrompt());
+            }
           else
-            line_read = (char*)readline ("(sdcdb) ");
-        }
-      else
-        line_read = (char*)readline ("");
+            line_read = (char*)readline ("");
 
-      if (line_read)
-        {
-          /* If the line has any text in it,
-             save it on the history. */
-          if (line_read && *line_read)
-              add_history (line_read);
+          if (line_read)
+            {
+              /* If the line has any text in it,
+                 save it on the history. */
+              if (*line_read)
+                add_history (line_read);
 
-           // FIX: readline returns malloced string.
-           //   should check the source to verify it can be used
-           //    directly. for now - just copy it to cmdbuff.
-           strcpy(cmdbuff,line_read);
+              // FIX: readline returns malloced string.
+              //   should check the source to verify it can be used
+              //    directly. for now - just copy it to cmdbuff.
+              strcpy(cmdbuff,line_read);
 #if defined(_WIN32) || defined(HAVE_RL_FREE)
-            rl_free(line_read);
+              rl_free(line_read);
 #else
-            free(line_read);
+              free(line_read);
 #endif
-            line_read = NULL;
-        }
-      else
-        {
-          break;  // EOF
+              line_read = NULL;
+            }
+          else
+            {
+              break;  // EOF
+            }
         }
 #else  /* HAVE_LIBREADLINE */
   actualcmdfile = cmdfile;
 
   while (1)
     {
-      if ( cmdfile == stdin )
-        {
-          if (sim_cmd_mode)
-              printf("(sim) ");
-          else
-              fprintf(stdout,"(sdcdb) ");
-          fflush(stdout);
-        }
-      //fprintf(stderr,"commandLoop actualcmdfile=%p cmdfile=%p\n",
-      //        actualcmdfile,cmdfile);
-      if (fgets(cmdbuff,sizeof(cmdbuff),cmdfile) == NULL)
+      if (commandGets(cmdfile))
           break;
 #endif  /* HAVE_LIBREADLINE */
 
@@ -1822,7 +1843,7 @@ static void usage(void)
   const char *args =
         "-{h|?}, --help\tDisplay this help\n"
         "-v\tVerbose: show the simulator invocation commald line\n"
-        "--directory=<dir>\tSearch modules in <dir> directory\n"
+        "--directory=<dir>[:<dir>\tSearch modules in <dir> directories\n"
         "-fullname\tGive the file name & position\n"
         "-cd=<dir>, -cd <dir>\tChange directory to <dir>\n"
 #ifdef SDCDB_DEBUG
@@ -1830,7 +1851,7 @@ static void usage(void)
 #endif
         "-contsim\tContinuous simulation\n"
         "-q\tIgnored\n"
-        "-m<model>\tModel string: avr, xa, z80\n"
+        "-m<model>\tModel string: pdk, z80, xa, stm8, tlcs, m6800, mos6502, m68hc08, f8, rxk, mcs51\n"
         "-z\tAll remaining options are for simulator";
 
   const char *simArgs =
@@ -1952,13 +1973,29 @@ static void parseCmdLine (int argc, char **argv)
           if (strncmp(argv[i],"-m", 2) == 0)
             {
               strncpy(model_str, &argv[i][2], 15);
-              if (strcmp(model_str, "avr") == 0)
-                  simArgs[0] = "savr";
-              else if (strcmp(model_str, "xa") == 0)
-                  simArgs[0] = "sxa";
+              if (strcmp(model_str, "pdk") == 0)
+                  simArgs[0] = "ucsim_pdk";
               else if (strcmp(model_str, "z80") == 0)
-                  simArgs[0] = "sz80";
-              continue;
+                  simArgs[0] = "ucsim_z80";
+              else if (strcmp(model_str, "xa") == 0)
+                  simArgs[0] = "ucsim_xa";
+              else if (strcmp(model_str, "stm8") == 0)
+                  simArgs[0] = "ucsim_stm8";
+              else if (strcmp(model_str, "tlcs") == 0)
+                  simArgs[0] = "ucsim_tlcs";
+              else if (strcmp(model_str, "m6800") == 0)
+                  simArgs[0] = "ucsim_m6800";
+              else if (strcmp(model_str, "mos6502") == 0)
+                  simArgs[0] = "ucsim_mos6502";
+              else if (strcmp(model_str, "m68hc08") == 0)
+                  simArgs[0] = "ucsim_m68hc08";
+              else if (strcmp(model_str, "f8") == 0)
+                  simArgs[0] = "ucsim_f8";
+              else if (strcmp(model_str, "rxk") == 0)
+                  simArgs[0] = "ucsim_rxk";
+               else if (strcmp(model_str, "mcs51") == 0)
+                  simArgs[0] = "ucsim_51";
+             continue;
             }
 
           /* -z all remaining options are for simulator */
@@ -2103,7 +2140,7 @@ setsignals()
 
 int main ( int argc, char **argv)
 {
-  simArgs[nsimArgs++] = "s51";
+  simArgs[nsimArgs++] = "ucsim_51";
   simArgs[nsimArgs++] = "-P";
   simArgs[nsimArgs++] = "-r";
   simArgs[nsimArgs++] = "9756";
