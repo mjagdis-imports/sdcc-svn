@@ -281,6 +281,7 @@ function display_files($descdir, $lsDir, $cldir, $rtdir, $subdir)
 
     # Regression test
     $rt = '&nbsp;';
+    $rrt = '&nbsp;';
     if ($rtdir) {
       $rtpath = $rtdir . '/' . $subdir . '/regression-test-' . file_name_to_snapshot_id($file_name[$i]) . '.log';
       if (is_file($rtpath)) {
@@ -293,11 +294,11 @@ function display_files($descdir, $lsDir, $cldir, $rtdir, $subdir)
         $rt = "<a href=\"$rtpathp\"><img src=\"/images/$rtIcon\" border=\"0\" alt=\"Regression Test Log\" /></a>";
       }
       $rrtpath = $rtdir . '/' . $subdir . '/rand-regression-test-' . file_name_to_snapshot_id($file_name[$i]) . '.log';
-      if (is_file($rtpath)) {
+      if (is_file($rrtpath)) {
         $rrtpathp = preg_replace("/\s/", "%20", $rrtpath);
         $failed = rt_failed($rrtpathp);
         if (isset($failed))
-          $rrtIcon = $failed ? '18dot2a.gif' : '18dot4a.gif';
+          $rrtIcon = $failed ? '18dot1a.gif' : '18dot4a.gif';
         else
           $rrtIcon = '18dot2a.gif';
         $rrt = "<a href=\"$rrtpathp\"><img src=\"/images/$rrtIcon\" border=\"0\" alt=\"Regression Test Log\" /></a>";

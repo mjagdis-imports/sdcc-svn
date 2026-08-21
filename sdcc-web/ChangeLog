@@ -1,3 +1,8 @@
+2026-08-21 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* snap.php:
+	  Fix farm randomized regression test result display for the case of no logfile uploaded.
+
 2026-08-20 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* snap.php:
