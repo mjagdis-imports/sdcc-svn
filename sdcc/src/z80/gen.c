@@ -16446,7 +16446,7 @@ genUnpackBits (operand *result, int offset, int blen, int bstr)
   wassert (blen <= 8);
 
   AccRol (8 - bstr);
-  unpackMaskA (!SPEC_USIGN (etype), blen, false);
+  unpackMaskA (!SPEC_USIGN (etype) && !IS_BOOLEAN (etype), blen, false);
   cheapMove (result->aop, offset++, ASMOP_A, 0, true);
 
   if (offset < rsize)

@@ -506,9 +506,9 @@ void moveNestedInit(initList *deepParent, initList *src)
   *eol = dst;
 }
 
-/*-----------------------------------------------------------------*/
-/* findStructField - find a specific field in a struct definition  */
-/*-----------------------------------------------------------------*/
+/*------------------------------------------------------------------*/
+/* findStructField - find a specific field in a struct definition   */
+/*------------------------------------------------------------------*/
 static int
 findStructField (symbol *fields, symbol *target)
 {
@@ -531,13 +531,9 @@ findStructField (symbol *fields, symbol *target)
 }
 
 /*------------------------------------------------------------------*/
-/* reorderIlist - expands an initializer list to match designated   */
-/*                initializers.                                     */
-/*------------------------------------------------------------------*/
-/*-----------------------------------------------------------------*/
 /* findStructFieldAt - the member an entry of the reordered list    */
 /*                     initializes, NULL past the last one          */
-/*-----------------------------------------------------------------*/
+/*------------------------------------------------------------------*/
 static symbol *
 findStructFieldAt (sym_link * type, int slot)
 {
@@ -558,7 +554,7 @@ findStructFieldAt (sym_link * type, int slot)
   return NULL;
 }
 
-/*-----------------------------------------------------------------*/
+/*------------------------------------------------------------------*/
 /* nextInitSlot - the slot after SLOT a positional initializer goes */
 /*   to. The members promoted out of a non-first alternative of an  */
 /*   anonymous union get none of their own: the union is            */
@@ -566,7 +562,7 @@ findStructFieldAt (sym_link * type, int slot)
 /*   they are skipped here. A designator can still name one, which  */
 /*   is how printIvalStruct() tells that an alternative other than  */
 /*   the first was picked.                                          */
-/*-----------------------------------------------------------------*/
+/*------------------------------------------------------------------*/
 static int
 nextInitSlot (sym_link * type, int slot)
 {
