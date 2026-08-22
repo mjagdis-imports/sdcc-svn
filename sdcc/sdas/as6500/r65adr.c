@@ -1,7 +1,7 @@
 /* r65adr.c */
 
 /*
- *  Copyright (C) 1995-2025  Alan R. Baldwin
+ *  Copyright (C) 1995-2026  Alan R. Baldwin
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -168,6 +168,47 @@ addr(struct expr *esp)
 		}
 	}
 	return (esp->e_mode);
+}
+
+/*
+ * Evaluate For Direct Mode
+ *
+ * Addressing Modes Must Be
+ * Ordered From Long To Short:
+ *
+ *	S_EXT	+ 1	->	S_DIR
+ *	S_INDX	+ 1	->	S_DINDX
+ *	S_INDY	+ 1	->	S_DINDY
+ */
+int
+espmode(struct expr *esp, int s)
+{
+	int mode;
+
+	/* Constants In Direct Page */
+	if (autodpcnst
+	    && (!esp->e_flag)
+	    && (esp->e_base.e_ap == NULL)
+	    && !(esp->e_addr & ~0xFF)) {
+		mode = s + 1;
+	} else
+	/* Local Symbols In Direct Page */
+	if (autodpsmbl
+	    && (!esp->e_flag)
+	    && (zpg != NULL)
+	    && (esp->e_base.e_ap == zpg)) {
+		mode = s + 1;
+	} else
+	/* External Symbols In Direct Page */
+	if (autodpsmbl
+	    && (esp->e_flag)
+	    && (zpg != NULL)
+	    && (esp->e_base.e_sp->s_area == zpg)) {
+		mode = s + 1;
+	} else {
+		mode = s;
+	}
+	return(mode);
 }
 
 /*

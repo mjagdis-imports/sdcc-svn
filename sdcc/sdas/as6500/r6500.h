@@ -70,6 +70,8 @@ struct adsym
  * Machine Extensions
  */
 #define	S_SDP		80
+#define	S_PGD		81
+
 #define	S_CPU		82
 #define	X_R6500		31
 #define	X_R65F11	32
@@ -136,6 +138,8 @@ extern	int		srch(char *str);
 
 	/* r65mch.c */
 extern	struct  area	*zpg;
+extern	int		autodpcnst;
+extern	int		autodpsmbl;
 extern	void		machine(struct mne *mp);
 extern	int		mchpcr(struct expr *esp, int *v, int n);
 extern	void		mcherr(int c, char *str);

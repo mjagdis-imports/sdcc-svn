@@ -1,3 +1,10 @@
+2026-08-21 Gabriele Gorla <gorlik@yahoo.com>
+
+	* sdas/as6500/r6500.h,
+	  sdas/as6500/r65mch.c,
+	  sdas/as6500/r65pst.c:
+	  Merge some asxxxx upstream changes.
+
 2026-08-21 Maarten Brock <sourceforge.brock AT dse.nl>
 
 	* device/lib/atoi.c,

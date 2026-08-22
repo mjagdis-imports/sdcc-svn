@@ -163,6 +163,7 @@ machine(struct mne *mp)
 {
 	int op, t1;
 	struct expr e1,e2;
+	struct sym *sp;
 	char id[NCPS];
 	int c, v1, v2;
 
@@ -196,6 +197,18 @@ machine(struct mne *mp)
 		outdp(zpg, &e1, 0);
 		lmode = SLIST;
 		break;
+
+	case S_PGD:
+		do {
+			getid(id, -1);
+			sp = lookup(id);
+			sp->s_flag &= ~S_LCL;
+			sp->s_flag |=  S_GBL;
+			sp->s_area = (zpg != NULL) ? zpg : dot.s_area;
+ 		} while (comma(0));
+		lmode = SLIST;
+		break;
+
 	case S_CPU:
 		mchtyp = op;
 		switch(mchtyp) {
@@ -498,8 +511,13 @@ machine(struct mne *mp)
 			outrb(&e1, R_PAG0);
 			break;
 		case S_INDY:
-			outab(op + 0x1E);
-			outrw(&e1, 0);
+			if (op == 0x80) {
+				outab(op + 0x16);
+				outrb(&e1, R_PAG0);
+			} else {
+				outab(op + 0x1E);
+				outrw(&e1, 0);
+			}
 			break;
 		default:
 			outab(op + 0x06);
@@ -531,8 +549,13 @@ machine(struct mne *mp)
 			outrb(&e1, R_PAG0);
 			break;
 		case S_INDX:
-			outab(op + 0x1C);
-			outrw(&e1, 0);
+			if (op == 0x80) {
+				outab(op + 0x14);
+				outrb(&e1, R_PAG0);
+			} else {
+				outab(op + 0x1C);
+				outrw(&e1, 0);
+			}
 			break;
 		default:
 			outab(op + 0x04);
@@ -695,6 +718,21 @@ mchpcr(struct expr *esp, int *v, int n)
 		esp->e_base.e_sp = &sym[1];
 	}
 	return(0);
+}
+
+/*
+ * Machine specific .enable/.dsable terms.
+ */
+int
+mchoptn(char *id, int v)
+{
+	/* Automatic Direct Page (Constants) */
+	if (symeq(id, "autodpcnst", 1)) { autodpcnst = v; } else
+	/* Automatic Direct Page (Symbols) */
+	if (symeq(id, "autodpsmbl", 1)) { autodpsmbl = v; } else {
+		return(0);
+	}
+	return(1);
 }
 
 /*
