@@ -59,13 +59,11 @@
 	$(STACK) = 3000
 */
 
-
 /*
  * Indirect Addressing delimeters
  */
 #define	LFIND		'('
 #define RTIND		')'
-
 
 /*
  * Registers
@@ -127,9 +125,6 @@
 #define CC_GE         0x8
 #define CC_LEU        0x9
 #define CC_LE         0xa
-
-
-
 
 /*
  * Symbol types
@@ -248,6 +243,20 @@
 #define X_BOX		107
 #define X_RLB_RRB	108
 
+/*
+ * Processor Types (S_CPU)
+ */
+#define	X_R2K		0
+#define	X_R3KA		1
+#define X_R4K00         2
+#define X_R4K01         3
+#define X_R4K10         4
+#define X_R4K11         5
+#define X_R6K00         6
+#define X_R6K01         7
+#define X_R6K10         8
+#define X_R6K11         9
+
 
 #define R_2K       0
 #define R_3KA      3
@@ -268,20 +277,6 @@
 #define IS_MIN_4K(x) ((x.cpu)>=R_4K)
 #define IS_ONLY_4K(x) ((x.cpu)==R_4K)
 #define IS_MIN_6K(x) ((x.cpu)>=R_6K)
-
-/*
- * Processor Types (S_CPU)
- */
-#define	T_R2K		0
-#define	T_R3KA		1
-#define T_R4K00         2
-#define T_R4K01         3
-#define T_R4K10         4
-#define T_R4K11         5
-#define T_R6K00         6
-#define T_R6K01         7
-#define T_R6K10         8
-#define T_R6K11         9
 
 
 struct adsym

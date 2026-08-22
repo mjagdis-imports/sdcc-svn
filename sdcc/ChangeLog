@@ -1,3 +1,25 @@
+2026-08-22 Gabriele Gorla <gorlik@yahoo.com>
+
+    * sdas/as6500/r65pst.c,
+      sdas/as6808/m08mch.c,
+      sdas/as6808/m08pst.c,
+      sdas/as8051/i51mch.c,
+      sdas/as8051/i51pst.c,
+      sdas/as8xcxxx/ds8pst.c,
+      sdas/asf8/f8pst.c,
+      sdas/asgb/gbpst.c,
+      sdas/aspdk13/pdk13pst.c,
+      sdas/aspdk14/pdk14pst.c,
+      sdas/aspdk15/pdk15pst.c,
+      sdas/aspdk16/pdk16pst.c,
+      sdas/asrab/rab.h,
+      sdas/asrab/rabmch.c,
+      sdas/asrab/rabpst.c,
+      sdas/asstm8/stm8pst.c,
+      sdas/astlcs90/t90pst.c,
+      sdas/asz80/z80pst.c:
+	  Merge more asxxxx upstream changes.
+
 2026-08-21 Gabriele Gorla <gorlik@yahoo.com>
 
 	* sdas/as6500/r6500.h,

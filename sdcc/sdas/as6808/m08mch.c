@@ -1,7 +1,7 @@
 /* m08mch.c */
 
 /*
- *  Copyright (C) 1993-2025  Alan R. Baldwin
+ *  Copyright (C) 1993-2026  Alan R. Baldwin
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -34,7 +34,6 @@ char	*dsft	= "asm";
 #define	OPCY_SDP	((char) (0xFF))
 #define	OPCY_ERR	((char) (0xFE))
 #define	OPCY_CPU	((char)	(0xFD))
-
 
 /*	OPCY_NONE	((char) (0x80))	*/
 /*	OPCY_MASK	((char) (0x7F))	*/

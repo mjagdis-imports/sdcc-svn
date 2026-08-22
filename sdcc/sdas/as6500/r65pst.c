@@ -182,8 +182,6 @@ struct	mne	mne[] = {
     {	NULL,	".endif",	S_CONDITIONAL,	0,	O_ENDIF	},
     {	NULL,	".list",	S_LISTING,	0,	O_LIST	},
     {	NULL,	".nlist",	S_LISTING,	0,	O_NLIST	},
-    {   NULL,   ".uleb128",     S_ULEB128,      0,      0       },
-    {   NULL,   ".sleb128",     S_SLEB128,      0,      0       },
     {	NULL,	".equ",		S_EQU,		0,	O_EQU	},
     {	NULL,	".gblequ",	S_EQU,		0,	O_GBLEQU},
     {	NULL,	".lclequ",	S_EQU,		0,	O_LCLEQU},
@@ -235,9 +233,11 @@ struct	mne	mne[] = {
 /*    {	NULL,	".end",		S_END,		0,	0	},	*/
 
 /* sdas specific */
+/*    {   NULL,   ".df",          S_FLOAT,        0,      0       },	*/
+    {   NULL,   ".uleb128",     S_ULEB128,      0,      0       },
+    {   NULL,   ".sleb128",     S_SLEB128,      0,      0       },
     {   NULL,   ".optsdcc",     S_OPTSDCC,      0,      0       },
 /* end sdas specific */
-
 
 	/* Macro Processor */
 

@@ -1,7 +1,7 @@
 /* gbpst.c */
 
 /*
- *  Copyright (C) 1989-2023  Alan R. Baldwin
+ *  Copyright (C) 1989-2026  Alan R. Baldwin
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -101,8 +101,12 @@ struct	mne	mne[] = {
 
         /* machine */
 
+/*    {	NULL,	"CSEG",		S_ATYP,		0,	A_CSEG|A_1BYTE	},	*/
+/*    {	NULL,	"DSEG",		S_ATYP,		0,	A_DSEG|A_1BYTE	},	*/
+
         /* system */
 
+/*    {	NULL,	"BANK",		S_ATYP,		0,	A_BNK	},	*/
     {   NULL,   "CON",          S_ATYP,         0,      A_CON   },
     {   NULL,   "OVR",          S_ATYP,         0,      A_OVR   },
     {   NULL,   "REL",          S_ATYP,         0,      A_REL   },
@@ -110,6 +114,10 @@ struct	mne	mne[] = {
     {   NULL,   "NOPAG",        S_ATYP,         0,      A_NOPAG },
     {   NULL,   "PAG",          S_ATYP,         0,      A_PAG   },
 
+	/* assembler */
+
+/*    {	NULL,	".enabl",	S_OPTN,		0,	O_ENBL	},	*/
+/*    {	NULL,	".dsabl",	S_OPTN,		0,	O_DSBL	},	*/
     {	NULL,	".page",	S_PAGE,		0,	0	},
     {	NULL,	".title",	S_HEADER,	0,	O_TITLE	},
     {	NULL,	".sbttl",	S_HEADER,	0,	O_SBTTL	},
@@ -117,7 +125,9 @@ struct	mne	mne[] = {
     {	NULL,	".include",	S_INCL,		0,	I_CODE	},
     {	NULL,	".incbin",	S_INCL,		0,	I_BNRY	},
     {	NULL,	".area",	S_AREA,		0,	0	},
-//    {	NULL,	".bank",	S_BANK,		0,	0	},
+/*    {	NULL,	".psharea",	S_AREA,		0,	O_PSH	},	*/
+/*    {	NULL,	".poparea",	S_AREA,		0,	O_POP	},	*/
+/*    {	NULL,	".bank",	S_BANK,		0,	0	},	*/
     {	NULL,	".org",		S_ORG,		0,	0	},
     {	NULL,	".radix",	S_RADIX,	0,	0	},
     {	NULL,	".globl",	S_GLOBL,	0,	0	},
@@ -169,9 +179,10 @@ struct	mne	mne[] = {
     {	NULL,	".fdb",		S_DATA,		0,	O_2BYTE	},
 /*    {	NULL,	".3byte",	S_DATA,		0,	O_3BYTE	},	*/
 /*    {	NULL,	".triple",	S_DATA,		0,	O_3BYTE	},	*/
+/*    {	NULL,	".dl",		S_DATA,		0,	O_4BYTE	},	*/
 /*    {	NULL,	".4byte",	S_DATA,		0,	O_4BYTE	},	*/
 /*    {	NULL,	".quad",	S_DATA,		0,	O_4BYTE	},	*/
-    {   NULL,   ".df",          S_FLOAT,        0,      0       },
+/*    {	NULL,	".long",	S_DATA,		0,	O_4BYTE	},	*/
     {	NULL,	".blkb",	S_BLK,		0,	O_1BYTE	},
     {	NULL,	".ds",		S_BLK,		0,	O_1BYTE	},
     {	NULL,	".rmb",		S_BLK,		0,	O_1BYTE	},
@@ -179,6 +190,7 @@ struct	mne	mne[] = {
     {	NULL,	".blkw",	S_BLK,		0,	O_2BYTE	},
 /*    {	NULL,	".blk3",	S_BLK,		0,	O_3BYTE	},	*/
 /*    {	NULL,	".blk4",	S_BLK,		0,	O_4BYTE	},	*/
+/*    {	NULL,	".blkl",	S_BLK,		0,	O_4BYTE	},	*/
     {	NULL,	".ascii",	S_ASCIX,	0,	O_ASCII	},
     {	NULL,	".ascis",	S_ASCIX,	0,	O_ASCIS	},
     {	NULL,	".asciz",	S_ASCIX,	0,	O_ASCIZ	},
@@ -194,7 +206,22 @@ struct	mne	mne[] = {
     {	NULL,	".msg"	,	S_MSG,		0,	0	},
     {	NULL,   ".assume",      S_ERROR,        0,      O_ASSUME},
     {	NULL,   ".error",       S_ERROR,        0,      O_ERROR	},
+/*    {	NULL,	".msb",		S_MSB,		0,	0	},	*/
+/*    {	NULL,	".lohi",	S_MSB,		0,	O_LOHI	},	*/
+/*    {	NULL,	".hilo",	S_MSB,		0,	O_HILO	},	*/
+/*    {	NULL,	".8bit",	S_BITS,		0,	O_1BYTE	},	*/
+/*    {	NULL,	".16bit",	S_BITS,		0,	O_2BYTE	},	*/
+/*    {	NULL,	".24bit",	S_BITS,		0,	O_3BYTE	},	*/
+/*    {	NULL,	".32bit",	S_BITS,		0,	O_4BYTE	},	*/
+/*    {	NULL,	".trace",	S_TRACE,	0,	O_TRC	},	*/
+/*    {	NULL,	".ntrace",	S_TRACE,	0,	O_NTRC	},	*/
+/*    {	NULL,	"_______",	S_CONST,	0,	VALUE	},	*/
+/*    {	NULL,	".end",		S_END,		0,	0	},	*/
+
 /* sdas specific */
+    {   NULL,   ".df",          S_FLOAT,        0,      0       },
+/*    {   NULL,   ".uleb128",     S_ULEB128,      0,      0       },	*/
+/*    {   NULL,   ".sleb128",     S_SLEB128,      0,      0       },	*/
     {   NULL,   ".optsdcc",     S_OPTSDCC,      0,      0 },
 /* end sdas specific */
 

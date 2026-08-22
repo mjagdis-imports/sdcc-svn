@@ -1,7 +1,7 @@
 /* rabmch.c */
 
 /*
- *  Copyright (C) 1989-2009  Alan R. Baldwin
+ *  Copyright (C) 1989-2026  Alan R. Baldwin
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -27,11 +27,6 @@
  * CERN
  * CH-1211 Geneva-23
  * email: Ulrich dot Raich at cern dot ch
- */
-
-/*
- * xerr messages Copyright (C) 1989-2021  Alan R. Baldwin
- * from ASxxxx 5.40
  */
 
 /*
@@ -99,16 +94,16 @@ machine(struct mne *mp)
 	switch (rf) {
 	case S_CPU:
 		switch (op) {
-		case T_R2K:   rab.cpu=R_2K;  rab.mode = R_NOMODE; break;
-		case T_R3KA:  rab.cpu=R_3KA; rab.mode = R_NOMODE; break;
-		case T_R4K00: rab.cpu=R_4K;  rab.mode = R_MODE00; break;
-		case T_R4K01: rab.cpu=R_4K;  rab.mode = R_MODE01; break;
-		case T_R4K10: rab.cpu=R_4K;  rab.mode = R_MODE10; break;
-		case T_R4K11: rab.cpu=R_4K;  rab.mode = R_MODE11; break;
-		case T_R6K00: rab.cpu=R_6K;  rab.mode = R_MODE00; break;
-		case T_R6K01: rab.cpu=R_6K;  rab.mode = R_MODE01; break;
-		case T_R6K10: rab.cpu=R_6K;  rab.mode = R_MODE10; break;
-		case T_R6K11: rab.cpu=R_6K;  rab.mode = R_MODE11; break;
+		case X_R2K:   rab.cpu=R_2K;  rab.mode = R_NOMODE; break;
+		case X_R3KA:  rab.cpu=R_3KA; rab.mode = R_NOMODE; break;
+		case X_R4K00: rab.cpu=R_4K;  rab.mode = R_MODE00; break;
+		case X_R4K01: rab.cpu=R_4K;  rab.mode = R_MODE01; break;
+		case X_R4K10: rab.cpu=R_4K;  rab.mode = R_MODE10; break;
+		case X_R4K11: rab.cpu=R_4K;  rab.mode = R_MODE11; break;
+		case X_R6K00: rab.cpu=R_6K;  rab.mode = R_MODE00; break;
+		case X_R6K01: rab.cpu=R_6K;  rab.mode = R_MODE01; break;
+		case X_R6K10: rab.cpu=R_6K;  rab.mode = R_MODE10; break;
+		case X_R6K11: rab.cpu=R_6K;  rab.mode = R_MODE11; break;
 		default: break;
 		}
 		sym[2].s_addr = op;
@@ -1830,7 +1825,7 @@ minit(void)
 	 */
         exprmasks(3);
 	if (pass == 0) {
-		sym[2].s_addr = T_R2K;
+		sym[2].s_addr = X_R2K;
 	}
 }
 
