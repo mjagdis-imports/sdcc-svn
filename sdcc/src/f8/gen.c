@@ -2474,7 +2474,7 @@ skip_byte:
         }
 
       // No byte can be assigned safely (i.e. the assignment is a permutation).
-      int j;
+      int j = 0; // fix gcc warning about uninitialized variable
       // Try swapping with xl (4B for swap).
       for (i = 0; i < n; i++)
         {
