@@ -795,12 +795,12 @@ PORT mos6502_port =
     m6502_keywords,
     m6502_genAssemblerStart,    /* genAssemblerStart */
     m6502_genAssemblerEnd,      /* genAssemblerEnd */
-    m6502_genIVT,
+    m6502_genIVT,               /* local IVT generation code */
     m6502_genXINIT,             /* genXINIT code */
-    0,                          /* genInitStartup */
+    NULL,                       /* genInitStartup */
     m6502_reset_regparm,
     m6502_regparm,
-    NULL,                       /* process_pragma */
+    m6502_process_pragma,       /* process_pragma */
     NULL,                       /* getMangledFunctionName */
     _hasNativeMulFor,           /* hasNativeMulFor */
     hasExtBitOp,                /* hasExtBitOp */
@@ -967,12 +967,12 @@ PORT mos65c02_port =
     m6502_keywords,
     m65c02_genAssemblerStart,   /* genAssemblerStart */
     m6502_genAssemblerEnd,      /* genAssemblerEnd */
-    m6502_genIVT,
-    m6502_genXINIT,
-    0,                          /* genInitStartup */
+    m6502_genIVT,               /* local IVT generation code */
+    m6502_genXINIT,             /* genXINIT code */
+    NULL,                       /* genInitStartup */
     m6502_reset_regparm,
     m6502_regparm,
-    0,                          /* process_pragma */
+    m6502_process_pragma,       /* process_pragma */
     NULL,                       /* getMangledFunctionName */
     _hasNativeMulFor,           /* hasNativeMulFor */
     hasExtBitOp,                /* hasExtBitOp */

@@ -32,6 +32,8 @@ typedef struct
 MOS6502_OPTS;
 
 extern MOS6502_OPTS mos6502_opts;
+extern int m6502_process_pragma (const char *s);
+
 
 #define IS_MOS6502 (mos6502_opts.sub == SUB_MOS6502)
 #define IS_MOS65C02 (mos6502_opts.sub == SUB_MOS65C02)

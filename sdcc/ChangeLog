@@ -41,7 +41,11 @@
 	  Merge more asxxxx upstream changes.
     * src/SDCCicode.c,
       src/mos6502/gen.c:
-      Correctly mark builtin as generated. 
+      Correctly mark builtin as generated.
+    * src/mos6502/m6502.h,
+      src/mos6502/main.c,
+      src/mos6502/pragma.c:
+      Initial pragma implementation for mos6502.
 
 2026-08-21 Gabriele Gorla <gorlik@yahoo.com>
 
