@@ -999,7 +999,7 @@ m6502_transferRegReg (reg_info *sreg, reg_info *dreg, bool freesrc)
             }
           else if (m6502_reg_a->isFree)
             {
-              m6502_transferRegReg (m6502_reg_y, m6502_reg_a, freesrc);
+              m6502_transferRegReg (m6502_reg_y, m6502_reg_a, false);
               m6502_transferRegReg (m6502_reg_a, m6502_reg_x, true);
             }
           else
@@ -1033,7 +1033,7 @@ m6502_transferRegReg (reg_info *sreg, reg_info *dreg, bool freesrc)
             }
           else if (m6502_reg_a->isFree)
             {
-              m6502_transferRegReg (m6502_reg_x, m6502_reg_a, freesrc);
+              m6502_transferRegReg (m6502_reg_x, m6502_reg_a, false);
               m6502_transferRegReg (m6502_reg_a, m6502_reg_y, true);
             }
           else
@@ -2318,7 +2318,7 @@ loadRegFromDPTR(reg_info *reg, int dofs)
   if (_S.DPTRAttr[dofs].isLiteral)
     {
       if (reg->isLitConst
-         && reg->litConst == _S.DPTRAttr[dofs].literalValue )
+	  && reg->litConst == _S.DPTRAttr[dofs].literalValue )
         m6502_emitComment (TRACEGEN, " %s: DPTR[%d] has same literal %02x",
                            __func__, dofs, reg->litConst);
       else
@@ -2867,7 +2867,7 @@ static asmop * aopForRemat (symbol * sym)
       aop = newAsmop (AOP_LIT);
       aop->aopu.aop_lit = constVal (buffer);
     }
-   else
+  else
     {
       werror (E_INTERNAL_ERROR, __FILE__, __LINE__, "unexpected rematerialization");
     }
@@ -3922,6 +3922,7 @@ m6502_copy (operand * result, operand * source)
     {
       reg_info *reg0=m6502_findRegAop(AOP(source), 0);
       reg_info *reg1=m6502_findRegAop(AOP(source), 1);
+
       if (reg0&&reg1)
         {
           m6502_emitComment (TRACEGEN|VVDBG, "      %s (regtrack)", __func__);
@@ -6431,6 +6432,9 @@ static void genUnpackBits (operand * result, operand * left, operand * right, iC
   bool needpulla = false;
   bool needpully = false;
   bool needpullx = false;
+  char * ptr_str;
+  int yoff;
+
   m6502_emitComment (TRACEGEN, __func__);
 
   decodePointerOffset (right, &litOffset, &rematOffset);
@@ -6448,9 +6452,6 @@ static void genUnpackBits (operand * result, operand * left, operand * right, iC
       needpullx = storeRegTempIfSurv (m6502_reg_x);
       needpully = storeRegTempIfSurv (m6502_reg_y);
     }
-
-  char * ptr_str;
-  int yoff;
 
   if(AOP_TYPE(left)==AOP_DIR && litOffset< 248 && !rematOffset)
     {
@@ -7303,7 +7304,7 @@ static void genPackBits (operand * result, operand * left, sym_link * etype, ope
   if(late_dptr)
     yoff= setupDPTR(result, litOffset, rematOffset, false);
 
-//  needpulla = storeRegTempIfUsed (m6502_reg_a);
+  //  needpulla = storeRegTempIfUsed (m6502_reg_a);
 
   /* If the bitfield length is less than a byte */
   if (blen < 8)
@@ -8622,13 +8623,6 @@ genm6502iCode (iCode *ic)
   if (!regalloc_dry_run)
     printf ("ic %d op %d stack pushed %d\n", ic->key, ic->op, G.stack.pushed);
 #endif
-
-  if (ic->op == SEND && ic->builtinSEND)
-    {
-      // FIXME: the send is marked generated
-      // workaround to mark the send as not generated
-      ic->generated = 0;
-    }
 
   if (resultRemat (ic))
     {

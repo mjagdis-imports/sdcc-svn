@@ -39,6 +39,9 @@
       sdas/asz80/z80mch.c,
       sdas/asz80/z80pst.c:
 	  Merge more asxxxx upstream changes.
+    * src/SDCCicode.c,
+      src/mos6502/gen.c:
+      Correctly mark builtin as generated. 
 
 2026-08-21 Gabriele Gorla <gorlik@yahoo.com>
 

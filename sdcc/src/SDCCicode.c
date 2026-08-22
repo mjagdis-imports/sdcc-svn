@@ -1333,8 +1333,9 @@ getBuiltinParms (iCode *fic, int *pcount, operand **parms)
   while (ic->op != CALL)
     {
       assert (ic->op == SEND && ic->builtinSEND);
-      if(!regalloc_dry_run || ic != fic)
+      if(!regalloc_dry_run && ic != fic)
         ic->generated = 1;        /* mark the icode as generated */
+
       parms[*pcount] = IC_LEFT (ic);
       ic = ic->next;
       (*pcount)++;
