@@ -691,11 +691,6 @@ printChar16 (struct dbuf_s *oBuf, const TYPE_TARGET_UINT *s, int plen)
       s++;
       pplen++;
     }
-  while (pplen < plen)
-    {
-      dbuf_tprintf (oBuf, "\t!db !constbyte\n", 0);
-      pplen++;
-    }
 }
 
 /*-----------------------------------------------------------------*/
@@ -721,11 +716,6 @@ printChar32 (struct dbuf_s *oBuf, const TYPE_TARGET_ULONG *s, int plen)
         dbuf_printf (oBuf, "\t.byte %d,%d,%d,%d\n", (*s >> 24) & 0xff, (*s >> 16) & 0xff, (*s >> 8) & 0xff,(*s >> 0) & 0xff);
 
       s++;
-      pplen++;
-    }
-  while (pplen < plen)
-    {
-      dbuf_tprintf (oBuf, "\t!db !constbyte\n", 0);
       pplen++;
     }
 }
@@ -929,7 +919,7 @@ printIvalType (symbol * sym, sym_link * type, initList * ilist, struct dbuf_s *o
             }
           else
             {
-              dbuf_tprintf (oBuf, "\t!dbs\t; % d", aopLiteral (val, 0), (int) ulVal);
+              dbuf_tprintf (oBuf, "\t!dbs\t; %d", aopLiteral (val, 0), (int) ulVal);
             }
           if (isalnum ((int) ulVal))
             dbuf_tprintf (oBuf, "\t'%c'\n", (int) ulVal);
@@ -948,7 +938,7 @@ printIvalType (symbol * sym, sym_link * type, initList * ilist, struct dbuf_s *o
       if (IS_UNSIGNED (val->type))
         dbuf_printf (oBuf, "\t; %u\n", (unsigned int) ulVal);
       else
-        dbuf_printf (oBuf, "\t; % d\n", (int) ulVal);
+        dbuf_printf (oBuf, "\t; %d\n", (int) ulVal);
       break;
 
     case 4:
@@ -970,7 +960,7 @@ printIvalType (symbol * sym, sym_link * type, initList * ilist, struct dbuf_s *o
               if (IS_UNSIGNED (val->type))
                 dbuf_printf (oBuf, "\t; %u\n", (unsigned int) ulVal);
               else
-                dbuf_printf (oBuf, "\t; % d\n", (int) ulVal);
+                dbuf_printf (oBuf, "\t; %d\n", (int) ulVal);
             }
         }
       break;

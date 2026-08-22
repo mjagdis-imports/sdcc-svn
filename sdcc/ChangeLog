@@ -19,6 +19,8 @@
       sdas/astlcs90/t90pst.c,
       sdas/asz80/z80pst.c:
 	  Merge more asxxxx upstream changes.
+    * src/SDCCglue.c
+      Remove dead code.
 
 2026-08-21 Gabriele Gorla <gorlik@yahoo.com>
 
