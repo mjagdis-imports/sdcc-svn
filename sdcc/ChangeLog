@@ -23,6 +23,22 @@
       Remove dead code.
     * src/f8/gen.c:
       Fix gcc warning.
+    * sdas/as6808/m08adr.c,
+      sdas/as6808/m08mch.c,
+      sdas/as6808/m6808.h,
+      sdas/as8051/i51mch.c,
+      sdas/as8051/i8051.h,
+      sdas/as8xcxxx/ds8.h,
+      sdas/as8xcxxx/ds8mch.c,
+      sdas/asf8/f8mch.c,
+      sdas/asf8/f8pst.c,
+      sdas/asgb/gb.h,
+      sdas/asgb/gbmch.c,
+      sdas/asrab/rabpst.c,
+      sdas/asz80/z80.h,
+      sdas/asz80/z80mch.c,
+      sdas/asz80/z80pst.c:
+	  Merge more asxxxx upstream changes.
 
 2026-08-21 Gabriele Gorla <gorlik@yahoo.com>
 

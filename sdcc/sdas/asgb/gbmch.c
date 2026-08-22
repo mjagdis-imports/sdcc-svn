@@ -1,7 +1,7 @@
 /* gbmch.c */
 
 /*
- *  Copyright (C) 1989-2025  Alan R. Baldwin
+ *  Copyright (C) 1989-2026  Alan R. Baldwin
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -20,14 +20,6 @@
  * Alan R. Baldwin
  * 721 Berkeley St.
  * Kent, Ohio  44240
- */
-
-/*
- * xerr messages Copyright (C) 1989-2021  Alan R. Baldwin
- * from ASxxxx 5.40
- * Things missing that exist in 5.40:
- * .rel format
- * cycle counting
  */
 
 /*
@@ -476,9 +468,8 @@ machine(struct mne *mp)
 		}
 		expr(&e2, 0);
 		outab(op);
-                if (mchpcr(&e2)) {
-                        v2 = (int) (e2.e_addr - dot.s_addr - 1);
-                        if (pass == 2 && ((v2 < -128) || (v2 > 127)))
+		if (mchpcr(&e2, &v2, 1)) {
+			if ((v2 < -128) || (v2 > 127))
 				xerr('a', "Branching Range Exceeded.");
 			outab(v2);
 		} else {
@@ -709,9 +700,25 @@ genop(int pop, int op, struct expr *esp, int f)
  * Branch/Jump PCR Mode Check
  */
 int
-mchpcr(struct expr *esp)
+mchpcr(struct expr *esp, int *v, int n)
 {
 	if (esp->e_base.e_ap == dot.s_area) {
+		if (v != NULL) {
+#if 1
+			/* Allows branching from top-to-bottom and bottom-to-top */
+ 			*v = (int) (esp->e_addr - dot.s_addr - n);
+			/* only bits 'a_mask' are significant, make circular */
+			if (*v & s_mask) {
+				*v |= (int) ~a_mask;
+			}
+			else {
+				*v &= (int) a_mask;
+			}
+#else
+			/* Disallows branching from top-to-bottom and bottom-to-top */
+			*v = (int) ((esp->e_addr & a_mask) - (dot.s_addr & a_mask) - n);
+#endif
+		}
 		return(1);
 	}
 	if (esp->e_flag==0 && esp->e_base.e_ap==NULL) {

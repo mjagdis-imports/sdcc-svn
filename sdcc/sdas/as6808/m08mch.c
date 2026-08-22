@@ -208,8 +208,9 @@ machine(struct mne *mp)
 	int op, t1, t2, type;
 	struct expr e1, e2, e3;
         a_uint espv;
+	struct sym *sp;
 	char id[NCPS];
-	int c, v1;
+	int c, v1, v2, v3;
 
 	clrexpr(&e1);
 	clrexpr(&e2);
@@ -225,6 +226,7 @@ machine(struct mne *mp)
 			expr(&e1, 0);
 			if (e1.e_flag == 0 && e1.e_base.e_ap == NULL) {
 				if (e1.e_addr) {
+					e1.e_addr = 0;
 					xerr('b', "Only Page 0 Allowed.");
 				}
 			}
@@ -232,6 +234,7 @@ machine(struct mne *mp)
 				getid(id, -1);
 				zpg = alookup(id);
 				if (zpg == NULL) {
+					zpg = dot.s_area;
 					xerr('u', "Undefined Area.");
 				}
 			} else {
@@ -242,6 +245,17 @@ machine(struct mne *mp)
 		lmode = SLIST;
 		break;
 
+	case S_PGD:
+		do {
+			getid(id, -1);
+			sp = lookup(id);
+			sp->s_flag &= ~S_LCL;
+			sp->s_flag |=  S_GBL;
+			sp->s_area = (zpg != NULL) ? zpg : dot.s_area;
+ 		} while (comma(0));
+		lmode = SLIST;
+		break;
+ 
 	case S_CPU:
 		opcycles = OPCY_CPU;
 		mchtyp = op;
@@ -274,8 +288,7 @@ machine(struct mne *mp)
 	case S_BRA:
 		expr(&e1, 0);
 		outab(op);
-		if (mchpcr(&e1)) {
-			v1 = (int) (e1.e_addr - dot.s_addr - 1);
+		if (mchpcr(&e1, &v1, 1)) {
 			if ((v1 < -128) || (v1 > 127))
 				xerr('a', "Branching Range Exceeded.");
 			outab(v1);
@@ -404,11 +417,10 @@ machine(struct mne *mp)
 		expr(&e3, 0);
                 outab(op + 2*(espv&0x07));
 		outrb(&e2, R_PAG0);
-                if (mchpcr(&e3)) {
-                        v1 = (int) (e3.e_addr - dot.s_addr - 1);
-			if ((v1 < -128) || (v1 > 127))
-				aerr();
-			outab(v1);
+		if (mchpcr(&e3, &v3, 1)) {
+			if ((v3 < -128) || (v3 > 127))
+				xerr('a', "Branching Range Exceeded.");
+			outab(v3);
 		} else {
 			outrb(&e3, R_PCR);
 		}
@@ -536,11 +548,10 @@ machine(struct mne *mp)
 			xerr('a', "Invalid Addressing Mode.");
 			break;
 		}
-		if (mchpcr(&e2)) {
-			v1 = (int) (e2.e_addr - dot.s_addr - 1);
-			if ((v1 < -128) || (v1 > 127))
+		if (mchpcr(&e2, &v2, 1)) {
+			if ((v2 < -128) || (v2 > 127))
 				xerr('a', "Branching Range Exceeded.");
-			outab(v1);
+			outab(v2);
 		} else {
 			outrb(&e2, R_PCR);
 		}
@@ -561,11 +572,10 @@ machine(struct mne *mp)
 		expr(&e2, 0);
 		outab(op);
 		outrb(&e1, 0);
-		if (mchpcr(&e2)) {
-			v1 = (int) (e2.e_addr - dot.s_addr - 1);
-			if ((v1 < -128) || (v1 > 127))
+		if (mchpcr(&e2, &v2, 1)) {
+			if ((v2 < -128) || (v2 > 127))
 				xerr('a', "Branching Range Exceeded.");
-			outab(v1);
+			outab(v2);
 		} else {
 			outrb(&e2, R_PCR);
 		}
@@ -601,11 +611,10 @@ machine(struct mne *mp)
 			xerr('a', "Invalid Addressing Mode.");
 			break;
 		}
-		if (mchpcr(&e2)) {
-			v1 = (int) (e2.e_addr - dot.s_addr - 1);
-			if ((v1 < -128) || (v1 > 127))
+		if (mchpcr(&e2, &v2, 1)) {
+			if ((v2 < -128) || (v2 > 127))
 				xerr('a', "Branching Range Exceeded.");
-			outab(v1);
+			outab(v2);
 		} else {
 			outrb(&e2, R_PCR);
 		}
@@ -621,8 +630,7 @@ machine(struct mne *mp)
 		}
 		expr(&e1, 0);
 		outab(op);
-		if (mchpcr(&e1)) {
-			v1 = (int) (e1.e_addr - dot.s_addr - 1);
+		if (mchpcr(&e1, &v1, 1)) {
 			if ((v1 < -128) || (v1 > 127))
 				xerr('a', "Branching Range Exceeded.");
 			outab(v1);
@@ -708,9 +716,25 @@ machine(struct mne *mp)
  * Branch/Jump PCR Mode Check
  */
 int
-mchpcr(struct expr *esp)
+mchpcr(struct expr *esp, int *v, int n)
 {
 	if (esp->e_base.e_ap == dot.s_area) {
+		if (v != NULL) {
+#if 1
+			/* Allows branching from top-to-bottom and bottom-to-top */
+ 			*v = (int) (esp->e_addr - dot.s_addr - n);
+			/* only bits 'a_mask' are significant, make circular */
+			if (*v & s_mask) {
+				*v |= (int) ~a_mask;
+			}
+			else {
+				*v &= (int) a_mask;
+			}
+#else
+			/* Disallows branching from top-to-bottom and bottom-to-top */
+			*v = (int) ((esp->e_addr & a_mask) - (dot.s_addr & a_mask) - n);
+#endif
+		}
 		return(1);
 	}
 	if (esp->e_flag==0 && esp->e_base.e_ap==NULL) {

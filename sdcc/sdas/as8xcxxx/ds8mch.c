@@ -1,7 +1,7 @@
 /* ds8mch.c */
 
 /*
- *  Copyright (C) 1998-2025  Alan R. Baldwin
+ *  Copyright (C) 1998-2026  Alan R. Baldwin
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -95,11 +95,10 @@ machine(struct mne *mp)
 	int c, d, t, t1, v1;
 	a_uint op;
 	struct sym *sp;
-        struct expr e, e1, e2;
+	struct expr e, e1;
 
 	clrexpr(&e);
 	clrexpr(&e1);
-        clrexpr(&e2);
 
 	op = mp->m_valu;
 	switch (mp->m_type) {
@@ -581,17 +580,13 @@ machine(struct mne *mp)
 		t = addr(&e);
 		if ((t != S_DIR) && (t != S_EXT))
 			xerr('a', "Argument must be an address.");
-                /* sdcc svn rev #4994: fixed bug 1865114 */
-		comma(1);
-		expr(&e1, 0);
-
 		outab(op);
 		outrb(&e, R_PAG0);
 
-                if (mchpcr(&e1)) {
-                        v1 = (int) (e1.e_addr - dot.s_addr - 1);
-                        /* sdcc svn rev #602: Fix some path problems */
-                        if (pass == 2 && ((v1 < -128) || (v1 > 127)))
+		comma(1);
+		expr(&e1, 0);
+		if (mchpcr(&e1, &v1, 1)) {
+			if ((v1 < -128) || (v1 > 127))
 				xerr('a', "Branching Range Exceeded.");
 			outab(v1);
 		} else {
@@ -603,14 +598,10 @@ machine(struct mne *mp)
 
         case S_BR:  /* JC, JNC, JZ, JNZ */
 		/* Relative branch */
-                /* sdcc svn rev #4994: fixed bug 1865114 */
-		expr(&e1, 0);
 		outab(op);
-
-                if (mchpcr(&e1)) {
-                        v1 = (int) (e1.e_addr - dot.s_addr - 1);
-                        /* sdcc svn rev #602: Fix some path problems */
-                        if (pass == 2 && ((v1 < -128) || (v1 > 127)))
+		expr(&e1, 0);
+		if (mchpcr(&e1, &v1, 1)) {
+			if ((v1 < -128) || (v1 > 127))
 				xerr('a', "Branching Range Exceeded.");
 			outab(v1);
 		} else {
@@ -625,11 +616,6 @@ machine(struct mne *mp)
 		t = addr(&e);
 		comma(1);
 		t1 = addr(&e1);
-
-                /* Benny */
-		comma(1);
-                expr(&e2, 0);
-
 		switch (t) {
 		case S_A:
 			if (t1 == S_IMMED) {
@@ -663,26 +649,22 @@ machine(struct mne *mp)
 		}
 
 		/* branch destination */
-                if (mchpcr(&e2)) {
-                        v1 = (int) (e2.e_addr - dot.s_addr - 1);
-                        /* sdcc svn rev #602: Fix some path problems */
-                        if (pass == 2 && ((v1 < -128) || (v1 > 127)))
+		comma(1);
+		expr(&e1, 0);
+		if (mchpcr(&e1, &v1, 1)) {
+			if ((v1 < -128) || (v1 > 127))
 				xerr('a', "Branching Range Exceeded.");
 			outab(v1);
 		} else {
-                        outrb(&e2, R_PCR);
+			outrb(&e1, R_PCR);
 		}
-                if (e2.e_mode != S_USER)
+		if (e1.e_mode != S_USER)
 			rerr();
 		break;
 
 	case S_DJNZ:
 		/* Dir,dest;  Reg,dest */
 		t = addr(&e);
-                /* sdcc svn rev #4994: fixed bug 1865114 */
-		comma(1);
-		expr(&e1, 0);
-
 		switch (t) {
 		case S_DIR:
 		case S_EXT:
@@ -699,11 +681,10 @@ machine(struct mne *mp)
 		}
 
 		/* branch destination */
-                /* sdcc svn rev #4994: fixed bug 1865114 */
-                if (mchpcr(&e1)) {
-                        v1 = (int) (e1.e_addr - dot.s_addr - 1);
-                        /* sdcc svn rev #602: Fix some path problems */
-                        if (pass == 2 && ((v1 < -128) || (v1 > 127)))
+		comma(1);
+		expr(&e1, 0);
+		if (mchpcr(&e1, &v1, 1)) {
+			if ((v1 < -128) || (v1 > 127))
 				xerr('a', "Branching Range Exceeded.");
 			outab(v1);
 		} else {
@@ -881,9 +862,25 @@ machine(struct mne *mp)
  * Branch/Jump PCR Mode Check
  */
 int
-mchpcr(struct expr *esp)
+mchpcr(struct expr *esp, int *v, int n)
 {
 	if (esp->e_base.e_ap == dot.s_area) {
+		if (v != NULL) {
+#if 1
+			/* Allows branching from top-to-bottom and bottom-to-top */
+ 			*v = (int) (esp->e_addr - dot.s_addr - n);
+			/* only bits 'a_mask' are significant, make circular */
+			if (*v & s_mask) {
+				*v |= (int) ~a_mask;
+			}
+			else {
+				*v &= (int) a_mask;
+			}
+#else
+			/* Disallows branching from top-to-bottom and bottom-to-top */
+			*v = (int) ((esp->e_addr & a_mask) - (dot.s_addr & a_mask) - n);
+#endif
+		}
 		return(1);
 	}
 	if (esp->e_flag==0 && esp->e_base.e_ap==NULL) {

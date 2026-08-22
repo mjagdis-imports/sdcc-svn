@@ -1,7 +1,7 @@
-/* stm8pst.c */
+/* f8pst.c */
 
 /*
- *  Copyright (C) 1010  Alan R. Baldwin
+ *  Copyright (C) 2012-2026  Alan R. Baldwin
  *  Copyright (C) 2022  Philipp K. Krause
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -21,7 +21,6 @@
  * Alan R. Baldwin
  * 721 Berkeley St.
  * Kent, Ohio  44240
- * 
  */
 
 #include "asxxxx.h"
@@ -73,7 +72,6 @@ char	mode1[32] = {	/* R_BITS */
 	'\020',	'\021',	'\022',	'\023',	'\024',	'\025',	'\026',	'\027',
 	'\030',	'\031',	'\032',	'\033',	'\034',	'\035',	'\036',	'\037'
 };
-
 
 /*
  *     *m_def is a pointer to the bit relocation definition.

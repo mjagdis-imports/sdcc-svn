@@ -1,7 +1,7 @@
 /* m08adr.c */
 
 /*
- *  Copyright (C) 1989-2025  Alan R. Baldwin
+ *  Copyright (C) 1989-2026  Alan R. Baldwin
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -98,11 +98,18 @@ addr(struct expr *esp)
 			    && (esp->e_base.e_ap == NULL)
 			    && !(esp->e_addr & ~0xFF)) {
 				esp->e_mode = S_DIR;
+			} else {
+				if (zpg != NULL) {
+					if (esp->e_flag) {
+						if (esp->e_base.e_sp->s_area == zpg) {
+							esp->e_mode = S_DIR;	/* ___  (*)arg */
 			}
-			if ((!esp->e_flag)
-				&& (zpg != NULL)
-				&& (esp->e_base.e_ap == zpg)) {
-				esp->e_mode = S_DIR;
+					} else {
+						if (esp->e_base.e_ap == zpg) {
+							esp->e_mode = S_DIR;	/* ___  (*)arg */
+						}
+					}
+				}
 			}
 			if ((esp->e_mode == S_DIR) && more()) {
 				comma(1);

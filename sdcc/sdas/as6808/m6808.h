@@ -1,7 +1,7 @@
 /* m6808.h */
 
 /*
- *  Copyright (C) 1993-2025  Alan R. Baldwin
+ *  Copyright (C) 1993-2026  Alan R. Baldwin
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -96,6 +96,7 @@ struct adsym
  * Special Types
  */
 #define	S_SDP	80
+#define	S_PGD	81
 
 /*
  * CPU Option
@@ -127,6 +128,6 @@ extern	int		srch(char *str);
 	/* m08mch.c */
 extern	struct  area	*zpg;
 extern	void		machine(struct mne *mp);
-extern	int		mchpcr(struct expr *esp);
+extern	int		mchpcr(struct expr *esp, int *v, int n);
 extern	void		minit(void);
 

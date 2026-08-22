@@ -1,7 +1,7 @@
 /* gb.h */
 
 /*
- *  Copyright (C) 1989-2025  Alan R. Baldwin
+ *  Copyright (C) 1989-2026  Alan R. Baldwin
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -138,23 +138,26 @@
 #define	S_IMMED	30
 #define	S_R8	31
 #define	S_R16	33
-#define	S_R16X	34   /* AF */
+#define	S_R16X	34	/* AF */
 #define	S_CND	35
-#define	S_FLAG	36
+#define	S_FLAG	36	/* Not Used By Game Boy */
 
 /*
  * Indexing modes
  */
-#define	S_INDB	40
-#define	S_IDC	41
-#define	S_INDR	50
-#define	S_IDBC	50
-#define	S_IDDE	51
-#define	S_IDHL	52
-#define	S_IDSP	53
-#define	S_IDHLD	55
-#define	S_IDHLI	56
-#define	S_INDM	57
+#define	S_INDB	40	/* 8-Bit Base Index */
+#define	S_IDC	41	/* (C) */
+#define	S_INDR	50	/* 16-Bit Base Index */
+#define	S_IDBC	50	/* (BC) */
+#define	S_IDDE	51	/* (DE) */
+#define	S_IDHL	52	/* (HL) */
+#define	S_IDSP	53	/* (SP) n(SP) Syntax for SP+n */
+#define	S_IDAF	54	/* (AF) Not Used By Game Boy */
+#define	S_IDHLD	55	/* ldd (hl),a | ldd a,(hl) | ld a,(hl-) | ld (hl-),a */
+#define	S_IDHLI	56	/* ldi (hl),a | ldi (hl),a | ld a,(hl+) | ld (hl+),a */
+
+#define	S_INDM	57	/* (address) */
+#define	S_IDIR	58	/* (*address) */
 
 /*
  * Instruction types
@@ -171,18 +174,22 @@
 #define	S_ADC	69
 #define	S_AND	70
 #define	S_PUSH	72
-
-#define	S_RL	76
-#define	S_RST	77
-#define	S_IM	78
-#define	S_INH1	79
-#define	S_SUB	80
-#define	S_SBC	81
-#define S_LDHL	90	/* LDHL SP,offset */
-#define	S_LDA	91
+#define	S_RL	75
+#define	S_RST	76
+#define	S_IM	77
+#define	S_INH1	78
+#define	S_SUB	81
+#define	S_SBC	82
 #define	S_STOP	83
 #define	S_LDH	84
-#define S_TILE	93	/* .TILE pseudo-op */
+#define	S_LDA	92
+#define S_LDHL	85	/* LDHL SP,offset  <<==  LD HL, SP+offset */
+
+/*
+ * Machine Specific
+ */
+#define	S_SPG	90	/* I/O Page */
+#define S_TILE	91	/* .TILE pseudo-op */
 
 struct adsym
 {
@@ -206,6 +213,6 @@ extern	int		srch(char *str);
 	/* gbmch.c */
 extern	int		genop(int pop, int op, struct expr *esp, int f);
 extern	void		machine(struct mne *mp);
-extern	int		mchpcr(struct expr *esp);
+extern	int		mchpcr(struct expr *esp, int *v, int n);
 extern	void		minit(void);
 
