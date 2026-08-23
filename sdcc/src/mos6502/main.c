@@ -177,6 +177,9 @@ m6502_finaliseOptions (void)
       port->mem.default_globl_map = data;
     }
 
+  if(options.data_loc > 240)
+    werror (W_DATA_LOC_RANGE);
+
   istack->ptrType = FPOINTER;
 }
 

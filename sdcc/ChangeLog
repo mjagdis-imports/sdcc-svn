@@ -1,3 +1,10 @@
+2026-08-23 Gabriele Gorla <gorlik@yahoo.com>
+
+    * src/SDCCerr.c,
+      src/SDCCerr.h,
+      src/mos6502/main.c:
+      Add warning for out of range ZP location (feature request #1021).
+
 2026-08-22 Gabriele Gorla <gorlik@yahoo.com>
 
     * sdas/as6500/r65pst.c,
