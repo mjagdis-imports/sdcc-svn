@@ -1,3 +1,10 @@
+2026-08-24 Gabriele Gorla <gorlik@yahoo.com>
+
+    * sdas/as6500/r6500.h,
+      sdas/as6500/r65mch.c,
+      sdas/as6500/r65pst.c:
+      Initial sdas support for Huc6280.
+
 2026-08-23 Gabriele Gorla <gorlik@yahoo.com>
 
     * src/SDCCerr.c,

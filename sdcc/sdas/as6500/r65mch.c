@@ -43,6 +43,7 @@ int r6500;
 int r65f11;
 int r65c00;
 int r65c02;
+int huc6280;
 
 /*
  * Opcode Cycle Definitions
@@ -149,7 +150,6 @@ static char c02pg1[256] = {
 /*F0*/   4, 7, 6,UN,UN, 5, 6, 5, 2, 6, 4,UN,UN, 6, 7, 7
 };
 
-int mchtyp;
 struct area *zpg;
 
 int autodpcnst;
@@ -210,13 +210,13 @@ machine(struct mne *mp)
 		break;
 
 	case S_CPU:
-		mchtyp = op;
-		switch(mchtyp) {
+		switch(op) {
 		case X_R6500:
 			opcycles = OPCY_6500;
 			r65f11 = 0;
 			r65c00 = 0;
 			r65c02 = 0;
+			huc6280 = 0;
 			break;
 
 		case X_R65F11:
@@ -224,6 +224,7 @@ machine(struct mne *mp)
 			r65f11 = 1;
 			r65c00 = 0;
 			r65c02 = 0;
+			huc6280 = 0;
 			break;
 
 		case X_R65C00:
@@ -231,19 +232,36 @@ machine(struct mne *mp)
 			r65f11 = 1;
 			r65c00 = 1;
 			r65c02 = 0;
+			huc6280 = 0;
 			break;
 
 		case X_R65C02:
-		opcycles = OPCY_65C02;
-		r65f11 = 1;
-		r65c00 = 1;
-		r65c02 = 1;
-		break;
+			opcycles = OPCY_65C02;
+			r65f11 = 1;
+			r65c00 = 1;
+			r65c02 = 1;
+			huc6280 = 0;
+			break;
+
+		case X_HUC6280:
+			opcycles = OPCY_65C02; // FIXME - shoube be HUC
+			r65f11 = 1;
+			r65c00 = 1;
+			r65c02 = 1;
+			huc6280 = 1;
+			break;
 		}
 		break;
 
+	case S_INH4:
+		if (!huc6280) {
+			while(more()) getnb();
+			xerr('o', "Invalid Huc6280 Instruction");
+			break;
+		}
+
 	case S_INH3:
-		if (r65c02) {
+		if (!r65c02) {
 			while(more()) getnb();
 			xerr('o', "Invalid 65C02 Instruction");
 			break;
@@ -259,6 +277,28 @@ machine(struct mne *mp)
 	case S_INH1:
 		outab(op);
 		break;
+
+	case S_TAM:
+	case S_TMA:
+		if (!huc6280) {
+			while(more()) getnb();
+			xerr('o', "Valid Only For The Huc6280");
+			break;
+		}
+                if(mp->m_type==S_TAM)
+			outab(0x53);
+		else
+			outab(0x43);
+
+		outab(op);
+		break;
+
+	case S_BRA3:
+		if (!huc6280) {
+			while(more()) getnb();
+			xerr('o', "Invalid Huc6820 Instruction");
+			break;
+		}
 
 	case S_BRA2:
 		if (!r65c00) {
@@ -325,7 +365,7 @@ machine(struct mne *mp)
 
 	case S_DOP:
 		t1 = addr(&e1);
-		v1 = (int) e1.e_addr;
+		//v1 = (int) e1.e_addr;
 		switch (t1) {
 		case S_IPREX:
 			outab(op + 0x01);
@@ -656,6 +696,47 @@ machine(struct mne *mp)
 		}
 		break;
 
+	case S_ST:
+		if (!huc6280) {
+			while(more()) getnb();
+			xerr('o', "Invalid Huc6820 Instruction");
+			break;
+		}
+
+		if(addr(&e1)==S_IMMED) {
+			outab(op);
+			outrb(&e1, 0);
+		} else {
+			aerr();
+                }
+		break;
+
+	case S_MT:
+		if (!huc6280) {
+			while(more()) getnb();
+			xerr('o', "Invalid Huc6820 Instruction");
+			break;
+		}
+		outab(op);
+		expr(&e2, 0);
+		outrw(&e2, 0);
+		comma(1);
+		expr(&e2, 0);
+		outrw(&e2, 0);
+		comma(1);
+		expr(&e2, 0);
+		outrw(&e2, 0);
+		break;
+
+	case S_TST:
+		if (!huc6280) {
+			while(more()) getnb();
+			xerr('o', "Invalid Huc6820 Instruction");
+			break;
+		}
+		xerr('o', "Unimplemented opcode TST");
+		break;
+
 	default:
 		opcycles = OPCY_ERR;
 		err('o');
@@ -759,9 +840,9 @@ minit(void)
 	/*
 	 * Default Machine
 	 */
-	mchtyp = X_R6500;
 	r6500  = 1;
 	r65f11 = 0;
 	r65c00 = 0;
 	r65c02 = 0;
+	huc6280 = 0;
 }

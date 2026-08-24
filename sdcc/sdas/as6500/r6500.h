@@ -69,14 +69,15 @@ struct adsym
 /*
  * Machine Extensions
  */
-#define	S_SDP		80
-#define	S_PGD		81
+#define	S_SDP		30
+#define	S_PGD		31
 
-#define	S_CPU		82
-#define	X_R6500		31
-#define	X_R65F11	32
-#define X_R65C00	33
-#define	X_R65C02	34
+#define	S_CPU		90
+#define	X_R6500		33
+#define	X_R65F11	34
+#define X_R65C00	35
+#define	X_R65C02	36
+#define	X_HUC6280	37
 
 /*
  * Addressing types
@@ -125,6 +126,18 @@ struct adsym
  */
 #define S_STZ	75
 #define	S_TB	76
+
+/*
+ * Huc6280 Extensions
+ */
+#define S_INH4	77
+
+#define	S_MT	79
+#define	S_ST	80
+#define	S_BRA3	81
+#define	S_TST	82
+#define S_TAM	83
+#define S_TMA	84
 
 /*
  * machine dependent functions

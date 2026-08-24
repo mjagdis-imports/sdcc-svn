@@ -268,6 +268,7 @@ struct	mne	mne[] = {
     {	NULL,	".r65f11",	S_CPU,		0,	X_R65F11},
     {	NULL,	".r65c00",	S_CPU,		0,	X_R65C00},
     {	NULL,	".r65c02",	S_CPU,		0,	X_R65C02},
+    {	NULL,	".huc6280",	S_CPU,		0,	X_HUC6280},
 
 	/* 650X / 651X Family  Instructions */
 
@@ -391,5 +392,47 @@ struct	mne	mne[] = {
     {	NULL,	"stz",		S_STZ,		0,	0x60	},
 
     {	NULL,	"trb",		S_TB,		0,	0x10	},
-    {	NULL,	"tsb",		S_TB,		S_EOL,	0x00	}
+    {	NULL,	"tsb",		S_TB,		0,	0x00	},
+
+	/* Additional HuC6280 series Instructions */
+
+    {	NULL,	"cla",		S_INH4,		0,	0x62	},
+    {	NULL,	"clx",		S_INH4,		0,	0x82	},
+    {	NULL,	"cly",		S_INH4,		0,	0xc2	},
+    {	NULL,	"sax",		S_INH4,		0,	0x22	},
+    {	NULL,	"say",		S_INH4,		0,	0x42	},
+    {	NULL,	"sxy",		S_INH4,		0,	0x02	},
+    {	NULL,	"set",		S_INH4,		0,	0xf4	},
+
+    {	NULL,	"bsr",		S_BRA3,		0,	0x44	},
+
+    {	NULL,	"tai",		S_MT,		0,	0xf3	},
+    {	NULL,	"tdd",		S_MT,		0,	0xc3	},
+    {	NULL,	"tia",		S_MT,		0,	0xe3	},
+    {	NULL,	"tii",		S_MT,		0,	0x73	},
+    {	NULL,	"tin",		S_MT,		0,	0xd3	},
+
+    {	NULL,	"tam0",		S_TAM,		0,	0x01	},
+    {	NULL,	"tam1",		S_TAM,		0,	0x02	},
+    {	NULL,	"tam2",		S_TAM,		0,	0x04	},
+    {	NULL,	"tam3",		S_TAM,		0,	0x08	},
+    {	NULL,	"tam4",		S_TAM,		0,	0x10	},
+    {	NULL,	"tam5",		S_TAM,		0,	0x20	},
+    {	NULL,	"tam6",		S_TAM,		0,	0x40	},
+    {	NULL,	"tam7",		S_TAM,		0,	0x80	},
+    {	NULL,	"tma0",		S_TMA,		0,	0x01	},
+    {	NULL,	"tma1",		S_TMA,		0,	0x02	},
+    {	NULL,	"tma2",		S_TMA,		0,	0x04	},
+    {	NULL,	"tma3",		S_TMA,		0,	0x08	},
+    {	NULL,	"tma4",		S_TMA,		0,	0x10	},
+    {	NULL,	"tma5",		S_TMA,		0,	0x20	},
+    {	NULL,	"tma6",		S_TMA,		0,	0x40	},
+    {	NULL,	"tma7",		S_TMA,		0,	0x80	},
+
+    {	NULL,	"st0",		S_ST,		0,	0x03	},
+    {	NULL,	"st1",		S_ST,		0,	0x13	},
+    {	NULL,	"st2",		S_ST,		0,	0x23	},
+
+    {	NULL,	"tst",		S_TST,		S_EOL,	0x83	}
+
 };
