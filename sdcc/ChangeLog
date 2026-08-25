@@ -1,65 +1,73 @@
+2026-08-25 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* device/lib/_mullong.c: use xstack asm code for medium as well
+	* device/lib/_mullonglong.c: replaced byte-by-byte mult with bit mult
+	  which is shorter and uses less memory for almost all targets/models
+	  exceptions: hc08, s08, s08-stack-auto
+	  also optimized byte-by-byte with zero-checking and much less shifts
+
 2026-08-24 Gabriele Gorla <gorlik@yahoo.com>
 
-    * sdas/as6500/r6500.h,
-      sdas/as6500/r65mch.c,
-      sdas/as6500/r65pst.c:
-      Initial sdas support for Huc6280.
+	* sdas/as6500/r6500.h,
+	  sdas/as6500/r65mch.c,
+	  sdas/as6500/r65pst.c:
+	  Initial sdas support for Huc6280.
 
 2026-08-23 Gabriele Gorla <gorlik@yahoo.com>
 
-    * src/SDCCerr.c,
-      src/SDCCerr.h,
-      src/mos6502/main.c:
-      Add warning for out of range ZP location (feature request #1021).
+	* src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/mos6502/main.c:
+	  Add warning for out of range ZP location (feature request #1021).
 
 2026-08-22 Gabriele Gorla <gorlik@yahoo.com>
 
-    * sdas/as6500/r65pst.c,
-      sdas/as6808/m08mch.c,
-      sdas/as6808/m08pst.c,
-      sdas/as8051/i51mch.c,
-      sdas/as8051/i51pst.c,
-      sdas/as8xcxxx/ds8pst.c,
-      sdas/asf8/f8pst.c,
-      sdas/asgb/gbpst.c,
-      sdas/aspdk13/pdk13pst.c,
-      sdas/aspdk14/pdk14pst.c,
-      sdas/aspdk15/pdk15pst.c,
-      sdas/aspdk16/pdk16pst.c,
-      sdas/asrab/rab.h,
-      sdas/asrab/rabmch.c,
-      sdas/asrab/rabpst.c,
-      sdas/asstm8/stm8pst.c,
-      sdas/astlcs90/t90pst.c,
-      sdas/asz80/z80pst.c:
+	* sdas/as6500/r65pst.c,
+	  sdas/as6808/m08mch.c,
+	  sdas/as6808/m08pst.c,
+	  sdas/as8051/i51mch.c,
+	  sdas/as8051/i51pst.c,
+	  sdas/as8xcxxx/ds8pst.c,
+	  sdas/asf8/f8pst.c,
+	  sdas/asgb/gbpst.c,
+	  sdas/aspdk13/pdk13pst.c,
+	  sdas/aspdk14/pdk14pst.c,
+	  sdas/aspdk15/pdk15pst.c,
+	  sdas/aspdk16/pdk16pst.c,
+	  sdas/asrab/rab.h,
+	  sdas/asrab/rabmch.c,
+	  sdas/asrab/rabpst.c,
+	  sdas/asstm8/stm8pst.c,
+	  sdas/astlcs90/t90pst.c,
+	  sdas/asz80/z80pst.c:
 	  Merge more asxxxx upstream changes.
-    * src/SDCCglue.c:
-      Remove dead code.
-    * src/f8/gen.c:
-      Fix gcc warning.
-    * sdas/as6808/m08adr.c,
-      sdas/as6808/m08mch.c,
-      sdas/as6808/m6808.h,
-      sdas/as8051/i51mch.c,
-      sdas/as8051/i8051.h,
-      sdas/as8xcxxx/ds8.h,
-      sdas/as8xcxxx/ds8mch.c,
-      sdas/asf8/f8mch.c,
-      sdas/asf8/f8pst.c,
-      sdas/asgb/gb.h,
-      sdas/asgb/gbmch.c,
-      sdas/asrab/rabpst.c,
-      sdas/asz80/z80.h,
-      sdas/asz80/z80mch.c,
-      sdas/asz80/z80pst.c:
+	* src/SDCCglue.c:
+	  Remove dead code.
+	* src/f8/gen.c:
+	  Fix gcc warning.
+	* sdas/as6808/m08adr.c,
+	  sdas/as6808/m08mch.c,
+	  sdas/as6808/m6808.h,
+	  sdas/as8051/i51mch.c,
+	  sdas/as8051/i8051.h,
+	  sdas/as8xcxxx/ds8.h,
+	  sdas/as8xcxxx/ds8mch.c,
+	  sdas/asf8/f8mch.c,
+	  sdas/asf8/f8pst.c,
+	  sdas/asgb/gb.h,
+	  sdas/asgb/gbmch.c,
+	  sdas/asrab/rabpst.c,
+	  sdas/asz80/z80.h,
+	  sdas/asz80/z80mch.c,
+	  sdas/asz80/z80pst.c:
 	  Merge more asxxxx upstream changes.
-    * src/SDCCicode.c,
-      src/mos6502/gen.c:
-      Correctly mark builtin as generated.
-    * src/mos6502/m6502.h,
-      src/mos6502/main.c,
-      src/mos6502/pragma.c:
-      Initial pragma implementation for mos6502.
+	* src/SDCCicode.c,
+	  src/mos6502/gen.c:
+	  Correctly mark builtin as generated.
+	* src/mos6502/m6502.h,
+	  src/mos6502/main.c,
+	  src/mos6502/pragma.c:
+	  Initial pragma implementation for mos6502.
 
 2026-08-21 Gabriele Gorla <gorlik@yahoo.com>
 

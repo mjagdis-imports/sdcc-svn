@@ -26,29 +26,80 @@
    might be covered by the GNU General Public License.
 -------------------------------------------------------------------------*/
 
+#include <stdbit.h>
 #include <stdint.h>
 
 #include <sdcc-lib.h>
 
 #ifdef __SDCC_LONGLONG
 
+#if __STDC_ENDIAN_NATIVE__ == __STDC_ENDIAN_LITTLE__
+# define LSB_OFFSET     (0)
+# define MSB_DIRECTION  (+1)
+#elif __STDC_ENDIAN_NATIVE__ == __STDC_ENDIAN_BIG__
+# define LSB_OFFSET     (sizeof(long long) - 1)
+# define MSB_DIRECTION  (-1)
+#endif
+
+/* On most targets & models it costs less bytes, less spill locations and
+   sometimes even less cycles to do it per bit as below.
+   The hc08/s08 are the clear exception and do better with byte multiplication.
+*/
+
+#if defined(__SDCC_s08) || defined(__SDCC_hc08)
+
 long long _mullonglong(long long ll, long long lr) __SDCC_NONBANKED
 {
   unsigned long long ret = 0ull;
-  unsigned char i, j;
+  unsigned char i, j, k;
 
+  unsigned char _AUTOMEM * pl = ((unsigned char _AUTOMEM *)&ll) + LSB_OFFSET;
   for (i = 0; i < sizeof (long long); i++)
     {
-      unsigned char l = ll >> (i * 8);
-      for(j = 0; (i + j) < sizeof (long long); j++)
+      unsigned char l = *pl;
+      pl += MSB_DIRECTION;
+      if (l)
         {
-          unsigned char r = lr >> (j * 8);
-          ret += (unsigned long long)((unsigned short)(l * r)) << ((i + j) * 8);
+          unsigned char _AUTOMEM * pr = (unsigned char _AUTOMEM *)&lr + LSB_OFFSET;
+          for (j = 0; (unsigned char)(i + j) < sizeof (long long); j++)
+            {
+              unsigned char r = *pr;
+              pr += MSB_DIRECTION;
+              if (r)
+                {
+                  unsigned long long mul = (unsigned short)(l * r);
+                  k = i + j;
+                  while (k--)
+                    mul <<= 8;
+                  ret += mul;
+                }
+            }
         }
     }
 
   return(ret);
 }
+
+#else
+
+long long _mullonglong(long long x, long long y) __SDCC_NONBANKED
+{
+  long long result = 0ull;
+  unsigned char i = sizeof(long long) * 8;
+
+  do
+    {
+      result <<= 1;
+      if (x & 0x8000000000000000)
+        result += y;
+      x <<= 1;
+    }
+  while (--i);
+
+  return result;
+}
+
+#endif
 
 #endif
 
