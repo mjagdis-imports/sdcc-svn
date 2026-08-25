@@ -1,5 +1,6 @@
 2026-08-25 Maarten Brock <sourceforge.brock AT dse.nl>
 
+	* device/lib/_muluchar.c: applied patch #448, Thanks Konstantin Kim
 	* device/lib/_mullong.c: use xstack asm code for medium as well
 	* device/lib/_mullonglong.c: replaced byte-by-byte mult with bit mult
 	  which is shorter and uses less memory for almost all targets/models
