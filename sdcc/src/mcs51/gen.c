@@ -1182,7 +1182,7 @@ aopOp (operand *op, iCode *ic, bool result)
     {
       sym->aop = op->aop = aop = newAsmop (AOP_CRY);
       aop->aopu.aop_dir = "c";
-      aop->size = sym->ruonly ? 1 : 0;
+      aop->size = (sym->ruonly || POINTER_SET (ic)) ? 1 : 0;
       return;
     }
 
