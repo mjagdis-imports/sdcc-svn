@@ -260,6 +260,12 @@ struct	mne	mne[] = {
 
     {	NULL,	".mdelete",	S_MACRO,	0,	O_MDEL	},
 
+
+        /* variants */
+    {	NULL,	".f8",		S_CPU,		0,	X_F8	},
+    {	NULL,	".f8l",		S_CPU,		0,	X_F8L	},
+
+
 	/* f8 instructions */
 
 	/* 8-bit 2-op-instrustions */
@@ -318,7 +324,7 @@ struct	mne	mne[] = {
     {	NULL,	"mad",		S_0OPMAD,	0,	0xbc	},
     {	NULL,	"rot",		S_0OPROT,	0,	0x95	},
     {	NULL,	"thrd",		S_0OP,		0,	0x9a	},
-	{	NULL,	"cax",		S_0OPCAX,	0,	0x9b	},
+    {	NULL,	"cax",		S_0OPCAX,	0,	0x9b	},
     //{	NULL,	"push",		S_0OP,		0,	0x90	},
     
     /* 16-bit 0-op-instrustions */
@@ -341,14 +347,10 @@ struct	mne	mne[] = {
 //    {	NULL,	"sllw",		S_0OPW,		0,	0xe5	},
 //    {	NULL,	"rlcw",		S_0OPW,		0,	0xe6	},
 //    {	NULL,	"rrcw",		S_0OPW,		0,	0xe7	},
-	{	NULL,	"cltz",		S_0OPW,		0,	0xed	},
     {	NULL,	"sex",		S_0OPWSEX,	0,	0xee	},
     {	NULL,	"zex",		S_0OPWSEX,	0,	0xef	},
 //    {	NULL,	"addw",		S_0OPW,		0,	0xec	},
-	{	NULL,	"caxw",		S_0OPWCAX,	0,	0xf9	},
-
-    /* bit instructions */
-    {	NULL,	"xchb",		S_BIT,		0,	0x68	},
+    {	NULL,	"caxw",		S_0OPWCAX,	0,	0xf9	},
 
 	/* relative jumps */
     {	NULL,	"jr",		S_JR,		0,	0xd0	},
@@ -373,9 +375,6 @@ struct	mne	mne[] = {
 	{	NULL,	"jp",		S_JP,		0,	0x64	},
 	{	NULL,	"ret",		S_RET,		0,	0xba	},
 	{	NULL,	"reti",		S_RET,		0,	0xbb	},
-
-	/* nop */
-    {	NULL,	"nop",		S_TRAP,		0,	0x08	},
     
     /* trap */
     {	NULL,	"trap",		S_TRAP,	S_EOL,	0x00	}

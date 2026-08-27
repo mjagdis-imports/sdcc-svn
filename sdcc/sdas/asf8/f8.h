@@ -125,8 +125,13 @@ S_DNJNZ,
 S_JP,
 S_RET,
 S_NOP,
-S_TRAP
+S_TRAP,
+
+S_CPU
 };
+
+#define X_F8  0
+#define X_F8L 1
 
 struct adsym
 {

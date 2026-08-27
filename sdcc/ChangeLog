@@ -5,6 +5,12 @@
 	  sim/ucsim/src/sims/f8.src/glob.cc,
 	  sim/ucsim/src/sims/f8.src/imove.cc:
 	  Use generated tables instead of hand-written ones for f8 opcodes.
+	* sdas/asf8/f8.h,
+	  sdas/asf8/f8mch.c,
+	  sdas/asf8/f8pst.c,
+	  src/f8/main.c,
+	  src/f8/main.c:
+	  Basic sdas f8l support.
 
 2026-08-15 Gabriele Gorla <gorlik@yahoo.com>
 
