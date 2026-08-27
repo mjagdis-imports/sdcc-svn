@@ -42,7 +42,7 @@
 
 #define NUM_OPCODES 256
 
-const char *opcodenames_verilog[NUM_OPCODES] =	{
+const char *opcodenames_verilog[NUM_OPCODES] = {
 	"OPCODE_TRAP",
 	"OPCODE_SUB_XL_DIR",
 	"OPCODE_SUB_XL_SPREL",
@@ -301,7 +301,7 @@ const char *opcodenames_verilog[NUM_OPCODES] =	{
 	"OPCODE_XORW_Y_X",
 	};
 
-const char *opcodenames_tex[NUM_OPCODES] =	{
+const char *opcodenames_tex[NUM_OPCODES] = {
 	"trap",
 	"sub xl, mm",
 	"sub xl, (n, sp)",
@@ -318,6 +318,7 @@ const char *opcodenames_tex[NUM_OPCODES] =	{
 	"sbc xl, xh",
 	"sbc xl, yl",
 	"sbc xl, yh",
+
 	"add xl, \\#i",
 	"add xl, mm",
 	"add xl, (n, sp)",
@@ -334,6 +335,7 @@ const char *opcodenames_tex[NUM_OPCODES] =	{
 	"adc xl, xh",
 	"adc xl, yl",
 	"adc xl, yh",
+
 	"cp xl, \\#i",
 	"cp xl, mm",
 	"cp xl, (n, sp)",
@@ -350,6 +352,7 @@ const char *opcodenames_tex[NUM_OPCODES] =	{
 	"or xl, xh",
 	"or xl, yl",
 	"or xl, yh",
+
 	"and xl, \\#i",
 	"and xl, mm",
 	"and xl, (n, sp)",
@@ -366,6 +369,7 @@ const char *opcodenames_tex[NUM_OPCODES] =	{
 	"xor xl, xh",
 	"xor xl, yl",
 	"xor xl, yh",
+
 	"srl mm",
 	"srl (n, sp)",
 	"srl xl",
@@ -382,6 +386,7 @@ const char *opcodenames_tex[NUM_OPCODES] =	{
 	"rlc (n, sp)",
 	"rlc xl",
 	"rlc (n, y)",
+
 	"inc mm",
 	"inc (n, sp)",
 	"inc xl",
@@ -398,6 +403,7 @@ const char *opcodenames_tex[NUM_OPCODES] =	{
 	"tst (n, sp)",
 	"tst xl",
 	"tst (n, y)",
+
 	"push mm",
 	"push (n, sp)",
 	"push xl",
@@ -414,6 +420,7 @@ const char *opcodenames_tex[NUM_OPCODES] =	{
 	"",
 	"",
 	"",
+
 	"ldw y, sp",
 	"subw y, mm",
 	"subw y, (n, sp)",
@@ -430,6 +437,7 @@ const char *opcodenames_tex[NUM_OPCODES] =	{
 	"adcw y, mm",
 	"adcw y, (n, sp)",
 	"adcw y, x",
+
 	"ld xl, \\#i",
 	"ld xl, mm",
 	"ld xl, (n, sp)",
@@ -446,6 +454,7 @@ const char *opcodenames_tex[NUM_OPCODES] =	{
 	"ld (nn, z), xl",
 	"ld (y), xl",
 	"ld (n, y), xl",
+
 	"push \\#i",
 	"xch xl, (n, sp)",
 	"xch xl, (y)",
@@ -462,6 +471,7 @@ const char *opcodenames_tex[NUM_OPCODES] =	{
 	"altacc1",
 	"altacc2",
 	"altacc3",
+
 	"clrw mm",
 	"clrw (n, sp)",
 	"clrw (nn, z)",
@@ -478,6 +488,7 @@ const char *opcodenames_tex[NUM_OPCODES] =	{
 	"sbcw (n, sp)",
 	"sbcw (nn, z)",
 	"sbcw y",
+
 	"pushw mm",
 	"pushw (n, sp)",
 	"pushw (nn, z)",
@@ -494,6 +505,7 @@ const char *opcodenames_tex[NUM_OPCODES] =	{
 	"mad x, (n, sp), yl",
 	"mad x, (nn, z), yl",
 	"mad x, (z), yl",
+
 	"ldw y, \\#ii",
 	"ldw y, mm",
 	"ldw y, (n, sp)",
@@ -510,6 +522,7 @@ const char *opcodenames_tex[NUM_OPCODES] =	{
 	"ldw (y), x",
 	"ldw (n, y), x",
 	"ldwi (n, y), (z)",
+
 	"jr \\#d",
 	"dnjnz yh, \\#d",
 	"jrz \\#d",
@@ -526,6 +539,7 @@ const char *opcodenames_tex[NUM_OPCODES] =	{
 	"jrsle \\#d",
 	"ldw x, (y)",
 	"jrle \\#d",
+
 	"srlw y",
 	"sllw y",
 	"rrcw y",
@@ -542,6 +556,7 @@ const char *opcodenames_tex[NUM_OPCODES] =	{
 	"ldi (n, y), (z)",
 	"sex y, xl",
 	"zex y, xl",
+
 	"orw y, \\#ii",
 	"orw y, mm",
 	"orw y, (n, sp)",
@@ -560,6 +575,332 @@ const char *opcodenames_tex[NUM_OPCODES] =	{
 	"xorw y, x",
 	};
 
+struct {int bytes; int cycles; const char *prefixes; const char *macro; const char *name;} opcodenames_ucsim[NUM_OPCODES] = {
+	{1, 0, "PN", "TRAP", "trap"},
+
+	{3, 3, "PA", "SUB_M", "sub %a,'a16_8'" },	
+	{2, 2, "PA", "SUB_NSP", "sub %a,('nsp_8')" },
+	{3, 3, "PA", "SUB_NNZ","sub %a,('nnz_8')" },
+	{1, 1, "PA", "SUB_ZL","sub %a,zl" },
+	{1, 1, "PA", "SUB_XH","sub %a,xh" },
+	{1, 1, "PA", "SUB_YL","sub %a,yl" },
+	{1, 1, "PA", "SUB_YH","sub %a,yh" },
+
+	{0, 0, "PN", "", ""},
+
+	{3, 3, "PA", "SBC_M", "sbc %a,'a16_8'" },
+	{2, 2, "PA", "SBC_NSP", "sbc %a,('nsp_8')" },
+	{3, 3, "PA", "SBC_NNZ", "sbc %a,('nnz_8')" },
+	{1, 1, "PA", "SBC_ZL", "sbc %a,zl" },
+	{1, 1, "PA", "SBC_XH", "sbc %a,xh" },
+	{1, 1, "PA", "SBC_YL", "sbc %a,yl" },
+	{1, 1, "PA", "SBC_YH", "sbc %a,yh" },
+  
+	{2, 1, "PD", "ADD_I", "add %a,#'i8'" },
+	{3, 3, "PA", "ADD_M", "add %a,'a16_8'" },
+	{2, 2, "PA", "ADD_NSP", "add %a,('nsp_8')" },
+	{3, 3, "PA", "ADD_NNZ", "add %a,('nnz_8')" },
+	{1, 1, "PA", "ADD_ZL", "add %a,zl" },
+	{1, 1, "PA", "ADD_XH", "add %a,xh" },
+	{1, 1, "PA", "ADD_YL", "add %a,yl" },
+	{1, 1, "PA", "ADD_YH", "add %a,yh" },
+
+	{2, 1, "PD", "ADC_I", "adc %a,#'i8'" },
+	{3, 3, "PA", "ADC_M", "adc %a,'a16_8'" },
+	{2, 2, "PA", "ADC_NSP", "adc %a,('nsp_8')" },
+	{3, 3, "PA", "ADC_NNZ", "adc %a,('nnz_8')" },
+	{1, 1, "PA", "ADC_ZL", "adc %a,zl" },
+	{1, 1, "PA", "ADC_XH", "adc %a,xh" },
+	{1, 1, "PA", "ADC_YL", "adc %a,yl" },
+	{1, 1, "PA", "ADC_YH", "adc %a,yh" },
+      
+	{2, 1, "PD", "CP_I", "cp %a,#'i8'" },
+	{3, 3, "PA", "CP_M", "cp %a,'a16_8'" },
+	{2, 2, "PA", "CP_NSP", "cp %a,('nsp_8')" },
+	{3, 3, "PA", "CP_NNZ", "cp %a,('nnz_8')" },
+	{1, 1, "PA", "CP_ZL", "cp %a,zl" },
+	{1, 1, "PA", "CP_XH", "cp %a,xh" },
+	{1, 1, "PA", "CP_YL", "cp %a,yl" },
+	{1, 1, "PA", "CP_YH", "cp %a,yh" },
+
+	{2, 1, "PD", "OR_I", "or %a,#'i8'" },
+	{3, 3, "PA", "OR_M", "or %a,'a16_8'" },
+	{2, 2, "PA", "OR_NSP", "or %a,('nsp_8')" },
+	{3, 3, "PA", "OR_NNZ", "or %a,('nnz_8')" },
+	{1, 1, "PA", "OR_ZL", "or %a,zl" },
+	{1, 1, "PA", "OR_XH", "or %a,xh" },
+	{1, 1, "PA", "OR_YL", "or %a,yl" },
+	{1, 1, "PA", "OR_YH", "or %a,yh" },
+    
+	{2, 1, "PD", "AND_I", "and %a,#'i8'" },
+	{3, 3, "PA", "AND_M", "and %a,'a16_8'" },
+	{2, 2, "PA", "AND_NSP", "and %a,('nsp_8')" },
+	{3, 3, "PA", "AND_NNZ", "and %a,('nnz_8')" },
+	{1, 1, "PA", "AND_ZL", "and %a,zl" },
+	{1, 1, "PA", "AND_XH", "and %a,xh" },
+	{1, 1, "PA", "AND_YL", "and %a,yl" },
+	{1, 1, "PA", "AND_YH", "and %a,yh" },
+
+	{2, 1, "PD", "XOR_I", "xor %a,#'i8'" },
+	{3, 3, "PA", "XOR_M", "xor %a,'a16_8'" },
+	{2, 2, "PA", "XOR_NSP", "xor %a,('nsp_8')" },
+	{3, 3, "PA", "XOR_NNZ", "xor %a,('nnz_8')" },
+	{1, 1, "PA", "XOR_ZL", "xor %a,zl" },
+	{1, 1, "PA", "XOR_XH", "xor %a,xh" },
+	{1, 1, "PA", "XOR_YL", "xor %a,yl" },
+	{1, 1, "PA", "XOR_YH", "xor %a,yh" },
+
+	{3, 3, "PN", "SRL_M", "srl 'a16_8'" },
+	{2, 2, "PN", "SRL_NSP", "srl ('nsp_8')" },
+	{1, 1, "PD", "SRL_A", "srl %a" },
+	{2, 2, "PN", "SRL_NY", "srl ('ny_8')" },
+	{3, 3, "PN", "SLL_M", "sll 'a16_8'" },
+	{2, 2, "PN", "SLL_NSP", "sll ('nsp_8')" },
+	{1, 1, "PD", "SLL_A", "sll %a" },
+	{2, 2, "PN", "SLL_NY", "sll ('ny_8')" },
+	{3, 3, "PN", "RRC_M", "rrc 'a16_8'" },
+	{2, 2, "PN", "RRC_NSP", "rrc ('nsp_8')" },
+	{1, 1, "PD", "RRC_A", "rrc %a" },
+	{2, 2, "PN", "RRC_NY", "rrc ('ny_8')" },
+	{3, 3, "PN", "RLC_M", "rlc 'a16_8'" },
+	{2, 2, "PN", "RLC_NSP", "rlc ('nsp_8')" },
+	{1, 1, "PD", "RLC_A", "rlc %a" },
+	{2, 2, "PN", "RLC_NY", "rlc ('ny_8')" },
+
+	{3, 3, "PN", "INC_M", "inc 'a16_8'" },
+	{2, 2, "PN", "INC_NSP", "inc ('nsp_8')" },
+	{1, 1, "PD", "INC_A", "inc %a" },
+	{2, 2, "PN", "INC_NY", "inc ('ny_8')" },
+	{3, 3, "PN", "DEC_M", "dec 'a16_8'" },
+	{2, 2, "PN", "DEC_NSP", "dec ('nsp_8')" },
+	{1, 1, "PD", "DEC_A", "dec %a" },
+	{2, 2, "PN", "DEC_NY", "dec ('ny_8')" },
+
+	{3, 3, "PN", "CLR_M", "clr 'a16_8'" },
+	{2, 2, "PN", "CLR_NSP", "clr ('nsp_8')" },
+	{1, 1, "PD", "CLR_A", "clr %a" },
+	{2, 2, "PN", "CLR_NY", "clr ('ny_8')" },
+
+	{3, 3, "PN", "TST_M", "tst 'a16_8'" },
+	{2, 2, "PN", "TST_NSP", "tst ('nsp_8')" },
+	{1, 1, "PD", "TST_A", "tst %a" },
+	{1, 1, "PN", "TST_NY", "tst ('ny_8')" },
+
+	{3, 3, "PN", "PUSH_M", "push 'a16_8'" },
+	{2, 2, "PN", "PUSH_NSP", "push ('nsp_8')" },
+	{1, 1, "PD", "PUSH_A", "push %a" },
+	{2, 2, "PN", "PUSH_NY", "push ('ny_8')" },
+    
+	{3, 3, "PN", "JP_I", "jp #'a16'" },
+	{1, 1, "PW", "JP_A", "jp %A" },
+	{3, 3, "PN", "CALL_I", "call #'a16'" },
+	{1, 1, "PW", "CALL_A", "call %A" },
+    
+	{0, 0, "PN", "", ""},
+	{0, 0, "PN", "", ""},
+	{0, 0, "PN", "", ""},
+	{0, 0, "PN", "", ""},
+	{0, 0, "PN", "", ""},
+	{0, 0, "PN", "", ""},
+	{0, 0, "PN", "", ""},
+	{0, 0, "PN", "", ""},
+
+	{1, 1, "PA", "LDW_A_SP", "ldw %A, sp" }, // PA too permissive
+
+	{3, 3, "PA", "SUBW_M", "subw %A,'a16_16'" }, // PA too permissive
+	{2, 2, "PA", "SUBW_NSP", "subw %A,('nsp_16')" }, // PA too permissive
+	{1, 1, "PA", "SUBW_X", "subw %A,%R" }, // PA too permissive
+
+	{2, 1, "PD", "LDW_DSP_A", "ldw (('nsp_16')),%A" }, // PD too permissive
+
+	{3, 3, "PA", "SBCW_M", "sbcw %A,'a16_16'" }, // PA too permissive
+	{2, 2, "PA", "SBCW_NSP", "sbcw %A,('nsp_16')" }, // PA too permissive
+	{1, 1, "PA", "SBCW_X", "sbcw %A,%R" }, // PA too permissive
+
+	{3, 2, "PW", "ADDW_I", "addw %A,#'i16'" },
+	{3, 3, "PA", "ADDW_M", "addw %A,'a16_16'" }, // PA too permissive
+	{2, 2, "PA", "ADDW_NSP", "addw %A,('nsp_16')" }, // PA too permissive
+	{1, 1, "PA", "ADDW_X", "addw %A,%R" }, // PA too permissive
+	{3, 2, "PW", "ADCW_I", "adcw %A,#'i16'" },
+	{3, 3, "PA", "ADCW_M", "adcw %A,'a16_16'" }, // PA too permissive
+	{2, 2, "PA", "ADCW_NSP", "adcw %A,('nsp_16')" }, // PA too permissive
+	{1, 1, "PA", "ADCW_X", "adcw %A,%R" }, // PA too permissive
+
+	{2, 1, "PD", "LD8_A_I", "ld %a,#'i8'" },
+	{3, 3, "PD", "LD8_A_M", "ld %a,'a16_8'" },
+	{2, 2, "PD", "LD8_A_NSP", "ld %a,('nsp_8')" },
+	{3, 3, "PD", "LD8_A_NNZ", "ld %a,('nnz_8')" },
+	{1, 2, "PD", "LD8_A_Y", "ld %a,('y_8')" },
+	{2, 2, "PD", "LD8_A_NY", "ld %a,('ny_8')" },
+	{1, 1, "PA", "LD8_A_XH", "ld %a,xh" },
+	{1, 1, "PA", "LD8_A_YL", "ld %a,yl" },
+	{1, 1, "PA", "LD8_A_YH", "ld %a,yh" },
+	{1, 1, "PA", "LD8_A_ZL", "ld %a,zl" },
+	{1, 1, "PA", "LD8_A_ZH", "ld %a,zh" },
+	{3, 2, "PD", "LD8_M_A", "ld 'a16_8',%a" },
+	{2, 1, "PD", "LD8_NSP_A", "ld ('nsp_8'),%a" },
+	{3, 2, "PD", "LD8_NNZ_A", "ld ('nnz_8'),%a" },
+	{1, 1, "PD", "LD8_Y_A", "ld ('y_8'),%a" },
+	{2, 1, "PD", "LD8_NY_A", "ld ('ny_8'),%a" },
+
+       
+	{2, 1, "PN", "PUSH_I", "push #'i8'" },
+
+	{2, 2, "PD", "XCH_A_NSP", "xch %a,('nsp_8')" },
+	{1, 2, "PD", "XCH_A_Y", "xch %a,('y_8')" },
+	{1, 1, "PW", "XCH_A_A", "xch %L,%H" },
+
+	{1, 1, "PN", "PREF_ALT4", "altacc4" },
+
+	{2, 1, "PD", "ROT", "rot %a,#'i8'" },
+	{1, 1, "PD", "SRA", "sra %a" },
+	{1, 1, "PD", "DAA", "da %a" },
+	{1, 1, "PD", "BOOL_A", "bool %a" },
+
+	{1, 1, "PD", "POP_A", "pop %a" },
+
+	{1, 1, "PD", "THRD", "thrd %a" },
+    
+	{1, 1, "PD", "CAX", "cax ('y_8'),xh,yl" }, // PD too permissive
+
+	{1, 1, "PN", "PREF_SWAPOP", "swapop" },
+	{1, 1, "PN", "PREF_ALT1", "altacc1" },
+	{1, 1, "PN", "PREF_ALT2", "altacc2" },
+	{1, 1, "PN", "PREF_ALT3", "altacc3" },
+
+	{3, 3, "PN", "CLRW_M", "clrw 'a16_16'" },
+	{2, 2, "PN", "CLRW_NSP", "clrw ('nsp_16')" },
+	{3, 3, "PN", "CLRW_NNZ", "clrw ('nnz_16')" },
+	{1, 1, "PW", "CLRW_A", "clrw %A" },
+
+	{3, 3, "PN", "INCW_M", "incw 'a16_16'" },
+	{2, 2, "PN", "INCW_NSP", "incw ('nsp_16')" },
+	{3, 3, "PN", "INCW_NNZ", "incw ('nnz_16')" },
+	{1, 1, "PW", "INCW_A", "incw %A" },
+	{3, 3, "PN", "ADCW1_M", "adcw 'a16_16'" },
+	{2, 2, "PN", "ADCW1_NSP", "adcw ('nsp_16')" },
+	{3, 3, "PN", "ADCW1_NNZ", "adcw ('nnz_16')" },
+	{1, 1, "PW", "ADCW1_A", "adcw %A" },
+	{3, 3, "PN", "SBCW1_M", "sbcw 'a16_16'" },
+	{2, 2, "PN", "SBCW1_NSP", "sbcw ('nsp_16')" },
+	{3, 3, "PN", "SBCW1_NNZ", "sbcw ('nnz_16')" },
+	{1, 1, "PW", "SBCW1_A", "sbcw %A" },
+
+	{3, 3, "PN", "PUSHW_M", "pushw 'a16_16'" },
+	{2, 2, "PN", "PUSHW_NSP", "pushw ('nsp_16')" },
+	{3, 3, "PN", "PUSHW_NNZ", "pushw ('nnz_16')" },
+	{1, 1, "PW", "PUSHW_A", "pushw %A" },
+
+	{3, 3, "PN", "TSTW1_M", "tstw 'a16_16'" },
+	{2, 2, "PN", "TSTW1_NSP", "tstw ('nsp_16')" },
+	{3, 3, "PN", "TSTW1_NNZ", "tstw ('nnz_16')" },
+	{1, 1, "PW", "TSTW1_A", "tstw %A" },
+
+	{2, 2, "PD", "MSK", "msk (%A),%a,#'i8'" },
+
+	{1, 1, "PW", "MUL", "mul %A"},
+
+	{1, 1, "PN", "RET", "ret" },
+	{1, 1, "PN", "RETI", "reti" },
+
+	{3, 3, "PN", "MAD_M", "mad x,'a16_8',yl" },
+	{2, 2, "PN", "MAD_NSP", "mad x,('nsp_8'),yl" },
+	{3, 3, "PN", "MAD_NNZ", "mad x,('nnz_8'),yl" },
+	{1, 2, "PN", "MAD_Z", "mad x,('z_8'),yl" },
+
+	{3, 2, "PW", "LDW_A_I", "ldw %A,#'i16'" },
+	{3, 3, "PW", "LDW_A_M", "ldw %A,'a16_16'" },
+	{2, 2, "PW", "LDW_A_NSP", "ldw %A,('nsp_16')" },
+	{3, 3, "PW", "LDW_A_NNZ", "ldw %A,('nnz_16')" },
+	{2, 2, "PW", "LDW_A_NY", "ldw %A,('ny_16')" },
+	{1, 2, "PW", "LDW_A_AM", "ldw %A,(%A)" },
+	{1, 1, "PW", "LDW_A_X", "ldw %A,x" }, // PW too permissive
+	{2, 1, "PW", "LDW_A_D", "ldw %A,#%d" },
+	{3, 2, "PW", "LDW_M_A", "ldw 'a16_16',%A" },
+	{2, 1, "PW", "LDW_NSP_A", "ldw ('nsp_16'),%A" },
+	{3, 2, "PW", "LDW_NNZ_A", "ldw ('nnz_16'),%A" }, // PW too permissive
+	{1, 1, "PW", "LDW_X_A", "ldw x,%A" }, // PW too permissive
+	{1, 1, "PW", "LDW_Z_A", "ldw z,%A" }, // PW too permissive
+	{1, 1, "PD", "LDW_AM_X", "ldw (%A),%R" }, // PD too permissive
+	{2, 2, "PW", "LDW_NAM_X", "ldw ('nA_16'),%R" },
+
+	{2, 2, "PN", "LDWI_YREL_Z", "ldwi ('ny16'),(z)" },
+
+	{2, 1, "PN", "JR", "jr %r" },
+	{2, 1, "PW", "DNJNZ", "dnjnz yh,%r" },
+	{2, 1, "PN", "JRZ", "jrz %r" },
+	{2, 1, "PN", "JRNZ", "jrnz %r" },
+	{2, 1, "PN", "JRC", "jrc %r" },
+	{2, 1, "PN", "JRNC", "jrnc %r" },
+	{2, 1, "PN", "JRN", "jrn %r" },
+	{2, 1, "PN", "JRNN", "jrnn %r" },
+
+	{1, 1, "PN", "PREF_ALT5", "altacc5" },
+
+	{2, 1, "PS", "JRNO", "jrno %r" },
+	{2, 1, "PN", "JRSGE", "jrsge %r" },
+	{2, 1, "PN", "JRSLT", "jrslt %r" },
+
+	{2, 1, "PN", "LDW_A_Z", "ldw %A,z" },
+
+	{2, 1, "PS", "JRSLE", "jrsle %r" },
+
+	{2, 1, "PD", "LDW_X_AM", "ldw %R,(%A)" }, // PD too permissive
+
+	{2, 1, "PS", "JRLE", "jrle %r" },
+
+	{1, 1, "PW", "SRLW", "srlw %A"},
+	{1, 1, "PW", "SLLW", "sllw %A"},
+	{1, 1, "PW", "RRCW", "rrcw %A"},
+	{1, 1, "PW", "RLCW_A", "rlcw %A"},
+
+	{1, 1, "PW", "SRAW", "sraw %A"},
+	{1, 1, "PD", "SLLW_A_XL", "sllw %A,xl"},
+
+	{2, 2, "PN", "RRCW_NSP", "rrcw ('nsp_16')"},
+	{2, 2, "PN", "RLCW_NSP", "rlcw ('nsp_16')"},
+
+	{3, 2, "PN", "PUSHW_I", "pushw #'i16'" },
+
+	{1, 1, "PW", "POPW_A", "popw %A" },
+
+	{2, 1, "PN", "ADDW_SP_D", "addw sp,#%d"},
+
+	{2, 1, "PW", "ADDW_A_D", "addw %A,#%d"},
+
+	{2, 2, "PN", "XCH_F_NSP", "xch f,('nsp_16')"},
+
+	{2, 2, "PN", "LDI_YREL_Z", "ldi ('ny_8'),(z)" },
+
+	{1, 1, "PD", "SEX", "sex %A,%a"},
+	{1, 1, "PD", "ZEX", "zex %A,%a"},
+
+	{3, 2, "PW", "ORW_I", "orw %A,#'i16'" },
+	{3, 3, "PA", "ORW_M", "orw %A,'a16_16'" }, // PA too permissive
+	{2, 2, "PA", "ORW_NSP", "orw %A,('nsp_16')" }, // PA too permissive
+	{1, 1, "PA", "ORW_X", "orw %A,%R" }, // PA too permissive
+
+	{1, 2, "PD", "XCHW_X_Y", "xchw %R,('%A')" }, // PD too permissive
+	{1, 2, "PW", "XCHW_Y_NSP", "xchw %A,('nsp_16')" },
+
+	{1, 1, "PW", "INCNW", "incnw %A"},
+
+	{2, 2, "PN", "DECW_NSP", "decw ('nsp_16')"},
+
+	{3, 2, "PW", "CPW", "cpw %A,#'i16'"},
+
+	{1, 1, "PN", "CAXW", "caxw ('y_16'),z,x" },
+
+	{1, 1, "PW", "NEGW", "negw %A"},
+
+	{1, 1, "PW", "BOOLW", "boolw %A"},
+
+	{3, 2, "PW", "XORW_I", "xorw %A,#'i16'" },
+	{3, 3, "PA", "XORW_M", "xorw %A,'a16_16'" }, // PA too permissive
+	{2, 2, "PA", "XORW_NSP", "xorw %A,('nsp_16')" }, // PA too permissive
+	{1, 1, "PA", "XORW_X", "xorw %A,%R" }, // PA too permissive
+	};
+	
 inline static void init_table_order(uint8_t *table)
 {
 	for(unsigned int i = 0; i < NUM_OPCODES; i++)
@@ -651,6 +992,42 @@ static void print_table_tex(FILE *f, const uint8_t *table)
 	fprintf(f, "\\end{tabular}\n");
 }
 
+
+static void print_table_ucsim(FILE *f, const uint8_t *table)
+{
+	fprintf(f, "// For glob.cc:\n\n");
+
+	fprintf(f, "struct dis_entry disass_f8[]=\n");
+	fprintf(f, "  {\n");
+	
+	for(unsigned int i = 0; i < NUM_OPCODES; i++)
+		if (opcodenames_ucsim[table[i]].bytes)
+			fprintf(f, "    { 0x%02x, 0xff, ' ', %d, \"%s\" },\n", i, opcodenames_ucsim[table[i]].bytes, opcodenames_ucsim[table[i]].name);
+
+	fprintf(f, "    { 0, 0, 0, 0, 0, 0 }\n");
+	fprintf(f, "  };\n\n");
+
+	fprintf(f, "u8_t allowed_prefs[256]= {\n");
+	fprintf(f, "  /*       ");
+	for(unsigned int i = 0; i < 16; i++)
+		fprintf(f, "x%x %s", i, i != 15 ? " " : "*/\n");
+	for(unsigned int i = 0; i < NUM_OPCODES; i++)
+	{
+		if (!(i % 16))
+			fprintf(f, "  /* %xx */ ", i / 16);
+		fprintf(f, "%s%s", opcodenames_ucsim[table[i]].prefixes, (i % 16 != 15) ? ", " : (i != 255) ? ",\n" : "\n");
+	}
+	fprintf(f, "};\n\n");
+
+	// todo: allowed prefixes!
+
+	fprintf(f, "// For decode.h:\n\n");
+
+	for(unsigned int i = 0; i < NUM_OPCODES; i++)
+		if (opcodenames_ucsim[table[i]].bytes)
+			fprintf(f, strncmp (opcodenames_ucsim[table[i]].macro, "PREF_", 5) ? "#define %s instruction_%02x\n" : "#define %s 0x%02x\n", opcodenames_ucsim[table[i]].macro, i);
+}
+
 void help(FILE *f)
 {
 	fprintf(f, "opcodemaptool <command> [n]\n");
@@ -662,6 +1039,7 @@ void help(FILE *f)
 	fprintf(f, "showbest:    add show best n opcode maps\n");
 	fprintf(f, "deleteworst: delete worst n opcode maps\n");
 	fprintf(f, "print_tex:   print table n as TeX table\n");
+	fprintf(f, "print_ucsim: print table n as uCsim instruction tables\n");
 }
 
 std::map <std::vector<uint8_t>, unsigned long int> opcodemapstable;
@@ -811,7 +1189,7 @@ int main(int argc, char **argv)
 		write_opcodemapstable();
 		create_opcodemapsfiles();
 	}
-	if (argc == 2 && !strcmp(argv[1], "recreate"))
+	else if (argc == 2 && !strcmp(argv[1], "recreate"))
 	{
 		if (mkdir ("opcodemaps", 0750))
 		{
@@ -875,7 +1253,7 @@ int main(int argc, char **argv)
 		delete_worst(n);
 		write_opcodemapstable();
 	}
-	else if (argc == 3 && !strcmp(argv[1], "print_tex"))
+	else if (argc == 3 && (!strcmp(argv[1], "print_tex") || !strcmp(argv[1], "print_ucsim")))
 	{
 		read_opcodemapstable();
 		std::map <std::vector<uint8_t>, unsigned long int>::iterator it;
@@ -885,7 +1263,12 @@ int main(int argc, char **argv)
 				break;
 		}
 		if (it != opcodemapstable.end())
-			print_table_tex(stdout, it->first.data());
+		{
+			if (!strcmp(argv[1], "print_tex"))
+				print_table_tex(stdout, it->first.data());
+			else
+				print_table_ucsim(stdout, it->first.data());	
+		}
 		else
 			std::cerr << "Entry not found.";
 	}
