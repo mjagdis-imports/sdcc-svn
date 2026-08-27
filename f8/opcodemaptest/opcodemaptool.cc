@@ -575,330 +575,330 @@ const char *opcodenames_tex[NUM_OPCODES] = {
 	"xorw y, x",
 	};
 
-struct {int bytes; int cycles; const char *prefixes; const char *macro; const char *name;} opcodenames_ucsim[NUM_OPCODES] = {
-	{1, 0, "PN", "TRAP", "trap"},
+struct {int bytes; int cycles; const char *prefixes; bool f8l; const char *macro; const char *name;} opcodenames_ucsim[NUM_OPCODES] = {
+	{1, 0, "PN", true, "TRAP", "trap"},
 
-	{3, 3, "PA", "SUB_M", "sub %a,'a16_8'" },	
-	{2, 2, "PA", "SUB_NSP", "sub %a,('nsp_8')" },
-	{3, 3, "PA", "SUB_NNZ","sub %a,('nnz_8')" },
-	{1, 1, "PA", "SUB_ZL","sub %a,zl" },
-	{1, 1, "PA", "SUB_XH","sub %a,xh" },
-	{1, 1, "PA", "SUB_YL","sub %a,yl" },
-	{1, 1, "PA", "SUB_YH","sub %a,yh" },
+	{3, 3, "PA", true, "SUB_M", "sub %a,'a16_8'" },	
+	{2, 2, "PA", true, "SUB_NSP", "sub %a,('nsp_8')" },
+	{3, 3, "PA", true, "SUB_NNZ","sub %a,('nnz_8')" },
+	{1, 1, "PA", true, "SUB_ZL","sub %a,zl" },
+	{1, 1, "PA", true, "SUB_XH","sub %a,xh" },
+	{1, 1, "PA", true, "SUB_YL","sub %a,yl" },
+	{1, 1, "PA", true, "SUB_YH","sub %a,yh" },
 
-	{0, 0, "PN", "", ""},
+	{0, 0, "PN", true, "", ""},
 
-	{3, 3, "PA", "SBC_M", "sbc %a,'a16_8'" },
-	{2, 2, "PA", "SBC_NSP", "sbc %a,('nsp_8')" },
-	{3, 3, "PA", "SBC_NNZ", "sbc %a,('nnz_8')" },
-	{1, 1, "PA", "SBC_ZL", "sbc %a,zl" },
-	{1, 1, "PA", "SBC_XH", "sbc %a,xh" },
-	{1, 1, "PA", "SBC_YL", "sbc %a,yl" },
-	{1, 1, "PA", "SBC_YH", "sbc %a,yh" },
+	{3, 3, "PA", true, "SBC_M", "sbc %a,'a16_8'" },
+	{2, 2, "PA", true, "SBC_NSP", "sbc %a,('nsp_8')" },
+	{3, 3, "PA", true, "SBC_NNZ", "sbc %a,('nnz_8')" },
+	{1, 1, "PA", true, "SBC_ZL", "sbc %a,zl" },
+	{1, 1, "PA", true, "SBC_XH", "sbc %a,xh" },
+	{1, 1, "PA", true, "SBC_YL", "sbc %a,yl" },
+	{1, 1, "PA", true, "SBC_YH", "sbc %a,yh" },
   
-	{2, 1, "PD", "ADD_I", "add %a,#'i8'" },
-	{3, 3, "PA", "ADD_M", "add %a,'a16_8'" },
-	{2, 2, "PA", "ADD_NSP", "add %a,('nsp_8')" },
-	{3, 3, "PA", "ADD_NNZ", "add %a,('nnz_8')" },
-	{1, 1, "PA", "ADD_ZL", "add %a,zl" },
-	{1, 1, "PA", "ADD_XH", "add %a,xh" },
-	{1, 1, "PA", "ADD_YL", "add %a,yl" },
-	{1, 1, "PA", "ADD_YH", "add %a,yh" },
+	{2, 1, "PD", true, "ADD_I", "add %a,#'i8'" },
+	{3, 3, "PA", true, "ADD_M", "add %a,'a16_8'" },
+	{2, 2, "PA", true, "ADD_NSP", "add %a,('nsp_8')" },
+	{3, 3, "PA", true, "ADD_NNZ", "add %a,('nnz_8')" },
+	{1, 1, "PA", true, "ADD_ZL", "add %a,zl" },
+	{1, 1, "PA", true, "ADD_XH", "add %a,xh" },
+	{1, 1, "PA", true, "ADD_YL", "add %a,yl" },
+	{1, 1, "PA", true, "ADD_YH", "add %a,yh" },
 
-	{2, 1, "PD", "ADC_I", "adc %a,#'i8'" },
-	{3, 3, "PA", "ADC_M", "adc %a,'a16_8'" },
-	{2, 2, "PA", "ADC_NSP", "adc %a,('nsp_8')" },
-	{3, 3, "PA", "ADC_NNZ", "adc %a,('nnz_8')" },
-	{1, 1, "PA", "ADC_ZL", "adc %a,zl" },
-	{1, 1, "PA", "ADC_XH", "adc %a,xh" },
-	{1, 1, "PA", "ADC_YL", "adc %a,yl" },
-	{1, 1, "PA", "ADC_YH", "adc %a,yh" },
+	{2, 1, "PD", true, "ADC_I", "adc %a,#'i8'" },
+	{3, 3, "PA", true, "ADC_M", "adc %a,'a16_8'" },
+	{2, 2, "PA", true, "ADC_NSP", "adc %a,('nsp_8')" },
+	{3, 3, "PA", true, "ADC_NNZ", "adc %a,('nnz_8')" },
+	{1, 1, "PA", true, "ADC_ZL", "adc %a,zl" },
+	{1, 1, "PA", true, "ADC_XH", "adc %a,xh" },
+	{1, 1, "PA", true, "ADC_YL", "adc %a,yl" },
+	{1, 1, "PA", true, "ADC_YH", "adc %a,yh" },
       
-	{2, 1, "PD", "CP_I", "cp %a,#'i8'" },
-	{3, 3, "PA", "CP_M", "cp %a,'a16_8'" },
-	{2, 2, "PA", "CP_NSP", "cp %a,('nsp_8')" },
-	{3, 3, "PA", "CP_NNZ", "cp %a,('nnz_8')" },
-	{1, 1, "PA", "CP_ZL", "cp %a,zl" },
-	{1, 1, "PA", "CP_XH", "cp %a,xh" },
-	{1, 1, "PA", "CP_YL", "cp %a,yl" },
-	{1, 1, "PA", "CP_YH", "cp %a,yh" },
+	{2, 1, "PD", true, "CP_I", "cp %a,#'i8'" },
+	{3, 3, "PA", true, "CP_M", "cp %a,'a16_8'" },
+	{2, 2, "PA", true, "CP_NSP", "cp %a,('nsp_8')" },
+	{3, 3, "PA", true, "CP_NNZ", "cp %a,('nnz_8')" },
+	{1, 1, "PA", true, "CP_ZL", "cp %a,zl" },
+	{1, 1, "PA", true, "CP_XH", "cp %a,xh" },
+	{1, 1, "PA", true, "CP_YL", "cp %a,yl" },
+	{1, 1, "PA", true, "CP_YH", "cp %a,yh" },
 
-	{2, 1, "PD", "OR_I", "or %a,#'i8'" },
-	{3, 3, "PA", "OR_M", "or %a,'a16_8'" },
-	{2, 2, "PA", "OR_NSP", "or %a,('nsp_8')" },
-	{3, 3, "PA", "OR_NNZ", "or %a,('nnz_8')" },
-	{1, 1, "PA", "OR_ZL", "or %a,zl" },
-	{1, 1, "PA", "OR_XH", "or %a,xh" },
-	{1, 1, "PA", "OR_YL", "or %a,yl" },
-	{1, 1, "PA", "OR_YH", "or %a,yh" },
+	{2, 1, "PD", true, "OR_I", "or %a,#'i8'" },
+	{3, 3, "PA", true, "OR_M", "or %a,'a16_8'" },
+	{2, 2, "PA", true, "OR_NSP", "or %a,('nsp_8')" },
+	{3, 3, "PA", true, "OR_NNZ", "or %a,('nnz_8')" },
+	{1, 1, "PA", true, "OR_ZL", "or %a,zl" },
+	{1, 1, "PA", true, "OR_XH", "or %a,xh" },
+	{1, 1, "PA", true, "OR_YL", "or %a,yl" },
+	{1, 1, "PA", true, "OR_YH", "or %a,yh" },
     
-	{2, 1, "PD", "AND_I", "and %a,#'i8'" },
-	{3, 3, "PA", "AND_M", "and %a,'a16_8'" },
-	{2, 2, "PA", "AND_NSP", "and %a,('nsp_8')" },
-	{3, 3, "PA", "AND_NNZ", "and %a,('nnz_8')" },
-	{1, 1, "PA", "AND_ZL", "and %a,zl" },
-	{1, 1, "PA", "AND_XH", "and %a,xh" },
-	{1, 1, "PA", "AND_YL", "and %a,yl" },
-	{1, 1, "PA", "AND_YH", "and %a,yh" },
+	{2, 1, "PD", true, "AND_I", "and %a,#'i8'" },
+	{3, 3, "PA", true, "AND_M", "and %a,'a16_8'" },
+	{2, 2, "PA", true, "AND_NSP", "and %a,('nsp_8')" },
+	{3, 3, "PA", true, "AND_NNZ", "and %a,('nnz_8')" },
+	{1, 1, "PA", true, "AND_ZL", "and %a,zl" },
+	{1, 1, "PA", true, "AND_XH", "and %a,xh" },
+	{1, 1, "PA", true, "AND_YL", "and %a,yl" },
+	{1, 1, "PA", true, "AND_YH", "and %a,yh" },
 
-	{2, 1, "PD", "XOR_I", "xor %a,#'i8'" },
-	{3, 3, "PA", "XOR_M", "xor %a,'a16_8'" },
-	{2, 2, "PA", "XOR_NSP", "xor %a,('nsp_8')" },
-	{3, 3, "PA", "XOR_NNZ", "xor %a,('nnz_8')" },
-	{1, 1, "PA", "XOR_ZL", "xor %a,zl" },
-	{1, 1, "PA", "XOR_XH", "xor %a,xh" },
-	{1, 1, "PA", "XOR_YL", "xor %a,yl" },
-	{1, 1, "PA", "XOR_YH", "xor %a,yh" },
+	{2, 1, "PD", true, "XOR_I", "xor %a,#'i8'" },
+	{3, 3, "PA", true, "XOR_M", "xor %a,'a16_8'" },
+	{2, 2, "PA", true, "XOR_NSP", "xor %a,('nsp_8')" },
+	{3, 3, "PA", true, "XOR_NNZ", "xor %a,('nnz_8')" },
+	{1, 1, "PA", true, "XOR_ZL", "xor %a,zl" },
+	{1, 1, "PA", true, "XOR_XH", "xor %a,xh" },
+	{1, 1, "PA", true, "XOR_YL", "xor %a,yl" },
+	{1, 1, "PA", true, "XOR_YH", "xor %a,yh" },
 
-	{3, 3, "PN", "SRL_M", "srl 'a16_8'" },
-	{2, 2, "PN", "SRL_NSP", "srl ('nsp_8')" },
-	{1, 1, "PD", "SRL_A", "srl %a" },
-	{2, 2, "PN", "SRL_NY", "srl ('ny_8')" },
-	{3, 3, "PN", "SLL_M", "sll 'a16_8'" },
-	{2, 2, "PN", "SLL_NSP", "sll ('nsp_8')" },
-	{1, 1, "PD", "SLL_A", "sll %a" },
-	{2, 2, "PN", "SLL_NY", "sll ('ny_8')" },
-	{3, 3, "PN", "RRC_M", "rrc 'a16_8'" },
-	{2, 2, "PN", "RRC_NSP", "rrc ('nsp_8')" },
-	{1, 1, "PD", "RRC_A", "rrc %a" },
-	{2, 2, "PN", "RRC_NY", "rrc ('ny_8')" },
-	{3, 3, "PN", "RLC_M", "rlc 'a16_8'" },
-	{2, 2, "PN", "RLC_NSP", "rlc ('nsp_8')" },
-	{1, 1, "PD", "RLC_A", "rlc %a" },
-	{2, 2, "PN", "RLC_NY", "rlc ('ny_8')" },
+	{3, 3, "PN", true, "SRL_M", "srl 'a16_8'" },
+	{2, 2, "PN", true, "SRL_NSP", "srl ('nsp_8')" },
+	{1, 1, "PD", true, "SRL_A", "srl %a" },
+	{2, 2, "PN", false,"SRL_NY", "srl ('ny_8')" },
+	{3, 3, "PN", true, "SLL_M", "sll 'a16_8'" },
+	{2, 2, "PN", true, "SLL_NSP", "sll ('nsp_8')" },
+	{1, 1, "PD", true, "SLL_A", "sll %a" },
+	{2, 2, "PN", false,"SLL_NY", "sll ('ny_8')" },
+	{3, 3, "PN", true, "RRC_M", "rrc 'a16_8'" },
+	{2, 2, "PN", true, "RRC_NSP", "rrc ('nsp_8')" },
+	{1, 1, "PD", true, "RRC_A", "rrc %a" },
+	{2, 2, "PN", false,"RRC_NY", "rrc ('ny_8')" },
+	{3, 3, "PN", true, "RLC_M", "rlc 'a16_8'" },
+	{2, 2, "PN", true, "RLC_NSP", "rlc ('nsp_8')" },
+	{1, 1, "PD", true, "RLC_A", "rlc %a" },
+	{2, 2, "PN", false,"RLC_NY", "rlc ('ny_8')" },
 
-	{3, 3, "PN", "INC_M", "inc 'a16_8'" },
-	{2, 2, "PN", "INC_NSP", "inc ('nsp_8')" },
-	{1, 1, "PD", "INC_A", "inc %a" },
-	{2, 2, "PN", "INC_NY", "inc ('ny_8')" },
-	{3, 3, "PN", "DEC_M", "dec 'a16_8'" },
-	{2, 2, "PN", "DEC_NSP", "dec ('nsp_8')" },
-	{1, 1, "PD", "DEC_A", "dec %a" },
-	{2, 2, "PN", "DEC_NY", "dec ('ny_8')" },
+	{3, 3, "PN", true, "INC_M", "inc 'a16_8'" },
+	{2, 2, "PN", true, "INC_NSP", "inc ('nsp_8')" },
+	{1, 1, "PD", true, "INC_A", "inc %a" },
+	{2, 2, "PN", false,"INC_NY", "inc ('ny_8')" },
+	{3, 3, "PN", true, "DEC_M", "dec 'a16_8'" },
+	{2, 2, "PN", true, "DEC_NSP", "dec ('nsp_8')" },
+	{1, 1, "PD", true, "DEC_A", "dec %a" },
+	{2, 2, "PN", false,"DEC_NY", "dec ('ny_8')" },
 
-	{3, 3, "PN", "CLR_M", "clr 'a16_8'" },
-	{2, 2, "PN", "CLR_NSP", "clr ('nsp_8')" },
-	{1, 1, "PD", "CLR_A", "clr %a" },
-	{2, 2, "PN", "CLR_NY", "clr ('ny_8')" },
+	{3, 3, "PN", true, "CLR_M", "clr 'a16_8'" },
+	{2, 2, "PN", true, "CLR_NSP", "clr ('nsp_8')" },
+	{1, 1, "PD", true, "CLR_A", "clr %a" },
+	{2, 2, "PN", false,"CLR_NY", "clr ('ny_8')" },
 
-	{3, 3, "PN", "TST_M", "tst 'a16_8'" },
-	{2, 2, "PN", "TST_NSP", "tst ('nsp_8')" },
-	{1, 1, "PD", "TST_A", "tst %a" },
-	{1, 1, "PN", "TST_NY", "tst ('ny_8')" },
+	{3, 3, "PN", true, "TST_M", "tst 'a16_8'" },
+	{2, 2, "PN", true, "TST_NSP", "tst ('nsp_8')" },
+	{1, 1, "PD", true, "TST_A", "tst %a" },
+	{1, 1, "PN", false,"TST_NY", "tst ('ny_8')" },
 
-	{3, 3, "PN", "PUSH_M", "push 'a16_8'" },
-	{2, 2, "PN", "PUSH_NSP", "push ('nsp_8')" },
-	{1, 1, "PD", "PUSH_A", "push %a" },
-	{2, 2, "PN", "PUSH_NY", "push ('ny_8')" },
+	{3, 3, "PN", true, "PUSH_M", "push 'a16_8'" },
+	{2, 2, "PN", true, "PUSH_NSP", "push ('nsp_8')" },
+	{1, 1, "PD", true, "PUSH_A", "push %a" },
+	{2, 2, "PN", false,"PUSH_NY", "push ('ny_8')" },
     
-	{3, 3, "PN", "JP_I", "jp #'a16'" },
-	{1, 1, "PW", "JP_A", "jp %A" },
-	{3, 3, "PN", "CALL_I", "call #'a16'" },
-	{1, 1, "PW", "CALL_A", "call %A" },
+	{3, 3, "PN", true, "JP_I", "jp #'a16'" },
+	{1, 1, "PW", true, "JP_A", "jp %A" },
+	{3, 3, "PN", true, "CALL_I", "call #'a16'" },
+	{1, 1, "PW", true, "CALL_A", "call %A" },
     
-	{0, 0, "PN", "", ""},
-	{0, 0, "PN", "", ""},
-	{0, 0, "PN", "", ""},
-	{0, 0, "PN", "", ""},
-	{0, 0, "PN", "", ""},
-	{0, 0, "PN", "", ""},
-	{0, 0, "PN", "", ""},
-	{0, 0, "PN", "", ""},
+	{0, 0, "PN", false, "", ""},
+	{0, 0, "PN", false,  "", ""},
+	{0, 0, "PN", false, "", ""},
+	{0, 0, "PN", false, "", ""},
+	{0, 0, "PN", false, "", ""},
+	{0, 0, "PN", false, "", ""},
+	{0, 0, "PN", false, "", ""},
+	{0, 0, "PN", false, "", ""},
 
-	{1, 1, "PA", "LDW_A_SP", "ldw %A, sp" }, // PA too permissive
+	{1, 1, "PA", true, "LDW_A_SP", "ldw %A, sp" }, // PA too permissive
 
-	{3, 3, "PA", "SUBW_M", "subw %A,'a16_16'" }, // PA too permissive
-	{2, 2, "PA", "SUBW_NSP", "subw %A,('nsp_16')" }, // PA too permissive
-	{1, 1, "PA", "SUBW_X", "subw %A,%R" }, // PA too permissive
+	{3, 3, "PA", false, "SUBW_M", "subw %A,'a16_16'" }, // PA too permissive
+	{2, 2, "PA", false, "SUBW_NSP", "subw %A,('nsp_16')" }, // PA too permissive
+	{1, 1, "PA", false, "SUBW_X", "subw %A,%R" }, // PA too permissive
 
-	{2, 1, "PD", "LDW_DSP_A", "ldw (('nsp_16')),%A" }, // PD too permissive
+	{2, 1, "PD", false, "LDW_DSP_A", "ldw (('nsp_16')),%A" }, // PD too permissive
 
-	{3, 3, "PA", "SBCW_M", "sbcw %A,'a16_16'" }, // PA too permissive
-	{2, 2, "PA", "SBCW_NSP", "sbcw %A,('nsp_16')" }, // PA too permissive
-	{1, 1, "PA", "SBCW_X", "sbcw %A,%R" }, // PA too permissive
+	{3, 3, "PA", false, "SBCW_M", "sbcw %A,'a16_16'" }, // PA too permissive
+	{2, 2, "PA", false, "SBCW_NSP", "sbcw %A,('nsp_16')" }, // PA too permissive
+	{1, 1, "PA", false, "SBCW_X", "sbcw %A,%R" }, // PA too permissive
 
-	{3, 2, "PW", "ADDW_I", "addw %A,#'i16'" },
-	{3, 3, "PA", "ADDW_M", "addw %A,'a16_16'" }, // PA too permissive
-	{2, 2, "PA", "ADDW_NSP", "addw %A,('nsp_16')" }, // PA too permissive
-	{1, 1, "PA", "ADDW_X", "addw %A,%R" }, // PA too permissive
-	{3, 2, "PW", "ADCW_I", "adcw %A,#'i16'" },
-	{3, 3, "PA", "ADCW_M", "adcw %A,'a16_16'" }, // PA too permissive
-	{2, 2, "PA", "ADCW_NSP", "adcw %A,('nsp_16')" }, // PA too permissive
-	{1, 1, "PA", "ADCW_X", "adcw %A,%R" }, // PA too permissive
+	{3, 2, "PW", false, "ADDW_I", "addw %A,#'i16'" },
+	{3, 3, "PA", false, "ADDW_M", "addw %A,'a16_16'" }, // PA too permissive
+	{2, 2, "PA", false, "ADDW_NSP", "addw %A,('nsp_16')" }, // PA too permissive
+	{1, 1, "PA", false, "ADDW_X", "addw %A,%R" }, // PA too permissive
+	{3, 2, "PW", false, "ADCW_I", "adcw %A,#'i16'" },
+	{3, 3, "PA", false, "ADCW_M", "adcw %A,'a16_16'" }, // PA too permissive
+	{2, 2, "PA", false, "ADCW_NSP", "adcw %A,('nsp_16')" }, // PA too permissive
+	{1, 1, "PA", false, "ADCW_X", "adcw %A,%R" }, // PA too permissive
 
-	{2, 1, "PD", "LD8_A_I", "ld %a,#'i8'" },
-	{3, 3, "PD", "LD8_A_M", "ld %a,'a16_8'" },
-	{2, 2, "PD", "LD8_A_NSP", "ld %a,('nsp_8')" },
-	{3, 3, "PD", "LD8_A_NNZ", "ld %a,('nnz_8')" },
-	{1, 2, "PD", "LD8_A_Y", "ld %a,('y_8')" },
-	{2, 2, "PD", "LD8_A_NY", "ld %a,('ny_8')" },
-	{1, 1, "PA", "LD8_A_XH", "ld %a,xh" },
-	{1, 1, "PA", "LD8_A_YL", "ld %a,yl" },
-	{1, 1, "PA", "LD8_A_YH", "ld %a,yh" },
-	{1, 1, "PA", "LD8_A_ZL", "ld %a,zl" },
-	{1, 1, "PA", "LD8_A_ZH", "ld %a,zh" },
-	{3, 2, "PD", "LD8_M_A", "ld 'a16_8',%a" },
-	{2, 1, "PD", "LD8_NSP_A", "ld ('nsp_8'),%a" },
-	{3, 2, "PD", "LD8_NNZ_A", "ld ('nnz_8'),%a" },
-	{1, 1, "PD", "LD8_Y_A", "ld ('y_8'),%a" },
-	{2, 1, "PD", "LD8_NY_A", "ld ('ny_8'),%a" },
+	{2, 1, "PD", true, "LD8_A_I", "ld %a,#'i8'" },
+	{3, 3, "PD", true, "LD8_A_M", "ld %a,'a16_8'" },
+	{2, 2, "PD", true, "LD8_A_NSP", "ld %a,('nsp_8')" },
+	{3, 3, "PD", true, "LD8_A_NNZ", "ld %a,('nnz_8')" },
+	{1, 2, "PD", true, "LD8_A_Y", "ld %a,('y_8')" },
+	{2, 2, "PD", false, "LD8_A_NY", "ld %a,('ny_8')" },
+	{1, 1, "PA", true, "LD8_A_XH", "ld %a,xh" },
+	{1, 1, "PA", true, "LD8_A_YL", "ld %a,yl" },
+	{1, 1, "PA", true, "LD8_A_YH", "ld %a,yh" },
+	{1, 1, "PA", true, "LD8_A_ZL", "ld %a,zl" },
+	{1, 1, "PA", true, "LD8_A_ZH", "ld %a,zh" },
+	{3, 2, "PD", true, "LD8_M_A", "ld 'a16_8',%a" },
+	{2, 1, "PD", true, "LD8_NSP_A", "ld ('nsp_8'),%a" },
+	{3, 2, "PD", true, "LD8_NNZ_A", "ld ('nnz_8'),%a" },
+	{1, 1, "PD", true, "LD8_Y_A", "ld ('y_8'),%a" },
+	{2, 1, "PD", false, "LD8_NY_A", "ld ('ny_8'),%a" },
 
        
-	{2, 1, "PN", "PUSH_I", "push #'i8'" },
+	{2, 1, "PN", true, "PUSH_I", "push #'i8'" },
 
-	{2, 2, "PD", "XCH_A_NSP", "xch %a,('nsp_8')" },
-	{1, 2, "PD", "XCH_A_Y", "xch %a,('y_8')" },
-	{1, 1, "PW", "XCH_A_A", "xch %L,%H" },
+	{2, 2, "PD", false, "XCH_A_NSP", "xch %a,('nsp_8')" },
+	{1, 2, "PD", true, "XCH_A_Y", "xch %a,('y_8')" },
+	{1, 1, "PW", false, "XCH_A_A", "xch %L,%H" },
 
-	{1, 1, "PN", "PREF_ALT4", "altacc4" },
+	{1, 1, "PN", true, "PREF_ALT4", "altacc4" },
 
-	{2, 1, "PD", "ROT", "rot %a,#'i8'" },
-	{1, 1, "PD", "SRA", "sra %a" },
-	{1, 1, "PD", "DAA", "da %a" },
-	{1, 1, "PD", "BOOL_A", "bool %a" },
+	{2, 1, "PD", false, "ROT", "rot %a,#'i8'" },
+	{1, 1, "PD", true, "SRA", "sra %a" },
+	{1, 1, "PD", true, "DAA", "da %a" },
+	{1, 1, "PD", true, "BOOL_A", "bool %a" },
 
-	{1, 1, "PD", "POP_A", "pop %a" },
+	{1, 1, "PD", true, "POP_A", "pop %a" },
 
-	{1, 1, "PD", "THRD", "thrd %a" },
+	{1, 1, "PD", true, "THRD", "thrd %a" },
     
-	{1, 1, "PD", "CAX", "cax ('y_8'),xh,yl" }, // PD too permissive
+	{1, 1, "PD", true, "CAX", "cax ('y_8'),xh,yl" }, // PD too permissive
 
-	{1, 1, "PN", "PREF_SWAPOP", "swapop" },
-	{1, 1, "PN", "PREF_ALT1", "altacc1" },
-	{1, 1, "PN", "PREF_ALT2", "altacc2" },
-	{1, 1, "PN", "PREF_ALT3", "altacc3" },
+	{1, 1, "PN", true, "PREF_SWAPOP", "swapop" },
+	{1, 1, "PN", true, "PREF_ALT1", "altacc1" },
+	{1, 1, "PN", true, "PREF_ALT2", "altacc2" },
+	{1, 1, "PN", true, "PREF_ALT3", "altacc3" },
 
-	{3, 3, "PN", "CLRW_M", "clrw 'a16_16'" },
-	{2, 2, "PN", "CLRW_NSP", "clrw ('nsp_16')" },
-	{3, 3, "PN", "CLRW_NNZ", "clrw ('nnz_16')" },
-	{1, 1, "PW", "CLRW_A", "clrw %A" },
+	{3, 3, "PN", true, "CLRW_M", "clrw 'a16_16'" },
+	{2, 2, "PN", true, "CLRW_NSP", "clrw ('nsp_16')" },
+	{3, 3, "PN", true, "CLRW_NNZ", "clrw ('nnz_16')" },
+	{1, 1, "PW", true, "CLRW_A", "clrw %A" },
 
-	{3, 3, "PN", "INCW_M", "incw 'a16_16'" },
-	{2, 2, "PN", "INCW_NSP", "incw ('nsp_16')" },
-	{3, 3, "PN", "INCW_NNZ", "incw ('nnz_16')" },
-	{1, 1, "PW", "INCW_A", "incw %A" },
-	{3, 3, "PN", "ADCW1_M", "adcw 'a16_16'" },
-	{2, 2, "PN", "ADCW1_NSP", "adcw ('nsp_16')" },
-	{3, 3, "PN", "ADCW1_NNZ", "adcw ('nnz_16')" },
-	{1, 1, "PW", "ADCW1_A", "adcw %A" },
-	{3, 3, "PN", "SBCW1_M", "sbcw 'a16_16'" },
-	{2, 2, "PN", "SBCW1_NSP", "sbcw ('nsp_16')" },
-	{3, 3, "PN", "SBCW1_NNZ", "sbcw ('nnz_16')" },
-	{1, 1, "PW", "SBCW1_A", "sbcw %A" },
+	{3, 3, "PN", true, "INCW_M", "incw 'a16_16'" },
+	{2, 2, "PN", true, "INCW_NSP", "incw ('nsp_16')" },
+	{3, 3, "PN", true, "INCW_NNZ", "incw ('nnz_16')" },
+	{1, 1, "PW", true, "INCW_A", "incw %A" },
+	{3, 3, "PN", false, "ADCW1_M", "adcw 'a16_16'" },
+	{2, 2, "PN", false, "ADCW1_NSP", "adcw ('nsp_16')" },
+	{3, 3, "PN", false, "ADCW1_NNZ", "adcw ('nnz_16')" },
+	{1, 1, "PW", false, "ADCW1_A", "adcw %A" },
+	{3, 3, "PN", false, "SBCW1_M", "sbcw 'a16_16'" },
+	{2, 2, "PN", false, "SBCW1_NSP", "sbcw ('nsp_16')" },
+	{3, 3, "PN", false, "SBCW1_NNZ", "sbcw ('nnz_16')" },
+	{1, 1, "PW", false, "SBCW1_A", "sbcw %A" },
 
-	{3, 3, "PN", "PUSHW_M", "pushw 'a16_16'" },
-	{2, 2, "PN", "PUSHW_NSP", "pushw ('nsp_16')" },
-	{3, 3, "PN", "PUSHW_NNZ", "pushw ('nnz_16')" },
-	{1, 1, "PW", "PUSHW_A", "pushw %A" },
+	{3, 3, "PN", true, "PUSHW_M", "pushw 'a16_16'" },
+	{2, 2, "PN", true, "PUSHW_NSP", "pushw ('nsp_16')" },
+	{3, 3, "PN", true, "PUSHW_NNZ", "pushw ('nnz_16')" },
+	{1, 1, "PW", true, "PUSHW_A", "pushw %A" },
 
-	{3, 3, "PN", "TSTW1_M", "tstw 'a16_16'" },
-	{2, 2, "PN", "TSTW1_NSP", "tstw ('nsp_16')" },
-	{3, 3, "PN", "TSTW1_NNZ", "tstw ('nnz_16')" },
-	{1, 1, "PW", "TSTW1_A", "tstw %A" },
+	{3, 3, "PN", true, "TSTW1_M", "tstw 'a16_16'" },
+	{2, 2, "PN", true, "TSTW1_NSP", "tstw ('nsp_16')" },
+	{3, 3, "PN", true, "TSTW1_NNZ", "tstw ('nnz_16')" },
+	{1, 1, "PW", true, "TSTW1_A", "tstw %A" },
 
-	{2, 2, "PD", "MSK", "msk (%A),%a,#'i8'" },
+	{2, 2, "PD", true, "MSK", "msk (%A),%a,#'i8'" },
 
-	{1, 1, "PW", "MUL", "mul %A"},
+	{1, 1, "PW", false, "MUL", "mul %A"},
 
-	{1, 1, "PN", "RET", "ret" },
-	{1, 1, "PN", "RETI", "reti" },
+	{1, 1, "PN", true, "RET", "ret" },
+	{1, 1, "PN", true, "RETI", "reti" },
 
-	{3, 3, "PN", "MAD_M", "mad x,'a16_8',yl" },
-	{2, 2, "PN", "MAD_NSP", "mad x,('nsp_8'),yl" },
-	{3, 3, "PN", "MAD_NNZ", "mad x,('nnz_8'),yl" },
-	{1, 2, "PN", "MAD_Z", "mad x,('z_8'),yl" },
+	{3, 3, "PN", false, "MAD_M", "mad x,'a16_8',yl" },
+	{2, 2, "PN", false, "MAD_NSP", "mad x,('nsp_8'),yl" },
+	{3, 3, "PN", false, "MAD_NNZ", "mad x,('nnz_8'),yl" },
+	{1, 2, "PN", false, "MAD_Z", "mad x,('z_8'),yl" },
 
-	{3, 2, "PW", "LDW_A_I", "ldw %A,#'i16'" },
-	{3, 3, "PW", "LDW_A_M", "ldw %A,'a16_16'" },
-	{2, 2, "PW", "LDW_A_NSP", "ldw %A,('nsp_16')" },
-	{3, 3, "PW", "LDW_A_NNZ", "ldw %A,('nnz_16')" },
-	{2, 2, "PW", "LDW_A_NY", "ldw %A,('ny_16')" },
-	{1, 2, "PW", "LDW_A_AM", "ldw %A,(%A)" },
-	{1, 1, "PW", "LDW_A_X", "ldw %A,x" }, // PW too permissive
-	{2, 1, "PW", "LDW_A_D", "ldw %A,#%d" },
-	{3, 2, "PW", "LDW_M_A", "ldw 'a16_16',%A" },
-	{2, 1, "PW", "LDW_NSP_A", "ldw ('nsp_16'),%A" },
-	{3, 2, "PW", "LDW_NNZ_A", "ldw ('nnz_16'),%A" }, // PW too permissive
-	{1, 1, "PW", "LDW_X_A", "ldw x,%A" }, // PW too permissive
-	{1, 1, "PW", "LDW_Z_A", "ldw z,%A" }, // PW too permissive
-	{1, 1, "PD", "LDW_AM_X", "ldw (%A),%R" }, // PD too permissive
-	{2, 2, "PW", "LDW_NAM_X", "ldw ('nA_16'),%R" },
+	{3, 2, "PW", true, "LDW_A_I", "ldw %A,#'i16'" },
+	{3, 3, "PW", true, "LDW_A_M", "ldw %A,'a16_16'" },
+	{2, 2, "PW", true, "LDW_A_NSP", "ldw %A,('nsp_16')" },
+	{3, 3, "PW", true, "LDW_A_NNZ", "ldw %A,('nnz_16')" },
+	{2, 2, "PW", false, "LDW_A_NY", "ldw %A,('ny_16')" },
+	{1, 2, "PW", true, "LDW_A_AM", "ldw %A,(%A)" },
+	{1, 1, "PW", true, "LDW_A_X", "ldw %A,x" }, // PW too permissive
+	{2, 1, "PW", true, "LDW_A_D", "ldw %A,#%d" },
+	{3, 2, "PW", true, "LDW_M_A", "ldw 'a16_16',%A" },
+	{2, 1, "PW", true, "LDW_NSP_A", "ldw ('nsp_16'),%A" },
+	{3, 2, "PW", true, "LDW_NNZ_A", "ldw ('nnz_16'),%A" }, // PW too permissive
+	{1, 1, "PW", true, "LDW_X_A", "ldw x,%A" }, // PW too permissive
+	{1, 1, "PW", true, "LDW_Z_A", "ldw z,%A" }, // PW too permissive
+	{1, 1, "PD", true, "LDW_AM_X", "ldw (%A),%R" }, // PD too permissive
+	{2, 2, "PW", false, "LDW_NAM_X", "ldw ('nA_16'),%R" },
 
-	{2, 2, "PN", "LDWI_YREL_Z", "ldwi ('ny16'),(z)" },
+	{2, 2, "PN", false, "LDWI_YREL_Z", "ldwi ('ny16'),(z)" },
 
-	{2, 1, "PN", "JR", "jr %r" },
-	{2, 1, "PW", "DNJNZ", "dnjnz yh,%r" },
-	{2, 1, "PN", "JRZ", "jrz %r" },
-	{2, 1, "PN", "JRNZ", "jrnz %r" },
-	{2, 1, "PN", "JRC", "jrc %r" },
-	{2, 1, "PN", "JRNC", "jrnc %r" },
-	{2, 1, "PN", "JRN", "jrn %r" },
-	{2, 1, "PN", "JRNN", "jrnn %r" },
+	{2, 1, "PN", true, "JR", "jr %r" },
+	{2, 1, "PW", false, "DNJNZ", "dnjnz yh,%r" },
+	{2, 1, "PN", true, "JRZ", "jrz %r" },
+	{2, 1, "PN", true, "JRNZ", "jrnz %r" },
+	{2, 1, "PN", true, "JRC", "jrc %r" },
+	{2, 1, "PN", true, "JRNC", "jrnc %r" },
+	{2, 1, "PN", true, "JRN", "jrn %r" },
+	{2, 1, "PN", true, "JRNN", "jrnn %r" },
 
-	{1, 1, "PN", "PREF_ALT5", "altacc5" },
+	{1, 1, "PN", true, "PREF_ALT5", "altacc5" },
 
-	{2, 1, "PS", "JRNO", "jrno %r" },
-	{2, 1, "PN", "JRSGE", "jrsge %r" },
-	{2, 1, "PN", "JRSLT", "jrslt %r" },
+	{2, 1, "PS", true, "JRNO", "jrno %r" },
+	{2, 1, "PN", true, "JRSGE", "jrsge %r" },
+	{2, 1, "PN", true, "JRSLT", "jrslt %r" },
 
-	{2, 1, "PN", "LDW_A_Z", "ldw %A,z" },
+	{2, 1, "PN", true, "LDW_A_Z", "ldw %A,z" },
 
-	{2, 1, "PS", "JRSLE", "jrsle %r" },
+	{2, 1, "PS", true, "JRSLE", "jrsle %r" },
 
-	{2, 1, "PD", "LDW_X_AM", "ldw %R,(%A)" }, // PD too permissive
+	{2, 1, "PD", false, "LDW_X_AM", "ldw %R,(%A)" }, // PD too permissive
 
-	{2, 1, "PS", "JRLE", "jrle %r" },
+	{2, 1, "PS", true, "JRLE", "jrle %r" },
 
-	{1, 1, "PW", "SRLW", "srlw %A"},
-	{1, 1, "PW", "SLLW", "sllw %A"},
-	{1, 1, "PW", "RRCW", "rrcw %A"},
-	{1, 1, "PW", "RLCW_A", "rlcw %A"},
+	{1, 1, "PW", false, "SRLW", "srlw %A"},
+	{1, 1, "PW", false, "SLLW", "sllw %A"},
+	{1, 1, "PW", false, "RRCW", "rrcw %A"},
+	{1, 1, "PW", false, "RLCW_A", "rlcw %A"},
 
-	{1, 1, "PW", "SRAW", "sraw %A"},
-	{1, 1, "PD", "SLLW_A_XL", "sllw %A,xl"},
+	{1, 1, "PW", false, "SRAW", "sraw %A"},
+	{1, 1, "PD", false, "SLLW_A_XL", "sllw %A,xl"},
 
-	{2, 2, "PN", "RRCW_NSP", "rrcw ('nsp_16')"},
-	{2, 2, "PN", "RLCW_NSP", "rlcw ('nsp_16')"},
+	{2, 2, "PN", false, "RRCW_NSP", "rrcw ('nsp_16')"},
+	{2, 2, "PN", false, "RLCW_NSP", "rlcw ('nsp_16')"},
 
-	{3, 2, "PN", "PUSHW_I", "pushw #'i16'" },
+	{3, 2, "PN", true, "PUSHW_I", "pushw #'i16'" },
 
-	{1, 1, "PW", "POPW_A", "popw %A" },
+	{1, 1, "PW", true, "POPW_A", "popw %A" },
 
-	{2, 1, "PN", "ADDW_SP_D", "addw sp,#%d"},
+	{2, 1, "PN", true, "ADDW_SP_D", "addw sp,#%d"},
 
-	{2, 1, "PW", "ADDW_A_D", "addw %A,#%d"},
+	{2, 1, "PW", true, "ADDW_A_D", "addw %A,#%d"},
 
-	{2, 2, "PN", "XCH_F_NSP", "xch f,('nsp_16')"},
+	{2, 2, "PN", true, "XCH_F_NSP", "xch f,('nsp_16')"},
 
-	{2, 2, "PN", "LDI_YREL_Z", "ldi ('ny_8'),(z)" },
+	{2, 2, "PN", false, "LDI_YREL_Z", "ldi ('ny_8'),(z)" },
 
-	{1, 1, "PD", "SEX", "sex %A,%a"},
-	{1, 1, "PD", "ZEX", "zex %A,%a"},
+	{1, 1, "PD", false, "SEX", "sex %A,%a"},
+	{1, 1, "PD", false, "ZEX", "zex %A,%a"},
 
-	{3, 2, "PW", "ORW_I", "orw %A,#'i16'" },
-	{3, 3, "PA", "ORW_M", "orw %A,'a16_16'" }, // PA too permissive
-	{2, 2, "PA", "ORW_NSP", "orw %A,('nsp_16')" }, // PA too permissive
-	{1, 1, "PA", "ORW_X", "orw %A,%R" }, // PA too permissive
+	{3, 2, "PW", false, "ORW_I", "orw %A,#'i16'" },
+	{3, 3, "PA", false, "ORW_M", "orw %A,'a16_16'" }, // PA too permissive
+	{2, 2, "PA", false, "ORW_NSP", "orw %A,('nsp_16')" }, // PA too permissive
+	{1, 1, "PA", false, "ORW_X", "orw %A,%R" }, // PA too permissive
 
-	{1, 2, "PD", "XCHW_X_Y", "xchw %R,('%A')" }, // PD too permissive
-	{1, 2, "PW", "XCHW_Y_NSP", "xchw %A,('nsp_16')" },
+	{1, 2, "PD", true, "XCHW_X_Y", "xchw %R,('%A')" }, // PD too permissive
+	{1, 2, "PW", false, "XCHW_Y_NSP", "xchw %A,('nsp_16')" },
 
-	{1, 1, "PW", "INCNW", "incnw %A"},
+	{1, 1, "PW", false, "INCNW", "incnw %A"},
 
-	{2, 2, "PN", "DECW_NSP", "decw ('nsp_16')"},
+	{2, 2, "PN", false, "DECW_NSP", "decw ('nsp_16')"},
 
-	{3, 2, "PW", "CPW", "cpw %A,#'i16'"},
+	{3, 2, "PW", false, "CPW", "cpw %A,#'i16'"},
 
-	{1, 1, "PN", "CAXW", "caxw ('y_16'),z,x" },
+	{1, 1, "PN", true, "CAXW", "caxw ('y_16'),z,x" },
 
-	{1, 1, "PW", "NEGW", "negw %A"},
+	{1, 1, "PW", false, "NEGW", "negw %A"},
 
-	{1, 1, "PW", "BOOLW", "boolw %A"},
+	{1, 1, "PW", false, "BOOLW", "boolw %A"},
 
-	{3, 2, "PW", "XORW_I", "xorw %A,#'i16'" },
-	{3, 3, "PA", "XORW_M", "xorw %A,'a16_16'" }, // PA too permissive
-	{2, 2, "PA", "XORW_NSP", "xorw %A,('nsp_16')" }, // PA too permissive
-	{1, 1, "PA", "XORW_X", "xorw %A,%R" }, // PA too permissive
+	{3, 2, "PW", false, "XORW_I", "xorw %A,#'i16'" },
+	{3, 3, "PA", false, "XORW_M", "xorw %A,'a16_16'" }, // PA too permissive
+	{2, 2, "PA", false, "XORW_NSP", "xorw %A,('nsp_16')" }, // PA too permissive
+	{1, 1, "PA", false, "XORW_X", "xorw %A,%R" }, // PA too permissive
 	};
 	
 inline static void init_table_order(uint8_t *table)
