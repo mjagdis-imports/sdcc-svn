@@ -187,21 +187,24 @@ genlsh16 (operand * result, operand * left, int shCount)
     }
   else if (AOP_TYPE (result) != AOP_REG)
     {
-//      m6502_emitComment (TRACEGEN, "  %s - non register path", __func__);
+      //      m6502_emitComment (TRACEGEN, "  %s - non register path", __func__);
 
       int countLimit = (AOP_TYPE (result) == AOP_DIR) ? 3: 2;
       int xloc = -1;
 
       if (AOP_TYPE (left) == AOP_SOF || AOP_TYPE (result) == AOP_SOF)
-        needpullx = storeRegTempIfSurv (m6502_reg_x);
+        {
+          needpullx = storeRegTempIfSurv (m6502_reg_x);
+          xloc=m6502_getLastTempOfs();
+        }
 
-//      if (AOP_TYPE (left) == AOP_REG && !needpullx)
-//       storeRegTemp (m6502_reg_x, true);
+      //      if (AOP_TYPE (left) == AOP_REG && !needpullx)
+      //       storeRegTemp (m6502_reg_x, true);
       xloc = m6502_getLastTempOfs ();
 
       if ( m6502_sameRegs (AOP (left), AOP (result)) && shCount<=countLimit  && !maskedtopbyte)
         {
-//          m6502_emitComment (TRACEGEN, "  %s - non register path in place shCount==%d", __func__, shCount);
+	  //          m6502_emitComment (TRACEGEN, "  %s - non register path in place shCount==%d", __func__, shCount);
 
           while (shCount--)
             {
@@ -211,7 +214,7 @@ genlsh16 (operand * result, operand * left, int shCount)
         }
       else if (shCount==7 && AOP_TYPE (left) != AOP_REG)
         {
-//        m6502_emitComment (TRACEGEN, "  %s - non register path shCount==7", __func__);
+	  //        m6502_emitComment (TRACEGEN, "  %s - non register path shCount==7", __func__);
 
           needpulla = storeRegTempIfSurv (m6502_reg_a);
 
@@ -233,12 +236,15 @@ genlsh16 (operand * result, operand * left, int shCount)
         }
       else
         {
-//         m6502_emitComment (TRACEGEN, "  %s - non register path generic", __func__);
-
-          needpulla = storeRegTempIfSurv (m6502_reg_a);
+	  // m6502_emitComment (TRACEGEN, "  %s - non register path generic", __func__);
 
           if (IS_AOP_WITH_X (AOP (left)) && AOP_TYPE (result) == AOP_SOF && !needpullx)
-            needpullx = storeRegTemp (m6502_reg_x, true);
+            {
+              needpullx = storeRegTemp (m6502_reg_x, true);
+              xloc=m6502_getLastTempOfs();
+            }
+
+          needpulla = storeRegTempIfSurv (m6502_reg_a);
 
           m6502_loadRegFromAop (m6502_reg_a, AOP (left), 0);
           m6502_emitOp ("asl", "a");
@@ -246,11 +252,15 @@ genlsh16 (operand * result, operand * left, int shCount)
 
           if (AOP_TYPE (left) == AOP_REG && needpullx)
             {
-//              m6502_emitComment (TRACEGEN, "  %s - xloc=%d", __func__, xloc);
-              (void)xloc; // silence unused variable warning
+	      // m6502_emitComment (TRACEGEN, "  %s - xloc =%d", __func__, xloc);
 
-              m6502_loadRegTemp (m6502_reg_a);
-              needpullx = false;
+              if(AOP_TYPE (result) != AOP_SOF && m6502_reg_x->isDead)
+                {
+                  m6502_loadRegTemp (m6502_reg_a);
+                  needpullx = false;
+                }
+              else
+                 m6502_loadRegTempAt(m6502_reg_a, xloc);
             }
           else
             m6502_loadRegFromAop (m6502_reg_a, AOP (left), 1);
@@ -326,7 +336,7 @@ genlsh16 (operand * result, operand * left, int shCount)
     }
   else
     {
-//      m6502_emitComment (TRACEGEN, "  %s - any to reg", __func__);
+      //      m6502_emitComment (TRACEGEN, "  %s - any to reg", __func__);
 
       needpulla = storeRegTempIfSurv (m6502_reg_a);
 
@@ -453,7 +463,7 @@ shiftLLong1 (operand * left, operand * result, int shift)
 
   if (shift==24)
     {
-//      m6502_transferAopAop (AOP (left), 0, AOP (result), 3);
+      //      m6502_transferAopAop (AOP (left), 0, AOP (result), 3);
       m6502_loadRegFromAop (m6502_reg_a, AOP (left), 0);
       m6502_storeRegToAop (m6502_reg_a, AOP (result), 3);
       m6502_storeConstToAop (0, AOP (result), 0);
@@ -514,8 +524,8 @@ shiftLLong2 (operand * left, operand * result, int shift)
 
   if (shift==16)
     {
-//     m6502_transferAopAop (AOP (left), 0, AOP (result), 2);
-//     m6502_transferAopAop (AOP (left), 1, AOP (result), 3);
+      //     m6502_transferAopAop (AOP (left), 0, AOP (result), 2);
+      //     m6502_transferAopAop (AOP (left), 1, AOP (result), 3);
       m6502_loadRegFromAop (m6502_reg_a, AOP (left), 0);
       m6502_storeRegToAop (m6502_reg_a, AOP (result), 2);
       m6502_loadRegFromAop (m6502_reg_a, AOP (left), 1);
@@ -578,22 +588,22 @@ shiftLLong3 (operand * left, operand * result, int shift)
   wassertl (shift>=8, "shiftLLong3 - shift<8");
   wassertl (shift<16,  "shiftLLong3 - shift>=16");
 
-//  if (shift==8 && AOP_TYPE (left)!=AOP_SOF && AOP_TYPE (result)!=AOP_SOF)
-//    reg=m6502_getFreeByteReg ();
-//  if (!reg)
-//    reg = m6502_reg_a;
+  //  if (shift==8 && AOP_TYPE (left)!=AOP_SOF && AOP_TYPE (result)!=AOP_SOF)
+  //    reg=m6502_getFreeByteReg ();
+  //  if (!reg)
+  //    reg = m6502_reg_a;
 
   needpulla = pushRegIfUsed (m6502_reg_a);
 
-//  idx=getFreeIdxReg ();
-//  if (!idx)
-//    idx = m6502_reg_x;
+  //  idx=getFreeIdxReg ();
+  //  if (!idx)
+  //    idx = m6502_reg_x;
 
   if (shift==8)
     {
-//      m6502_transferAopAop (AOP (left), 2, AOP (result), 3);
-//      m6502_transferAopAop (AOP (left), 1, AOP (result), 2);
-//      m6502_transferAopAop (AOP (left), 0, AOP (result), 1);
+      //      m6502_transferAopAop (AOP (left), 2, AOP (result), 3);
+      //      m6502_transferAopAop (AOP (left), 1, AOP (result), 2);
+      //      m6502_transferAopAop (AOP (left), 0, AOP (result), 1);
       m6502_loadRegFromAop (m6502_reg_a, AOP (left), 2);
       m6502_storeRegToAop (m6502_reg_a, AOP (result), 3);
       m6502_loadRegFromAop (m6502_reg_a, AOP (left), 1);
@@ -640,7 +650,7 @@ shiftLLong3 (operand * left, operand * result, int shift)
           m6502_storeRegToAop (m6502_reg_a, AOP (result), 2);
           m6502_loadRegFromAop (m6502_reg_a, AOP (left), 2);
           m6502_rmwWithReg ("rol", m6502_reg_a);
-//          m6502_storeRegToAop (m6502_reg_a, AOP (result), 3);
+	  //          m6502_storeRegToAop (m6502_reg_a, AOP (result), 3);
           m6502_storeConstToAop (0, AOP (result), 0);
         }
       else
@@ -658,7 +668,7 @@ shiftLLong3 (operand * left, operand * result, int shift)
 
           m6502_transferRegReg (m6502_reg_x, m6502_reg_a, true);
           m6502_rmwWithReg ("rol", m6502_reg_a);
-//          m6502_storeRegToAop (m6502_reg_a, AOP (result), 3);
+	  //          m6502_storeRegToAop (m6502_reg_a, AOP (result), 3);
           m6502_storeConstToAop (0, AOP (result), 0);
         }
       shiftLLongInPlace (result, shift-9, 1, true);
@@ -711,14 +721,14 @@ shiftLLong4 (operand * left, operand * result, int shift)
           while (shift!=7)
             {
               m6502_rmwWithReg ("lsr", m6502_reg_a);
-//              m6502_emitRegTempOp ("lsr", m6502_getLastTempOfs () );
+	      //              m6502_emitRegTempOp ("lsr", m6502_getLastTempOfs () );
               m6502_rmwWithAop ("ror", AOP (result), 3);
               m6502_rmwWithAop ("ror", AOP (result), 2);
               m6502_rmwWithAop ("ror", AOP (result), 1);
               m6502_rmwWithAop ("ror", AOP (result), 0);
               shift++;
             }
-//          m6502_loadRegTemp(NULL);
+	  //          m6502_loadRegTemp(NULL);
         }
     }
   else
@@ -736,15 +746,15 @@ shiftLLong4 (operand * left, operand * result, int shift)
           m6502_storeRegToAop (m6502_reg_a, AOP (result), 2);
           m6502_loadRegFromAop (m6502_reg_a, AOP (left), 3);
           m6502_rmwWithReg ("rol", m6502_reg_a);
-//          m6502_storeRegToAop (m6502_reg_a, AOP (result), 3);
+	  //          m6502_storeRegToAop (m6502_reg_a, AOP (result), 3);
           shiftLLongInPlace (result, shift-1, 0, true);
           m6502_storeRegToAop (m6502_reg_a, AOP (result), 3);
         }
       else
         {
-//          m6502_loadRegFromAop (m6502_reg_a, AOP (left), 3);
+	  //          m6502_loadRegFromAop (m6502_reg_a, AOP (left), 3);
           shiftLLongInPlace (result, shift, 0, false);
-//          m6502_storeRegToAop (m6502_reg_a, AOP (result), 3);
+	  //          m6502_storeRegToAop (m6502_reg_a, AOP (result), 3);
         }
     }
   pullOrFreeReg (m6502_reg_a, needpulla);
