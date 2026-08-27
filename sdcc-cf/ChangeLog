@@ -1,3 +1,8 @@
+2026-08-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* bin/dcf.sh:
+	  Keep more regession test log files (since we now need both the results non-randomized tests and from pseudo-randomized tests for each snapshot).
+
 2023-12-17 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* crontab.txt

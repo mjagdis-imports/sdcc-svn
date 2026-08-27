@@ -171,7 +171,7 @@ log_it ()
 }
 
 
-# remove more than 7 files in dir from fsr server
+# Only keep most recent 7 in dir on fsr server (and most recent 14 files for regression test logs - the one for non-radomized tests and the psudo-randomized one).
 rm_old_versions ()
 {
   local i j k
@@ -191,7 +191,7 @@ rm_old_versions ()
   do    
     for j in $(echo "ls -1t $i" | sftp -b- ${WEBUSER}@${WEBHOST} | sed -e '/^sftp> /d')
     do    
-      for k in $(echo "ls -1t $j" | sftp -b- ${WEBUSER}@${WEBHOST} | sed -e '/^sftp> /d' | sed -e '1,7d')
+      for k in $(echo "ls -1t $j" | sftp -b- ${WEBUSER}@${WEBHOST} | sed -e '/^sftp> /d' | sed -e '1,14d')
       do
         if [ -n "$k" ]; then echo "removing $k"; echo "rm $k" | sftp -b- ${WEBUSER}@${WEBHOST}; fi
       done
