@@ -2,6 +2,8 @@
 
 	* src/mos6502/genlshift.c:
 	  Fix bug #4065
+    * support/regression/tests/falcon-ntt.c
+      Enable falcon-ntt for mos6502-stack-auto.
 
 2026-08-26 Maarten Brock <sourceforge.brock AT dse.nl>
 
