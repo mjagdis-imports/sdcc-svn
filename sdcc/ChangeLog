@@ -1,3 +1,11 @@
+2026-08-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sim/ucsim/src/sims/f8.src/decode.h,
+	  sim/ucsim/src/sims/f8.src/f8cl.h,
+	  sim/ucsim/src/sims/f8.src/glob.cc,
+	  sim/ucsim/src/sims/f8.src/imove.cc:
+	  Use generated tables instead of hand-written ones for f8 opcodes.
+
 2026-08-15 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/mos6502/genlshift.c:
