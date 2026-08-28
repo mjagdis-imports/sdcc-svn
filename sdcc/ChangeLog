@@ -3,6 +3,8 @@
 	* src/f8/gen.c,
 	  sdas/asf8/f8mch.c:
 	  Fix bug #4069.
+	* src/z80/gen.c:
+	  Implement codegen for a case that resulted in a regression test failure in pseudorandomized regression testing on powerpc64 host.
 
 2026-08-27 Gabriele Gorla <gorlik@yahoo.com>
 
