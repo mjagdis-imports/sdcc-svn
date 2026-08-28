@@ -4014,25 +4014,70 @@ restore:
 static void
 genCritical (iCode *ic)
 {
-  push (ASMOP_X, 0, 2);
-  push (ASMOP_Y, 0, 2);
-  emit2 ("ldw", "y, #0x0010");
-  cost (3, 1);
-  emit3 (A_CLRW, ASMOP_X, 0);
-  emit2 ("xchw", "x, (y)");
-  cost (1, 1);
-  pop (ASMOP_Y, 0, 2);
-  emit2 ("xchw", "x, (0, sp)");
-  cost (1, 1);
+  D (emit2 ("; genCritical", ""));
+
+  if (ic && regDead (X_IDX, ic) && regDead (Y_IDX, ic))
+    {
+      emit2 ("ldw", "y, #0x0010");
+      cost (3, 1);
+      emit3 (A_CLRW, ASMOP_X, 0);
+      emit2 ("xchw", "x, (y)");
+      cost (1, 1);
+      push (ASMOP_X, 0, 2);
+    }
+  else
+    {
+      push (ASMOP_X, 0, 2);
+      push (ASMOP_Y, 0, 2);
+      emit2 ("ldw", "y, #0x0010");
+      cost (3, 1);
+      emit3 (A_CLRW, ASMOP_X, 0);
+      emit2 ("xchw", "x, (y)");
+      cost (1, 1);
+      if (!IS_F8L)
+        {
+          pop (ASMOP_Y, 0, 2);
+          emit2 ("xchw", "x, (0, sp)");
+          cost (1, 1);
+        }
+      else
+        {
+          emit2 ("ldw", "y, (2, sp)");
+          emit2 ("ldw", "(2, sp), x");
+          emit2 ("ldw", "x, y");
+          cost (6, 4);
+          pop (ASMOP_Y, 0, 2);
+        }
+    }
 }
 
 static void
 genEndCritical (iCode *ic)
 {
-  emit2 ("xchw", "y, (0, sp)");
-  emit2 ("ldw", "0x0010, y");
-  cost (5, 2);
-  pop (ASMOP_Y, 0, 2);
+  D (emit2 ("; genEndCritical", ""));
+
+  if (ic && regDead (Y_IDX, ic))
+    {
+      pop (ASMOP_Y, 0, 2);
+      emit2 ("ldw", "0x0010, y");
+      cost (3, 2);
+    }
+  else if (!IS_F8L)
+    {
+      emit2 ("xchw", "y, (0, sp)");
+      emit2 ("ldw", "0x0010, y");
+      cost (5, 4);
+      pop (ASMOP_Y, 0, 2);
+    }
+  else
+    {
+      push (ASMOP_Y, 0, 2);
+      emit2 ("ldw", "y, (2, sp)");
+      emit2 ("ldw", "0x0010, y");
+      cost (5, 2);
+      pop (ASMOP_Y, 0, 2);
+      adjustStack (2, false, false);
+    }
 }
 
 /*-----------------------------------------------------------------*/

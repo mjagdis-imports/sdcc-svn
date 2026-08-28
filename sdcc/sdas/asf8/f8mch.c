@@ -855,7 +855,7 @@ opw:
 			outab(OPCODE_ALTACC5);
 			outab(0xf4);
 		}
-		else if(t2 != S_SPREL || ls_mode(&e2) /*|| mchtyp == X_F8L todo: fix codegen for critical sections first! */)
+		else if(t2 != S_SPREL || ls_mode(&e2) || mchtyp == X_F8L)
 			aerr();
 		else {
 			altaccw(r1);
