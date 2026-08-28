@@ -1233,6 +1233,28 @@ convbuiltin (iCode *const ic, eBBlock *ebp)
       goto convert;
     }
 
+#if 0
+  if ((TARGET_IS_MOS6502) && (!strcmp (bif->name, "__builtin_memset")))
+    {
+      /* Replace iff return value is used or last parameter is not an integer constant (except for memcpy, where non-integers can be handled). */
+      if (bitVectIsZero (OP_USES (IC_RESULT (icc))) && (IS_OP_LITERAL (IC_LEFT (lastparam))) && operandLitValue (IC_LEFT (lastparam)) < 256 )
+        return;
+
+      strcpy(OP_SYMBOL (IC_LEFT (icc))->rname, "_memset");
+  icc=ic;
+  while (icc->op != CALL)
+    {
+      if (icc->op == SEND)
+       icc->builtinSEND=0;
+      icc->generated=0;
+      icc = icc->next;
+    }
+ftype->funcAttrs.builtin=0;
+      return;
+      goto convert;
+    }
+#endif
+
   return;
 
 convert:

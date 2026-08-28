@@ -15,7 +15,7 @@
   #define SDCC_PDK 16
 #endif
 
-#if defined(__SDCC_mos6502) || defined(__SDCC_mos65c02)
+#if defined(__SDCC_mos6502) || defined(__SDCC_mos65c02) || defined(__SDCC_huc6280)
 #define SDCC_MOS
 #if defined(__SDCC_STACK_AUTO)
 #define SDCC_SMALL_STACK 256
@@ -105,7 +105,7 @@ void __printf(const char *szFormat, ...);
 # define __pdata __data
 #endif
 
-#if defined(__SDCC_mos6502) || defined(__SDCC_mos65c02)
+#if defined(SDCC_MOS)
 # define __idata __data
 # define __pdata __data
 #endif

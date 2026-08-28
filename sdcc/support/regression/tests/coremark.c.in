@@ -18,7 +18,7 @@
 #define LACK_OF_MEMORY
 #endif
 
-#if defined(__SDCC_hc08) || defined(__SDCC_s08) || defined(__SDCC_mos6502) || defined(__SDCC_mos65c02) || defined(__SDCC_mcs51) // Looks like we run out of space for local variables even with MEM_STATIC - this should improve when we have Chaitin-style allocation for local vairables not on the stack (RFE #958), any maybe some other optimizations.
+#if defined(__SDCC_hc08) || defined(__SDCC_s08) || defined(__SDCC_mos6502) || defined(__SDCC_mos65c02) || defined(__SDCC_huc6280) || defined(__SDCC_mcs51) // Looks like we run out of space for local variables even with MEM_STATIC - this should improve when we have Chaitin-style allocation for local vairables not on the stack (RFE #958), any maybe some other optimizations.
 #define LACK_OF_MEMORY
 #endif
 

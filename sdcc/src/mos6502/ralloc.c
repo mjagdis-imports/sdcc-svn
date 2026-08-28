@@ -1021,6 +1021,164 @@ packForPush (iCode * ic, eBBlock ** ebpp, int count)
   hTabDeleteItem (&iCodehTab, dic->key, dic, DELETE_ITEM, NULL);
 }
 
+static void
+printOpsNames(iCode *ic)
+{
+  if(!ic)
+    return;
+  fprintf(stderr, "%s - ic:%d ", __func__, ic->key);
+
+
+  fprintf(stderr, "%s = ", IS_SYMOP(IC_RESULT(ic))?OP_SYMBOL(IC_RESULT(ic))->name:"***");
+  fprintf(stderr, "L:%s ", IS_SYMOP(IC_LEFT(ic))?OP_SYMBOL(IC_LEFT(ic))->name:"***");
+  fprintf(stderr, "R:%s ", IS_SYMOP(IC_RIGHT(ic))?OP_SYMBOL(IC_RIGHT(ic))->name:"***");
+  
+  fprintf(stderr, "\n");
+
+}
+
+/*------------------------------------------------------------------*/
+/* fusePSet - fuse copy/cast + POINTER_SET                          */
+/*------------------------------------------------------------------*/
+static void
+fusePSet (iCode *pcall, eBBlock *ebp)
+{
+// not working properly
+#if 0
+  iCode * prev = pcall->prev;
+  
+ // if(!pcall || pcall->op != PCALL)
+ //   return;
+
+  fprintf(stderr, "%s - ic:%d\n", __func__, pcall->key);
+      printOpsNames(pcall);
+
+//  while(prev && prev->op == SEND)
+//{
+//    fprintf(stderr, "%s - prev ic:%d\n", __func__, prev->key);
+//    prev=prev->prev;
+//}
+
+  if(prev)
+    {
+      fprintf(stderr, "%s - end ic:%d op:%d (%c)\n", __func__, prev->key, prev->op, prev->op);
+
+      printOpsNames(prev);
+
+
+      if(IS_CAST_ICODE(prev) || IS_ASSIGN_ICODE(prev) )
+
+{
+        fprintf(stderr, "cast + pset \n");
+
+      if(IS_ITEMP(IC_RESULT(prev)) && IS_ITEMP(IC_RIGHT(pcall))
+         && isOperandEqual (IC_RESULT(prev), IC_RIGHT(pcall)) 
+     //    && IS_TRUE_SYMOP(IC_RIGHT(prev) ) 
+)
+        {
+        fprintf(stderr, "sub \n");
+            IC_RIGHT(pcall)=IC_RIGHT(prev);
+            remiCodeFromeBBlock (ebp, prev);
+        }
+    }
+
+   if(prev->op==GETBYTE)
+    {
+      if(IS_ITEMP(IC_RESULT(prev)) && IS_ITEMP(IC_RIGHT(pcall))
+         && isOperandEqual (IC_RESULT(prev), IC_RIGHT(pcall)) 
+     //    && IS_TRUE_SYMOP(IC_RIGHT(prev) )  
+)
+        {
+        fprintf(stderr, "sub \n");
+            IC_RIGHT(pcall)=IC_LEFT(prev);
+            remiCodeFromeBBlock (ebp, prev);
+        }
+
+    }
+
+  }
+#endif
+}
+
+/*------------------------------------------------------------------*/
+/* fusePCall - fuse copy/cast + PCALL                                    */
+/*------------------------------------------------------------------*/
+static void
+fusePCall (iCode *pcall, eBBlock *ebp)
+{
+  iCode * prev = pcall->prev;
+  
+  if(!pcall || pcall->op != PCALL)
+    return;
+
+//  fprintf(stderr, "%s - ic:%d\n", __func__, pcall->key);
+
+//  this seems the ideal function but it fails to detect the right conditions
+//  prev = findAssignToSym (IC_LEFT(pcall), pcall);
+
+  while(prev && prev->op == SEND)
+{
+//    fprintf(stderr, "%s - prev ic:%d\n", __func__, prev->key);
+    prev=prev->prev;
+}
+
+  if(prev)
+    {
+//      fprintf(stderr, "%s - end ic:%d op:%d (%c)\n", __func__, prev->key, prev->op, prev->op);
+
+#if 0
+      if(POINTER_GET(prev))
+        {
+//        this should be optimized with:
+//        jsr lbl
+//        jmp skip
+//  lbl:  jmp (addr)
+//    skip:
+//        
+        fprintf(stderr, "ptrget + pcall \n");
+
+      if(IS_SYMOP(IC_LEFT(prev)))
+        {
+        fprintf(stderr, "*** symop L: %s\n", OP_SYMBOL(IC_LEFT(prev))->name);
+        fprintf(stderr, "*** symop L type: %d\n", OP_SYM_TYPE(IC_LEFT(prev)));
+        }
+// can't figure out how to make IC_LEFT(prev) AOP_EXT instead of AOP_IMM
+//      if(IS_SYMOP(IC_RIGHT(prev)))
+//        fprintf(stderr, "*** symop R: %s\n", OP_SYMBOL(IC_RIGHT(prev))->name);
+//      if(IS_SYMOP(IC_RESULT(prev)))
+//        fprintf(stderr, "*** symop Res: %s\n", OP_SYMBOL(IC_RESULT(prev))->name);
+      if(IS_VALOP(IC_LEFT(prev)))
+        fprintf(stderr, "*** valop\n");
+      if(IS_TYPOP(IC_LEFT(prev)))
+        fprintf(stderr, "*** typop\n");
+
+
+            IC_LEFT(pcall)=IC_LEFT(prev);
+
+            IC_LEFT(pcall)->isaddr=true;
+            IC_LEFT(pcall)->isPtr=true;
+            IC_LEFT(pcall)->isLiteral=false;
+            OP_SYMBOL(IC_LEFT(pcall))->uptr=true;
+
+            remiCodeFromeBBlock (ebp, prev);
+        }
+#endif
+
+      if(!IS_CAST_ICODE(prev) && !IS_ASSIGN_ICODE(prev))
+        return;
+//      else
+//        fprintf(stderr, "cast + pcall \n");
+
+      if(IS_ITEMP(IC_RESULT(prev)) && IS_ITEMP(IC_LEFT(pcall))
+         && isOperandEqual (IC_RESULT(prev), IC_LEFT(pcall)) 
+         && IS_TRUE_SYMOP(IC_RIGHT(prev) ) )
+        {
+            IC_LEFT(pcall)=IC_RIGHT(prev);
+            remiCodeFromeBBlock (ebp, prev);
+        }
+    }
+}
+
 /*------------------------------------------------------------------*/
 /* moveSendToCall - move SEND to immediately precede its CALL/PCALL */
 /*------------------------------------------------------------------*/
@@ -1030,11 +1188,14 @@ moveSendToCall (iCode *sic, eBBlock *ebp)
   iCode * prev = sic->prev;
   iCode * sic2 = NULL;
   iCode * cic;
-  
+
+//  fprintf(stderr, "%s - ic:%d\n", __func__, sic->key);
+
   /* Go find the CALL/PCALL */
   cic = sic;
   while (cic && cic->op != CALL && cic->op != PCALL)
     cic = cic->next;
+
   if (!cic)
     return sic;
 
@@ -1094,10 +1255,35 @@ packPointerOp (iCode * ic, eBBlock ** ebpp)
   if (OP_SYMBOL (pointer)->remat)
     return;
 
+#if 1
   if (offsetOp && IS_OP_LITERAL (offsetOp) && operandLitValue (offsetOp) != 0)
     return;
+#else
+if(offsetOp && IS_OP_LITERAL (offsetOp))
+fprintf(stderr, "1 ic:%d litvalue:%d\n",ic->key,
+    operandLitValue (offsetOp) );
+
+  if (offsetOp && IS_OP_LITERAL (offsetOp))
+   {
+fprintf(stderr, "1 val:%ld \n",
+    operandLitValue (offsetOp) );
+   if ((operandLitValue (offsetOp)) !=0)
+    return;
+  else
+fprintf(stderr, "not return\n");
+
+}
+
+if(offsetOp && IS_OP_LITERAL (offsetOp))
+fprintf(stderr, "2 ic:%d litvalue:%d\n",ic->key,
+    operandLitValue (offsetOp) );
+#endif
+
   if (offsetOp && IS_SYMOP (offsetOp))
     return;
+//if(offsetOp &&IS_OP_LITERAL (offsetOp))
+//fprintf(stderr, "3 ic:%d litvalue:%d\n",ic->key,
+//    operandLitValue (offsetOp) );
 
   /* There must be only one definition */
   if (bitVectnBitsOn (OP_DEFS (pointer)) != 1)
@@ -1105,6 +1291,11 @@ packPointerOp (iCode * ic, eBBlock ** ebpp)
   /* find the definition */
   if (!(dic = hTabItemWithKey (iCodehTab, bitVectFirstBit (OP_DEFS (pointer)))))
     return;
+
+//if(offsetOp &&IS_OP_LITERAL (offsetOp))
+//fprintf(stderr, "4 ic:%d litvalue:%d\n",ic->key,
+//    operandLitValue (offsetOp) );
+
 
   if (dic->op == '+' && (IS_OP_LITERAL (IC_RIGHT (dic)) ||
 			 (IS_ITEMP (IC_RIGHT (dic)) && OP_SYMBOL (IC_RIGHT (dic))->remat)))
@@ -1120,6 +1311,9 @@ packPointerOp (iCode * ic, eBBlock ** ebpp)
   else
     return;
 
+//if(offsetOp &&IS_OP_LITERAL (offsetOp))
+//fprintf(stderr, "5 ic:%d litvalue:%d\n",ic->key,
+//    operandLitValue (offsetOp) );
 
   /* Now check all of the uses to make sure they are all get/set pointer */
   /* and don't already have a non-zero offset operand */
@@ -1153,6 +1347,9 @@ packPointerOp (iCode * ic, eBBlock ** ebpp)
             return;
         }
     }
+//if(offsetOp &&IS_OP_LITERAL (offsetOp))
+//fprintf(stderr, "6 ic:%d litvalue:%d\n",ic->key,
+//    operandLitValue (offsetOp) );
 
   /* Everything checks out. Move the literal or rematerializable offset */
   /* to the pointer get/set iCodes */
@@ -1177,6 +1374,9 @@ packPointerOp (iCode * ic, eBBlock ** ebpp)
             return;
         }
     }
+//if(offsetOp &&IS_OP_LITERAL (offsetOp))
+//fprintf(stderr, "7 ic:%d litvalue:%d\n",ic->key,
+//    operandLitValue (offsetOp) );
 
   /* Put the remaining operand on the right and convert to assignment     */
   if (IS_SYMOP (offsetOp))
@@ -1221,7 +1421,12 @@ packRegisters (eBBlock ** ebpp, int count)
       for (ic = ebp->sch; ic; ic = ic->next)
 	{
 	  //packRegsForLiteral (ic);
-      
+          if (ic->op == PCALL)
+            fusePCall (ic, ebp);
+
+          if (POINTER_SET (ic))
+            fusePSet (ic, ebp);
+
 	  /* move SEND to immediately precede its CALL/PCALL */
 	  if (ic->op == SEND && ic->next &&
 	      ic->next->op != CALL && ic->next->op != PCALL)

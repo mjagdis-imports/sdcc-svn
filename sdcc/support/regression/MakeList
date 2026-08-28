@@ -11,7 +11,8 @@ EXCLUDE_host += \
 	gte_20001111-1 \
 	gte_931004-12 \
 	gte_960802-1 \
-	gte_loop-2b
+	gte_loop-2b \
+	tst_bug-2305
 
 ###############################################
 
@@ -19,35 +20,20 @@ EXCLUDE_host += \
 EXCLUDE_pdk13 += \
 	tst_bug1057979 \
 	tst_bug1115321 \
-	tst_bug1520966 \
-	tst_bug1551947 \
 	tst_bug-2840 \
 	tst_bug-3393 \
 	tst_bug-3873 \
 	tst_frexpf \
-	tst_lonesha256 \
-	tst_sha3-256 \
-	tst_wcsnlen \
-	tst_wcsto
+	tst_wcsnlen
 EXCLUDE_pdk14 += \
 	tst_bug1057979 \
 	tst_bug1115321 \
-	tst_bug1520966 \
-	tst_bug1551947 \
 	tst_bug-3873 \
 	tst_frexpf \
-	tst_lonesha256 \
-	tst_sha3-256 \
-	tst_wcsnlen \
-	tst_wcsto
-EXCLUDE_pdk15 += \
-	tst_bug1520966 \
-	tst_bug1551947 \
-	tst_lonesha256 \
-	tst_sha3-256 \
-	tst_wcsto
+	tst_wcsnlen
 EXCLUDE_pdk15-stack-auto += \
-	tst_bug1057979 \
+	tst_bug1057979
+EXCLUDE_ARCH_pdk += \
 	tst_bug1520966 \
 	tst_bug1551947 \
 	tst_lonesha256 \
@@ -165,6 +151,14 @@ EXCLUDE_ARCH_mos6502 += \
 	gte_pr30185 \
 	gte_pr58365 \
 	tst_gcc-torture-execute-20001026-1
+
+# mcs51, hc08, s08 and pdk14 have restrictions on function pointers wrt. reentrancy
+EXCLUDE_ARCH_mos6502 += \
+	tst_bug-2663
+EXCLUDE_ARCH_hc08 += \
+	tst_bug-2663
+EXCLUDE_ARCH_pdk += \
+	tst_bug-2663
 
 # Target does not yet support struct/union return
 EXCLUDE_nostructret = \
@@ -429,6 +423,7 @@ EXCLUDE_pdk15-stack-auto += ${EXCLUDE_ARCH_pdk}
 ###################################################
 EXCLUDE_uc6502 += ${EXCLUDE_ARCH_mos6502}
 EXCLUDE_uc65c02 += ${EXCLUDE_ARCH_mos6502}
+EXCLUDE_uc6280 += ${EXCLUDE_ARCH_mos6502}
 EXCLUDE_uc6502-stack-auto += ${EXCLUDE_ARCH_mos6502}
 ###################################################
 EXCLUDE_f8 += ${EXCLUDE_ARCH_f8}

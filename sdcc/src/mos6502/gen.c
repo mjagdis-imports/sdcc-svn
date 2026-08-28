@@ -1171,7 +1171,7 @@ aopName (asmop * aop)
  *************************************************************************/
 void
 m6502_loadRegFromAop (reg_info * reg, asmop * aop, int loffset)
-{
+{		
   int regidx = reg->rIdx;
 
   m6502_emitComment (REGOPS, "      %s (%s, %s, %d)", __func__,
@@ -4469,7 +4469,7 @@ genPointerPush (iCode *ic)
 
   needpulla=storeRegTempIfSurv(m6502_reg_a);
 
-  if (AOP_TYPE(left)==AOP_SOF)
+  if (AOP_TYPE(left)==AOP_SOF || AOP_TYPE(left)==AOP_REG)
     {
       needpullx=storeRegTempIfSurv(m6502_reg_x);
 
@@ -4691,12 +4691,15 @@ genPcall (iCode * ic)
   sym_link *dtype;
   sym_link *etype;
   iCode * sendic;
+  operand *op = NULL;
 
   m6502_emitComment (TRACEGEN, __func__);
   m6502_printIC(ic);
 
   dtype = operandType (left)->next;
   etype = getSpec (dtype);
+
+  m6502_aopOp (left, ic);
 
   /* Go through the send set and mark any registers used by iTemps as */
   /* in use so we don't clobber them while setting up the return address */
@@ -4709,9 +4712,24 @@ genPcall (iCode * ic)
   if (!ic->regsSaved)
     saveRegisters (ic);
 
-  // TODO: handle DIR/EXT with jmp [aa] or jmp [aaaa]
+  // TODO: handle EXT with jmp [aaaa]
 
-  if (!IS_LITERAL (etype))
+  if(IS_CONSTEXPR(etype))
+      m6502_emitComment (TRACEGEN, "  %s - constexpr", __func__);
+  if(IS_ABSOLUTE(etype))
+      m6502_emitComment (TRACEGEN, "  %s - abs expr", __func__);
+  if(AOP_TYPE(left)==AOP_REG && AOP(left)->aopu.aop_reg[0]->aop )
+     m6502_emitComment (TRACEGEN, "  %s - reg expr", __func__);
+
+  if(IS_LITERAL(etype) || IS_ABSOLUTE(etype))
+    op=left;
+
+//  if(AOP_TYPE(left)==AOP_REG && AOP(left)->aopu.aop_reg[0]->aop )
+//     if(AOP(left)->aopu.aop_reg[0]->aop->type==AOP_EXT)
+//       op=AOP(left)->aopu.aop_reg[0]->aop->op;
+//    use_dptr=false;
+
+  if (!op)
     {
       m6502_updateCFA ();
       /* compute the function address */
@@ -4727,14 +4745,25 @@ genPcall (iCode * ic)
     }
 
   /* make the call */
-  if (!IS_LITERAL (etype))
+  if (!op)
     {
       m6502_emitOp("jsr","__sdcc_indirect_jsr");
       m6502_updateCFA ();
     }
-  else
+  else if(IS_LITERAL(etype))
     {
       m6502_emitOp ("jsr", "0x%04X", ulFromVal (OP_VALUE (left)));
+    }
+  else //if(IS_ABSOLUTE(etype))
+    {
+      if(AOP_TYPE(op)==AOP_IMMD)
+        m6502_emitOp ("jsr", "%s", AOP(op)->aopu.aop_immd);
+
+//    if(AOP_TYPE(left)==AOP_LIT)
+//        return aopLiteral (aop->aopu.aop_lit, loffset);
+
+    if(AOP_TYPE(op)==AOP_DIR || AOP_TYPE(left)==AOP_EXT)
+      m6502_emitOp ("jsr", "%s", AOP(op)->aopu.aop_dir );
     }
 
   m6502_dirtyAllRegs();
@@ -7586,6 +7615,12 @@ static void genDataPointerSet (operand * left, operand * right, operand * result
   derefaop = aopDerefAop (AOP (result), litOffset);
   m6502_freeAsmop (result, NULL);
   derefaop->size = size;
+
+
+  m6502_emitComment (TRACEGEN, "    %s  - *( reg=%s + litoffset=%d + rematoffset=%s) =",
+                     __func__, aopName (AOP (result)),  litOffset, rematOffset );
+  m6502_emitComment (TRACEGEN, "                       %s, size=%d",
+                     aopName (AOP (right)), size );
 
   if(m6502_findRegAop (AOP(right), 0))
     {

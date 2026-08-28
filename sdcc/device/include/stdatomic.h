@@ -43,7 +43,7 @@ inline void atomic_flag_clear(volatile atomic_flag object[static 1])
 	object->flag = 0xfe;
 }
 
-#elif defined(__SDCC_tlcs90) || defined(__SDCC_stm8) || defined(__SDCC_hc08) || defined(__SDCC_s08) || defined(__SDCC_mos6502) || defined(__SDCC_mos65c02)
+#elif defined(__SDCC_tlcs90) || defined(__SDCC_stm8) || defined(__SDCC_hc08) || defined(__SDCC_s08) || defined(__SDCC_mos6502) || defined(__SDCC_mos65c02) || defined(__SDCC_huc6280)
 
 #define ATOMIC_FLAG_INIT {1}
 

@@ -31,7 +31,7 @@
 #undef strchr /* Avoid conflict with builtin strchr() in Z80 and some related ports */
 
 #ifdef __SDCC_BROKEN_STRING_FUNCTIONS
-char * strchr ( const char * string, char ch )
+char * strchr ( const char * string, _NEAR char ch )
 #else
 char * strchr ( const char * string, int ch )
 #endif

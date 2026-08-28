@@ -147,7 +147,6 @@ extern asmop m6502_tsxaop;
 extern unsigned fReturnSizeM6502;
 extern bool m6502_assignment_optimal;
 extern struct m6502_state_t _S;
-extern const char m6502_builtins[];
 
 extern const char *IMMDFMT; // = "#0x%02x";
 extern const char *TEMPFMT_IND; // = "[REGTEMP+%d]";

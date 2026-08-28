@@ -244,7 +244,7 @@ uintmax_t umaxabs(intmax_t j);
 #endif
 
 /* NOTE: SDCC does not currently support struct return types on these architectures */
-#if !defined(__SDCC_ds390) && !defined(__SDCC_hc08) && !defined(__SDCC_s08) && !defined(__SDCC_mos6502) && !defined(__SDCC_pic14) && !defined(__SDCC_pic16)
+#if !defined(__SDCC_ds390) && !defined(__SDCC_hc08) && !defined(__SDCC_s08) && !defined(__SDCC_mos6502) && !defined(__SDCC_mos65c02) && !defined(__SDCC_huc6280) && !defined(__SDCC_pic14) && !defined(__SDCC_pic16)
 imaxdiv_t imaxdiv(intmax_t numer, intmax_t denom);
 #endif
 

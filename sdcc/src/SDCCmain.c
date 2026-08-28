@@ -392,6 +392,9 @@ static PORT *_ports[] = {
 #if !OPT_DISABLE_MOS65C02
   &mos65c02_port,
 #endif
+#if !OPT_DISABLE_HUC6280
+  &huc6280_port,
+#endif
 #if !OPT_DISABLE_F8
   &f8_port,
 #endif

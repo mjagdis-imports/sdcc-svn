@@ -36,7 +36,7 @@ void *bsearch(const void *key, const void *base, size_t nmemb, size_t size, int 
 		int c = (*compar)(key, middle);
 
 		if(c < 0)
-			nmemb = nmemb / 2;	
+			nmemb = nmemb / 2;
 		else if(c > 0)
 		{
 			left = middle + size;
@@ -48,4 +48,3 @@ void *bsearch(const void *key, const void *base, size_t nmemb, size_t size, int 
 
 	return(0);
 }
-

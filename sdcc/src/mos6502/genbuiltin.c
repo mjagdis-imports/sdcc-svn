@@ -25,6 +25,7 @@
 
 const char m6502_builtins[] =
   "extern float __builtin_fabsf (float f) __builtin__;\n"
+//  "extern void * __builtin_memset (void *s, __zp unsigned char c, __zp unsigned int n) __builtin__;\n"
   ;
 
 
@@ -68,11 +69,11 @@ genBuiltInMemset(const iCode *ic, int nparams, operand **pparams)
   bool use_dptr = false;
   //  int offset;
 
-  m6502_emitComment (TRACEGEN, "  %s", __func__);
+  m6502_emitComment (TRACEGEN, "  %s - nparm:%d", __func__, nparams);
 
-  dst = pparams[0];
-  val = pparams[1];
-  len = pparams[2];
+  dst = pparams[1]; // weird
+  val = pparams[2];
+  len = pparams[0];
 
   m6502_aopOp (dst, ic);
   m6502_aopOp (val, ic);
@@ -81,8 +82,7 @@ genBuiltInMemset(const iCode *ic, int nparams, operand **pparams)
   needpulla = storeRegTempIfSurv (m6502_reg_a);
   needpully = storeRegTempIfSurv (m6502_reg_y);
 
-
-  if(AOP_TYPE(dst)!=AOP_DIR)
+//  if(AOP_TYPE(dst)!=AOP_DIR)
     {
       //storeOperToDPTR (operand *oper, int size, iCode *ic)
       m6502_loadRegFromAop (m6502_reg_a, AOP (dst), 0);
@@ -100,7 +100,8 @@ genBuiltInMemset(const iCode *ic, int nparams, operand **pparams)
   if(use_dptr)
     m6502_emitOp ("sta", INDFMT_IY, "DPTR");
   else
-    m6502_emitOp("sta", INDFMT_IY, AOP(dst)->aopu.aop_dir);
+    m6502_emitOp ("sta", INDFMT_IY, AOP(dst)->aopu.aop_dir);
+
   m6502_emitBranch ("bne", loop_label);
 
   m6502_loadOrFreeRegTemp(m6502_reg_y, needpully);

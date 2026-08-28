@@ -54,8 +54,8 @@ static struct
 } _G;
 
 /* Forward declarations (used before definitions below). */
-static bool mos6502UncondJump (const lineNode *pl);
-static bool mos6502CondJump (const lineNode *pl);
+static bool m6502_UncondJump (const lineNode *pl);
+static bool m6502_CondJump (const lineNode *pl);
 
 /*-----------------------------------------------------------------*/
 /* univisitLines - clear "visited" flag in all lines               */
@@ -84,7 +84,7 @@ incLabelJmpToCount (const char *label)
 }
 
 static const char *
-mos6502SkipToOperands (const char *s)
+m6502_SkipToOperands (const char *s)
 {
   /* `lineIsInst()` already matched the mnemonic; here we just find the operand
      portion for simple syntactic checks (indexing, accumulator form). */
@@ -119,7 +119,7 @@ findLabel (const lineNode *pl)
   int i;
   int label_len = 0;
 
-  p = mos6502SkipToOperands (pl->line);
+  p = m6502_SkipToOperands (pl->line);
 
 #if 0
   /* 1. extract label in opcode */
@@ -177,7 +177,7 @@ findLabel (const lineNode *pl)
 }
 
 static bool
-mos6502MightReadFlag(const lineNode *pl, const char *what)
+m6502_MightReadFlag(const lineNode *pl, const char *what)
 {
   if (lineIsInst (pl, "php"))
     return true;
@@ -202,7 +202,7 @@ mos6502MightReadFlag(const lineNode *pl, const char *what)
 }
 
 static bool
-mos6502OperandUsesIndexReg (const lineNode *pl, char reg)
+m6502_OperandUsesIndexReg (const lineNode *pl, char reg)
 {
   const char *p;
   char r = (char)tolower ((unsigned char)reg);
@@ -210,7 +210,7 @@ mos6502OperandUsesIndexReg (const lineNode *pl, char reg)
   if (!pl || !pl->line)
     return false;
 
-  p = mos6502SkipToOperands (pl->line);
+  p = m6502_SkipToOperands (pl->line);
   if (!p || !*p)
     return false;
 
@@ -233,14 +233,14 @@ mos6502OperandUsesIndexReg (const lineNode *pl, char reg)
 }
 
 static bool
-mos6502IsAccumulatorForm (const lineNode *pl)
+m6502_IsAccumulatorForm (const lineNode *pl)
 {
   const char *p;
 
   if (!pl || !pl->line)
     return false;
 
-  p = mos6502SkipToOperands (pl->line);
+  p = m6502_SkipToOperands (pl->line);
   if (!p || !*p)
     return true; /* e.g. "asl" => accumulator */
 
@@ -260,7 +260,7 @@ mos6502IsAccumulatorForm (const lineNode *pl)
 }
 
 static bool
-mos6502MightReadReg (const lineNode *pl, const char *what)
+m6502_MightReadReg (const lineNode *pl, const char *what)
 {
   /* This is used by `notUsed()`; it's OK (and safer) to be conservative.
      The goal is to avoid returning "might read" for registers that clearly
@@ -284,7 +284,7 @@ mos6502MightReadReg (const lineNode *pl, const char *what)
       if ((lineIsInst (pl, "asl") || lineIsInst (pl, "lsr") ||
            lineIsInst (pl, "rol") || lineIsInst (pl, "ror") || 
            lineIsInst (pl, "inc") || lineIsInst (pl, "dec") ) &&
-          mos6502IsAccumulatorForm (pl))
+          m6502_IsAccumulatorForm (pl))
         return true;
     }
 
@@ -299,7 +299,7 @@ mos6502MightReadReg (const lineNode *pl, const char *what)
           lineIsInst (pl, "txs"))
         return true;
 
-      if (mos6502OperandUsesIndexReg (pl, 'x'))
+      if (m6502_OperandUsesIndexReg (pl, 'x'))
         return true;
     }
 
@@ -312,7 +312,7 @@ mos6502MightReadReg (const lineNode *pl, const char *what)
           lineIsInst (pl, "tya") || lineIsInst (pl, "cpy"))
         return true;
 
-      if (mos6502OperandUsesIndexReg (pl, 'y'))
+      if (m6502_OperandUsesIndexReg (pl, 'y'))
         return true;
     }
 
@@ -320,7 +320,7 @@ mos6502MightReadReg (const lineNode *pl, const char *what)
 }
 
 static bool
-mos6502MightRead(const lineNode *pl, const char *what)
+m6502_MightRead(const lineNode *pl, const char *what)
 {
   /* Be conservative across control transfers: the jump/call target may read
      any register/flag. This keeps `notUsed()` safe. */
@@ -337,10 +337,10 @@ mos6502MightRead(const lineNode *pl, const char *what)
     return true;
 
   if (!strcmp (what, "n") || !strcmp (what, "z") || !strcmp (what, "c") || !strcmp (what, "v"))
-    return (mos6502MightReadFlag (pl, what));
+    return (m6502_MightReadFlag (pl, what));
 
   if (!strcmp (what, "a") || !strcmp (what, "x") || !strcmp (what, "y"))
-    return mos6502MightReadReg (pl, what);
+    return m6502_MightReadReg (pl, what);
 
   return false;
 }
@@ -357,7 +357,7 @@ mos6502MightRead(const lineNode *pl, const char *what)
 */
 
 static bool
-mos6502SurelyWritesFlag(const lineNode *pl, const char *what)
+m6502_SurelyWritesFlag(const lineNode *pl, const char *what)
 {
 #if 1
   int idx = 0;
@@ -437,7 +437,7 @@ mos6502SurelyWritesFlag(const lineNode *pl, const char *what)
 }
 
 static bool
-mos6502SurelyWritesReg(const lineNode *pl, const char *what)
+m6502_SurelyWritesReg(const lineNode *pl, const char *what)
 {
 
   if(!strcmp(what, "a"))
@@ -468,25 +468,25 @@ mos6502SurelyWritesReg(const lineNode *pl, const char *what)
 }
 
 static bool
-mos6502SurelyWrites(const lineNode *pl, const char *what)
+m6502_SurelyWrites(const lineNode *pl, const char *what)
 {
   if (!strcmp (what, "n") || !strcmp (what, "z") || !strcmp (what, "c") || !strcmp (what, "v"))
-    return (mos6502SurelyWritesFlag(pl, what));
+    return (m6502_SurelyWritesFlag(pl, what));
   if (!strcmp (what, "a") || !strcmp (what, "x") || !strcmp (what, "y"))
-    return (mos6502SurelyWritesReg(pl, what));
+    return (m6502_SurelyWritesReg(pl, what));
   return false;
 }
 
 
 static bool
-mos6502UncondJump (const lineNode *pl)
+m6502_UncondJump (const lineNode *pl)
 {
   // FIXME: should jsr be here as well?
   return (lineIsInst (pl, "jmp") || lineIsInst (pl, "bra"));
 }
 
 static bool
-mos6502CondJump (const lineNode *pl)
+m6502_CondJump (const lineNode *pl)
 {
   return (lineIsInst (pl, "bpl") || lineIsInst (pl, "bmi") ||
 	  lineIsInst (pl, "bvc") || lineIsInst (pl, "bvs") ||
@@ -495,7 +495,7 @@ mos6502CondJump (const lineNode *pl)
 }
 
 static bool
-mos6502SurelyTerminates (const lineNode *pl)
+m6502_SurelyTerminates (const lineNode *pl)
 {
   return (lineIsInst (pl, "rts") || lineIsInst (pl, "rti" ) || 
           lineIsInst (pl, "jsr") );
@@ -559,20 +559,20 @@ scan4op (lineNode **pl, const char *what, const char *untilOp,
 
       (*pl)->visited = true;
 
-      if (mos6502MightRead (*pl, what))
+      if (m6502_MightRead (*pl, what))
         {
           D(("S4O_RD_OP\n"));
           return S4O_RD_OP;
         }
 
       // Check writes before conditional jumps
-      if (mos6502SurelyWrites (*pl, what))
+      if (m6502_SurelyWrites (*pl, what))
         {
           D(("S4O_WR_OP\n"));
           return S4O_WR_OP;
         }
 
-      if (mos6502UncondJump (*pl))
+      if (m6502_UncondJump (*pl))
         {
 	  D(("JMP: %s for %s\n", (*pl)->line, what));
           *pl = findLabel (*pl);
@@ -583,7 +583,7 @@ scan4op (lineNode **pl, const char *what, const char *untilOp,
 	    }
         }
 
-      if (mos6502CondJump (*pl))
+      if (m6502_CondJump (*pl))
         {
           *plCond = findLabel (*pl);
           if (!*plCond)
@@ -595,7 +595,7 @@ scan4op (lineNode **pl, const char *what, const char *untilOp,
           return S4O_CONDJMP;
         }
 
-      if (mos6502SurelyTerminates (*pl))
+      if (m6502_SurelyTerminates (*pl))
         {
           D(("S4O_TERM\n"));
           return S4O_TERM;
@@ -644,7 +644,7 @@ doTermScan (lineNode **pl, const char *what)
 }
 
 bool
-mos6502notUsed (const char *what, lineNode *endPl, lineNode *head)
+m6502_notUsed (const char *what, lineNode *endPl, lineNode *head)
 {
   lineNode *pl;
 
@@ -658,13 +658,13 @@ mos6502notUsed (const char *what, lineNode *endPl, lineNode *head)
 }
 
 bool
-mos6502notUsedFrom (const char *what, const char *label, lineNode *head)
+m6502_notUsedFrom (const char *what, const char *label, lineNode *head)
 {
   lineNode *cpl;
 
   for (cpl = head; cpl; cpl = cpl->next)
     if (cpl->isLabel && !strncmp (label, cpl->line, strlen(label)))
-      return (mos6502notUsed (what, cpl, head));
+      return (m6502_notUsed (what, cpl, head));
 
   return false;
 }

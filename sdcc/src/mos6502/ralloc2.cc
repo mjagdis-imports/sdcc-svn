@@ -427,7 +427,7 @@ static float instruction_cost(const assignment &a, unsigned short int i, const G
   iCode *ic = G[i].ic;
   float c;
 
-  wassert (TARGET_IS_MOS6502 || TARGET_IS_MOS65C02);
+  wassert (TARGET_IS_MOS6502 || TARGET_IS_MOS65C02 || TARGET_IS_HUC6280);
   wassert(ic);
 
   if(!inst_sane(a, i, G, I))
@@ -443,6 +443,7 @@ static float instruction_cost(const assignment &a, unsigned short int i, const G
   if(ic->generated)
     return(0.0f);
 
+//
   if(!XAinst_ok(a, i, G, I))
     return(std::numeric_limits<float>::infinity());
 

@@ -385,6 +385,7 @@ __STDC_MEMREVERSE8U(32)
 __STDC_MEMREVERSE8U(64)
 
 // C2Y 7.18.21 Endian-aware 8-bit Load
+#undef _NEAR
 #if defined(__SDCC_mos6502) && !defined(__SDCC_STACK_AUTO)
 #define _NEAR __zp
 #else
