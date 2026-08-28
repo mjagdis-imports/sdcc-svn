@@ -143,6 +143,9 @@
 #undef OPT_DISABLE_MOS65C02
 
 /* XXX */
+#undef OPT_DISABLE_HUC6280
+
+/* XXX */
 #undef OPT_DISABLE_NON_FREE
 
 /* XXX */
