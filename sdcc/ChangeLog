@@ -7,6 +7,8 @@
 	* src/SDCCicode.c,
 	  support/valdiag/tests/bug-4056.c:
 	  Fix bug #4056.
+	* support/regression/tests/bug-4054.c:
+	  Test for bug #4054 (disabled for now - bug is not yet fixed).
 
 2026-08-29 Gabriele Gorla <gorlik@yahoo.com>
 

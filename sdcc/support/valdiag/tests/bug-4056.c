@@ -44,7 +44,7 @@ struct s;
 
 struct s *p;
 
-void add(void) // Affected by bug
+void add(void) // Not affected by bug
 {
 	p += 7; /* ERROR */
 }
