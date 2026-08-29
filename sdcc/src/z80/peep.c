@@ -733,7 +733,7 @@ z80MightRead(const lineNode *pl, const char *what)
     return (strchr ("bde", *what));
 
   if (IS_Z80N && lineIsInst (pl, "nextreg") && rarg)
-    return (!strcmp (what, "a"));
+    return (!STRNCASECMP (rarg, "a", 1) && !strcmp (what, "a"));
 
   if(IS_TLCS90 &&
     (lineIsInst (pl, "decx") ||
