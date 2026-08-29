@@ -27,6 +27,7 @@
 ;-------------------------------------------------------------------------
 
 	.module abs
+	.huc6280
 
 ;--------------------------------------------------------
 ; exported symbols
@@ -46,12 +47,12 @@ ___negax:
   	sec
 	eor #0xff
 	adc #0x00
-	tay
-	txa
+	tay		; sax
+	txa		; nothing
 	eor #0xff
 	adc #0x00
-	tax
-	tya
+	tax		; sax
+	tya		; nothing
 skip:
 	rts
 

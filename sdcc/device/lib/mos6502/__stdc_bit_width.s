@@ -54,32 +54,31 @@ bloop:
 	lda *___stdc_bit_width_PARM_1,x
 	asl a
 	bcs end
-    dey
+	dey
 	asl a
 	bcs end
-    dey
+	dey
 	asl a
 	bcs end
-    dey
+	dey
 	asl a
 	bcs end
-    dey
+	dey
 	asl a
 	bcs end
-    dey
+	dey
 	asl a
 	bcs end
-    dey
+	dey
 	asl a
 	bcs end
-    dey
+	dey
 	asl a
 	bcs end
-    dey
+	dey
 
-    dex
-    bpl bloop
-
+	dex
+	bpl bloop
 end:
 	tya
 	rts

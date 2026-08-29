@@ -28,6 +28,7 @@
 ;-------------------------------------------------------------------------
 
 	.module _strlen
+	.huc6280
 
 ;--------------------------------------------------------
 ; exported symbols
@@ -37,7 +38,7 @@
 ;--------------------------------------------------------
 ; local aliases
 ;--------------------------------------------------------
-	.define _src "DPTR"
+	.define src "DPTR"
 	
 ;--------------------------------------------------------
 ; code
@@ -45,17 +46,17 @@
 	.area CODE
 
 _strlen:
-	sta	*_src+0
-	stx	*_src+1
+	sta	*src+0
+	stx	*src+1
 
-	ldy	#0x00
-	ldx	#0x00
+	ldy	#0x00		; cly
+	ldx	#0x00		; clx
 loop:
-	lda	[_src],y
+	lda	[src],y
 	beq	end
 	iny
 	bne	loop
-	inc	*_src+1
+	inc	*src+1
 	inx
 	bne	loop
 end:

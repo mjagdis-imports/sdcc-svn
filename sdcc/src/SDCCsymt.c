@@ -4818,6 +4818,7 @@ symbol *fp16x16conv[2][5][2];
 symbol *rlrr[2][4][2];
 
 sym_link *floatType;
+sym_link *floatTypeNear;
 sym_link *fixed16x16Type;
 
 symbol *builtin_memcpy;
@@ -5058,16 +5059,24 @@ initCSupport (void)
     }
 
   floatType = newFloatLink ();
+  floatTypeNear = newFloatLink ();
+  floatTypeNear->select.s.sclass=S_DATA;
+
+  if(!(TARGET_IS_MOS6502 && !options.stackAuto))
+    {
+      floatTypeNear=floatType;
+    }
+
   fixed16x16Type = newFixed16x16Link ();
   sym_link *boolType = newLink (SPECIFIER); SPEC_NOUN (boolType) = V_BOOL; // Can't use newBoolLink, as it might give us a __bit.
 
-  fsadd = funcOfType ("__fsadd", floatType, floatType, 2, options.float_rent);
-  fssub = funcOfType ("__fssub", floatType, floatType, 2, options.float_rent);
-  fsmul = funcOfType ("__fsmul", floatType, floatType, 2, options.float_rent);
+  fsadd = funcOfType ("__fsadd", floatType, floatTypeNear, 2, options.float_rent);
+  fssub = funcOfType ("__fssub", floatType, floatTypeNear, 2, options.float_rent);
+  fsmul = funcOfType ("__fsmul", floatType, floatTypeNear, 2, options.float_rent);
   fsdiv = funcOfType ("__fsdiv", floatType, floatType, 2, options.float_rent);
-  fseq = funcOfType ("__fseq", boolType, floatType, 2, options.float_rent);
-  fsneq = funcOfType ("__fsneq", boolType, floatType, 2, options.float_rent);
-  fslt = funcOfType ("__fslt", boolType, floatType, 2, options.float_rent);
+  fseq = funcOfType ("__fseq", boolType, floatTypeNear, 2, options.float_rent);
+  fsneq = funcOfType ("__fsneq", boolType, floatTypeNear, 2, options.float_rent);
+  fslt = funcOfType ("__fslt", boolType, floatTypeNear, 2, options.float_rent);
 
   for (tofrom = 0; tofrom < 2; tofrom++)
     {

@@ -1,9 +1,7 @@
 ;-------------------------------------------------------------------------
-;   memcpy.s - standarc C library
+;   _fseq.s - routine for floating point comparison
 ;
-;   Copyright (C) 2003, Ullrich von Bassewitz
-;   Copyright (C) 2009, Christian Krueger
-;   Copyright (C) 2022-2023, Gabriele Gorla
+;   Copyright (C) 2026, Gabriele Gorla
 ;
 ;   This library is free software; you can redistribute it and/or modify it
 ;   under the terms of the GNU General Public License as published by the
@@ -28,75 +26,49 @@
 ;   might be covered by the GNU General Public License.
 ;-------------------------------------------------------------------------
 
-	.module _memcpy
+	.module _fseq
 
 ;--------------------------------------------------------
 ; exported symbols
 ;--------------------------------------------------------
-	.globl ___memcpy_PARM_2
-	.globl ___memcpy_PARM_3
-	.globl ___memcpy
-	.globl _memcpy_PARM_2
-	.globl _memcpy_PARM_3
-	.globl _memcpy
-
-;--------------------------------------------------------
-; overlayable function parameters in zero page
-;--------------------------------------------------------
-	.area	OSEG    (PAG, OVR)
-_memcpy_PARM_2:
-___memcpy_PARM_2:
-	.ds 2
-_memcpy_PARM_3:
-___memcpy_PARM_3:
-	.ds 2
-
-;--------------------------------------------------------
-; local aliases
-;--------------------------------------------------------
-	.define save  "___SDCC_m6502_ret0"
-	.define dst   "DPTR"
-	.define src   "___memcpy_PARM_2"
-	.define count "___memcpy_PARM_3"
+	.globl ___fseq
 
 ;--------------------------------------------------------
 ; code
 ;--------------------------------------------------------
 	.area CODE
 
-_memcpy:
-___memcpy:
-;	sta	*save+0
-	sta	*dst+0
-	stx	*dst+1
-	stx	*save
+___fseq:
+	lda	*___fseq_PARM_1
+	cmp	*___fseq_PARM_2
+	bne	neq1
+	lda	*(___fseq_PARM_1+1)
+	cmp	*(___fseq_PARM_2+1)
+	bne	neq1
+	lda	*(___fseq_PARM_1+2)
+	cmp	*(___fseq_PARM_2+2)
+	bne	neq1
+	lda	*(___fseq_PARM_1+3)
+	cmp	*(___fseq_PARM_2+3)
+	bne	neq1
+ret1:
+	lda	#0x01
+	rts
 
-	ldy	#0
-	ldx	*count+1
-	beq	last_bytes
-page_loop:
-	lda	[src],y
-	sta	[dst],y
-	iny
-	lda	[src],y
-	sta	[dst],y
-	iny
-	bne	page_loop
-	inc	*src+1
-	inc	*dst+1
-	dex
-	bne	page_loop
-
-last_bytes:
-	ldx	*count+0
-	beq	end
-byte_loop:
-	lda	[src],y
-	sta	[dst],y
-	iny
-	dex
-	bne	byte_loop
-end:
-	lda	*dst+0
-	ldx	*save
+neq1:
+	lda	*___fseq_PARM_1
+	ora	*___fseq_PARM_2
+	bne	ret0
+	lda	*(___fseq_PARM_1+1)
+	ora	*(___fseq_PARM_2+1)
+	bne	ret0
+	lda	*(___fseq_PARM_1+2)
+	ora	*(___fseq_PARM_2+2)
+	bne	ret0
+	lda	*(___fseq_PARM_1+3)
+	ora	*(___fseq_PARM_2+3)
+	and	#0x7f
+	beq ret1
+ret0:
+	lda #0x00
 	rts

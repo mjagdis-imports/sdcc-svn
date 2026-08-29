@@ -1,3 +1,29 @@
+2026-08-29 Gabriele Gorla <gorlik@yahoo.com>
+
+    * device/include/float.h,
+      device/lib/huc6280/_memcmp.s,
+      device/lib/huc6280/_memset.s,
+      device/lib/huc6280/abs.s,
+      device/lib/huc6280/memcpy.s,
+      device/lib/huc6280/strlen.s,
+      device/lib/mos6502/__stdc_bit_width.s,
+      device/lib/mos6502/__stdc_count_ones.s,
+      device/lib/mos6502/_floatlib.s,
+      device/lib/mos6502/_modsint.s,
+      device/lib/mos6502/_moduint.s,
+      device/lib/mos6502/_modulong.s,
+      device/lib/mos6502/abs.s,
+      device/lib/mos6502/div.s,
+      device/lib/mos6502/memcpy.s,
+      device/lib/mos6502/strlen.s,
+      device/lib/mos65c02/_memset.s,
+      device/lib/mos65c02/memcpy.s,
+      device/lib/mos65c02/strlen.s,
+      device/lib/mos6502/_fseq.s,
+      device/lib/mos6502/_fsneq.s,
+      src/SDCCsymt.c:
+      MOS6502 library improvements
+
 2026-08-28 Maarten Brock <sourceforge.brock AT dse.nl>
 
 	* sdccconf_in.h: bugfix, added OPT_DISABLE_HUC6280

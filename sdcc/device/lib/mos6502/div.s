@@ -52,16 +52,16 @@ _div:
 	bpl	rempos
 	lda	*rem+0
 	ldx	*rem+1
-	jsr 	___negax
-	sta 	*rem+0
-	stx 	*rem+1
+	jsr	___negax
+	sta	*rem+0
+	stx	*rem+1
 	lda	*s1
 rempos:
 	ldx	*res+1
 	eor	*s2
 	bpl	pos
 	lda	*res+0
-	jmp 	___negax
+	jmp	___negax
 pos:
 	lda	*res+0
 	rts

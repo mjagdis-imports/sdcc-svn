@@ -48,7 +48,7 @@
 	.area CODE
 	
 __moduint:
-	jsr 	___udivmod16
+	jsr	___udivmod16
 	lda	*rem+0
 	ldx	*rem+1
 	rts	

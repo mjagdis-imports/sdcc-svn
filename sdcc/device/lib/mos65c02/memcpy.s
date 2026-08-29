@@ -66,10 +66,10 @@ ___memcpy_PARM_3:
 
 _memcpy:
 ___memcpy:
-	sta	*save+0
-	stx	*save+1
+;	sta	*save+0
 	sta	*dst+0
 	stx	*dst+1
+	stx	*save
 
 	ldy	#0
 	ldx	*count+1
@@ -97,6 +97,6 @@ byte_loop:
 	dex
 	bne	byte_loop
 end:
-	lda	*save+0
-	ldx	*save+1
+	lda	*dst+0
+	ldx	*save
 	rts

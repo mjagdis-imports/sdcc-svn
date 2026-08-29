@@ -51,8 +51,8 @@
 	.area CODE
 
 __modulong:
-	jsr 	___udivmod32
-	lda 	*rem+3
+	jsr	___udivmod32
+	lda	*rem+3
 	sta	*res3
 	lda	*rem+2
 	sta	*res2

@@ -49,11 +49,11 @@
 	.area CODE
 
 __modsint:
-	jsr 	___sdivmod16
+	jsr	___sdivmod16
 	lda	*rem+0
 	ldx	*rem+1
 	ldy	*s1
 	bpl	pos
-	jmp 	___negax
+	jmp	___negax
 pos:
 	rts

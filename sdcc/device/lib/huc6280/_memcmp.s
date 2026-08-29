@@ -29,6 +29,7 @@
 ;-------------------------------------------------------------------------
 
 	.module memcmp
+	.huc6280
 
 ;--------------------------------------------------------
 ; exported symbols
@@ -65,7 +66,7 @@ _memcmp_PARM_3:
 _memcmp:
 	sta	*s1+0
 	stx	*s1+1
-	ldy	#0
+	ldy	#0		; cly
 	ldx	*count+1
 	beq	endhi
 hiloop:
