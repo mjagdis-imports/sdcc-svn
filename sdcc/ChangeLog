@@ -4,6 +4,9 @@
 	  Fix bug #4062.
 	* src/z80/gen.c:
 	  Fix a corner case of previous fix from yesterday.
+	* src/SDCCicode.c,
+	  support/valdiag/tests/bug-4056.c:
+	  Fix bug #4056.
 
 2026-08-29 Gabriele Gorla <gorlik@yahoo.com>
 

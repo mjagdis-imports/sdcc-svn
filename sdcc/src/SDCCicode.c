@@ -2492,7 +2492,16 @@ geniCodeSubtract (operand * left, operand * right, RESULT_TYPE resultType)
   /* if left is an array or pointer */
   if (IS_PTR (ltype) || IS_ARRAY (ltype))
     {
+      if (!getSize (ltype->next))
+        {
+          if (!IS_VOID (ltype->next))
+            werror (E_UNKNOWN_SIZE, IS_SYMOP (left) ? OP_SYMBOL (left)->name : "<no name>");
+          else
+            werror (W_SIZEOF_VOID);
+        }
+
       isarray = left->isaddr;
+      
       right = geniCodeMultiply (right,
                                 operandFromLit (getSize (ltype->next)),
                                 (getArraySizePtr (left) >= INTSIZE) ? RESULT_TYPE_INT : RESULT_TYPE_CHAR);
@@ -2551,8 +2560,13 @@ geniCodeAdd (operand *left, operand *right, RESULT_TYPE resultType, int lvl)
       nBytes = getSize (ltype->next);
       ptrSize = getArraySizePtr (left); // works for both arrays and pointers
 
-      if (nBytes == 0 && !IS_VOID (ltype->next))
-        werror (E_UNKNOWN_SIZE, IS_SYMOP (left) ? OP_SYMBOL (left)->name : "<no name>");
+      if (nBytes == 0)
+        {
+          if (!IS_VOID (ltype->next))
+            werror (E_UNKNOWN_SIZE, IS_SYMOP (left) ? OP_SYMBOL (left)->name : "<no name>");
+          else
+            werror (W_SIZEOF_VOID);
+        }
       // there is no need to multiply with 1
       if (nBytes != 1)
         {
