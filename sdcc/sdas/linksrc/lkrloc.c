@@ -83,9 +83,9 @@ reloc(int c)
 		reloc3(c);
 		break;
 
-//      case 4:
-//              reloc4(c);
-//              break;
+	case 4:
+		reloc4(c);
+		break;
 
 	default:
 		fprintf(stderr, "?ASlink-Error-Internal Version Error");

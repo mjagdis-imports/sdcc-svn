@@ -37,6 +37,12 @@
       MOS6502 library improvements
     * device/lib/mos6502/_fseq.s:
       Improve _fseq performance.
+    * sdas/linksrc/Makefile.in,
+      sdas/linksrc/aslink.h,
+      sdas/linksrc/lkmain.c,
+      sdas/linksrc/lkrloc.c,
+      sdas/linksrc/lkrloc4.c:
+      Add version 4 relocation engine from upstream asxxxx.
 
 2026-08-28 Maarten Brock <sourceforge.brock AT dse.nl>
 

@@ -532,7 +532,7 @@ lkexit(int i)
  *      The function link_main() evaluates the directives for each line of
  *	text read from the .rel file(s).  The valid directives processed
  *	are:
- *              X, D, Q, H, M, A, S, T, R, and P.
+ *              X, D, Q, H, G, B, M, A, S, T, R, and P.
  *
  *	local variables:
  *		int	c		first non blank character of a line
@@ -686,6 +686,18 @@ link_main(void)  /* beware sdld changed name */
 		sdp.s_area = NULL;
 		sdp.s_areax = NULL;
 		sdp.s_addr = 0;
+		break;
+
+	case 'G':
+		ASxxxx_VERSION = 4;
+		if (pass == 0)
+			newmode();
+		break;
+
+	case 'B':
+		ASxxxx_VERSION = 4;
+		if (pass == 0)
+			newbank();
 		break;
 
 	case 'M':
