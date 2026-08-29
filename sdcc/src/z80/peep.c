@@ -292,7 +292,7 @@ z80MightReadFlag(const lineNode *pl, const char *what)
     return false;
 
   if((IS_SM83 || IS_Z80N) &&
-      lineIsInst (pl, "swap"))
+    lineIsInst (pl, "swap"))
     return false;
 
   if(IS_R800 &&
@@ -378,7 +378,8 @@ z80MightReadFlag(const lineNode *pl, const char *what)
     lineIsInst (pl, "bsra") ||
     lineIsInst (pl, "bsrl") ||
     lineIsInst (pl, "bsrf") ||
-    lineIsInst (pl, "brlc")))
+    lineIsInst (pl, "brlc") ||
+    lineIsInst (pl, "nextreg")))
     return(false);
 
   if((IS_Z180 || IS_EZ80 || IS_Z80N) &&
@@ -723,13 +724,16 @@ z80MightRead(const lineNode *pl, const char *what)
   if (IS_SM83 && (lineIsInst (pl, "lda") || lineIsInst (pl, "ldhl")))
     return(!strcmp(what, "sp"));
 
-  if(IS_Z80N &&
+  if (IS_Z80N &&
     (lineIsInst (pl, "bsla") ||
     lineIsInst (pl, "bsra") ||
     lineIsInst (pl, "bsrl") ||
     lineIsInst (pl, "bsrf") ||
     lineIsInst (pl, "brlc")))
-    return(strchr("bde", *what));
+    return (strchr ("bde", *what));
+
+  if (IS_Z80N && lineIsInst (pl, "nextreg") && rarg)
+    return (!strcmp (what, "a"));
 
   if(IS_TLCS90 &&
     (lineIsInst (pl, "decx") ||
@@ -910,9 +914,10 @@ z80SurelyWritesFlag(const lineNode *pl, const char *what)
     lineIsInst (pl, "bsra") ||
     lineIsInst (pl, "bsrl") ||
     lineIsInst (pl, "bsrf") ||
+    lineIsInst (pl, "nextreg") ||
     lineIsInst (pl, "swap")))
     return false;
-    
+
   if(IS_SM83 && lineIsInst (pl, "ldh"))
     return false;
     
@@ -2042,23 +2047,23 @@ int z80instructionSize (lineNode *pl)
   if((IS_SM83 || IS_Z80N) && lineIsInst (pl, "swap"))
     return(2);
 
-  if(IS_Z80N && (lineIsInst (pl, "swapnib") || lineIsInst (pl, "mirror") || lineIsInst (pl, "mul") ||
-     lineIsInst (pl, "outinb") || lineIsInst (pl, "ldix") || lineIsInst (pl, "ldirx") ||
-     lineIsInst (pl, "lddx") || lineIsInst (pl, "lddrx") || lineIsInst (pl, "ldpirx")))
+  if (IS_Z80N && (lineIsInst (pl, "swapnib") || lineIsInst (pl, "mirror") || lineIsInst (pl, "mul") ||
+    lineIsInst (pl, "outinb") || lineIsInst (pl, "ldix") || lineIsInst (pl, "ldirx") ||
+    lineIsInst (pl, "lddx") || lineIsInst (pl, "lddrx") || lineIsInst (pl, "ldpirx")))
     return(2);
 
-  if(IS_Z80N &&
+  if (IS_Z80N &&
     (lineIsInst (pl, "bsla") ||
     lineIsInst (pl, "bsra") ||
     lineIsInst (pl, "bsrl") ||
     lineIsInst (pl, "bsrf") ||
     lineIsInst (pl, "brlc")))
-    return(2);
+    return (2);
 
-  if(IS_Z80N && lineIsInst (pl, "nextreg"))
-    return(op1start && !STRNCASECMP(op1start, "a", 1) ? 3 : 4);
+  if (IS_Z80N && lineIsInst (pl, "nextreg"))
+    return(op1start && !STRNCASECMP (op1start, "a", 1) ? 3 : 4);
 
-  if(lineIsInst (pl, ".db") || lineIsInst (pl, ".byte"))
+  if (lineIsInst (pl, ".db") || lineIsInst (pl, ".byte"))
     {
       int i, j;
       for(i = 1, j = 0; pl->line[j]; i += pl->line[j] == ',', j++);

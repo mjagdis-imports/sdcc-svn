@@ -10600,7 +10600,13 @@ genPlus (iCode * ic)
       {
         if (ic->result->aop->regs[A_IDX] >= 0 && ic->result->aop->regs[A_IDX] != size) // Don't overwrite still-needed a.
           {
-            if (IS_SM83 || IS_TLCS870) // These don't have ex (sp), hl
+            if (aopInReg (ic->result->aop, cached[size], H_IDX) && isRegDead (L_IDX, ic) && ic->result->aop->regs[L_IDX] < 0)
+              {
+                _pop (PAIR_HL);
+                _push (PAIR_HL);
+              }
+            else if (IS_SM83 || IS_TLCS870 || // These don't have ex (sp), hl
+              aopInReg (ic->result->aop, cached[size], L_IDX) || aopInReg (ic->result->aop, cached[size], H_IDX))
               UNIMPLEMENTED;
             else
               {
