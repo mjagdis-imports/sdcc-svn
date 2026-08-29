@@ -33,6 +33,8 @@
       device/lib/mos6502/_fsneq.s,
       src/SDCCsymt.c:
       MOS6502 library improvements
+    * device/lib/mos6502/_fseq.s:
+      Improve _fseq performance.
 
 2026-08-28 Maarten Brock <sourceforge.brock AT dse.nl>
 

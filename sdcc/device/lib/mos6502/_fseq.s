@@ -39,35 +39,34 @@
 	.area CODE
 
 ___fseq:
-	lda	*___fseq_PARM_1
-	cmp	*___fseq_PARM_2
-	bne	neq1
-	lda	*(___fseq_PARM_1+1)
-	cmp	*(___fseq_PARM_2+1)
+	lda	*(___fseq_PARM_1+3)
+	eor	*(___fseq_PARM_2+3)
 	bne	neq1
 	lda	*(___fseq_PARM_1+2)
 	cmp	*(___fseq_PARM_2+2)
-	bne	neq1
-	lda	*(___fseq_PARM_1+3)
-	cmp	*(___fseq_PARM_2+3)
-	bne	neq1
+	bne	ret0
+	lda	*(___fseq_PARM_1+1)
+	cmp	*(___fseq_PARM_2+1)
+	bne	ret0
+	lda	*___fseq_PARM_1
+	cmp	*___fseq_PARM_2
+	bne	ret0
 ret1:
 	lda	#0x01
 	rts
 
 neq1:
-	lda	*___fseq_PARM_1
-	ora	*___fseq_PARM_2
-	bne	ret0
-	lda	*(___fseq_PARM_1+1)
-	ora	*(___fseq_PARM_2+1)
-	bne	ret0
-	lda	*(___fseq_PARM_1+2)
-	ora	*(___fseq_PARM_2+2)
-	bne	ret0
-	lda	*(___fseq_PARM_1+3)
-	ora	*(___fseq_PARM_2+3)
+;	lda	*(___fseq_PARM_1 + 3)
+;	ora	*(___fseq_PARM_2 + 3)
 	and	#0x7f
+	bne	ret0
+	ora 	*(___fseq_PARM_1 + 2)
+	ora	*(___fseq_PARM_2+2)
+;	bne	ret0
+	ora	*(___fseq_PARM_1 + 1)
+	ora	*(___fseq_PARM_2 + 1)
+	ora	*(___fseq_PARM_1 + 0)
+	ora	*(___fseq_PARM_2 + 0)
 	beq ret1
 ret0:
 	lda #0x00
