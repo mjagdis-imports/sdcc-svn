@@ -47,6 +47,10 @@
       sdas/linksrc/lklist.c,
       sdas/linksrc/lkmain.c:
       Add time stamp to map file from upstream asxxxx.
+    * sdas/linksrc/lkdata.c,
+      sdas/linksrc/lkmain.c,
+      sdas/linksrc/lksym.c:
+      Change zflag comments to match upstream asxxxx.
 
 2026-08-28 Maarten Brock <sourceforge.brock AT dse.nl>
 

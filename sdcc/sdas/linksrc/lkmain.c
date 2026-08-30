@@ -921,7 +921,7 @@ map(void)
  *		int	uflag		Relocated listing flag
  *		int	xflag		Map file radix type flag
  *		int	wflag		Wide listing format
- *              int     zflag           Disable symbol case sensitivity
+ *              int     zflag           Enable symbol case sensitivity
  *
  *	Functions called:
  *		void	addlib()	lklibr.c
