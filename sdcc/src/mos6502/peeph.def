@@ -1038,14 +1038,14 @@ replace restart {
 } by {
 	; Peephole BRJMP - replaced branch to jmp with branch
 	%1	%6
-} if same(%1 'bne' 'beq' 'bcc' 'bcs' 'bvc' 'bvs' 'bpl' 'bmi' 'bra'), labelIsUncondJump(%5), notSame(%5 %6), labelInRange(%6), labelRefCountChange(%5 -1), labelRefCountChange(%6 +1)
+} if same(%1 'bne' 'beq' 'bcc' 'bcs' 'bvc' 'bvs' 'bpl' 'bmi' 'bra'), label5IsUncondJumpTo6(%5), notSame(%5 %6), labelInRange(%6), labelRefCountChange(%5 -1), labelRefCountChange(%6 +1)
 
 replace restart {
 	jmp	%5
 } by {
 	; Peephole DJMP - replaced jmp to jmp with jmp
 	jmp	%6
-} if labelIsUncondJump(%5), notSame(%5 %6), labelRefCountChange(%5 -1), labelRefCountChange(%6 +1)
+} if label5IsUncondJumpTo6(%5), notSame(%5 %6), labelRefCountChange(%5 -1), labelRefCountChange(%6 +1)
 
 replace restart {
 	jmp	%1

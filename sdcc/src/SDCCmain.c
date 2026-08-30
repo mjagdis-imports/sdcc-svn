@@ -735,8 +735,8 @@ processFile (char *s)
 
   /* otherwise depending on the file type */
   extp = dbuf_c_str (&ext);
-  if (STRCASECMP (extp, ".c") == 0 || langOverride == LANG_OVERRIDE_C
-      || STRCASECMP (extp, ".h") == 0 || langOverride == LANG_OVERRIDE_C_HEADER)
+  if (STRCASECMP (extp, ".c") == 0 || langOverride == LANG_OVERRIDE_C ||
+      STRCASECMP (extp, ".h") == 0 || langOverride == LANG_OVERRIDE_C_HEADER)
     {
       char *p, *m;
 
@@ -2103,11 +2103,11 @@ linkEdit (char **envp)
   if (port->linker.cmd)
     {
       /* shell_escape file names */
-      char *b3 = shell_escape (dbuf_c_str (&linkerScriptFileName));
+      char *lfn = shell_escape (dbuf_c_str (&linkerScriptFileName));
       char *bfn = shell_escape (dbuf_c_str (&binFileName));
 
-      buf = buildCmdLine (port->linker.cmd, b3, bfn, NULL, linkOptionsSet, linkOptionsSet2);
-      Safe_free (b3);
+      buf = buildCmdLine (port->linker.cmd, lfn, bfn, NULL, linkOptionsSet, linkOptionsSet2);
+      Safe_free (lfn);
       Safe_free (bfn);
     }
   else
@@ -2899,12 +2899,14 @@ main (int argc, char **argv, char **envp)
   /* finalize common options */
   finalizeOptions ();
 
-  /* When a non-default calling convention is requested, the default stdlib and crt0 can't be used */
-  /* This is a warning, not an error, since some users like to compile their own stdlib, and use it in the stdlib location. */
+  /* When a non-default calling convention is requested, the default stdlib and
+     crt0 can't be used. This is a warning, not an error, since some users like
+     to compile their own stdlib, and use it in the stdlib location. */
   if (options.sdcccall != port->sdcccall &&
-  	(TARGET_IS_STM8 && !options.nostdlib ||
-  	TARGET_Z80_LIKE && (!options.nostdlib || !options.no_std_crt0)))
-  	werror (W_SDCCCALL_STD_LIB_CRT0);
+      (TARGET_IS_STM8 && !options.nostdlib ||
+       TARGET_Z80_LIKE && (!options.nostdlib ||
+       !options.no_std_crt0)))
+    werror (W_SDCCCALL_STD_LIB_CRT0);
 
   if (fullSrcFileName || options.c1mode)
     {
@@ -2966,7 +2968,8 @@ main (int argc, char **argv, char **envp)
               if (sym->level)
                 continue;
               // Check for arrays of unknown size that get size 1 due to an implicit initializer.
-              if (IS_ARRAY (sym->type) && !IS_EXTERN (sym->etype) && DCL_ARRAY_LENGTH_TYPE (sym->type) == ARRAY_LENGTH_UNKNOWN)
+              if (IS_ARRAY (sym->type) && !IS_EXTERN (sym->etype) &&
+                  DCL_ARRAY_LENGTH_TYPE (sym->type) == ARRAY_LENGTH_UNKNOWN)
                 {
                   wassert (!DCL_ELEM (sym->type));
                   werrorfl (sym->fileDef, sym->lineDef, W_INCOMPLETE_ARRAY_IMPLICIT_1, sym->name);

@@ -575,10 +575,10 @@ FBYNAME (labelIsReturnOnly)
 }
 
 /*-----------------------------------------------------------------*/
-/* labelIsUncondJump - Check if label %5 is followed by an         */
+/* label5IsUncondJumpTo6 - Check if label %5 is followed by an     */
 /* unconditional jump and put the destination of that jump in %6   */
 /*-----------------------------------------------------------------*/
-FBYNAME (labelIsUncondJump)
+FBYNAME (label5IsUncondJumpTo6)
 {
   /* assumes that %5 pattern variable has the label name */
   const char *label;
@@ -586,8 +586,9 @@ FBYNAME (labelIsUncondJump)
   const lineNode *pl;
   bool found = FALSE;
   int len;
-  const char *jpInst = NULL;
+  const char *jpInst1 = NULL;
   const char *jpInst2 = NULL;
+  const char *jpInst3 = NULL;
 
   label = hTabItemWithKey (vars, 5);
   if (!label)
@@ -648,34 +649,39 @@ FBYNAME (labelIsUncondJump)
 
   if (TARGET_MCS51_LIKE)
     {
-      jpInst = "ljmp";
+      jpInst1 = "ljmp";
       jpInst2 = "sjmp";
+      jpInst3 = "ajmp";
     }
   else if (TARGET_HC08_LIKE || TARGET_MOS6502_LIKE)
     {
-      jpInst = "jmp";
+      jpInst1 = "jmp";
       jpInst2 = "bra";
     }
   else if (TARGET_Z80_LIKE || TARGET_F8_LIKE)
     {
-      jpInst = "jp";
+      jpInst1 = "jp";
       jpInst2 = "jr";
     }
   else if (TARGET_IS_STM8)
     {
-      jpInst = (options.model == MODEL_LARGE ? "jpf" : "jp");
+      jpInst1 = (options.model == MODEL_LARGE ? "jpf" : "jp");
       jpInst2 = "jra";
     }
   else if (TARGET_PDK_LIKE)
     {
-      jpInst = "goto";
+      jpInst1 = "goto";
     }
-  len = strlen(jpInst);
-  if (strncmp(p, jpInst, len))
+  len = strlen(jpInst1);
+  if (strncmp(p, jpInst1, len))
     {
       len = jpInst2 ? strlen(jpInst2) : 0;
-      if(!jpInst2 || strncmp(p, jpInst2, len))
-        return FALSE; /* next line is no jump */
+      if (!jpInst2 || strncmp(p, jpInst2, len))
+        {
+          len = jpInst3 ? strlen(jpInst3) : 0;
+          if (!jpInst3 || strncmp(p, jpInst3, len))
+            return FALSE; /* next line is no jump */
+        }
     }
 
   p += len;
@@ -2674,7 +2680,7 @@ ftab[] =                                            // sorted on the number of t
     "removeParentheses", removeParentheses
   },
   {
-    "labelIsUncondJump", labelIsUncondJump          // 4
+    "label5IsUncondJumpTo6", label5IsUncondJumpTo6  // 4
   },
   {
     "deadMove", deadMove                            // 2
