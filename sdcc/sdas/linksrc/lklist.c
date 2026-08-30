@@ -1,7 +1,7 @@
 /* lklist.c */
 
 /*
- *  Copyright (C) 1989-2025  Alan R. Baldwin
+ *  Copyright (C) 1989-2026  Alan R. Baldwin
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -59,18 +59,24 @@
  *
  *		FILE *	fp		file handle for listing
  *
- *      The function newpag() outputs a page skip, writes the
- *      first page header line, sets the line count to 1, and
- *      increments the page counter.
+ *	The function newpag() provide pagination.
+ *		1)	put out a page skip,
+ *		2)	linker info and page number,,
+ *		3)	Number Type and current time,
+ *		4)	and reset the line count.
  *
  *	local variables:
- *		none
+ *		char *	frmt		string format
+ *		char	np[]		new page string
+ *		char	tp[]		temporary string
  *
  *	global variables:
+ *		time_t	curtim		current time string pointer
  *		int	lop		current line number on page
  *		int	page		current page number
  *
  *	functions called:
+ *		char *	ctime()		c_library
  *		int	fprintf()	c_library
  *
  *	side effects:
@@ -80,8 +86,49 @@
 void
 newpag(FILE *fp)
 {
-        fprintf(fp, "\fASxxxx Linker %s,  page %u.\n", VERSION, ++page);
-        lop = 1;
+	char *frmt;
+	char np[80];
+	char tp[80];
+	int n;
+
+	/*
+	 *12345678901234567890123456789012345678901234567890123456789012345678901234567890
+	 *ASxxxx Linker Vxx.xx                                                    Page 1
+	 */
+	sprintf(tp, "ASxxxx Linker %-64s", VERSION);
+	sprintf(np, "Page %u", ++page);
+ 	/*
+	 * Total string length is 78 characters.
+	 */
+	n = 78 - strlen(np) - strlen(tp);
+	/*
+	 * Output string.
+	 */
+	fprintf(fp, "\f%s%*s%s\n", tp, n, " ", np);
+	/*
+	 *12345678901234567890123456789012345678901234567890123456789012345678901234567890
+	 *Hexadecimal [16-Bits]                                 Sun Sep 15 17:22:25 2013
+	 */
+	/*
+	 * Total string length is 78 characters.
+	 */
+	switch(xflag) {
+	default:
+	case 0:	frmt = "Hexadecimal [%d-Bits]"; break;
+	case 1:	frmt = "Octal [%d-Bits]"; break;
+	case 2:	frmt = "Decimal [%d-Bits]"; break;
+	}
+	sprintf(tp, frmt, 8 * a_bytes);
+	sprintf(np, "%.24s", ctime(&curtim));
+	/*
+	 * Total string length is 78 characters.
+	 */
+	n = 78 - strlen(np) - strlen(tp);
+	/*
+	 * Output string.
+	 */
+	fprintf(fp, "%s%*s%s\n", tp, n, " ", np);
+	lop = 3;
 }
 
 /*)Function	int	dgt(rdx, str, n)

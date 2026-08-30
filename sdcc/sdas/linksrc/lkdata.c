@@ -1,7 +1,7 @@
 /* lkdata.c */
 
 /*
- *  Copyright (C) 1989-2017  Alan R. Baldwin
+ *  Copyright (C) 1989-2026  Alan R. Baldwin
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -101,6 +101,8 @@ int	line;		/*	current line number
 int	page;		/*	current page number
 			 */
 int	lop;		/*	current line number on page
+			 */
+time_t	curtim;	/*	pointer to the current time string
 			 */
 int	pass;		/*	linker pass number
 			 */

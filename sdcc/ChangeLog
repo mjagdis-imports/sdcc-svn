@@ -43,6 +43,10 @@
       sdas/linksrc/lkrloc.c,
       sdas/linksrc/lkrloc4.c:
       Add version 4 relocation engine from upstream asxxxx.
+    * sdas/linksrc/lkdata.c,
+      sdas/linksrc/lklist.c,
+      sdas/linksrc/lkmain.c:
+      Add time stamp to map file from upstream asxxxx.
 
 2026-08-28 Maarten Brock <sourceforge.brock AT dse.nl>
 
