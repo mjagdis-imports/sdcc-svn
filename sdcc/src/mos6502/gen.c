@@ -695,6 +695,8 @@ m6502_emitOp (const char *inst, const char *fmt, ...)
         case M6502OP_JMP:
         case M6502OP_BBR:
           break;
+        default:
+          wassert (0);
         }
     }
   else

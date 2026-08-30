@@ -1,3 +1,6 @@
+/* suppress warning W_SIZEOF_VOID, &q-&q == 0 => 0*sizeof(void) == 0 */
+#pragma disable_warning 178
+
 void abort (void);
 
 char q;

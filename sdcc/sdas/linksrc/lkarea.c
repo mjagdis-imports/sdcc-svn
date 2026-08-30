@@ -115,7 +115,7 @@ newarea(void)
 {
 	a_uint i;
 	int k, narea;
-	struct areax *taxp;
+	struct areax *taxp = NULL;
 	struct areax **halp;
 	char id[NCPS];
 

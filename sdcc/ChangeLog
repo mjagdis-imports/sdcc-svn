@@ -1,3 +1,13 @@
+2026-08-31 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* sdas/as6500/r65mch.c: fixed unused variable warning
+	* sdas/linksrc/lkarea.c: fixed uninitialized variable warning
+	* src/mos6502/gen.c: fixed untested case warning
+	* src/mos6502/ralloc.c: fixed unused function warning
+	* support/regression/gte/pr17133.c,
+	* support/regression/gte/pr21173.c,
+	* support/regression/tests/bug-2710.c: suppress warning 178, W_SIZEOF_VOID
+
 2026-08-30 Maarten Brock <sourceforge.brock AT dse.nl>
 
 	* src/SDCCmain.c: cosmetics

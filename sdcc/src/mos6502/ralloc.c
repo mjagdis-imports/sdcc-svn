@@ -1021,6 +1021,7 @@ packForPush (iCode * ic, eBBlock ** ebpp, int count)
   hTabDeleteItem (&iCodehTab, dic->key, dic, DELETE_ITEM, NULL);
 }
 
+#if 0
 static void
 printOpsNames(iCode *ic)
 {
@@ -1028,14 +1029,13 @@ printOpsNames(iCode *ic)
     return;
   fprintf(stderr, "%s - ic:%d ", __func__, ic->key);
 
-
   fprintf(stderr, "%s = ", IS_SYMOP(IC_RESULT(ic))?OP_SYMBOL(IC_RESULT(ic))->name:"***");
   fprintf(stderr, "L:%s ", IS_SYMOP(IC_LEFT(ic))?OP_SYMBOL(IC_LEFT(ic))->name:"***");
   fprintf(stderr, "R:%s ", IS_SYMOP(IC_RIGHT(ic))?OP_SYMBOL(IC_RIGHT(ic))->name:"***");
   
   fprintf(stderr, "\n");
-
 }
+#endif
 
 /*------------------------------------------------------------------*/
 /* fusePSet - fuse copy/cast + POINTER_SET                          */
