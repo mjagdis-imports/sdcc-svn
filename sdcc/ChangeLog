@@ -51,6 +51,8 @@
       sdas/linksrc/lkmain.c,
       sdas/linksrc/lksym.c:
       Change zflag comments to match upstream asxxxx.
+    * sdas/linksrc/lkarea.c:
+      Bank boundary support from upstream asxxxx.
 
 2026-08-28 Maarten Brock <sourceforge.brock AT dse.nl>
 

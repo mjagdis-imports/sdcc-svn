@@ -128,35 +128,142 @@ newarea(void)
 	 */
 	getid(id, -1);
 	lkparea(id);
-	/*
-         * Evaluate area size
-	 */
-        skip(-1);
-        axp->a_size = eval();
-	/*
-         * Evaluate flags
-	 */
-        skip(-1);
-        i = 0;
-	taxp = ap->a_axp;
-	while (taxp->a_axp) {
-                ++i;
-		taxp = taxp->a_axp;
-	}
-        if (i == 0) {
-                ap->a_flag = eval();
-	} else {
-		i = eval();
-                if ((!is_sdld() || TARGET_IS_Z80 || TARGET_IS_Z180 || TARGET_IS_GB) &&
-                        i && (ap->a_flag != i)) {
-                        fprintf(stderr, "?ASlink-Error-Conflicting flags in area %8s\n", id);
-			lkerr++;
-		}
-	}
-        if (is_sdld() && !(TARGET_IS_Z80 || TARGET_IS_Z180 || TARGET_IS_GB)) {
+
+	axp->a_bndry = 0; /* default: no boundary alignment */
+
+	if (ASxxxx_VERSION >= 4) {
 		/*
-                 * Evaluate area address
+		 * Version 4 area directive uses named parameters:
+		 *   A name size=nnn flags=mm bank=n bndry=mmmm
 		 */
+		char opt[NCPS];
+		int aflags;
+		struct bank **hblp;
+
+		while (more()) {
+			getid(opt, -1);
+			i = eval();
+
+			if (symeq("size", opt, 1)) {
+				axp->a_size = i;
+			} else
+			if (symeq("flags", opt, 1)) {
+				if (ASxxxx_VERSION == 3) {
+					i &= (A3_OVR | A3_ABS | A3_PAG);
+					i = ((i << 8) | i);
+				}
+				taxp = ap->a_axp;
+				if (taxp->a_axp) {
+					aflags = ap->a_flag;
+					int iflags;
+					iflags = (int)(i & A4_OVR);
+					if (iflags) {
+						if (aflags & A4_OVR) {
+							if (iflags != (aflags & A4_OVR)) {
+								fprintf(stderr, "?ASlink-Error-Conflicting CON/OVR flags in area %s\n", id);
+								lkerr++;
+							}
+						} else {
+							ap->a_flag |= iflags;
+						}
+					}
+					iflags = (int)(i & A4_ABS);
+					if (iflags) {
+						if (aflags & A4_ABS) {
+							if (iflags != (aflags & A4_ABS)) {
+								fprintf(stderr, "?ASlink-Error-Conflicting REL/ABS flags in area %s\n", id);
+								lkerr++;
+							}
+						} else {
+							ap->a_flag |= iflags;
+						}
+					}
+					iflags = (int)(i & A4_PAG);
+					if (iflags) {
+						if (aflags & A4_PAG) {
+							if (iflags != (aflags & A4_PAG)) {
+								fprintf(stderr, "?ASlink-Error-Conflicting NOPAG/PAG flags in area %s\n", id);
+								lkerr++;
+							}
+						} else {
+							ap->a_flag |= iflags;
+						}
+					}
+					if (i & A4_DSEG) {
+						iflags = (int)(i & (A4_DSEG | A4_WLMSK));
+						if (aflags & A4_DSEG) {
+							if (iflags != (aflags & (A4_DSEG | A4_WLMSK))) {
+								fprintf(stderr, "?ASlink-Error-Conflicting CSEG/DSEG flags in area %s\n", id);
+								lkerr++;
+							}
+						} else {
+							ap->a_flag |= iflags;
+						}
+					}
+					ap->a_flag |= (int)(i & A4_OUT);
+				} else {
+					ap->a_flag = (int)i;
+				}
+			} else
+			if (symeq("bank", opt, 1)) {
+				hblp = hp->b_list;
+				if (hblp == NULL) {
+					fprintf(stderr, "?ASlink-Error-No banks defined\n");
+					lkexit(ER_FATAL);
+				}
+				if (i >= (unsigned)hp->h_nbank) {
+					fprintf(stderr, "?ASlink-Error-Invalid bank number\n");
+					lkexit(ER_FATAL);
+				}
+				if (hblp[(int)i] == NULL) {
+					fprintf(stderr, "?ASlink-Error-Bank not defined\n");
+					lkexit(ER_FATAL);
+				}
+				if (ap->a_bp != NULL) {
+					if (ap->a_bp != hblp[(int)i]) {
+						fprintf(stderr, "?ASlink-Error-Multiple Bank assignments for area %s (%s / %s)\n",
+							id, ap->a_bp->b_id, hblp[(int)i]->b_id);
+						lkerr++;
+					}
+				} else {
+					ap->a_bp = hblp[(int)i];
+				}
+			} else
+			if (symeq("bndry", opt, 1)) {
+				axp->a_bndry = i;
+			}
+		}
+	} else {
+	        /*
+	         * Evaluate area size
+		 */
+	        skip(-1);
+	        axp->a_size = eval();
+		/*
+	         * Evaluate flags
+		 */
+	        skip(-1);
+	        i = 0;
+		taxp = ap->a_axp;
+		while (taxp->a_axp) {
+	                ++i;
+			taxp = taxp->a_axp;
+		}	
+	        if (i == 0) {
+        	        ap->a_flag = eval();
+		} else {
+			i = eval();
+	                if ((!is_sdld() || TARGET_IS_Z80 || TARGET_IS_Z180 || TARGET_IS_GB) &&
+	                        i && (ap->a_flag != i)) {
+	                        fprintf(stderr, "?ASlink-Error-Conflicting flags in area %8s\n", id);
+				lkerr++;
+			}
+	        }
+	}
+	/*
+         * Evaluate area address (v3 path)
+	 */
+        if (is_sdld() && !(TARGET_IS_Z80 || TARGET_IS_Z180 || TARGET_IS_GB)) {
                 skip(-1);
                 axp->a_addr = eval();
 	}
@@ -670,6 +777,15 @@ lnksect(struct area *tap)
                                 addr = find_empty_space(addr, taxp->a_size, tap->a_id, codemap6808, sizeof (codemap6808));
                                 allocate_space(addr, taxp->a_size, tap->a_id, codemap6808, sizeof (codemap6808));
 			}
+                        /*
+                         * Apply boundary alignment if specified.
+                         */
+                        if (taxp->a_bndry != 0) {
+                                a_uint bofst = addr % taxp->a_bndry;
+                                if (bofst != 0)
+                                        bofst = taxp->a_bndry - bofst;
+                                addr += bofst;
+                        }
                         taxp->a_addr = addr;
 			addr += taxp->a_size;
 			size += taxp->a_size;
