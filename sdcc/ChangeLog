@@ -1,3 +1,17 @@
+2026-08-30 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* src/SDCCmain.c: cosmetics
+	* src/SDCCpeeph.c: renamed labelIsUncondJump to label5IsUncondJumpTo6,
+	  added mcs51 ajmp instruction
+	* src/f8/peeph.def,
+	* src/mcs51/peeph.def,
+	* src/mos6502/peeph.def,
+	* src/stm8/peeph.def,
+	* src/z80/peeph.def: renamed labelIsUncondJump to label5IsUncondJumpTo6
+	* src/mcs51/peeph.def: applied patch #514, Thanks Li-Hsin Chien,
+	  inserted new 257.b moving previous 257.b-i up to 257.c-j
+	* support/regression/tests/bug-4066.c: New regression test
+
 2026-08-29 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/z80/peep.c:
@@ -12,47 +26,47 @@
 
 2026-08-29 Gabriele Gorla <gorlik@yahoo.com>
 
-    * device/include/float.h,
-      device/lib/huc6280/_memcmp.s,
-      device/lib/huc6280/_memset.s,
-      device/lib/huc6280/abs.s,
-      device/lib/huc6280/memcpy.s,
-      device/lib/huc6280/strlen.s,
-      device/lib/mos6502/__stdc_bit_width.s,
-      device/lib/mos6502/__stdc_count_ones.s,
-      device/lib/mos6502/_floatlib.s,
-      device/lib/mos6502/_modsint.s,
-      device/lib/mos6502/_moduint.s,
-      device/lib/mos6502/_modulong.s,
-      device/lib/mos6502/abs.s,
-      device/lib/mos6502/div.s,
-      device/lib/mos6502/memcpy.s,
-      device/lib/mos6502/strlen.s,
-      device/lib/mos65c02/_memset.s,
-      device/lib/mos65c02/memcpy.s,
-      device/lib/mos65c02/strlen.s,
-      device/lib/mos6502/_fseq.s,
-      device/lib/mos6502/_fsneq.s,
-      src/SDCCsymt.c:
-      MOS6502 library improvements
-    * device/lib/mos6502/_fseq.s:
-      Improve _fseq performance.
-    * sdas/linksrc/Makefile.in,
-      sdas/linksrc/aslink.h,
-      sdas/linksrc/lkmain.c,
-      sdas/linksrc/lkrloc.c,
-      sdas/linksrc/lkrloc4.c:
-      Add version 4 relocation engine from upstream asxxxx.
-    * sdas/linksrc/lkdata.c,
-      sdas/linksrc/lklist.c,
-      sdas/linksrc/lkmain.c:
-      Add time stamp to map file from upstream asxxxx.
-    * sdas/linksrc/lkdata.c,
-      sdas/linksrc/lkmain.c,
-      sdas/linksrc/lksym.c:
-      Change zflag comments to match upstream asxxxx.
-    * sdas/linksrc/lkarea.c:
-      Bank boundary support from upstream asxxxx.
+	* device/include/float.h,
+	  device/lib/huc6280/_memcmp.s,
+	  device/lib/huc6280/_memset.s,
+	  device/lib/huc6280/abs.s,
+	  device/lib/huc6280/memcpy.s,
+	  device/lib/huc6280/strlen.s,
+	  device/lib/mos6502/__stdc_bit_width.s,
+	  device/lib/mos6502/__stdc_count_ones.s,
+	  device/lib/mos6502/_floatlib.s,
+	  device/lib/mos6502/_modsint.s,
+	  device/lib/mos6502/_moduint.s,
+	  device/lib/mos6502/_modulong.s,
+	  device/lib/mos6502/abs.s,
+	  device/lib/mos6502/div.s,
+	  device/lib/mos6502/memcpy.s,
+	  device/lib/mos6502/strlen.s,
+	  device/lib/mos65c02/_memset.s,
+	  device/lib/mos65c02/memcpy.s,
+	  device/lib/mos65c02/strlen.s,
+	  device/lib/mos6502/_fseq.s,
+	  device/lib/mos6502/_fsneq.s,
+	  src/SDCCsymt.c:
+	  MOS6502 library improvements
+	* device/lib/mos6502/_fseq.s:
+	  Improve _fseq performance.
+	* sdas/linksrc/Makefile.in,
+	  sdas/linksrc/aslink.h,
+	  sdas/linksrc/lkmain.c,
+	  sdas/linksrc/lkrloc.c,
+	  sdas/linksrc/lkrloc4.c:
+	  Add version 4 relocation engine from upstream asxxxx.
+	* sdas/linksrc/lkdata.c,
+	  sdas/linksrc/lklist.c,
+	  sdas/linksrc/lkmain.c:
+	  Add time stamp to map file from upstream asxxxx.
+	* sdas/linksrc/lkdata.c,
+	  sdas/linksrc/lkmain.c,
+	  sdas/linksrc/lksym.c:
+	  Change zflag comments to match upstream asxxxx.
+	* sdas/linksrc/lkarea.c:
+	  Bank boundary support from upstream asxxxx.
 
 2026-08-28 Maarten Brock <sourceforge.brock AT dse.nl>
 
