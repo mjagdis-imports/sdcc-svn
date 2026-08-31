@@ -2228,7 +2228,14 @@ checkSClass (symbol *sym, bool isProto)
   if (!TARGET_PIC_LIKE)
 #endif
     if (IS_ABSOLUTE (sym->etype))
-      SPEC_VOLATILE (sym->etype) = 1;
+      {
+        /* For function pointers, mark the pointer itself,
+           not the return type. */
+        if (IS_FUNCPTR (sym->type))
+          DCL_PTR_VOLATILE (sym->type) = 1;
+        else
+          SPEC_VOLATILE (sym->etype) = 1;
+      }
 
   if (TARGET_IS_MCS51 && IS_ABSOLUTE (sym->etype) && SPEC_SCLS (sym->etype) == S_SFR)
     {
@@ -2891,9 +2898,9 @@ computeType (sym_link * type1, sym_link * type2, RESULT_TYPE resultType, int op)
         }
       else
         {
-           rType = copyLinkChain (type1);
-           /* int bitfield can have up to 16 bits */
-           if (getSize (etype2) > 1)
+          rType = copyLinkChain (type1);
+          /* int bitfield can have up to 16 bits */
+          if (getSize (etype2) > 1)
             SPEC_NOUN (getSpec (rType)) = V_INT;
         }
     }

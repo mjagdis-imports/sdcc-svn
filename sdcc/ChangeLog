@@ -1,5 +1,12 @@
 2026-08-31 Maarten Brock <sourceforge.brock AT dse.nl>
 
+	* src/SDCCsymt.c (checkSClass): Put the volatile from __at on the
+	  function pointer itself, not on the function return type.
+	  Fixed bugs #4013 & #4041 by applying patch #515, Thanks Li-Hsin Chien
+	* support/regression/tests/bug-4013.c: New regression test.
+
+2026-08-31 Maarten Brock <sourceforge.brock AT dse.nl>
+
 	* sdas/as6500/r65mch.c: fixed unused variable warning
 	* sdas/linksrc/lkarea.c: fixed uninitialized variable warning
 	* src/mos6502/gen.c: fixed untested case warning
