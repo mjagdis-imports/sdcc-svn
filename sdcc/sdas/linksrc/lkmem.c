@@ -42,7 +42,7 @@ int summary(struct area * areap)
         fprintf(stderr, "%s%s",(H)?"\n?ASlink-Warning-":"", (A)); \
     }
 
-    char buff[128];
+    char buff[4100];
     int j, toreturn=0;
     unsigned int Total_Last=0, k;
 
@@ -129,7 +129,7 @@ int summary(struct area * areap)
             Rom.Start=0xffffff;
         }
 
-        if((iram_size<=0)||(iram_size>0x100)) /*Default: 8052 like memory*/
+        if ((iram_size<=0)||(iram_size>0x100)) /*Default: 8052 like memory*/
         {
             Ram[5].Max=0x80;
             Ram[6].Max=0x80;
@@ -137,7 +137,7 @@ int summary(struct area * areap)
             IRam.Max=0x80;
             iram_size=0x100;
         }
-        else if(iram_size<0x80)
+        else if (iram_size<0x80)
         {
             Ram[5].Max=iram_size;
             Ram[6].Max=iram_size;
@@ -153,8 +153,8 @@ int summary(struct area * areap)
         }
     }
 
-    for(j=0; j<(int)iram_size; j++) dram[j]=0;
-    for(; j<0x100; j++) dram[j]=0x8000; /*Memory not available*/
+    for (j=0; j<(int)iram_size; j++) dram[j]=0;
+    for (; j<0x100; j++) dram[j]=0x8000; /*Memory not available*/
 
     /* Open Memory Summary File*/
     of = afile(linkp->f_idp, "mem", 1);
@@ -199,17 +199,17 @@ int summary(struct area * areap)
         else if (EQ(xp->a_id, "ISEG"))
         {
             IRam.Size+=xp->a_size;
-            if(xp->a_addr<IRam.Start) IRam.Start=xp->a_addr;
+            if (xp->a_addr<IRam.Start) IRam.Start=xp->a_addr;
         }
 
         else if (TARGET_IS_8051)
         {
-            if(xp->a_flag & A_XDATA)
+            if (xp->a_flag & A_XDATA)
             {
-                if(xp->a_size>0)
+                if (xp->a_size>0)
                 {
                     XRam.Size+=xp->a_size;
-                    if(xp->a_addr<XRam.Start) XRam.Start=xp->a_addr;
+                    if (xp->a_addr<XRam.Start) XRam.Start=xp->a_addr;
                 }
             }
 
@@ -218,70 +218,70 @@ int summary(struct area * areap)
                 Ram[4].Size+=xp->a_size;
             }
 
-            else if(xp->a_flag & A_CODE)
+            else if (xp->a_flag & A_CODE)
             {
-                if(xp->a_size>0)
+                if (xp->a_size>0)
                 {
                     Rom.Size+=xp->a_size;
-                    if(xp->a_addr<Rom.Start) Rom.Start=xp->a_addr;
+                    if (xp->a_addr<Rom.Start) Rom.Start=xp->a_addr;
                 }
             }
         }
 
-        else if(TARGET_IS_6808)
+        else if (TARGET_IS_6808)
         {
             if ( EQ(xp->a_id, "DSEG") || EQ(xp->a_id, "OSEG") )
             {
                 Ram[6].Size+=xp->a_size;
-                if(xp->a_addr<Ram[6].Start) Ram[6].Start=xp->a_addr;
+                if (xp->a_addr<Ram[6].Start) Ram[6].Start=xp->a_addr;
             }
 
-            else if( EQ(xp->a_id, "CSEG") || EQ(xp->a_id, "GSINIT") ||
-                         EQ(xp->a_id, "GSFINAL") || EQ(xp->a_id, "HOME") )
+            else if ( EQ(xp->a_id, "CSEG") || EQ(xp->a_id, "GSINIT") ||
+                      EQ(xp->a_id, "GSFINAL") || EQ(xp->a_id, "HOME") )
             {
                 Rom.Size+=xp->a_size;
-                if(xp->a_addr<Rom.Start) Rom.Start=xp->a_addr;
+                if (xp->a_addr<Rom.Start) Rom.Start=xp->a_addr;
             }
 
             else if (EQ(xp->a_id, "XSEG") || EQ(xp->a_id, "XISEG"))
             {
                     XRam.Size+=xp->a_size;
-                    if(xp->a_addr<XRam.Start) XRam.Start=xp->a_addr;
+                    if (xp->a_addr<XRam.Start) XRam.Start=xp->a_addr;
             }
         }
 
         /*If is not a register bank, bit, stack, or idata, then it should be data*/
-        else if((TARGET_IS_8051 && xp->a_flag & (A_CODE|A_BIT|A_XDATA))==0)
+        else if ((TARGET_IS_8051 && xp->a_flag & (A_CODE|A_BIT|A_XDATA))==0)
         {
-            if(xp->a_size)
+            if (xp->a_size)
             {
                 Ram[6].Size+=xp->a_size;
-                if(xp->a_addr<Ram[6].Start) Ram[6].Start=xp->a_addr;
+                if (xp->a_addr<Ram[6].Start) Ram[6].Start=xp->a_addr;
             }
         }
 
         xp=xp->a_ap;
     }
 
-    for(j=0; j<7; j++)
-        for(k=Ram[j].Start; (k<(Ram[j].Start+Ram[j].Size))&&(k<0x100); k++)
+    for (j=0; j<7; j++)
+        for (k=Ram[j].Start; (k<(Ram[j].Start+Ram[j].Size))&&(k<0x100); k++)
             dram[k]|=Ram[j].flag; /*Mark as used*/
 
     if (TARGET_IS_8051) {
-        for(k=IRam.Start; (k<(IRam.Start+IRam.Size))&&(k<0x100); k++)
+        for (k=IRam.Start; (k<(IRam.Start+IRam.Size))&&(k<0x100); k++)
             dram[k]|=IRam.flag; /*Mark as used*/
     }
 
     /*Compute the amount of unused memory in direct data Ram.  This is the
     gap between the last register bank or bit segment and the data segment.*/
-    for(k=Ram[6].Start-1; (dram[k]==0) && (k>0); k--);
+    for (k=Ram[6].Start-1; (dram[k]==0) && (k>0); k--);
     Ram[5].Start=k+1;
     Ram[5].Size=Ram[6].Start-Ram[5].Start; /*It may be zero (which is good!)*/
 
     /*Compute the data Ram totals*/
-    for(j=0; j<7; j++)
+    for (j=0; j<7; j++)
     {
-        if(Ram[7].Start>Ram[j].Start) Ram[7].Start=Ram[j].Start;
+        if (Ram[7].Start>Ram[j].Start) Ram[7].Start=Ram[j].Start;
         Ram[7].Size+=Ram[j].Size;
     }
     Total_Last=Ram[6].Size+Ram[6].Start-1;
@@ -290,13 +290,13 @@ int summary(struct area * areap)
     fprintf(of, "Direct Internal RAM:\n");
     fprintf(of, format, "Name", "Start", "End", "Size", "Max");
 
-    for(j=0; j<8; j++)
+    for (j=0; j<8; j++)
     {
-        if((j==0) || (j==7)) fprintf(of, format, line, line, line, line, line);
-        if((j!=5) || (Ram[j].Size>0))
+        if ((j==0) || (j==7)) fprintf(of, format, line, line, line, line, line);
+        if ((j!=5) || (Ram[j].Size>0))
         {
             sprintf(start, "0x%02lx", Ram[j].Start);
-            if(Ram[j].Size==0)
+            if (Ram[j].Size==0)
                 end[0]=0;/*Empty string*/
             else
                 sprintf(end,  "0x%02lx", j==7?Total_Last:Ram[j].Size+Ram[j].Start-1);
@@ -307,9 +307,9 @@ int summary(struct area * areap)
     }
 
     if (TARGET_IS_8051) {
-        for(k=Ram[6].Start; (k<(Ram[6].Start+Ram[6].Size))&&(k<0x100); k++)
+        for (k=Ram[6].Start; (k<(Ram[6].Start+Ram[6].Size))&&(k<0x100); k++)
         {
-            if(dram[k]!=Ram[6].flag)
+            if (dram[k]!=Ram[6].flag)
             {
                 sprintf(buff, "Internal memory overlap starting at 0x%02x.\n", k);
                 REPORT_ERROR(buff, 1);
@@ -317,7 +317,7 @@ int summary(struct area * areap)
             }
         }
 
-        if(Ram[4].Size>Ram[4].Max)
+        if (Ram[4].Size>Ram[4].Max)
         {
             k=Ram[4].Size-Ram[4].Max;
             sprintf(buff, "Insufficient bit addressable memory.  "
@@ -325,7 +325,7 @@ int summary(struct area * areap)
             REPORT_ERROR(buff, 1);
         }
 
-        if(Ram[5].Size!=0)
+        if (Ram[5].Size!=0)
         {
             sprintf(buff, "%ld bytes in data memory wasted.  "
                         "SDCC link could use: --data-loc 0x%02lx\n",
@@ -333,7 +333,7 @@ int summary(struct area * areap)
             REPORT_WARNING(buff, 1);
         }
 
-        if((Ram[6].Start+Ram[6].Size)>Ram[6].Max)
+        if ((Ram[6].Start+Ram[6].Size)>Ram[6].Max)
         {
             k=(Ram[6].Start+Ram[6].Size)-Ram[6].Max;
             sprintf(buff, "Insufficient space in data memory.   "
@@ -354,33 +354,33 @@ int summary(struct area * areap)
             sprintf(buff, "Stack set to unavailable memory.\n");
             REPORT_ERROR(buff, 1);
         }
-        else if(dram[Stack.Start])
+        else if (dram[Stack.Start])
         {
             fprintf(of, ".\n");
             sprintf(buff, "Stack overlaps area ");
             REPORT_ERROR(buff, 1);
-            for(j=0; j<7; j++)
+            for (j=0; j<7; j++)
             {
-                if(dram[Stack.Start]&Ram[j].flag)
+                if (dram[Stack.Start] & Ram[j].flag)
                 {
-                    sprintf(buff, "'%s'\n", Ram[j].Name);
+                    snprintf(buff, sizeof(buff), "'%s'\n", Ram[j].Name);
                     break;
                 }
             }
-            if(dram[Stack.Start]&IRam.flag)
+            if (dram[Stack.Start] & IRam.flag)
             {
-                sprintf(buff, "'%s'\n", IRam.Name);
+                snprintf(buff, sizeof(buff), "'%s'\n", IRam.Name);
             }
             REPORT_ERROR(buff, 0);
         }
         else
         {
-            for(j=Stack.Start, k=0; (j<(int)iram_size)&&(dram[j]==0); j++, k++);
+            for (j=Stack.Start, k=0; (j<(int)iram_size) && (dram[j]==0); j++, k++);
             fprintf(of, " with %d bytes available\n", k);
             if ((int)k<stacksize)
             {
                 sprintf(buff, "Only %d byte%s available for stack.\n",
-                    k, (k==1)?"":"s");
+                        k, (k==1)?"":"s");
                 REPORT_WARNING(buff, 1);
             }
         }
@@ -391,7 +391,7 @@ int summary(struct area * areap)
     fprintf(of, format, line, line, line, line, line);
 
     /*Report IRam totals:*/
-    if(IRam.Size==0)
+    if (IRam.Size==0)
     {
         start[0]=0;/*Empty string*/
         end[0]=0;/*Empty string*/
@@ -406,7 +406,7 @@ int summary(struct area * areap)
     fprintf(of, format, IRam.Name, start, end, size, max);
 
     /*Report XRam totals:*/
-    if(XRam.Size==0)
+    if (XRam.Size==0)
     {
         start[0]=0;/*Empty string*/
         end[0]=0;/*Empty string*/
@@ -421,7 +421,7 @@ int summary(struct area * areap)
     fprintf(of, format, XRam.Name, start, end, size, max);
 
     /*Report Rom/Flash totals:*/
-    if(Rom.Size==0)
+    if (Rom.Size==0)
     {
         start[0]=0;/*Empty string*/
         end[0]=0;/*Empty string*/
@@ -437,7 +437,7 @@ int summary(struct area * areap)
 
     /*Report any excess:*/
     if (TARGET_IS_8051) {
-        if((IRam.Start+IRam.Size)>(IRam.Max+0x80))
+        if ((IRam.Start+IRam.Size)>(IRam.Max+0x80))
         {
             sprintf(buff, "Insufficient INDIRECT RAM memory.\n");
             REPORT_ERROR(buff, 1);
@@ -502,7 +502,7 @@ int summary2(struct area * areap)
     _Mem XRam= {0xffff, 0, 0, 65536, "EXTERNAL RAM",    0x0100};
     _Mem Rom=  {0xffff, 0, 0, 65536, "ROM/EPROM/FLASH", 0x0200};
 
-    if(rflag) /*For the DS390*/
+    if (rflag) /*For the DS390*/
     {
         XRam.Max=0x1000000; /*24 bits*/
         XRam.Start=0xffffff;
@@ -522,12 +522,12 @@ int summary2(struct area * areap)
     {
         if (xp->a_flag & A_CODE)
         {
-            if(xp->a_size)
+            if (xp->a_size)
             {
                 Rom.Size += xp->a_size;
-                if(xp->a_addr < Rom.Start)
+                if (xp->a_addr < Rom.Start)
                     Rom.Start = xp->a_addr;
-                if(xp->a_addr + xp->a_size > Rom.End)
+                if (xp->a_addr + xp->a_size > Rom.End)
                     Rom.End = xp->a_addr + xp->a_size;
             }
         }
@@ -535,18 +535,18 @@ int summary2(struct area * areap)
         else if (EQ(xp->a_id, "SSEG"))
         {
             Stack.Size += xp->a_size;
-            if(xp->a_addr < Stack.Start)
+            if (xp->a_addr < Stack.Start)
                 Stack.Start = xp->a_addr;
-            if(xp->a_addr + xp->a_size > Stack.End)
+            if (xp->a_addr + xp->a_size > Stack.End)
                 Stack.End = xp->a_addr + xp->a_size;
         }
 
         else if (EQ(xp->a_id, "PSEG"))
         {
             Paged.Size += xp->a_size;
-            if(xp->a_addr < Paged.Start)
+            if (xp->a_addr < Paged.Start)
                 Paged.Start = xp->a_addr;
-            if(xp->a_addr + xp->a_size > Paged.End)
+            if (xp->a_addr + xp->a_size > Paged.End)
                 Paged.End = xp->a_addr + xp->a_size;
         }
 
@@ -554,20 +554,20 @@ int summary2(struct area * areap)
         {
             xstack_xp = xp;
             Paged.Size += xp->a_size;
-            if(xp->a_addr < Paged.Start)
+            if (xp->a_addr < Paged.Start)
                 Paged.Start = xp->a_addr;
-            if(xp->a_addr + xp->a_size > Paged.End)
+            if (xp->a_addr + xp->a_size > Paged.End)
                 Paged.End = xp->a_addr + xp->a_size;
         }
 
         else if (xp->a_flag & A_XDATA)
         {
-            if(xp->a_size)
+            if (xp->a_size)
             {
                 XRam.Size += xp->a_size;
-                if(xp->a_addr < XRam.Start)
+                if (xp->a_addr < XRam.Start)
                     XRam.Start = xp->a_addr;
-                if(xp->a_addr + xp->a_size > XRam.End)
+                if (xp->a_addr + xp->a_size > XRam.End)
                     XRam.End = xp->a_addr + xp->a_size;
             }
         }
@@ -578,32 +578,32 @@ int summary2(struct area * areap)
     /*Report the Ram totals*/
     fprintf(of, "Internal RAM layout:\n");
     fprintf(of, "      0 1 2 3 4 5 6 7 8 9 A B C D E F");
-    for(j=0; j<256; j++)
+    for (j=0; j<256; j++)
     {
-        if(j%16==0) fprintf(of, "\n0x%02x:|", j);
+        if (j%16==0) fprintf(of, "\n0x%02x:|", j);
         fprintf(of, "%c|", idatamap[j]);
     }
     fprintf(of, "\n0-3:Reg Banks, T:Bit regs, a-z:Data, B:Bits, Q:Overlay, I:iData, S:Stack, A:Absolute\n");
 
-    for(j=0; j<256; j++)
+    for (j=0; j<256; j++)
     {
-        if(idatamap[j]=='S')
+        if (idatamap[j]=='S')
         {
             Stack_Start=j;
             break;
         }
     }
 
-    for(j=Stack_Start, Stack_Size=0; j<((iram_size)?iram_size:256); j++)
+    for (j=Stack_Start, Stack_Size=0; j<((iram_size)?iram_size:256); j++)
     {
-        if(idatamap[j]=='S') Stack_Size++;
+        if (idatamap[j]=='S') Stack_Size++;
         else break;
     }
 
     xp=areap;
     while (xp)
     {
-        if(xp->a_unaloc>0)
+        if (xp->a_unaloc>0)
         {
             fprintf(of, "\nERROR: Couldn't get %d byte%s allocated"
                         " in internal RAM for area %s.",
@@ -614,9 +614,10 @@ int summary2(struct area * areap)
     }
 
     /*Report the position of the begining of the stack*/
-    if(Stack_Start!=256 && Stack_Size > 0)
+    if (Stack_Start!=256 && Stack_Size > 0)
         fprintf(of, "\n%s starts at: 0x%02lx (sp set to 0x%02lx) with %ld bytes available.",
-            rflag ? "16 bit mode initial stack" : "Stack", Stack_Start, Stack_Start-1, Stack_Size);
+                rflag ? "16 bit mode initial stack" : "Stack",
+                Stack_Start, Stack_Start-1, Stack_Size);
     else
         fprintf(of, "\nNo clue at where the stack begins and ends!");
 
@@ -632,10 +633,11 @@ int summary2(struct area * areap)
         j = i + 1;
     }
     if (spare_size > 0)
-        fprintf(of, "\nThe largest spare internal RAM space starts at 0x%x with %d byte%s available.", spare_begin, spare_size, spare_size > 1 ? "s" : "");
+        fprintf(of, "\nThe largest spare internal RAM space starts at 0x%x with %d byte%s available.",
+                spare_begin, spare_size, spare_size > 1 ? "s" : "");
     else
         fprintf(of, "\nNo spare internal RAM space left.");
- 
+
     /*Report about xstack*/
     if (xstack_xp)
     {
@@ -650,7 +652,7 @@ int summary2(struct area * areap)
     fprintf(of, format, line, line, line, line, line);
 
     /*Report Paged XRam totals:*/
-    if(Paged.Size==0)
+    if (Paged.Size==0)
     {
         start[0]=0;/*Empty string*/
         end[0]=0;/*Empty string*/
@@ -665,7 +667,7 @@ int summary2(struct area * areap)
     fprintf(of, format, Paged.Name, start, end, size, max);
 
     /*Report XRam totals:*/
-    if(XRam.Size==0)
+    if (XRam.Size==0)
     {
         start[0]=0;/*Empty string*/
         end[0]=0;/*Empty string*/
@@ -680,7 +682,7 @@ int summary2(struct area * areap)
     fprintf(of, format, XRam.Name, start, end, size, max);
 
     /*Report Rom/Flash totals:*/
-    if(Rom.Size==0)
+    if (Rom.Size==0)
     {
         start[0]=0;/*Empty string*/
         end[0]=0;/*Empty string*/

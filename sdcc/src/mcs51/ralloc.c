@@ -62,27 +62,27 @@ int mcs51_ptrRegReq;            /* one byte pointer register required */
 
 /* 8051 registers */
 reg_info regs8051[] = {
-  {REG_GPR, R7_IDX, REG_GPR, "r7", "ar7", "0", 7, 1},
-  {REG_GPR, R6_IDX, REG_GPR, "r6", "ar6", "0", 6, 1},
-  {REG_GPR, R5_IDX, REG_GPR, "r5", "ar5", "0", 5, 1},
-  {REG_GPR, R4_IDX, REG_GPR, "r4", "ar4", "0", 4, 1},
-  {REG_GPR, R3_IDX, REG_GPR, "r3", "ar3", "0", 3, 1},
-  {REG_GPR, R2_IDX, REG_GPR, "r2", "ar2", "0", 2, 1},
-  {REG_PTR, R1_IDX, REG_PTR, "r1", "ar1", "0", 1, 1},
-  {REG_PTR, R0_IDX, REG_PTR, "r0", "ar0", "0", 0, 1},
-  {REG_BIT, B0_IDX, REG_BIT, "b0", "b0", "bits", 0, 1},
-  {REG_BIT, B1_IDX, REG_BIT, "b1", "b1", "bits", 1, 1},
-  {REG_BIT, B2_IDX, REG_BIT, "b2", "b2", "bits", 2, 1},
-  {REG_BIT, B3_IDX, REG_BIT, "b3", "b3", "bits", 3, 1},
-  {REG_BIT, B4_IDX, REG_BIT, "b4", "b4", "bits", 4, 1},
-  {REG_BIT, B5_IDX, REG_BIT, "b5", "b5", "bits", 5, 1},
-  {REG_BIT, B6_IDX, REG_BIT, "b6", "b6", "bits", 6, 1},
-  {REG_BIT, B7_IDX, REG_BIT, "b7", "b7", "bits", 7, 1},
-  {REG_CND, CND_IDX, REG_CND, "C", "not_psw", "0xd0", 0, 1},
-  {0, DPL_IDX, 0, "dpl", "dpl", "0x82", 0, 0},
-  {0, DPH_IDX, 0, "dph", "dph", "0x83", 0, 0},
-  {0, B_IDX, 0, "b", "b", "0xf0", 0, 0},
-  {0, A_IDX, 0, "a", "acc", "0xe0", 0, 0},
+  {REG_GPR, R7_IDX,  REG_GPR, "r7",      "ar7",     "0",    7, 1},
+  {REG_GPR, R6_IDX,  REG_GPR, "r6",      "ar6",     "0",    6, 1},
+  {REG_GPR, R5_IDX,  REG_GPR, "r5",      "ar5",     "0",    5, 1},
+  {REG_GPR, R4_IDX,  REG_GPR, "r4",      "ar4",     "0",    4, 1},
+  {REG_GPR, R3_IDX,  REG_GPR, "r3",      "ar3",     "0",    3, 1},
+  {REG_GPR, R2_IDX,  REG_GPR, "r2",      "ar2",     "0",    2, 1},
+  {REG_PTR, R1_IDX,  REG_PTR, "r1",      "ar1",     "0",    1, 1},
+  {REG_PTR, R0_IDX,  REG_PTR, "r0",      "ar0",     "0",    0, 1},
+  {REG_BIT, B0_IDX,  REG_BIT, "bits[0]", "bits[0]", "bits", 0, 1},
+  {REG_BIT, B1_IDX,  REG_BIT, "bits[1]", "bits[1]", "bits", 1, 1},
+  {REG_BIT, B2_IDX,  REG_BIT, "bits[2]", "bits[2]", "bits", 2, 1},
+  {REG_BIT, B3_IDX,  REG_BIT, "bits[3]", "bits[3]", "bits", 3, 1},
+  {REG_BIT, B4_IDX,  REG_BIT, "bits[4]", "bits[4]", "bits", 4, 1},
+  {REG_BIT, B5_IDX,  REG_BIT, "bits[5]", "bits[5]", "bits", 5, 1},
+  {REG_BIT, B6_IDX,  REG_BIT, "bits[6]", "bits[6]", "bits", 6, 1},
+  {REG_BIT, B7_IDX,  REG_BIT, "bits[7]", "bits[7]", "bits", 7, 1},
+  {REG_CND, CND_IDX, REG_CND, "C",       "not_psw", "0xd0", 0, 1},
+  {0,       DPL_IDX, 0,       "dpl",     "dpl",     "0x82", 0, 0},
+  {0,       DPH_IDX, 0,       "dph",     "dph",     "0x83", 0, 0},
+  {0,       B_IDX,   0,       "b",       "b",       "0xf0", 0, 0},
+  {0,       A_IDX,   0,       "a",       "acc",     "0xe0", 0, 0},
 };
 
 static const char* alt_regnames[] = {
@@ -102,7 +102,7 @@ static const char* alt_regnames[] = {
   NULL, /* B5_IDX */
   NULL, /* B6_IDX */
   NULL, /* B7_IDX */
-  "c", /* CND_ID */
+  "c",  /* CND_ID */
   NULL, /* DPL_IDX */
   NULL, /* DPH_IDX */
   NULL, /* B_IDX */
@@ -228,7 +228,6 @@ freeReg (reg_info *reg)
 
   reg->isFree = 1;
 }
-
 
 /*-----------------------------------------------------------------*/
 /* nFreeRegs - returns number of free registers                    */
@@ -525,7 +524,6 @@ createStackSpil (symbol * sym)
 {
   symbol *sloc = NULL;
   int useXstack, model;
-
   struct dbuf_s dbuf;
 
   /* first go try and find a free one that is already
@@ -546,7 +544,6 @@ createStackSpil (symbol * sym)
 
   dbuf_init (&dbuf, 128);
   dbuf_printf (&dbuf, "sloc%d", _G.slocNum++);
-
   sloc = newiTemp (dbuf_c_str (&dbuf));
   dbuf_destroy (&dbuf);
 
@@ -1421,8 +1418,8 @@ serialRegAssign (eBBlock ** ebbs, int count)
                 }
               /* if we need ptr regs for the right side
                  then mark it */
-              if (POINTER_GET (ic) && IS_SYMOP (IC_LEFT (ic))
-                  && getSize (OP_SYMBOL (IC_LEFT (ic))->type) <= (unsigned int) NEARPTRSIZE)
+              if (POINTER_GET (ic) && IS_SYMOP (IC_LEFT (ic)) &&
+                  getSize (OP_SYMBOL (IC_LEFT (ic))->type) <= (unsigned) NEARPTRSIZE)
                 {
                   mcs51_ptrRegReq++;
                   ptrRegSet = 1;
@@ -2493,7 +2490,6 @@ packRegsForSupport (iCode * ic, eBBlock * ebp)
   /* for the left & right operand :- look to see if the
      left was assigned a true symbol in far space in that
      case replace them */
-
   if (IS_ITEMP (IC_LEFT (ic)) && OP_SYMBOL (IC_LEFT (ic))->liveTo <= ic->seq)
     {
       dic = findAssignToSym (IC_LEFT (ic), ic);
@@ -2812,7 +2808,9 @@ packRegsForAccUse (iCode * ic)
 
   /* if this is an aggregate, e.g. a one byte char array */
   if (IS_AGGREGATE (operandType (IC_RESULT (ic))))
-    return;
+    {
+      return;
+    }
 
   /* if we are calling a reentrant function that has stack parameters */
   if (ic->op == CALL && IFFUNC_ISREENT (operandType (IC_LEFT (ic))) && FUNC_HASSTACKPARM (operandType (IC_LEFT (ic))))
@@ -3400,7 +3398,6 @@ mcs51_assignRegisters (ebbIndex * ebbi)
 
   /* change assignments this will remove some
      live ranges reducing some register pressure */
-
   for (i = 0; i < count; i++)
     packRegisters (ebbs, i);
 
@@ -3419,8 +3416,6 @@ mcs51_assignRegisters (ebbIndex * ebbi)
   serialRegAssign (ebbs, count);
 
   freeAllRegs ();
-  //setToNull ((void *) &_G.regAssigned);
-  //setToNull ((void *) &_G.totRegAssigned);
   fillGaps ();
 
   /* do positionRegs() for all ICs from end to begin */

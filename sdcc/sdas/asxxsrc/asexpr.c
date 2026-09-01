@@ -1,7 +1,7 @@
 /* asexpr.c */
 
 /*
- *  Copyright (C) 1989-2025  Alan R. Baldwin
+ *  Copyright (C) 1989-2026  Alan R. Baldwin
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -51,7 +51,7 @@
  *		void	exprmasks()
  *		int	oprio()
  *		void	term()
- *              a_uint  rngchk()
+ *		a_uint	rngchk()
  *
  *	asexpr.c contains no local/static variables
  */
@@ -103,15 +103,18 @@
 void
 expr(struct expr *esp, int n)
 {
-        a_uint ae, ar;  
+	a_uint ae, ar;
 	int c, p;
 	struct area *ap;
 	struct expr re;
 
+	/*
+	 * Process Expression
+	 */
 	term(esp);
 	while (ctype[c = getnb()] & BINOP) {
 		/*
-                 * Handle binary operators + - * / & | % ^ << >> [
+		 * Handle binary operators + - * / & | % ^ << >> [
 		 */
 		if ((p = oprio(c)) <= n)
 			break;
@@ -120,147 +123,147 @@ expr(struct expr *esp, int n)
 		clrexpr(&re);
 		expr(&re, p);
 		esp->e_rlcf |= re.e_rlcf;
-                
-                ae = esp->e_addr;
-                ar = re.e_addr;
 
-                if (c == '+') {
+		ae = esp->e_addr;
+		ar = re.e_addr;
+
+		if (c == '+') {
 			/*
-                         * esp + re, at least one must be absolute
+			 * esp + re, at least one must be absolute
 			 */
-                        if (esp->e_base.e_ap == NULL) {
-                                /*
-                                 * esp is absolute (constant),
-                                 * use area from re
-                                 */
-                                esp->e_base.e_ap = re.e_base.e_ap;
-                        } else
-                        if (re.e_base.e_ap) {
-                                /*
-                                 * re should be absolute (constant)
-                                 */
+			if (esp->e_base.e_ap == NULL) {
+				/*
+				 * esp is absolute (constant),
+				 * use area from re
+				 */
+				esp->e_base.e_ap = re.e_base.e_ap;
+			} else
+			if (re.e_base.e_ap) {
+				/*
+				 * re should be absolute (constant)
+				 */
 				xerr('r', "Arg1 + Arg2, Arg2 must be a constant.");
 			}
-                        if (esp->e_flag && re.e_flag)
+			if (esp->e_flag && re.e_flag)
 				xerr('r', "Arg1 + Arg2, Both arguments cannot be external.");
-                        if (re.e_flag)
+			if (re.e_flag)
 				esp->e_flag = 1;
-                        ae += ar;
- 		} else
-                if (c == '-') {
+			ae += ar;
+		} else
+		if (c == '-') {
 			/*
-                         * esp - re
+			 * esp - re
 			 */
-                        if ((ap = re.e_base.e_ap) != NULL) {
-                                if (esp->e_base.e_ap == ap) {
-                                        esp->e_base.e_ap = NULL;
-                                } else {
+			if ((ap = re.e_base.e_ap) != NULL) {
+				if (esp->e_base.e_ap == ap) {
+					esp->e_base.e_ap = NULL;
+				} else {
 					xerr('r', "Arg1 - Arg2, Arg2 must be in same area.");
 				}
 			}
-                        if (re.e_flag)
+			if (re.e_flag)
 				xerr('r', "Arg1 - Arg2, Arg2 cannot be external.");
-                        ae -= ar;
+			ae -= ar;
 		} else {
 			/*
-                         * Both operands (esp and re) must be constants
+			 * Both operands (esp and re) must be constants
 			 */
-                        /* SD/MB :- postpone the abscheck to cases '>' and '['
-                           and change the right shift operator.. if
-                           right shift by 8/16/24 bits of a relocatable address then
-                           the user wants the higher order byte. set the R_MSB
-                           for the expression */
-                        if (c != '>' && c != '[')
-                                abscheck(esp);
-                        abscheck(&re);
-                        switch (c) {
+			/* SD/MB :- postpone the abscheck to cases '>' and '['
+			   and change the right shift operator.. if
+			   right shift by 8/16/24 bits of a relocatable address then
+			   the user wants the higher order byte. set the R_MSB
+			   for the expression */
+			if (c != '>' && c != '[')
+				abscheck(esp);
+			abscheck(&re);
+			switch (c) {
 			/*
-                         * The (int) /, %, and >> operations
-                         * are truncated to a_bytes.
+			 * The (int) /, %, and >> operations
+			 * are truncated to a_bytes.
 			 */
-                        case '*':
-                                ae *= ar;
-                                break;
+			case '*':
+				ae *= ar;
+				break;
 
-                        case '/':
-                                if (ar == 0) {
-                                        ae = 0;
-                                        err('z');
-                                } else {
-                                        ae /= ar;
+			case '/':
+				if (ar == 0) {
+					ae = 0;
+					err('z');
+				} else {
+					ae /= ar;
 				}
-                                break;
+				break;
 
-                        case '&':
-                                ae &= ar;
-                                break;
+			case '&':
+				ae &= ar;
+				break;
 
-                        case '|':
-                                ae |= ar;
-                                break;
+			case '|':
+				ae |= ar;
+				break;
 
-                        case '%':
-                                if (ar == 0) {
-                                        ae = 0;
-                                        err('z');
-                                } else {
-                                        ae %= ar;
+			case '%':
+				if (ar == 0) {
+					ae = 0;
+					err('z');
+				} else {
+					ae %= ar;
 				}
-                                break;
+				break;
 
-                        case '^':
-                                ae ^= ar;
-                                break;
+			case '^':
+				ae ^= ar;
+				break;
 
-                        case '<':
-                                ae <<= ar;
-                                break;
+			case '<':
+				ae <<= ar;
+				break;
 
-                        case '>':
-                                /* SD change here */
-                                /* if the left is a relative address &
-                                   the right side is 8/16/24 then */
-                                if (esp->e_base.e_ap && ar == 8) {
-                                        esp->e_rlcf |= R_MSB;
-                                        break;
+			case '>':
+				/* SD change here */
+				/* if the left is a relative address &
+				   the right side is 8/16/24 then */
+				if (esp->e_base.e_ap && ar == 8) {
+					esp->e_rlcf |= R_MSB;
+					break;
 				}
-                                else if (esp->e_base.e_ap && ar == 16) {
-                                        esp->e_rlcf |= R_HIB;
-                                        break;
+				else if (esp->e_base.e_ap && ar == 16) {
+					esp->e_rlcf |= R_HIB;
+					break;
 				}
-                                else if (esp->e_base.e_ap && ar == 24) {
-                                        esp->e_rlcf |= R_MSB | R_HIB;
-                                        break;
+				else if (esp->e_base.e_ap && ar == 24) {
+					esp->e_rlcf |= R_MSB | R_HIB;
+					break;
 				}
-                                /* else continue with the normal processing */
-                                abscheck(esp);
-                                ae >>= ar;
-                                break;
+				/* else continue with the normal processing */
+				abscheck(esp);
+				ae >>= ar;
+				break;
 
-                        case '[':
-                                if (is_sdas() && is_sdas_target_8051_like()) {
-                                        /* MB added [ for bit access in bdata */
-                                        if (getnb() != ']')
-                                                qerr();
+			case '[':
+				if (is_sdas() && is_sdas_target_8051_like()) {
+					/* MB added [ for bit access in bdata */
+					if (getnb() != ']')
+						qerr();
 
-                                        /* if the left is a relative address then */
-                                        if (esp->e_base.e_ap) {
-                                                ae |= (ar | 0x80) << 8;
-                                                break;
-                                        }
-                                        else if ((ae & 0x87) == 0x80) {
-                                                ae |= ar;
-                                                break;
-                                        }
+					/* if the left is a relative address then */
+					if (esp->e_base.e_ap) {
+						ae |= (ar | 0x80) << 8;
+						break;
+					}
+					else if ((ae & 0x87) == 0x80) {
+						ae |= ar;
+						break;
+					}
 				}
-                                /* fall through */
+				/* fall through */
 
-                        default:
-                                qerr();
-                                break;
+			default:
+				qerr();
+				break;
 			}
 		}
-                esp->e_addr = rngchk(ae);
+		esp->e_addr = rngchk(ae);
 	}
 	unget(c);
 }
@@ -328,7 +331,7 @@ absexpr(void)
  *	global variables:
  *		char	ctype[]		array of character types, one per
  *					ASCII character
- *              int     nflag           don't resolve global assigned value symbols flag
+ *		int	nflag		don't resolve global assigned value symbols flag
  *		sym *	symp		pointer to a symbol structure
  *
  *	functions called:
@@ -354,24 +357,25 @@ absexpr(void)
 void
 term(struct expr *esp)
 {
-	int c;
-        const char *jp;
+	int c, d;
+	const char *jp;
 	char id[NCPS];
 	struct sym  *sp;
 	struct tsym *tp;
-        int r, v;
+	int r;
 	a_uint n;
 
- 	r = radix;
+	r = radix;
 	c = getnb();
 	/*
- 	 * Discard the unary '+' at this point and
+	 * Discard the unary '+' at this point and
 	 * also any reference to numerical arguments
 	 * associated with the '#' prefix.
 	 */
 	while (c == '+' || c == '#') { c = getnb(); }
+
 	/*
- 	 * Evaluate all binary operators
+	 * Evaluate all binary operators
 	 * by recursively calling expr().
 	 */
 	if (c == LFTERM) {
@@ -395,56 +399,56 @@ term(struct expr *esp)
 	if (c == '\'') {
 		esp->e_mode = S_USER;
 		esp->e_addr = getmap(-1)&0377;
-                /* MB: accept a closing ' */
+		/* MB: accept a closing ' */
 		c = get();
-                if (c != '\'')
+		if (c != '\'')
 			unget(c);
 		return;
 	}
 	if (c == '\"') {
 		esp->e_mode = S_USER;
 		if ((int) hilo) {
-		    esp->e_addr  = (getmap(-1)&0377)<<8;
-		    esp->e_addr |= (getmap(-1)&0377);
+			esp->e_addr  = (getmap(-1)&0377)<<8;
+			esp->e_addr |= (getmap(-1)&0377);
 		} else {
-		    esp->e_addr  = (getmap(-1)&0377);
-		    esp->e_addr |= (getmap(-1)&0377)<<8;
+			esp->e_addr  = (getmap(-1)&0377);
+			esp->e_addr |= (getmap(-1)&0377)<<8;
 		}
-                /* MB: accept a closing " */
+		/* MB: accept a closing " */
 		c = get();
-                if (c != '\"')
+		if (c != '\"')
 			unget(c);
 		return;
 	}
 	if (c == '>' || c == '<') {
-                if (is_sdas_target_pdk()) {
-                        waddrmode = 1;
+		if (is_sdas_target_pdk()) {
+			waddrmode = 1;
 		}
 		expr(esp, 100);
-                if (is_sdas_target_pdk()) {
-                        waddrmode = 0;
+	if (is_sdas_target_pdk()) {
+			waddrmode = 0;
 		}
 		if (is_abs (esp)) {
 			/*
 			 * evaluate byte selection directly
 			 */
 			if (c == '>')
-                                esp->e_addr >>= 8;
+				esp->e_addr >>= 8;
 			esp->e_addr &= 0377;
 			return;
 		} else {
 			/*
 			 * let linker perform byte selection
 			 */
-                        esp->e_rlcf |= R_BYTX;
+			esp->e_rlcf |= R_BYTX;
 			if (c == '>')
 				esp->e_rlcf |= R_MSB;
 			return;
 		}
 	}
 	/*
-         * Evaluate digit sequences as reusable symbols
-         * if followed by a '$' or as constants.
+	 * Evaluate digit sequences as reusable symbols
+	 * if followed by a '$' or as constants.
 	 */
 	if (ctype[c] & DIGIT) {
 		esp->e_mode = S_USER;
@@ -454,8 +458,8 @@ term(struct expr *esp)
 		}
 		if (*jp == '$') {
 			n = 0;
-			while ((v = digit(c, 10)) >= 0) {
-				n = 10*n + v;
+			while ((d = digit(c, 10)) >= 0) {
+				n = 10*n + d;
 				c = get();
 			}
 			n = rngchk(n);
@@ -471,76 +475,76 @@ term(struct expr *esp)
 			err('u');
 			return;
 		}
-                if (c == '0') {
+		if (c == '0') {
 			c = get();
-                        switch (c) {
-                                case 'b':
-                                case 'B':
-                                        r = 2;
-                                        c = get();
-                                        break;
-                                case 'o':
-                                case 'O':
-                                case 'q':
-                                case 'Q':
-                                        r = 8;
-                                        c = get();
-                                        break;
-                                case 'd':
-                                case 'D':
-                                        r = 10;
-                                        c = get();
-                                        break;
-                                case 'h':
-                                case 'H':
-                                case 'x':
-                                case 'X':
-                                        r = 16;
-                                        c = get();
-                                        break;
-                                default:
-                                        break;
+			switch (c) {
+			case 'b':
+			case 'B':
+				r = 2;
+				c = get();
+				break;
+			case 'o':
+			case 'O':
+			case 'q':
+			case 'Q':
+				r = 8;
+				c = get();
+				break;
+			case 'd':
+			case 'D':
+				r = 10;
+				c = get();
+				break;
+			case 'h':
+			case 'H':
+			case 'x':
+			case 'X':
+				r = 16;
+				c = get();
+				break;
+			default:
+				break;
 			}
 		}
 		n = 0;
-		while ((v = digit(c, r)) >= 0) {
-			n = r*n + v;
+		while ((d = digit(c, r)) >= 0) {
+			n = r*n + d;
 			c = get();
 		}
-                unget(c);
-                if (is_sdas_target_pdk() && waddrmode) {
-                        n *= 2;
+		unget(c);
+		if (is_sdas_target_pdk() && waddrmode) {
+			n *= 2;
 		}
 		esp->e_addr = rngchk(n);
 		return;
 	}
 	/*
 	 * Evaluate '$' sequences as a temporary radix
-         * if followed by a '%', '&', '#', or '$'.
+	 * if followed by a '%', '&', '#', or '$'.
 	 */
 	if (c == '$') {
 		c = get();
-                if (c == '%' || c == '&' || c == '#' || c == '$') {
-                        switch (c) {
-                                case '%':
-                                        r = 2;
-                                        break;
-                                case '&':
-                                        r = 8;
-                                        break;
-                                case '#':
-                                        r = 10;
-                                        break;
-                                case '$':
-                                        r = 16;
-                                        break;
-                                default:
-                                        break;
+		if (c == '%' || c == '&' || c == '#' || c == '$') {
+			switch (c) {
+			case '%':
+				r = 2;
+				break;
+			case '&':
+				r = 8;
+				break;
+			case '#':
+				r = 10;
+				break;
+			case '$':
+				r = 16;
+				break;
+			default:
+				break;
 			}
 			c = get();
 			n = 0;
-			while ((v = digit(c, r)) >= 0) {
-				n = r*n + v;
+			while ((d = digit(c, r)) >= 0) {
+				n = r*n + d;
 				c = get();
 			}
 			unget(c);
@@ -548,26 +552,26 @@ term(struct expr *esp)
 			esp->e_addr = rngchk(n);
 			return;
 		}
-                unget(c);
-                c = '$';
+		unget(c);
+		c = '$';
 	}
 	/*
-         * Evaluate symbols and labels
+	 * Evaluate Symbols and Labels
 	 */
 	if (ctype[c] & LETTER) {
 		getid(id, c);
 		esp->e_mode = S_USER;
 		sp = lookup(id);
-                /* Handle if the symbol or label is not yet defined.
+		/* Handle if the symbol or label is not yet defined.
 
-                   Also leave unevaluated if it's a global with an assigned value
-                   and the don't resolve global symbol assigns flag is set.
-                   This allows the value to get resolved at link time instead
-                   of during compile time. */
-                if ((sp->s_type == S_NEW) || ((sp->s_flag & S_GBL) && (sp->s_flag & S_ASG) && (nflag))) {
-                        esp->e_addr = 0;
+		   Also leave unevaluated if it's a global with an assigned value
+		   and the don't resolve global symbol assigns flag is set.
+		   This allows the value to get resolved at link time instead
+		   of during compile time. */
+		if ((sp->s_type == S_NEW) || ((sp->s_flag & S_GBL) && (sp->s_flag & S_ASG) && (nflag))) {
+			esp->e_addr = 0;
 			/*
-                         * Flag the expression symbol as external if it's global
+			 * Flag the expression symbol as external if it's global
 			 */
 			if (sp->s_flag&S_GBL) {
 				esp->e_flag = 1;
@@ -575,18 +579,13 @@ term(struct expr *esp)
 				return;
 			}
 			/*
-                         * Otherwise it's an undefined symbol
+			 * Otherwise it's an undefined symbol
 			 */
 			err('u');
 		} else {
 			esp->e_mode = sp->s_type;
 			esp->e_addr = sp->s_addr;
 			esp->e_base.e_ap = sp->s_area;
-                        /* MB: abused bit 15 of s_addr to indicate bit-addressable bytes */
-                        if ((sp->s_addr & 0x8000) && sp->s_area &&
-                            (!strcmp(sp->s_area->a_id, "BSEG_BYTES") || !strcmp(sp->s_area->a_id, "BIT_BANK"))) {
-                                esp->e_rlcf |= R_BIT | R_BYTX;
-			}
 		}
 		return;
 	}
@@ -785,8 +784,8 @@ oprio(int c)
 		return (3);
 	if (c == '|')
 		return (1);
-        if (is_sdas() && is_sdas_target_8051_like() && c == '[')
-                return (12);
+	if (is_sdas() && is_sdas_target_8051_like() && c == '[')
+		return (12);
 	return (0);
 }
 
@@ -808,7 +807,7 @@ oprio(int c)
  *	side effects:
  *		expression structure cleared.
  */
- 
+
 void
 clrexpr(struct expr *esp)
 {
@@ -849,7 +848,7 @@ clrexpr(struct expr *esp)
  *		arithmetic overflow cannot be determined.
  *		This ambiguity is caused by the inability
  *		to distinguish signed and unsigned values
- *		at the instrinsic sizeof(int) size. 
+ *		at the instrinsic sizeof(int) size.
  */
 
 a_uint
@@ -863,7 +862,7 @@ rngchk(a_uint n)
 	return((n & s_mask) ? (n | ~v_mask) : (n & v_mask));
 }
 
-/*)Function	void	exprmasks(esp)
+/*)Function	void	exprmasks(n)
  *
  *		int	n		T Line Bytes in Address
  *
@@ -885,7 +884,7 @@ rngchk(a_uint n)
  *	side effects:
  *		The arithmetic precision parameters are set.
  */
- 
+
 void
 exprmasks(int n)
 {
@@ -937,5 +936,4 @@ exprmasks(int n)
 	}
 #endif
 }
-
 

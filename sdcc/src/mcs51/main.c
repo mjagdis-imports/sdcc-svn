@@ -125,7 +125,7 @@ _mcs51_regparm (sym_link *l, bool reentrant)
 
   if (IS_SPEC(l) && (SPEC_NOUN(l) == V_BIT))
     {
-      /* bit parameters go to b0 thru b7 */
+      /* bit parameters go to bits.0 thru bits.7 */
       if (reentrant && (regBitParmFlg < 8))
         {
           regBitParmFlg++;
@@ -761,7 +761,7 @@ typedef struct mcs51opcodedata
   }
 mcs51opcodedata;
 
-static mcs51opcodedata mcs51opcodeDataTable[] =
+static const mcs51opcodedata mcs51opcodeDataTable[] =
 {
   {"acall","j", "",   "",   ""},
   {"add",  "",  "w",  "rw", "r"},
@@ -932,7 +932,7 @@ getRegsWritten (lineNode *line)
   return line->aln->regsWritten;
 }
 
-static const char * models[] = 
+static const char * models[] =
 {
   "small",  "small-xstack",  "small-stack-auto",  "small-xstack-auto",
   "medium", "medium-xstack", "medium-stack-auto", "medium-xstack-auto",

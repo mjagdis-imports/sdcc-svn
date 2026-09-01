@@ -1,3 +1,19 @@
+2026-09-01 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* sdas/asxxsrc/asexpr.c (term),
+	* sdas/as8051/i51adr.c (addr): moved handling of bit-addressable [n] from
+	  term() to addr()
+	* sdas/linksrc/lklist.c: fixed warning
+	* sdas/linksrc/lkmem.c: fixed warning
+	* src/SDCCglue.c (glue): removed equates for b0-b7
+	* src/mcs51/ralloc.c,
+	* src/ds390/ralloc.c: renamed b0 - b7 to bits[0] - bits[7]
+	* src/mcs51/gen.c (genMinusBits): replaced conditional jump with addition
+	  same #bytes, allows optimization if some Rn==0
+	  (genLeftShift, genSignedRightShift, genRightShift): removed redundant code
+	* src/mcs51/main.c: made mcs51opcodeDataTable const
+	* support/util/NewAlloc.c (Safe_strndup): fixed warning
+
 2026-08-31 Maarten Brock <sourceforge.brock AT dse.nl>
 
 	* src/SDCCsymt.c (checkSClass): Put the volatile from __at on the

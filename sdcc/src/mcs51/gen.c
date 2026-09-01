@@ -6002,12 +6002,12 @@ addSign (operand * result, int offset, int sign)
 static void
 genMinusBits (iCode * ic)
 {
-  symbol *lbl = newiTempLabel (NULL);
-
   D (emitcode (";", "genMinusBits"));
 
   if (AOP_TYPE (IC_RESULT (ic)) == AOP_CRY)
     {
+      symbol *lbl = newiTempLabel (NULL);
+
       emitcode ("mov", "c,%s", AOP (IC_LEFT (ic))->aopu.aop_dir);
       emitcode ("jnb", "%s,!tlabel", AOP (IC_RIGHT (ic))->aopu.aop_dir, labelKey2num (lbl->key));
       emitcode ("cpl", "c");
@@ -6018,9 +6018,8 @@ genMinusBits (iCode * ic)
     {
       emitcode ("mov", "c,%s", AOP (IC_RIGHT (ic))->aopu.aop_dir);
       emitcode ("subb", "a,acc");
-      emitcode ("jnb", "%s,!tlabel", AOP (IC_LEFT (ic))->aopu.aop_dir, labelKey2num (lbl->key));
-      emitcode ("inc", "a");
-      emitLabel (lbl);
+      emitcode ("mov", "c,%s", AOP (IC_LEFT (ic))->aopu.aop_dir);
+      emitcode ("addc", "a,%s", zero);
       opPut (IC_RESULT (ic), "a", 0);
       addSign (IC_RESULT (ic), MSB16, SPEC_USIGN (getSpec (operandType (IC_RESULT (ic)))));
     }
@@ -10146,23 +10145,12 @@ genLeftShift (iCode * ic)
   /* shift count is unknown then we have to form
      a loop get the loop count in B : Note: we take
      only the lower order byte since shifting
-     more that 32 bits makes no sense anyway, ( the
-     largest size of an object can be only 32 bits ) */
+     more that 64 bits makes no sense anyway, ( the
+     largest size of an object can be only 64 bits ) */
 
   pushedB = pushB ();
-  if (AOP_TYPE (right) == AOP_LIT)
-    {
-      /* Really should be handled by genLeftShiftLiteral,
-       * but since I'm too lazy to fix that today, at least we can make
-       * some small improvement.
-       */
-      emitcode ("mov", "b,#!constbyte", (unsigned)(((int) ulFromVal (AOP (right)->aopu.aop_lit)) + 1));
-    }
-  else
-    {
-      MOVB (opGet (right, 0, FALSE, FALSE));
-      emitcode ("inc", "b");
-    }
+  MOVB (opGet (right, 0, FALSE, FALSE));
+  emitcode ("inc", "b");
   freeAsmop (right, NULL, ic, TRUE);
   aopOp (left, ic, FALSE);
   aopOp (result, ic, FALSE);
@@ -10577,35 +10565,23 @@ genSignedRightShift (iCode * ic)
       genRightShiftLiteral (left, right, result, ic, 1);
       return;
     }
+
   /* shift count is unknown then we have to form
      a loop get the loop count in B : Note: we take
      only the lower order byte since shifting
-     more that 32 bits make no sense anyway, ( the
-     largest size of an object can be only 32 bits ) */
+     more that 64 bits make no sense anyway, ( the
+     largest size of an object can be only 64 bits ) */
 
   pushedB = pushB ();
-  if (AOP_TYPE (right) == AOP_LIT)
-    {
-      /* Really should be handled by genRightShiftLiteral,
-       * but since I'm too lazy to fix that today, at least we can make
-       * some small improvement.
-       */
-      emitcode ("mov", "b,#!constbyte", (unsigned)(((int) ulFromVal (AOP (right)->aopu.aop_lit)) + 1));
-    }
-  else
-    {
-      MOVB (opGet (right, 0, FALSE, FALSE));
-      emitcode ("inc", "b");
-    }
+  MOVB (opGet (right, 0, FALSE, FALSE));
+  emitcode ("inc", "b");
   freeAsmop (right, NULL, ic, TRUE);
   aopOp (left, ic, FALSE);
   aopOp (result, ic, FALSE);
 
-  /* now move the left to the result if they are not the
-     same */
+  /* now move the left to the result if they are not the same */
   if (!sameRegs (AOP (left), AOP (result)) && AOP_SIZE (result) > 1)
     {
-
       size = AOP_SIZE (result);
       offset = 0;
       while (size--)
@@ -10715,29 +10691,17 @@ genRightShift (iCode * ic)
   /* shift count is unknown then we have to form
      a loop get the loop count in B : Note: we take
      only the lower order byte since shifting
-     more that 32 bits make no sense anyway, ( the
-     largest size of an object can be only 32 bits ) */
+     more that 64 bits make no sense anyway, ( the
+     largest size of an object can be only 64 bits ) */
 
   pushedB = pushB ();
-  if (AOP_TYPE (right) == AOP_LIT)
-    {
-      /* Really should be handled by genRightShiftLiteral,
-       * but since I'm too lazy to fix that today, at least we can make
-       * some small improvement.
-       */
-      emitcode ("mov", "b,#!constbyte", (unsigned)(((int) ulFromVal (AOP (right)->aopu.aop_lit)) + 1));
-    }
-  else
-    {
-      MOVB (opGet (right, 0, FALSE, FALSE));
-      emitcode ("inc", "b");
-    }
+  MOVB (opGet (right, 0, FALSE, FALSE));
+  emitcode ("inc", "b");
   freeAsmop (right, NULL, ic, TRUE);
   aopOp (left, ic, FALSE);
   aopOp (result, ic, FALSE);
 
-  /* now move the left to the result if they are not the
-     same */
+  /* now move the left to the result if they are not the same */
   if (!sameRegs (AOP (left), AOP (result)) && AOP_SIZE (result) > 1)
     {
       size = AOP_SIZE (result);

@@ -2468,14 +2468,6 @@ glue (void)
           fprintf (asmFile, "%s", iComments2);
           fprintf (asmFile, "\t.area BIT_BANK\t(REL,OVR,DATA)\n");
           fprintf (asmFile, "bits:\n\t.ds 1\n");
-          fprintf (asmFile, "\tb0 = bits[0]\n");
-          fprintf (asmFile, "\tb1 = bits[1]\n");
-          fprintf (asmFile, "\tb2 = bits[2]\n");
-          fprintf (asmFile, "\tb3 = bits[3]\n");
-          fprintf (asmFile, "\tb4 = bits[4]\n");
-          fprintf (asmFile, "\tb5 = bits[5]\n");
-          fprintf (asmFile, "\tb6 = bits[6]\n");
-          fprintf (asmFile, "\tb7 = bits[7]\n");
         }
     }
 

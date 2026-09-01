@@ -1,7 +1,7 @@
 /* i51adr.c */
 
 /*
- *  Copyright (C) 1998-2025  Alan R. Baldwin
+ *  Copyright (C) 1998-2026  Alan R. Baldwin
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -55,12 +55,24 @@ addr(struct expr *esp)
 {
 	int c;
 	unsigned rd;
+	char *p;
+
+	/* fix order of '<', '>', and '#' */
+	p = ip;
+	if (((c = getnb()) == '<') || (c == '>')) {
+		p = ip-1;
+		if (getnb() == '#') {
+			*p = *(ip-1);
+			*(ip-1) = c;
+		}
+	}
+	ip = p;
 
 	if ((c = getnb()) == '#') {
 		/*  Immediate mode */
 		expr(esp, 0);
 		esp->e_mode = S_IMMED;
-	} 
+	}
 	else if (c == '@') {
 		/* choices are @R0, @R1, @DPTR, @A+PC, @A+DPTR */
 		switch (reg()) {
@@ -95,7 +107,7 @@ addr(struct expr *esp)
 
 		esp->e_flag = 0;
 		esp->e_base.e_ap = NULL;
-	} 
+	}
 	else if (c == '*') {
 		if ((c = getnb()) == '/') {
 			/* Force inverted bit */
@@ -109,12 +121,17 @@ addr(struct expr *esp)
 		}
 		if (esp->e_addr & ~0xFF)
 			xerr('d', "A Direct Page addressing error.");
-	} 
+	}
 	else if (c == '/') {
 		/* Force inverted bit  */
 		expr(esp, 0);
 		esp->e_mode = S_NOT_BIT;
-	} 
+		/* MB: abused bit 15 of s_addr to indicate bit-addressable bytes */
+		if ((esp->e_addr & 0x8000) && esp->e_base.e_ap &&
+		    (!strcmp(esp->e_base.e_ap->a_id, "BSEG_BYTES") || !strcmp(esp->e_base.e_ap->a_id, "BIT_BANK"))) {
+			esp->e_rlcf |= R_BIT | R_BYTX;
+		}
+	}
 	else {
 		unget(c);
 
@@ -150,12 +167,17 @@ addr(struct expr *esp)
 				esp->e_mode = S_DIR;
 			} else {
 				esp->e_mode = S_EXT;
+				/* MB: abused bit 15 of s_addr to indicate bit-addressable bytes */
+				if ((esp->e_addr & 0x8000) && esp->e_base.e_ap &&
+				    (!strcmp(esp->e_base.e_ap->a_id, "BSEG_BYTES") || !strcmp(esp->e_base.e_ap->a_id, "BIT_BANK"))) {
+					esp->e_rlcf |= R_BIT | R_BYTX;
+				}
 			}
 		}
 	}
 	return (esp->e_mode);
 }
-	
+
 /*
  * When building a table that has variations of a common
  * symbol always start with the most complex symbol first.
@@ -204,7 +226,7 @@ srch(char *str)
 	ptr = ip;
 
 	while (*ptr && *str) {
-		if(ccase[*ptr & 0x007F] != ccase[*str & 0x007F])
+		if (ccase[*ptr & 0x007F] != ccase[*str & 0x007F])
 			break;
 		ptr++;
 		str++;
@@ -215,7 +237,7 @@ srch(char *str)
 	}
 
 	if (!*str)
-                if (any(*ptr," \t\n,];")) {
+		if (any(*ptr," \t\n,];")) {
 			ip = ptr;
 			return(1);
 		}
@@ -228,8 +250,8 @@ srch(char *str)
 int
 any(int c, char *str)
 {
-        while (*str)
-                if(*str++ == c)
+	while (*str)
+		if(*str++ == c)
 			return(1);
 	return(0);
 }

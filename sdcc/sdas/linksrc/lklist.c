@@ -97,7 +97,7 @@ newpag(FILE *fp)
 	 */
 	sprintf(tp, "ASxxxx Linker %-64s", VERSION);
 	sprintf(np, "Page %u", ++page);
- 	/*
+	/*
 	 * Total string length is 78 characters.
 	 */
 	n = 78 - strlen(np) - strlen(tp);
@@ -206,17 +206,17 @@ slew(struct area *xp, struct bank *yp)
 {
 	int i, n;
 	char *frmta, *frmtb, *ptr;
- 	a_uint	ai, aj;
+	a_uint	ai, aj;
 
-       	if (lop++ >= NLPP) {
+	if (lop++ >= NLPP) {
 		newpag(mfp);
-                switch(xflag) {
+		switch(xflag) {
 		default:
-                case 0: frmta = "Hexadecimal"; break;
-                case 1: frmta = "Octal"; break;
-                case 2: frmta = "Decimal"; break;
+		case 0: frmta = "Hexadecimal"; break;
+		case 1: frmta = "Octal"; break;
+		case 2: frmta = "Decimal"; break;
 		}
-                fprintf(mfp, "%s  [%d-Bits]\n", frmta, a_bytes*8);
+		fprintf(mfp, "%s  [%d-Bits]\n", frmta, a_bytes*8);
 		if (*yp->b_id) {
 			fprintf(mfp, "[ Bank == %s ]\n", yp->b_id);
 			lop += 1;
@@ -224,13 +224,13 @@ slew(struct area *xp, struct bank *yp)
 		fprintf(mfp, "\n");
 		if (wflag) {
 			fprintf(mfp,
-                                "Area                                    Addr");
+			        "Area                                    Addr");
 			fprintf(mfp,
-                                "        Size        Decimal Bytes (Attributes)\n");
+			        "        Size        Decimal Bytes (Attributes)\n");
 			fprintf(mfp,
-                                "--------------------------------        ----");
+			        "--------------------------------        ----");
 			fprintf(mfp,
-                                "        ----        ------- ----- ------------\n");
+			        "        ----        ------- ----- ------------\n");
 		} else {
 		fprintf(mfp,
 			"Area                       Addr   ");
@@ -243,7 +243,7 @@ slew(struct area *xp, struct bank *yp)
 		}
 
 		ai = xp->a_addr & a_mask;
-                aj = xp->a_size & a_mask;
+		aj = xp->a_size & a_mask;
 
 		/*
 		 * Output Area Header
@@ -252,7 +252,7 @@ slew(struct area *xp, struct bank *yp)
 		if (wflag) {
 			fprintf(mfp, "%-32.32s", ptr);
 		} else {
-                        fprintf(mfp, "%-19.19s", ptr);
+			fprintf(mfp, "%-19.19s", ptr);
 		}
 #ifdef	LONGINT
 		switch(a_bytes) {
@@ -314,31 +314,31 @@ slew(struct area *xp, struct bank *yp)
 		fprintf(mfp, frmta, ai, aj);
 		fprintf(mfp, frmtb, aj);
 
-                if (xp->a_flag & A3_ABS) {
+		if (xp->a_flag & A3_ABS) {
 			fprintf(mfp, "(ABS");
 		} else {
 			fprintf(mfp, "(REL");
 		}
-                if (xp->a_flag & A3_OVR) {
+		if (xp->a_flag & A3_OVR) {
 			fprintf(mfp, ",OVR");
 		} else {
 			fprintf(mfp, ",CON");
 		}
-                if (xp->a_flag & A3_PAG) {
+		if (xp->a_flag & A3_PAG) {
 			fprintf(mfp, ",PAG");
 		}
 
-                /* sdld specific */
-                if (xp->a_flag & A_CODE) {
-                        fprintf(mfp, ",CODE");
+		/* sdld specific */
+		if (xp->a_flag & A_CODE) {
+			fprintf(mfp, ",CODE");
 		}
-                if (xp->a_flag & A_XDATA) {
-                        fprintf(mfp, ",XDATA");
+		if (xp->a_flag & A_XDATA) {
+			fprintf(mfp, ",XDATA");
 		}
-                if (xp->a_flag & A_BIT) {
-                        fprintf(mfp, ",BIT");
+		if (xp->a_flag & A_BIT) {
+			fprintf(mfp, ",BIT");
 		}
-                /* end sdld specific */
+		/* end sdld specific */
 
 		fprintf(mfp, ")\n");
 		if (wflag) {
@@ -379,17 +379,17 @@ slew(struct area *xp, struct bank *yp)
 /* Used for qsort call in lstsym */
 static int _cmpSymByAddr(const void *p1, const void *p2)
 {
-    struct sym **s1 = (struct sym **)(p1);
-    struct sym **s2 = (struct sym **)(p2);
-    int delta = ((*s1)->s_addr + (*s1)->s_axp->a_addr) -
-                ((*s2)->s_addr + (*s2)->s_axp->a_addr);
+	struct sym **s1 = (struct sym **)(p1);
+	struct sym **s2 = (struct sym **)(p2);
+	int delta = ((*s1)->s_addr + (*s1)->s_axp->a_addr) -
+	            ((*s2)->s_addr + (*s2)->s_axp->a_addr);
 
-    /* Sort first by address, then by name. */
-    if (delta)
-    {
-        return delta;
-    }
-    return strcmp((*s1)->s_id,(*s2)->s_id);
+	/* Sort first by address, then by name. */
+	if (delta)
+	{
+		return delta;
+	}
+	return strcmp((*s1)->s_id,(*s2)->s_id);
 }
 /* end sdld specific */
 
@@ -449,9 +449,9 @@ lstarea(struct area *xp, struct bank *yp)
 	a_uint a0, ai, aj;
 	struct sym *sp;
 	struct sym **p;
-        /* sdld specific */
-        int memPage;
-        /* end sdld specific */
+	/* sdld specific */
+	int memPage;
+	/* end sdld specific */
 
 	/*
 	 * Find number of symbols in area
@@ -462,7 +462,7 @@ lstarea(struct area *xp, struct bank *yp)
 		for (i=0; i<NHASH; i++) {
 			sp = symhash[i];
 			while (sp != NULL) {
-                                if (oxp == sp->s_axp) {
+				if (oxp == sp->s_axp) {
 					++nmsym;
 				}
 				sp = sp->s_sp;
@@ -496,7 +496,7 @@ lstarea(struct area *xp, struct bank *yp)
 		for (i=0; i<NHASH; i++) {
 			sp = symhash[i];
 			while (sp != NULL) {
-                                if (oxp == sp->s_axp) {
+				if (oxp == sp->s_axp) {
 					p[nmsym++] = sp;
 				}
 				sp = sp->s_sp;
@@ -505,29 +505,29 @@ lstarea(struct area *xp, struct bank *yp)
 		oxp = oxp->a_axp;
 	}
 
-        if (is_sdld()) {
+	if (is_sdld()) {
 		/*
-                 * Quick Sort of Addresses in Symbol Table Array
-		 */
-                qsort(p, nmsym, sizeof(struct sym *), _cmpSymByAddr);
+		 * Quick Sort of Addresses in Symbol Table Array
+		*/
+		qsort(p, nmsym, sizeof(struct sym *), _cmpSymByAddr);
 	} else {
 		/*
-                 * Bubble Sort of Addresses in Symbol Table Array
+		 * Bubble Sort of Addresses in Symbol Table Array
 		 */
-                j = 1;
-                while (j) {
-                        j = 0;
-                        sp = p[0];
-                        a0 = sp->s_addr + sp->s_axp->a_addr;
-                        for (i=1; i<nmsym; ++i) {
-                                sp = p[i];
-                                ai = sp->s_addr + sp->s_axp->a_addr;
-                                if (a0 > ai) {
-                                        j = 1;
-                                        p[i] = p[i-1];
-                                        p[i-1] = sp;
+		j = 1;
+		while (j) {
+			j = 0;
+			sp = p[0];
+			a0 = sp->s_addr + sp->s_axp->a_addr;
+			for (i=1; i<nmsym; ++i) {
+				sp = p[i];
+				ai = sp->s_addr + sp->s_axp->a_addr;
+				if (a0 > ai) {
+					j = 1;
+					p[i] = p[i-1];
+					p[i-1] = sp;
 				}
-                                a0 = ai;
+				a0 = ai;
 			}
 		}
 	}
@@ -545,32 +545,32 @@ lstarea(struct area *xp, struct bank *yp)
 	/*
 	 * Symbol Table Output
 	 */
-        /* sdld specific */
-        memPage = (xp->a_flag & A_CODE) ? 0x0C : ((xp->a_flag & A_XDATA) ? 0x0D : ((xp->a_flag & A_BIT) ? 0x0B : 0x00));
-        /* end sdld specific */
+	/* sdld specific */
+	memPage = (xp->a_flag & A_CODE) ? 0x0C : ((xp->a_flag & A_XDATA) ? 0x0D : ((xp->a_flag & A_BIT) ? 0x0B : 0x00));
+	/* end sdld specific */
 	i = 0;
 	while (i < nmsym) {
 		if (wflag) {
 			slew(xp, yp);
-                        if (is_sdld()) {
-                                switch(a_bytes) {
-                                default:
-                                case 2: frmt = "     "; break;
-                                case 3:
-                                case 4: frmt = ""; break;
+			if (is_sdld()) {
+				switch(a_bytes) {
+				default:
+				case 2: frmt = "     "; break;
+				case 3:
+				case 4: frmt = ""; break;
 				}
-                                if (memPage != 0)
-                                        fprintf(mfp, "%s%X:", frmt, memPage);
-                                else
-                                        fprintf(mfp, "%s  ", frmt);
+				if (memPage != 0)
+					fprintf(mfp, "%s%X:", frmt, memPage);
+				else
+					fprintf(mfp, "%s  ", frmt);
 			} else {
-                                switch(a_bytes) {
-                                default:
-                                case 2: frmt = "        "; break;
-                                case 3:
-                                case 4: frmt = "   "; break;
+				switch(a_bytes) {
+				default:
+				case 2: frmt = "        "; break;
+				case 3:
+				case 4: frmt = "   "; break;
 				}
-                                fprintf(mfp, "%s", frmt);
+				fprintf(mfp, "%s", frmt);
 			}
 		} else
 		if ((i % n) == 0) {
@@ -664,8 +664,8 @@ lstarea(struct area *xp, struct bank *yp)
 		if (wflag) {
 			fprintf(mfp, "%-32.32s", ptr);
 			i++;
-                        if(sp->m_id) {
-                                ptr = &sp->m_id[0];
+			ptr = &sp->m_id[0];
+			if (ptr) {
 				fprintf(mfp, "   %-.28s", ptr);
 			}
 		} else {
@@ -725,7 +725,7 @@ lsterr(int err)
 ee XXXX xx xx xx xx xx xx LLLLL *************	HEX(16)
 ee 000000 ooo ooo ooo ooo LLLLL *************	OCTAL(16)
 ee  DDDDD ddd ddd ddd ddd LLLLL *************	DECIMAL(16)
-                     XXXX
+		     XXXX
 		   OOOOOO
 		    DDDDD
 
@@ -736,7 +736,7 @@ ee  DDDDD ddd ddd ddd ddd LLLLL *************	DECIMAL(16)
 ee    XXXXXX xx xx xx xx xx xx xx LLLLL *********	HEX(24)
 ee   OO000000 ooo ooo ooo ooo ooo LLLLL *********	OCTAL(24)
 ee   DDDDDDDD ddd ddd ddd ddd ddd LLLLL *********	DECIMAL(24)
-                           XXXXXX
+			   XXXXXX
 			 OOOOOOOO
 			 DDDDDDDD
 
@@ -747,7 +747,7 @@ ee   DDDDDDDD ddd ddd ddd ddd ddd LLLLL *********	DECIMAL(24)
 ee  XXXXXXXX xx xx xx xx xx xx xx LLLLL *********	HEX(32)
 eeOOOOO000000 ooo ooo ooo ooo ooo LLLLL *********	OCTAL(32)
 ee DDDDDDDDDD ddd ddd ddd ddd ddd LLLLL *********	DECIMAL(32)
-                         XXXXXXXX
+		         XXXXXXXX
 		      OOOOOOOOOOO
 		       DDDDDDDDDD
 */
@@ -760,7 +760,7 @@ ee DDDDDDDDDD ddd ddd ddd ddd ddd LLLLL *********	DECIMAL(32)
 ee XXXX xx xx xx xx xx[nn]LLLLL *************	HEX(16)
 ee 000000 ooo ooo ooo [nn]LLLLL *************	OCTAL(16)
 ee  DDDDD ddd ddd ddd [nn]LLLLL *************	DECIMAL(16)
-                     XXXX
+		     XXXX
 		   OOOOOO
 		    DDDDD
 
@@ -771,7 +771,7 @@ ee  DDDDD ddd ddd ddd [nn]LLLLL *************	DECIMAL(16)
 ee    XXXXXX xx xx xx xx xx xx[nn]LLLLL *********	HEX(24)
 ee   OO000000 ooo ooo ooo ooo [nn]LLLLL *********	OCTAL(24)
 ee   DDDDDDDD ddd ddd ddd ddd [nn]LLLLL *********	DECIMAL(24)
-                           XXXXXX
+			   XXXXXX
 			 OOOOOOOO
 			 DDDDDDDD
 
@@ -782,7 +782,7 @@ ee   DDDDDDDD ddd ddd ddd ddd [nn]LLLLL *********	DECIMAL(24)
 ee  XXXXXXXX xx xx xx xx xx xx[nn]LLLLL *********	HEX(32)
 eeOOOOO000000 ooo ooo ooo ooo [nn]LLLLL *********	OCTAL(32)
 ee DDDDDDDDDD ddd ddd ddd ddd [nn]LLLLL *********	DECIMAL(32)
-                         XXXXXXXX
+		         XXXXXXXX
 		      OOOOOOOOOOO
 		       DDDDDDDDDD
 */
@@ -857,17 +857,17 @@ lkulist(int i)
 		 * Line with only address
 		 */	
 		if (rtcnt == a_bytes) {
-                        lkalist(pc);
+			lkalist(pc);
 
 		/*
-                 * Line with address and code
+		 * Line with address and code
 		 */
 		} else {
 			cpc = pc;
 			cbytes = 0;
 			for (i=a_bytes; i < rtcnt; i++) {
 				if (rtflg[i]) {
-                                        lklist(cpc, (int) (rtval[i] & 0xFF), rterr[i]);
+					lklist(cpc, (int) (rtval[i] & 0xFF), rterr[i]);
 					cbytes += 1;
 					cpc += (cbytes % pcb) ? 0 : 1;
 				}
@@ -880,7 +880,7 @@ lkulist(int i)
 		if (gline == 0)
 			fprintf(rfp, "%s", rb);
 
-                while (fgets(rb, sizeof(rb)-2, tfp) != 0) {
+		while (fgets(rb, sizeof(rb)-2, tfp) != 0) {
 			fprintf(rfp, "%s", rb);
 		}
 		if (tfp != NULL) {
@@ -896,7 +896,7 @@ lkulist(int i)
 
 /*)Function	void	lkalist(cpc)
  *
- *		int	cpc		current program counter value
+ *		a_uint	cpc		current program counter value
  *
  *	The function lkalist() performs the following functions:
  *
@@ -949,7 +949,7 @@ lkalist(a_uint cpc)
 {
 	char str[16];
 	char *frmt;
-        int m, n, r;
+	int m, n, r;
 
 	/*
 	 * Truncate (int) to N-Bytes
@@ -963,7 +963,7 @@ loop:   if (tfp == NULL)
 		return;
 
 	/*
-         * Copy current LST to RST
+	 * Copy current LST to RST
 	 */
 	if (gline == 0) {
 		fprintf(rfp, "%s", rb);
@@ -973,29 +973,29 @@ loop:   if (tfp == NULL)
 	/*
 	 * Clear text line buffer
 	 */
-        memset(rb, 0, sizeof(rb));
+	memset(rb, 0, sizeof(rb));
 
 	/*
 	 * Get next LST text line
 	 */
-        if (fgets(rb, sizeof(rb)-2, tfp) == NULL) {
-                fclose(tfp);
-                tfp = NULL;
-                fclose(rfp);
-                rfp = NULL;
+	if (fgets(rb, sizeof(rb)-2, tfp) == NULL) {
+		fclose(tfp);
+		tfp = NULL;
+		fclose(rfp);
+		rfp = NULL;
 		return;
 	}
 
 	/*
-         * Must have an ASxxxx Listing line number
+	 * Must have an ASxxxx Listing line number
 	 */
 	switch(a_bytes) {
 	default:
-        case 2: n = 30; break;
+	case 2: n = 30; break;
 	case 3:
-        case 4: n = 38; break;
+	case 4: n = 38; break;
 	}
-        if (!dgt(RAD10, &rb[n], 1)) {
+	if (!dgt(RAD10, &rb[n], 1)) {
 		fprintf(rfp, "%s", rb);
 		goto loop;
 	}
@@ -1010,27 +1010,27 @@ loop:   if (tfp == NULL)
 		r = RAD16;
 		switch(a_bytes) {
 		default:
-                case 2: n = 3; m = 4; frmt = "%04lX"; break;
-                case 3: n = 6; m = 6; frmt = "%06lX"; break;
-                case 4: n = 4; m = 8; frmt = "%08lX"; break;
+		case 2: n = 3; m = 4; frmt = "%04lX"; break;
+		case 3: n = 6; m = 6; frmt = "%06lX"; break;
+		case 4: n = 4; m = 8; frmt = "%08lX"; break;
 		}
 		break;
 	case 10:
 		r = RAD10;
 		switch(a_bytes) {
 		default:
-                case 2: n = 4; m = 5; frmt = "%05lu"; break;
-                case 3: n = 5; m = 8; frmt = "%08lu"; break;
-                case 4: n = 3; m = 10; frmt = "%010lu"; break;
+		case 2: n = 4; m = 5; frmt = "%05lu"; break;
+		case 3: n = 5; m = 8; frmt = "%08lu"; break;
+		case 4: n = 3; m = 10; frmt = "%010lu"; break;
 		}
 		break;
 	case 8:
 		r = RAD8;
 		switch(a_bytes) {
 		default:
-                case 2: n = 3; m = 6; frmt = "%06lo"; break;
-                case 3: n = 5; m = 8; frmt = "%08lo"; break;
-                case 4: n = 2; m = 11; frmt = "%011lo"; break;
+		case 2: n = 3; m = 6; frmt = "%06lo"; break;
+		case 3: n = 5; m = 8; frmt = "%08lo"; break;
+		case 4: n = 2; m = 11; frmt = "%011lo"; break;
 		}
 		break;
 	}
@@ -1041,27 +1041,27 @@ loop:   if (tfp == NULL)
 		r = RAD16;
 		switch(a_bytes) {
 		default:
-                case 2: n = 3; m = 4; frmt = "%04X"; break;
-                case 3: n = 6; m = 6; frmt = "%06X"; break;
-                case 4: n = 4; m = 8; frmt = "%08X"; break;
+		case 2: n = 3; m = 4; frmt = "%04X"; break;
+		case 3: n = 6; m = 6; frmt = "%06X"; break;
+		case 4: n = 4; m = 8; frmt = "%08X"; break;
 		}
 		break;
 	case 10:
 		r = RAD10;
 		switch(a_bytes) {
 		default:
-                case 2: n = 4; m = 5; frmt = "%05u"; break;
-                case 3: n = 5; m = 8; frmt = "%08u"; break;
-                case 4: n = 3; m = 10; frmt = "%010u"; break;
+		case 2: n = 4; m = 5; frmt = "%05u"; break;
+		case 3: n = 5; m = 8; frmt = "%08u"; break;
+		case 4: n = 3; m = 10; frmt = "%010u"; break;
 		}
 		break;
 	case 8:
 		r = RAD8;
 		switch(a_bytes) {
 		default:
-                case 2: n = 3; m = 6; frmt = "%06o"; break;
-                case 3: n = 5; m = 8; frmt = "%08o"; break;
-                case 4: n = 2; m = 11; frmt = "%011o"; break;
+		case 2: n = 3; m = 6; frmt = "%06o"; break;
+		case 3: n = 5; m = 8; frmt = "%08o"; break;
+		case 4: n = 2; m = 11; frmt = "%011o"; break;
 		}
 		break;
 	}
@@ -1084,7 +1084,7 @@ loop:   if (tfp == NULL)
 
 /*)Function	void	lklist(cpc, v, err)
  *
- *		int	cpc		current program counter value
+ *		a_uint	cpc		current program counter value
  *		int 	v		value of byte at this address
  *		int	err		error flag for this value
  *
@@ -1124,7 +1124,7 @@ loop:   if (tfp == NULL)
  *					output RST file
  *		FILE	*tfp		The file handle to the current
  *					LST file being scanned
- *              char    *errmsg3[]      array of pointers to error strings
+ *		char	*errmsg3[]	array of pointers to error strings
  *
  *	functions called:
  *		int	dgt()		lklist.c
@@ -1163,14 +1163,14 @@ loop:   if (tfp == NULL)
 	/*
 	 * Get next LST text line
 	 */
-        if (gline) {
+	if (gline) {
 		/*
-                 * Clear text line buffer
+		 * Clear text line buffer
 		 */
-                memset(rb, 0, sizeof(rb));
+		memset(rb, 0, sizeof(rb));
 
 		/*
-                 * Get next LST text line
+		 * Get next LST text line
 		 */
 		if (fgets(rb, sizeof(rb)-2, tfp) == NULL) {
 			fclose(tfp);
@@ -1181,31 +1181,31 @@ loop:   if (tfp == NULL)
 		}
 
 		/*
-                 * Check for a listing line number if required
+		 * Check for a listing line number if required
 		 */
-                if (gcntr != -1) {
+		if (gcntr != -1) {
 			switch(a_bytes) {
 			default:
-                        case 2: n = 30; break;
+			case 2: n = 30; break;
 			case 3:
-                        case 4: n = 38; break;
+			case 4: n = 38; break;
 			}
-                        if (!dgt(RAD10, &rb[n], 1)) {
+			if (!dgt(RAD10, &rb[n], 1)) {
 				fprintf(rfp, "%s", rb);
 				goto loop;
 			}
-                        gcntr = 0;
+			gcntr = 0;
 		}
-                gline = 0;
+		gline = 0;
 	}
 
 	/*
 	 * Hex Listing
 	 */
 #ifdef	LONGINT
-	 switch(radix) {
-	 default:
-	 case 16:
+	switch(radix) {
+	default:
+	case 16:
 		r = RAD16;
 		switch(a_bytes) {
 		default:
@@ -1234,9 +1234,9 @@ loop:   if (tfp == NULL)
 		frmt = " %03o"; break;
 	}
 #else
-	 switch(radix) {
-	 default:
-	 case 16:
+	switch(radix) {
+	default:
+	case 16:
 		r = RAD16;
 		switch(a_bytes) {
 		default:
@@ -1268,10 +1268,10 @@ loop:   if (tfp == NULL)
 	/*
 	 * Data Byte Pointer
 	 */
-        if (gcntr == -1) {
-                rp = &rb[a];
+	if (gcntr == -1) {
+		rp = &rb[a];
 	} else {
-                rp = &rb[a + (s * gcntr)];
+		rp = &rb[a + (s * gcntr)];
 	}
 	/*
 	 * Number must be of proper radix
@@ -1286,9 +1286,11 @@ loop:   if (tfp == NULL)
 	 * Output new data value, overwrite relocation codes
 	 */
 	sprintf(str, frmt, v);
-        strncpy(rp-1, str, s);
-        if (gcntr == -1) {
-                gcntr = 0;
+	/* With GCC [-Wstringop-truncation] ? */
+	/* strncpy(rp-1, str, s); */
+	memcpy(rp-1, str, s);
+	if (gcntr == -1) {
+		gcntr = 0;
 	}
 	/*
 	 * Output relocated code address
@@ -1317,8 +1319,8 @@ loop:   if (tfp == NULL)
 	/*
 	 * Fix 'u' if [nn], cycles, is specified
 	 */
-        if (rb[a + (s*u) - 1] == CYCNT_END) {
-	 	u -= 1;
+	if (rb[a + (s*u) - 1] == CYCNT_END) {
+		u -= 1;
 	}
 	/*
 	 * Output text line when updates finished
@@ -1326,7 +1328,7 @@ loop:   if (tfp == NULL)
 	if (++gcntr == u) {
 		fprintf(rfp, "%s", rb);
 		gline = 1;
-                gcntr = -1;
+		gcntr = -1;
 	}
 }
 
@@ -1466,7 +1468,7 @@ getlst(int ngline)
 void
 hlrlist(a_uint cpc, int v, int err)
 {
- 	/*
+	/*
 	 * Exit if listing file is not open
 	 */
 	if (tfp == NULL)
@@ -1925,7 +1927,7 @@ hlrclist(a_uint cpc, int v)
 	 * Fix 'u' if [nn], cycles, is specified
 	 */
 	 if (rb[a + (s*u) - 1] == CYCNT_END) {
-	 	u -= 1;
+		u -= 1;
 	}
 	/*
 	 * Must have an address
@@ -2239,3 +2241,4 @@ gethlr(int nhline)
 }
 
 #endif
+
