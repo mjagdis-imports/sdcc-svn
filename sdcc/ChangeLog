@@ -1,7 +1,9 @@
 2026-09-02 Gabriele Gorla <gorlik@yahoo.com>
 
 	* sdas/asxxsrc/aslist.c:
-      Apply patch from bug #4049.     
+      Apply patch from bug #4049. 
+    * support/regression/bug-2326.c:
+      Add regression for bug #2326.    
 
 2026-09-01 Maarten Brock <sourceforge.brock AT dse.nl>
 
