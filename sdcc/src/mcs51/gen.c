@@ -1602,7 +1602,6 @@ aopGetUsesAcc (const asmop* aop, int offset)
 
   switch (aop->type)
     {
-
     case AOP_R0:
     case AOP_R1:
       if (aop->paged)
@@ -2742,7 +2741,7 @@ release:
 #if 0
 /*-----------------------------------------------------------------*/
 /* genCpl - generate code for complement                           */
-/* no longer used; todo: chekc if something from here could still  */
+/* no longer used; todo: check if something from here could still  */
 /* be useful in genXor for AOP_CRY, then remove genCpl!            */
 /*-----------------------------------------------------------------*/
 static void
@@ -2820,10 +2819,18 @@ genUminusFloat (operand * op, operand * result)
 
   size = AOP_SIZE (op) - 1;
 
-  while (size--)
+  /* if they are the same */
+  if (operandsEqu (result, op) && !isOperandVolatile (result, FALSE))
     {
-      opPut (result, opGet (op, offset, FALSE, FALSE), offset);
-      offset++;
+      offset = size;
+    }
+  else
+    {
+      while (size--)
+        {
+          opPut (result, opGet (op, offset, FALSE, FALSE), offset);
+          offset++;
+        }
     }
 
   MOVA (opGet (op, offset, FALSE, FALSE));
@@ -7292,7 +7299,7 @@ gencjneshort (operand * left, operand * right, symbol * lbl)
         }
     }
 
-  /* if the right side is in a register or in direct space or
+  /* if the right side is in a register or in direct space or an immediate or
      if the left is a pointer register & right is not */
   else if (AOP_TYPE (right) == AOP_REG ||
            AOP_TYPE (right) == AOP_DIR || AOP_TYPE (right) == AOP_SFR ||
@@ -8147,8 +8154,10 @@ genAnd (iCode * ic, iCode * ifx)
             emitcode ("setb", "c");
           while (sizer--)
             {
-              if ((AOP_TYPE (right) == AOP_REG || IS_AOP_PREG (right) || AOP_TYPE (right) == AOP_DIR || AOP_TYPE (right) == AOP_SFR)
-                  && AOP_TYPE (left) == AOP_ACC)
+              if ((AOP_TYPE (right) == AOP_REG || IS_AOP_PREG (right) ||
+                   AOP_TYPE (right) == AOP_DIR || AOP_TYPE (right) == AOP_SFR ||
+                   IS_AOP_IMMEDIATE (right)) &&
+                  AOP_TYPE (left) == AOP_ACC)
                 {
                   if (offset)
                     emitcode ("mov", "a,b");
@@ -8231,8 +8240,10 @@ genAnd (iCode * ic, iCode * ifx)
                 }
               // faster than result <- left, anl result,right
               // and better if result is SFR
-              if ((AOP_TYPE (right) == AOP_REG || IS_AOP_PREG (right) || AOP_TYPE (right) == AOP_DIR || AOP_TYPE (right) == AOP_SFR)
-                  && AOP_TYPE (left) == AOP_ACC)
+              if ((AOP_TYPE (right) == AOP_REG || IS_AOP_PREG (right) ||
+                   AOP_TYPE (right) == AOP_DIR || AOP_TYPE (right) == AOP_SFR ||
+                   IS_AOP_IMMEDIATE (right)) &&
+                  AOP_TYPE (left) == AOP_ACC)
                 {
                   if (offset)
                     emitcode ("mov", "a,b");
@@ -8541,8 +8552,10 @@ genOr (iCode * ic, iCode * ifx)
             emitcode ("setb", "c");
           while (sizer--)
             {
-              if ((AOP_TYPE (right) == AOP_REG || IS_AOP_PREG (right) || AOP_TYPE (right) == AOP_DIR)
-                  && AOP_TYPE (left) == AOP_ACC)
+              if ((AOP_TYPE (right) == AOP_REG || IS_AOP_PREG (right) ||
+                   AOP_TYPE (right) == AOP_DIR || AOP_TYPE (right) == AOP_SFR ||
+                   IS_AOP_IMMEDIATE (right)) &&
+                  AOP_TYPE (left) == AOP_ACC)
                 {
                   if (offset)
                     emitcode ("mov", "a,b");
@@ -8626,8 +8639,10 @@ genOr (iCode * ic, iCode * ifx)
                 }
               // faster than result <- left, orl result,right
               // and better if result is SFR
-              if ((AOP_TYPE (right) == AOP_REG || IS_AOP_PREG (right) || AOP_TYPE (right) == AOP_DIR || AOP_TYPE (right) == AOP_SFR)
-                  && AOP_TYPE (left) == AOP_ACC)
+              if ((AOP_TYPE (right) == AOP_REG || IS_AOP_PREG (right) ||
+                   AOP_TYPE (right) == AOP_DIR || AOP_TYPE (right) == AOP_SFR ||
+                   IS_AOP_IMMEDIATE (right)) &&
+                  AOP_TYPE (left) == AOP_ACC)
                 {
                   if (offset)
                     emitcode ("mov", "a,b");
@@ -8906,8 +8921,10 @@ genXor (iCode * ic, iCode * ifx)
                 {
                   MOVA (opGet (left, offset, FALSE, FALSE));
                 }
-              else if ((AOP_TYPE (right) == AOP_REG || IS_AOP_PREG (right) || AOP_TYPE (right) == AOP_DIR || AOP_TYPE (right) == AOP_SFR)
-                       && AOP_TYPE (left) == AOP_ACC)
+              else if ((AOP_TYPE (right) == AOP_REG || IS_AOP_PREG (right) ||
+                        AOP_TYPE (right) == AOP_DIR || AOP_TYPE (right) == AOP_SFR ||
+                        IS_AOP_IMMEDIATE (right)) &&
+                       AOP_TYPE (left) == AOP_ACC)
                 {
                   if (offset)
                     emitcode ("mov", "a,b");
@@ -8986,8 +9003,10 @@ genXor (iCode * ic, iCode * ifx)
                 }
               // faster than result <- left, xrl result,right
               // and better if result is SFR
-              if ((AOP_TYPE (right) == AOP_REG || IS_AOP_PREG (right) || AOP_TYPE (right) == AOP_DIR || AOP_TYPE (right) == AOP_SFR)
-                  && AOP_TYPE (left) == AOP_ACC)
+              if ((AOP_TYPE (right) == AOP_REG || IS_AOP_PREG (right) ||
+                   AOP_TYPE (right) == AOP_DIR || AOP_TYPE (right) == AOP_SFR ||
+                   IS_AOP_IMMEDIATE (right)) &&
+                  AOP_TYPE (left) == AOP_ACC)
                 {
                   if (offset)
                     emitcode ("mov", "a,b");

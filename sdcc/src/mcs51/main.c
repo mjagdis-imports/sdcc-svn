@@ -699,7 +699,7 @@ updateOpRW (asmLineNode *aln, const char *op_in, const char *optype)
   if (*op_in == '/')
     op_in += 1;
 
-  /* Ignore dots or brackets in operand (bit numbes) for operand table search.
+  /* Ignore dots or brackets in operand (bit numbers) for operand table search.
      But remember that it's a bit access for special case handling.  */
   char op[32];
   strncpy (op, op_in, 31);
@@ -729,6 +729,7 @@ updateOpRW (asmLineNode *aln, const char *op_in, const char *optype)
         aln->regsWritten = bitVectSetBit (aln->regsWritten, opdat->regIdx2);
 
       /* Any bit access always implies a read of the full register.  */
+      // FIXME: BR, Why is that?
       if (opdat->regIdx1 == A_IDX && bit_sep)
         aln->regsRead = bitVectSetBit (aln->regsRead, A_IDX);
 
@@ -774,16 +775,16 @@ static const mcs51opcodedata mcs51opcodeDataTable[] =
   {"da",   "",  "rw", "rw", ""},
   {"dec",  "",  "",   "rw", ""},
   {"div",  "",  "w",  "rw", ""},
-  {"djnz", "j", "",  "rw",  ""},
+  {"djnz", "j", "",   "rw", ""},
   {"inc",  "",  "",   "rw", ""},
   {"jb",   "j", "",   "r",  ""},
-  {"jbc",  "j", "",  "rw",  ""},
-  {"jc",   "j", "",   "",   ""},
-  {"jmp",  "j", "",  "",    ""},
+  {"jbc",  "j", "",   "rw", ""},
+  {"jc",   "j", "r",  "",   ""},
+  {"jmp",  "j", "",   "",   ""},
   {"jnb",  "j", "",   "r",  ""},
-  {"jnc",  "j", "",   "",   ""},
-  {"jnz",  "j", "",  "",    ""},
-  {"jz",   "j", "",  "",    ""},
+  {"jnc",  "j", "r",  "",   ""},
+  {"jnz",  "j", "",   "",   ""},
+  {"jz",   "j", "",   "",   ""},
   {"lcall","j", "",   "",   ""},
   {"ljmp", "j", "",   "",   ""},
   {"mov",  "",  "",   "w",  "r"},
@@ -853,7 +854,6 @@ asmLineNodeFromLineNode (lineNode *ln)
   p = skip_spaces (p);
   if (*p == '=')
     return aln;
-
 
   /* extract first operand.  if it starts with '_' that usually means
      it's a case sensitive symbol from c code.  */

@@ -1516,12 +1516,12 @@ replace {
 
 // this one will screw assigns to volatile/sfr's
 replace {
-	mov  %1,%2
-	mov  %2,%1
+	mov	%1,%2
+	mov	%2,%1
 } by {
-	mov  %1,%2
+	mov	%1,%2
 	;	Peephole 177.a	removed redundant mov
-} if notVolatile %1 %2
+} if notVolatile(%1 %2)
 
 // applies to f.e. scott-add.asm (--model-large)
 replace {
@@ -5195,18 +5195,19 @@ replace restart {
 } if deadMove(%1)
 
 replace restart {
-	mov	%1, %2
-} by {
-	;	Peephole 302 removed dead mov %1, %2
-} if notVolatile(%2), notUsed(%1)
-
-replace restart {
 	mov	%1, a
 	mov	%2, %1
 } by {
+	mov	%1, a
 	mov	%2, a
-	;	Peephole 303 used a directly instead of going through %1
-} if notVolatile(%1), notUsed(%1)
+	;	Peephole 302 read from a instead of %1
+} if notVolatile(%1), notSame(%2 'a')
+
+replace restart {
+	mov	%1, %2
+} by {
+	;	Peephole 303 removed dead mov %1, %2
+} if notVolatile(%1 %2), notUsed(%1)
 
 // applies to: void test( char c ) { if( c ) func1(); else func2(); }
 replace {

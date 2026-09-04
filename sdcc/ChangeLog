@@ -1,9 +1,20 @@
+2026-09-05 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* device/lib/_divslonglong.c: optimized
+	* device/lib/mcs51/crtxpopr0.asm,
+	* device/lib/mcs51/crtxpop.asm: made register bank independent
+	* src/mcs51/gen.c (genUminusFloat): optimized in-place uminus,
+	  (genAnd, genOr, genXor): optimized IMMEDIATE
+	* src/mcs51/main.c (mcs51opcodeDataTable): fixed jc/jnc reads psw
+	* src/mcs51/peeph.def: swapped rules 302 & 303,
+	  fixed volatile, more general dead mov removal
+	* support/regression/collate-results.py: print in fixed columns for easier
+	  comparison by a human
+
 2026-09-02 Gabriele Gorla <gorlik@yahoo.com>
 
-	* sdas/asxxsrc/aslist.c:
-      Apply patch from bug #4049. 
-    * support/regression/bug-2326.c:
-      Add regression for bug #2326.    
+	* sdas/asxxsrc/aslist.c: Apply patch from bug #4049, Thanks Jan Andersen.
+	* support/regression/bug-2326.c: Add regression for bug #2326.
 
 2026-09-01 Maarten Brock <sourceforge.brock AT dse.nl>
 

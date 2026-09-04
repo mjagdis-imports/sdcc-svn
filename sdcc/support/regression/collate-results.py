@@ -121,17 +121,19 @@ for line in lines:
 
 
 if (len(sys.argv) > 1):
-    print("Summary for '%s':" % sys.argv[1], end=' ')
+    target = f"'{sys.argv[1]}'"
+    print(f"Summary for {target:<25s}:", end=' ')
 if (unmatch > 0):
-    print("%d abnormal stops (" % unmatch, end=' ')
+    print(f"{unmatch} abnormal stops (", end=' ')
     if (invalid > 0):
-        print("%d invalid instructions," % invalid, end=' ')
+        print(f"{invalid} invalid instructions,", end=' ')
     if (stack_overflow > 0):
-        print("%d Stack overflows," % stack_overflow, end=' ')
+        print(f"{stack_overflow} Stack overflows,", end=' ')
     if (halt > 0):
-        print("%d HALT instructions," % halt, end=' ')
+        print(f"{halt} HALT instructions,", end=' ')
     print("),", end=' ')
-print("%.0f failures, %.0f tests, %.0f test cases, %.0f bytes, %.0f ticks" % (failures, tests, cases, bytes, ticks))
+#print("%.0f failures, %.0f tests, %.0f test cases, %.0f bytes, %.0f ticks" % (failures, tests, cases, bytes, ticks))
+print(f"{failures:6d} failures,{tests:6d} tests,{cases:5d} test cases,{bytes:9d} bytes,{ticks:11d} ticks")
 for msg in messagelog:
   print("  ",msg)
 print()

@@ -45,8 +45,10 @@ _divslonglong (long long numerator, long long denominator) __SDCC_NONBANKED
     denominator = -denominator;
 
   d = (unsigned long long)numerator / (unsigned long long)denominator;
+  if (numeratorneg ^ denominatorneg)
+    d = -d;
 
-  return ((numeratorneg ^ denominatorneg) ? -d : d);
+  return (d);
 }
 #endif
 

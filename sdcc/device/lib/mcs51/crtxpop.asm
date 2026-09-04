@@ -33,9 +33,6 @@
 bits:
 	.ds 1
 
-	ar0 = 0x00
-	ar1 = 0x01
-
 	.area HOME    (CODE)
 
 ; Pop registers r1..r7 & bits from xstack
@@ -86,5 +83,6 @@ ___sdcc_xpop::
 	mov	r7,a
 00107$:
 	mov	_spx,r0
-	pop	ar0
+	pop	acc
+	mov	r0,a
 	ret

@@ -1,5 +1,5 @@
 ;--------------------------------------------------------------------------
-;  crtxpopbits.asm - C run-time: pop bits and other registers from xstack
+;  crtxpopr0.asm - C run-time: pop bits and other registers from xstack
 ;
 ;  Copyright (C) 2009, Maarten Brock
 ;
@@ -32,9 +32,6 @@
 	.area BIT_BANK	(REL,OVR,DATA)
 bits:
 	.ds 1
-
-	ar0 = 0x00
-	ar1 = 0x01
 
 	.area HOME    (CODE)
 
