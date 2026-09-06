@@ -210,13 +210,6 @@ slew(struct area *xp, struct bank *yp)
 
 	if (lop++ >= NLPP) {
 		newpag(mfp);
-		switch(xflag) {
-		default:
-		case 0: frmta = "Hexadecimal"; break;
-		case 1: frmta = "Octal"; break;
-		case 2: frmta = "Decimal"; break;
-		}
-		fprintf(mfp, "%s  [%d-Bits]\n", frmta, a_bytes*8);
 		if (*yp->b_id) {
 			fprintf(mfp, "[ Bank == %s ]\n", yp->b_id);
 			lop += 1;
