@@ -663,6 +663,7 @@ static mcs51operanddata mcs51operandDataTable[] =
   {"ar6",  R6_IDX,  -1},
   {"ar7",  R7_IDX,  -1},
   {"b",    B_IDX,   -1},
+  {"bits",    B0_IDX,  -1},
   {"c",    CND_IDX, -1},
   {"cy",   CND_IDX, -1},
   {"dph",  DPH_IDX, -1},
@@ -710,20 +711,39 @@ updateOpRW (asmLineNode *aln, const char *op_in, const char *optype)
     *bit_sep = '\0';
   else if (bit_sep = strchr (op, '['))
     *bit_sep = '\0';
+  int bit = -1;
+  if (bit_sep && bit_sep[1] >= '0' && bit_sep[1] <= '7')
+    bit = bit_sep[1] - '0';
   opdat = bsearch (op, mcs51operandDataTable,
                    sizeof(mcs51operandDataTable)/sizeof(mcs51operanddata),
                    sizeof(mcs51operanddata), mcs51operandCompare);
 
   if (opdat && strchr(optype,'r'))
     {
-      if (opdat->regIdx1 >= 0)
+      if (opdat->regIdx1 == B0_IDX)
+        {
+          if (bit_sep && bit >= 0)
+            aln->regsRead = bitVectSetBit (aln->regsRead, B0_IDX + bit);
+          else
+            for (int b=B0_IDX; b<=B7_IDX; b++)
+              aln->regsRead = bitVectSetBit (aln->regsRead, b);
+        }
+      else if (opdat->regIdx1 >= 0)
         aln->regsRead = bitVectSetBit (aln->regsRead, opdat->regIdx1);
       if (opdat->regIdx2 >= 0)
         aln->regsRead = bitVectSetBit (aln->regsRead, opdat->regIdx2);
     }
   if (opdat && strchr(optype,'w'))
     {
-      if (opdat->regIdx1 >= 0)
+      if (opdat->regIdx1 == B0_IDX)
+        {
+          if (bit_sep && bit >= 0)
+            aln->regsWritten = bitVectSetBit (aln->regsWritten, B0_IDX + bit);
+          else
+            for (int b=B0_IDX; b<=B7_IDX; b++)
+              aln->regsWritten = bitVectSetBit (aln->regsWritten, b);
+        }
+      else if (opdat->regIdx1 >= 0)
         aln->regsWritten = bitVectSetBit (aln->regsWritten, opdat->regIdx1);
       if (opdat->regIdx2 >= 0)
         aln->regsWritten = bitVectSetBit (aln->regsWritten, opdat->regIdx2);

@@ -45,7 +45,7 @@ memmap *c_abs = NULL;           /* constant absolute data      */
 memmap *x_abs = NULL;           /* absolute xdata/pdata        */
 memmap *i_abs = NULL;           /* absolute idata upto 256     */
 memmap *d_abs = NULL;           /* absolute data upto 128 (mcs51) or 64 K (z80-related) */
-memmap *sfr = NULL;             /* register space              */
+memmap *sfr = NULL;             /* special function registers  */
 memmap *reg = NULL;             /* register space              */
 memmap *sfrbit = NULL;          /* sfr bit space               */
 memmap *generic = NULL;         /* is a generic pointer        */
@@ -746,7 +746,8 @@ allocParms (value *val, struct sym_link *ftype)
           SPEC_OCLS (lval->etype) = SPEC_OCLS (lval->sym->etype) =
               port->mem.default_local_map;
           if (options.model == MODEL_SMALL ||
-              /* The test for NO_MODEL was introduced to fix an issue for pdk (pdk has no xdata) maybe it is the right thing to do for pic, too.
+              /* The test for NO_MODEL was introduced to fix an issue for pdk
+                 (pdk has no xdata) maybe it is the right thing to do for pic, too.
                  But I don't know about pic */
               options.model == NO_MODEL && !TARGET_PIC_LIKE)
             {
@@ -1024,7 +1025,6 @@ overlay2data (void)
   for (sym = setFirstItem (overlay->syms); sym;
        sym = setNextItem (overlay->syms))
     {
-
 //      SPEC_OCLS (sym->etype) = (options.xdata_spill)?xdata:data;
       SPEC_OCLS (sym->etype) = data;
       allocIntoSeg (sym);
@@ -1046,7 +1046,6 @@ overlay2Set (void)
   for (sym = setFirstItem (overlay->syms); sym;
        sym = setNextItem (overlay->syms))
     {
-
       addSet (&oset, sym);
     }
 
@@ -1055,7 +1054,7 @@ overlay2Set (void)
 }
 
 /*-----------------------------------------------------------------*/
-/* allocVariables - creates decl & assign storage class for a v    */
+/* allocVariables - creates decl & assign storage class for a var  */
 /*-----------------------------------------------------------------*/
 int
 allocVariables (symbol *symChain)
@@ -1341,25 +1340,25 @@ canOverlayLocals (eBBlock ** ebbs, int count)
   if (options.noOverlay ||
       options.stackAuto ||
       (currFunc &&
-       (IFFUNC_ISREENT (currFunc->type) ||
-        FUNC_ISISR (currFunc->type))) ||
+       (IFFUNC_ISREENT (currFunc->type) || FUNC_ISISR (currFunc->type))) ||
       elementsInSet (overlay->syms) == 0)
     {
-      return FALSE;
+      return false;
     }
 
   wassert (currFunc);
 
   /* if this is a forces overlay */
-  if (IFFUNC_ISOVERLAY(currFunc->type)) return TRUE;
+  if (IFFUNC_ISOVERLAY(currFunc->type))
+    return true;
 
   // struct / union parameters are written using memcpy, which goes very wrong if they are overlaid with memcpy's parameters.
   for (value *arg = FUNC_ARGS (currFunc->type); arg; arg = arg->next)
     if (IS_STRUCT (arg->type))
       return false;
 
-  /* otherwise do thru the blocks and see if there
-     any function calls if found then return false */
+  /* otherwise go through the blocks and see if there are
+     any function calls, if found then return false */
   for (i = 0; i < count; i++)
     {
       iCode *ic;
@@ -1371,17 +1370,18 @@ canOverlayLocals (eBBlock ** ebbs, int count)
                 {
                   sym_link *ftype = operandType(IC_LEFT(ic));
                   /* builtins only can use overlays */
-                  if (!IFFUNC_ISBUILTIN(ftype)) return FALSE;
+                  if (!IFFUNC_ISBUILTIN(ftype))
+                    return false;
                 }
               else if (ic->op == PCALL)
                 {
-                  return FALSE;
+                  return false;
                 }
           }
     }
 
-  /* no function calls found return TRUE */
-  return TRUE;
+  /* no function calls found return true */
+  return true;
 }
 
 /*-----------------------------------------------------------------*/
@@ -1393,17 +1393,17 @@ doOverlays (eBBlock ** ebbs, int count)
   if (!overlay)
     return;
 
-  /* check if the parameters and local variables
+  /* Check if the parameters and local variables
      of this function can be put in the overlay segment
      This check is essentially to see if the function
-     calls any other functions if yes then we cannot
+     calls any other functions. If yes then we cannot
      overlay */
   if (canOverlayLocals (ebbs, count))
-    /* if we can then put the parameters &
+    /* If we can then put the parameters &
        local variables in the overlay set */
     overlay2Set ();
   else
-    /* otherwise put them into data where they belong */
+    /* Otherwise put them into data where they belong */
     overlay2data ();
 }
 
@@ -1429,9 +1429,11 @@ printAllocInfo (symbol *func, struct dbuf_s *oBuf)
   cnt += printAllocInfoSeg (xstack, func, oBuf);
   cnt += printAllocInfoSeg (istack, func, oBuf);
   cnt += printAllocInfoSeg (code, func, oBuf);
+  cnt += printAllocInfoSeg (bit, func, oBuf);
   cnt += printAllocInfoSeg (data, func, oBuf);
-  cnt += printAllocInfoSeg (xdata, func, oBuf);
   cnt += printAllocInfoSeg (idata, func, oBuf);
+  cnt += printAllocInfoSeg (pdata, func, oBuf);
+  cnt += printAllocInfoSeg (xdata, func, oBuf);
   cnt += printAllocInfoSeg (sfr, func, oBuf);
   cnt += printAllocInfoSeg (sfrbit, func, oBuf);
 

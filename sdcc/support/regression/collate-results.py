@@ -132,7 +132,6 @@ if (unmatch > 0):
     if (halt > 0):
         print(f"{halt} HALT instructions,", end=' ')
     print("),", end=' ')
-#print("%.0f failures, %.0f tests, %.0f test cases, %.0f bytes, %.0f ticks" % (failures, tests, cases, bytes, ticks))
 print(f"{failures:6d} failures,{tests:6d} tests,{cases:5d} test cases,{bytes:9d} bytes,{ticks:11d} ticks")
 for msg in messagelog:
   print("  ",msg)

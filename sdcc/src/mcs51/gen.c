@@ -2408,6 +2408,15 @@ cheapMove (asmop *to, int to_offset, asmop *from, int from_offset, bool a_dead)
       return;
     }
 
+  if (from->paged == to->paged && from_offset == to_offset &&
+      ( (from->type == AOP_R0   && to->type == AOP_R0)  ||
+        (from->type == AOP_R1   && to->type == AOP_R1)  ||
+        (from->type == AOP_STK  && to->type == AOP_STK) ||
+        (from->type == AOP_DPTR && to->type == AOP_DPTR) ))
+    {
+      return;
+    }
+
   if (to->type == AOP_STR && from->type == AOP_REG &&
       EQ (to->aopu.aop_str[to_offset], from->aopu.aop_reg[from_offset]->name))
     {
@@ -3765,20 +3774,20 @@ genSend (set *sendSet)
                 emitcode ("clr", "b.%d", bit);
             }
           else
-            {
-              /* we need to or */
-              toCarry (IC_LEFT (sic));
+                {
+                  /* we need to or */
+                  toCarry (IC_LEFT (sic));
               emitcode ("mov", "b.%d,c", bit);
-            }
+                }
           bit_count++;
           BitBankUsed = 1;
 
           freeAsmop (IC_LEFT (sic), NULL, sic, TRUE);
         }
-    }
+}
 
   if (options.useXstack || bit_count || setFirstItem (sendSet) && operandSize (IC_LEFT ((iCode *)(setFirstItem (sendSet)))) >= 6)
-    {
+{
       if (bit_count)
         BITSINB++;
       saveRegisters (setFirstItem (sendSet));
@@ -7303,7 +7312,7 @@ gencjneshort (operand * left, operand * right, symbol * lbl)
      if the left is a pointer register & right is not */
   else if (AOP_TYPE (right) == AOP_REG ||
            AOP_TYPE (right) == AOP_DIR || AOP_TYPE (right) == AOP_SFR ||
-           IS_AOP_IMMEDIATE (right) ||
+           IS_AOP_IMMEDIATE (right)    ||
            (IS_AOP_PREG (left) && !IS_AOP_PREG (right)))
     {
       if (AOP_TYPE (right) == AOP_LIT)
@@ -13651,7 +13660,8 @@ mcs51IsReturned (const char *what)
   if (!retaop)
     return false;
   for (int i = 0; i < retaop->size; i++)
-    if (!strcmp(retaop->aopu.aop_reg[i]->name, what))
+    if (!strcmp(retaop->aopu.aop_reg[i]->name, what) ||
+        !strcmp(retaop->aopu.aop_reg[i]->dname, what))
       return true;
   return false;
 }
@@ -13673,7 +13683,8 @@ mcs51IsRegArg (struct sym_link *ftype, int i, const char *what)
     return true;
 
   for (int i = 0; i < argaop->size; i++)
-    if (!strcmp(argaop->aopu.aop_reg[i]->name, what))
+    if (!strcmp(argaop->aopu.aop_reg[i]->name, what) ||
+        !strcmp(argaop->aopu.aop_reg[i]->dname, what))
       return true;
 
   return false;

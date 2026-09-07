@@ -206,7 +206,7 @@ mcs51_regWithIdx (int idx)
 {
   int i;
 
-  for (i = 0; i < sizeof (regs8051) / sizeof (reg_info); i++)
+  for (i = 0; i < END_IDX; i++)
     if (regs8051[i].rIdx == idx)
       return &regs8051[i];
 

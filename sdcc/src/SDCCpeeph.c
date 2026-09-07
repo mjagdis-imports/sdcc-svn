@@ -1320,7 +1320,7 @@ operandBaseName (const char *op)
         return op+1;
       if (!strcmp (op, "ab"))
         return "ab";
-      if (!strcmp (op, "acc") || !strncmp (op, "acc.", 4) || *op == 'a')
+      if (!strcmp (op, "a") || !strcmp (op, "acc") || !strncmp (op, "acc.", 4))
         return "a";
       // bug 1739475, temp fix
       if (op[0] == '@')
@@ -1437,6 +1437,9 @@ FBYNAME (notUsed)
       fprintf (stderr, "Function notUsed not initialized in port structure\n");
       return FALSE;
     }
+
+  if (currPl && currPl->ic && (currPl->ic->op == SEND || currPl->ic->op == RETURN))
+    return FALSE;
 
   set *operands = setFromConditionArgs (cmdLine, vars);
 

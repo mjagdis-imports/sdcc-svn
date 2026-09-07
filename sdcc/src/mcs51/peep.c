@@ -368,6 +368,15 @@ scan4op (lineNode **pl, const char *pReg, const char *untilOp,
               /* we can get here, if the register name is
                  part of a variable name: ignore it */
             }
+          if (rIdx >= B0_IDX && rIdx <= B7_IDX && strstr (p, "bits"))
+            {
+              /* does opcode read from pReg? */
+              if (bitVectBitValue (port->peep.getRegsRead ((*pl)), rIdx))
+                return S4O_RD_OP;
+              /* does opcode write to pReg? */
+              if (bitVectBitValue (port->peep.getRegsWritten ((*pl)), rIdx))
+                return S4O_WR_OP;
+            }
         }
 
       /* found label? */
@@ -781,7 +790,7 @@ removeDeadMove (const char *pReg, lineNode *currPl)
   lineNode *pl;
 
   /* "mov r0,a" can be removed, if these criteria are met
-     (r0 is just an example here, r0...r7 are possible):
+     (r0 is just an example here, r0...r7 and bits[n] are possible):
 
       ; There must not be:
       ;    - read access of r0
@@ -842,7 +851,7 @@ canonicalizeRegName (char* outBuf, unsigned int outBufSz, const char* inBuf)
 bool
 mcs51DeadMove (const char *reg, lineNode *currPl, lineNode *head)
 {
-  dbglog_deadmove (printf ("mcs51DeadMove  reg: %s  line: %s\n", reg, currPl->line));
+  dbglog_deadmove (printf ("mcs51DeadMove reg: %s line: %s\n", reg, currPl->line));
 
   _G.head = head;
 
@@ -860,7 +869,7 @@ mcs51DeadMove (const char *reg, lineNode *currPl, lineNode *head)
     {
       fprintf (stderr, "Error: "
                        "peephole rule with condition deadMove "
-                       "used with unknown opocde:\n"
+                       "used with unknown opcode:\n"
                        "\t%s\n", currPl->line);
       return FALSE;
     }
@@ -872,7 +881,7 @@ mcs51DeadMove (const char *reg, lineNode *currPl, lineNode *head)
 bool
 mcs51notUsed (const char *what, lineNode *endPl, lineNode *head)
 {
-  dbglog_deadmove (printf ("mcs51notUsed %s  after line: %s\n", what, endPl->line));
+  dbglog_deadmove (printf ("mcs51notUsed %s after line: %s\n", what, endPl->line));
 
   wassert (what);
 
@@ -885,14 +894,10 @@ mcs51notUsed (const char *what, lineNode *endPl, lineNode *head)
   // If we don't know what it is, assume it might be used.
   // todo: allow a, and support it in removeDeadMove.
   // todo: allow dpl, dph, and support it in removeDeadMove.
-  // Allow r0-r3 and ar0-ar3
-  int reg = 255;
-  if (what[0] == 'r' && isdigit(what[1]))
-    reg = what[1] - '0';
-  if (what[0] == 'a' && what[1] == 'r' && isdigit(what[2]))
-    reg = what[2] - '0';
-  if (reg >= 4)
-    return (false);
+  // Allow r0-r7, ar0-ar7 and bits[0]-bits[7]
+  int reg = mcs51_regname_to_idx (what);
+  if (reg < 0 || reg >= 16)
+    return false;
 
   _G.head = head;
 
