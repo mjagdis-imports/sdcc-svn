@@ -9,6 +9,15 @@
       support/regression/ports/uc6502-stack-auto/spec.mk,
       support/regression/ports/uc6280/spec.mk:
       Spec files cleanup.
+    * src/mos6502/gen.c,
+      src/mos6502/m6502.h,
+      src/mos6502/main.c,
+      src/mos6502/port_huc6280.c,
+      src/mos6502/port_mos6502.c,
+      src/mos6502/port_mos65c02.c,
+      src/mos6502/stackops.c,
+      src/mos6502/tempops.c:
+      Improve handling of enhanced instructions.
 
 2026-09-08 Maarten Brock <sourceforge.brock AT dse.nl>
 

@@ -835,7 +835,7 @@ m6502_emitBranch (const char *branchop, symbol * tlbl)
     }
   else
     {
-      if (!IS_MOS65C02 && !strcmp (branchop, "bra"))
+      if (IS_MOS6502 && !strcmp (branchop, "bra"))
         branchop = "jmp";
       m6502_emitOp (branchop, "%05d$", m6502_safeLabelNum (tlbl));
     }
@@ -900,7 +900,7 @@ m6502_smallAdjustReg (reg_info *reg, int n)
   if (n==0)
     return true;
 
-  if (reg != m6502_reg_x && reg != m6502_reg_y && !IS_MOS65C02)
+  if (reg != m6502_reg_x && reg != m6502_reg_y && !HAS_EXT_ACC_OPS)
     return false;
 
   if (n <= -4 || n >= 4)
@@ -1006,7 +1006,7 @@ m6502_transferRegReg (reg_info *sreg, reg_info *dreg, bool freesrc)
             }
           else
             {
-              if (IS_MOS65C02)
+              if (HAS_EXT_STACK_OPS)
                 {
                   m6502_emitOp ("phy", "");
                   m6502_emitOp ("plx", "");
@@ -1040,7 +1040,7 @@ m6502_transferRegReg (reg_info *sreg, reg_info *dreg, bool freesrc)
             }
           else
             {
-              if (IS_MOS65C02)
+              if (HAS_EXT_STACK_OPS)
                 {
                   m6502_emitOp ("phx", "");
                   m6502_emitOp ("ply", "");
@@ -1727,7 +1727,7 @@ m6502_storeConstToAop (int c, asmop * aop, int loffset)
     case AOP_EXT:
       /* stz operates with read-modify-write cycles, so don't use if the */
       /* destination is volatile to avoid the read side-effect. */
-      if (c==0 && IS_MOS65C02 && !(aop->op && isOperandVolatile (aop->op, false)))
+      if (c==0 && HAS_STZ && !(aop->op && isOperandVolatile (aop->op, false)))
         {
           m6502_emitOp ("stz", "%s", aopAdrStr (aop, loffset, false));
           break;
@@ -1812,7 +1812,7 @@ storeImmToAop (char *c, asmop * aop, int loffset)
       break;
     case AOP_DIR:
     case AOP_EXT:
-      if (!strcmp (c, "#0x00") && IS_MOS65C02 )
+      if (!strcmp (c, "#0x00") && HAS_STZ )
         {
           m6502_emitOp ("stz", "%s", aopAdrStr (aop, loffset, false));
           break;
@@ -2214,12 +2214,12 @@ m6502_rmwWithReg (char *rmwop, reg_info * reg)
 {
   if (reg->rIdx == A_IDX)
     {
-      if (!strcmp (rmwop, "inc") && !IS_MOS65C02)
+      if (!strcmp (rmwop, "inc") && !HAS_EXT_ACC_OPS)
         {
           m6502_emitSetCarry (0);
           m6502_emitOp ("adc", "#0x01");
         }
-      else if (!strcmp (rmwop, "dec")  && !IS_MOS65C02)
+      else if (!strcmp (rmwop, "dec")  && !HAS_EXT_ACC_OPS)
         {
           m6502_emitSetCarry (1);
           m6502_emitOp ("sbc", "#0x01");
@@ -3008,7 +3008,7 @@ m6502_aopCanIncDec (asmop * aop)
     {
     case AOP_REG:
       if (aop->aopu.aop_reg[0]->rIdx == A_IDX)
-        return IS_MOS65C02;
+        return HAS_EXT_ACC_OPS;
     case AOP_DIR:
     case AOP_EXT:
     case AOP_SOF:
@@ -3055,7 +3055,7 @@ m6502_aopCanBit (asmop * aop)
 
       // bit #aa
     case AOP_LIT:
-      return IS_MOS65C02;
+      return !IS_MOS6502; // only plain 6502 does not have bit #cc
 
       // TODO: ind,x for 65c02?
     default:
@@ -4217,7 +4217,7 @@ saveRegisters (iCode *lic)
     }
 
 
-  bool clobbers_a = !IS_MOS65C02
+  bool clobbers_a = !HAS_EXT_STACK_OPS
     && (bitVectBitValue(ic->rSurv, X_IDX) || bitVectBitValue(ic->rSurv, Y_IDX))
     && !bitVectBitValue(ic->rSurv, A_IDX);
 
@@ -4250,7 +4250,7 @@ static void unsaveRegisters (iCode *ic)
 
   // TODO: only clobbered if m6502_reg_a->isFree
 
-  bool clobbers_a = !IS_MOS65C02
+  bool clobbers_a = !HAS_EXT_STACK_OPS
     && (bitVectBitValue(ic->rSurv, X_IDX) || bitVectBitValue(ic->rSurv, Y_IDX))
     && !bitVectBitValue(ic->rSurv, A_IDX);
 
@@ -6424,7 +6424,7 @@ static void decodePointerOffset (operand * opOffset, int * litOffset, char ** re
 static void bitAConst(int val)
 {
   wassertl (val >= 0 && val <= 0xff, "bitAConst()");
-  if (IS_MOS65C02)
+  if (!IS_MOS6502)
     {
       m6502_emitOp ("bit", IMMDFMT, (unsigned int)val);
     }
@@ -8108,12 +8108,18 @@ static void genAddrOf (iCode * ic)
         {
           m6502_reg_a->aop = &m6502_tsxaop;
           m6502_reg_a->stackOffset += offset;
-          m6502_loadRegFromConst (m6502_reg_x, 0x01); // stack top = 0x100
+          if (m6502_opts.sub == SUB_HUC6280)
+            m6502_loadRegFromConst (m6502_reg_x, 0x21); // stack top = 0x2100
+          else
+            m6502_loadRegFromConst (m6502_reg_x, 0x01); // stack top = 0x0100
         }
       else
         {
           m6502_storeRegToAop (m6502_reg_a, AOP (result), 0);
-          m6502_loadRegFromConst (m6502_reg_a, 0x01); // stack top = 0x100
+          if (m6502_opts.sub == SUB_HUC6280)
+            m6502_loadRegFromConst (m6502_reg_a, 0x21); // stack top = 0x2100
+          else
+            m6502_loadRegFromConst (m6502_reg_a, 0x01); // stack top = 0x0100
           m6502_storeRegToAop (m6502_reg_a, AOP (result), 1);
         }
       m6502_loadOrFreeRegTemp (m6502_reg_x, needloadx);

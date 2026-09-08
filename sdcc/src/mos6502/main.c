@@ -186,10 +186,22 @@ m6502_setDefaultOptions (void)
   //  options.intlong_rent = 1;
   //  options.float_rent = 1;
   //  options.noRegParams = 0;
-  options.code_loc = 0x8000;
+
+  if (m6502_opts.sub == SUB_HUC6280)
+    {
+//      options.data_loc = 0x2000;    /* Zero page */
+      options.xdata_loc = 0x2200;   /* immediately following stack */
+      options.stack_loc = 0x21ff;
+    }
+  else
+    {
+      options.xdata_loc = 0x0200;   /* immediately following stack */
+      options.stack_loc = 0x01ff;
+    }
+
   options.data_loc = 0x0001;    /* Zero page, We can't use the byte at address zero in C, since NULL pointers have special meaning */
-  options.xdata_loc = 0x0200;   /* immediately following stack */
-  options.stack_loc = 0x01ff;
+                                /* this is technicall incorrect for HuC6280, but it's the only way to get the assembler to work properly */
+  options.code_loc = 0x8000;
 
   options.omitFramePtr = 1;     /* no frame pointer (we use SP */
                                 /* offsets instead)            */
@@ -619,24 +631,5 @@ m6502_getInstructionSize (lineNode *line)
     line->aln = (asmLineNodeBase *) m6502_asmLineNodeFromLineNode (line);
 
   return line->aln->size;
-}
-
-const char *
-m6502_get_model (void)
-{
-  if (IS_MOS65C02)
-    {
-      if (options.stackAuto)
-        return "mos65c02-stack-auto";
-      else
-        return "mos65c02";
-    }
-  else
-    {
-      if (options.stackAuto)
-        return "mos6502-stack-auto";
-      else
-        return "mos6502";
-    }
 }
 

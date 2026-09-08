@@ -38,6 +38,15 @@ huc6280_init (void)
   asm_addTree (&asm_asxxxx_mapping);
 }
 
+static const char *
+huc6280_get_model (void)
+{
+  if (options.stackAuto)
+    return "huc6280-stack-auto";
+  else
+    return "huc6280";
+}
+
 static void
 huc6280_genAssemblerStart (FILE * of)
 {
@@ -60,7 +69,7 @@ PORT huc6280_port =
       false,                    /* Emit glue around main */
       MODEL_SMALL | MODEL_LARGE,
       MODEL_LARGE,
-      m6502_get_model,
+      huc6280_get_model,
     },
     {
       m6502_asmCmd,

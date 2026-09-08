@@ -38,6 +38,15 @@ mos6502_init (void)
   asm_addTree (&asm_asxxxx_mapping);
 }
 
+static const char *
+mos6502_get_model (void)
+{
+  if (options.stackAuto)
+    return "mos6502-stack-auto";
+  else
+    return "mos6502";
+}
+
 static void
 mos6502_genAssemblerStart (FILE * of)
 {
@@ -60,7 +69,7 @@ PORT mos6502_port =
       false,                    /* Emit glue around main */
       MODEL_SMALL | MODEL_LARGE,
       MODEL_LARGE,
-      m6502_get_model,
+      mos6502_get_model,
     },
     {
       m6502_asmCmd,
