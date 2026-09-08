@@ -51,7 +51,7 @@ cl_huc6280::reset(void)
 {
   mpras->write(7, 0);
   //emulate 64k system:
-  for (int i=0; i<7; i++) mpras->write(i,7-i);
+  //for (int i=0; i<7; i++) mpras->write(i,7-i);
   cl_mos65c02s::reset();
 }
 
@@ -84,6 +84,9 @@ cl_huc6280::init(void)
   mk_mvar(mpras, 5, "MPR5", "Mapping Register 5");
   mk_mvar(mpras, 6, "MPR6", "Mapping Register 6");
   mk_mvar(mpras, 7, "MPR7", "Mapping Register 7");
+  // power-on values for MAP registers
+  for (i=0;i<7;i++)
+    mpras->write(i, 0xff);
   return 0;
 }
 
