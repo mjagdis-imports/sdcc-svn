@@ -3,7 +3,7 @@
 # simulation timeout in cycles
 SIM_CYCLES = 1000000000
 
-EMU_PORT_FLAG=-t65c02
+EMU_PORT_FLAG=-t6280
 
 # path to uCsim
 ifdef SDCC_BIN_PATH
@@ -30,7 +30,7 @@ ifdef CROSSCOMPILING
   SDCCFLAGS += -I$(top_srcdir)
 endif
 
-SDCCFLAGS += -mhuc6280 --less-pedantic --code-loc 0x8000 --xram-loc 0x0200 --i-code-in-asm --opt-code-speed
+SDCCFLAGS += -mhuc6280 --less-pedantic --code-loc 0x8000 --i-code-in-asm --opt-code-speed
 LINKFLAGS += huc6280.lib
 
 OBJEXT = .rel

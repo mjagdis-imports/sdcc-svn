@@ -1,3 +1,15 @@
+2026-09-08 Gabriele Gorla <gorlik@yahoo.com>
+
+	* support/regression/Makefile.in,
+      support/regression/ports/mos6502:
+	  Removed unmantained support for sim65.
+    * support/regression/ports/uc65c02/uCsim.cmd,
+      support/regression/ports/uc65c02/spec.mk,
+      support/regression/ports/uc6502/spec.mk,
+      support/regression/ports/uc6502-stack-auto/spec.mk,
+      support/regression/ports/uc6280/spec.mk:
+      Spec files cleanup.
+
 2026-09-08 Maarten Brock <sourceforge.brock AT dse.nl>
 
 	* src/SDCCmem.c (printAllocInfo): print bit and pdata info

@@ -30,7 +30,7 @@ ifdef CROSSCOMPILING
   SDCCFLAGS += -I$(top_srcdir)
 endif
 
-SDCCFLAGS += -mmos6502 --less-pedantic --code-loc 0x8000 --xram-loc 0x0200 --i-code-in-asm --opt-code-speed
+SDCCFLAGS += -mmos6502 --less-pedantic --code-loc 0x8000 --i-code-in-asm --opt-code-speed
 LINKFLAGS += mos6502.lib
 
 OBJEXT = .rel
