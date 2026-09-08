@@ -159,11 +159,6 @@ EXCLUDE_PORTS += \
 EXCLUDE_PORTS += \
 	pdk13
 
-# simulator may be unavailable
-EXCLUDE_PORTS += \
-	mos6502 \
-	mos6502-stack-auto
-
 # unstable
 EXCLUDE_PORTS += \
 	pic14 \
@@ -224,6 +219,9 @@ test-z80: test-ucz80 test-ucz80-undoc test-ucz80-resiy test-ucz180 test-ucz180-r
 
 # Shorthand for testing the pdk ports only
 test-pdk: test-pdk14 test-pdk15 test-pdk15-stack-auto
+
+# Shorthand for testing the mos6502 ports only
+test-mos: test-uc6502 test-uc65c02 test-uc6502-stack-auto
 
 # what is this?
 test-host2:
