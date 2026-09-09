@@ -62,13 +62,13 @@ ___setjmp:
         stx	*(ptr + 1)		; msb(buf)
         sta	*(ptr + 0)		; lsb(buf)
 
-        ; save stack pointer
+; save stack pointer
         tsx
-        ldy	#0
+        ldy	#0x00
         txa
         sta	[ptr],y
 
-        ; save return address
+; save return address
         lda	0x101,x
         iny
         sta	[ptr],y
@@ -76,8 +76,8 @@ ___setjmp:
         iny
         sta	[ptr],y
 
-        ; return 0
-        lda	#0
+; return 0
+        lda	#0x00
         tax
         rts
 
@@ -89,13 +89,13 @@ _longjmp:
         stx	*(ptr + 1)		; msb(buf)
         sta	*(ptr + 0)		; lsb(buf)
 
-        ; restore stack pointer
-        ldy	#0
+; restore stack pointer
+        ldy	#0x00
         lda	[ptr],y
         tax
         txs
 
-        ; set return address
+; set return address
         iny
         lda	[ptr],y
         sta	0x101,x

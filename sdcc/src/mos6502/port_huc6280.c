@@ -26,20 +26,23 @@
 #include "m6502.h"
 #include "peep.h"
 
-static char _huc6280_defaultRules[] =
+static const char *const _crt[]  = { "crt0.rel", NULL };
+static const char *const _libs[] = { "huc6280",  NULL };
+
+static char _defaultRules[] =
   {
 #include "peeph.rul"
   };
 
 static void
-huc6280_init (void)
+_init (void)
 {
   m6502_opts.sub = SUB_HUC6280;
   asm_addTree (&asm_asxxxx_mapping);
 }
 
 static const char *
-huc6280_get_model (void)
+_get_model (void)
 {
   if (options.stackAuto)
     return "huc6280-stack-auto";
@@ -48,14 +51,11 @@ huc6280_get_model (void)
 }
 
 static void
-huc6280_genAssemblerStart (FILE * of)
+_genAssemblerStart (FILE * of)
 {
   fprintf(of, "\t.huc6280\n");
   m6502_commonAssemblerStart (of);
 }
-
-static const char *const _crt[] = { "crt0.rel", NULL, };
-static const char * const _libs_huc6280[] = { "huc6280", NULL, };
 
 /* Globals */
 PORT huc6280_port =
@@ -69,7 +69,7 @@ PORT huc6280_port =
       false,                    /* Emit glue around main */
       MODEL_SMALL | MODEL_LARGE,
       MODEL_LARGE,
-      huc6280_get_model,
+      _get_model
     },
     {
       m6502_asmCmd,
@@ -87,10 +87,10 @@ PORT huc6280_port =
       ".rel",                   /* object file extension */
       1,                        /* need linker script */
       _crt,                     /* crt */
-      _libs_huc6280,             /* libs */
+      _libs                     /* libs */
     },
     {                           /* Peephole optimizer */
-      _huc6280_defaultRules,
+      _defaultRules,
       m6502_getInstructionSize,
       NULL,
       NULL,
@@ -100,7 +100,7 @@ PORT huc6280_port =
       m6502_notUsedFrom,
       NULL,
       NULL,
-      NULL,
+      NULL
     },
     /* Sizes: char, short, int, long, long long, ptr, fptr, gptr, bit, float, max */
     // TODO: banked func ptr
@@ -117,7 +117,7 @@ PORT huc6280_port =
       0,                        /* banked func ptr */
       1,                        /* bit */
       4,                        /* float */
-      64,                       /* bit-precise integer types up to _BitInt (64) */
+      64                        /* bit-precise integer types up to _BitInt (64) */
     },
     /* tags for generic pointers */
     { 0x00, 0x00, 0x00, 0x00 }, /* far, near, xstack, code */
@@ -159,24 +159,24 @@ PORT huc6280_port =
       2,                        /* call overhead */
       0,                        /* reent overhead */
       0,                        /* banked overhead (switch between code banks) */
-      1                         /* sp is offset by 1 from last item pushed */
+      1                         /* sp points to next free stack location */
     },
     {
       -1,                       /* shifts never use support routines */
       false,                    /* do not use support routine for int x int -> long multiplication */
-      false,                    /* do not use support routine for unsigned long x unsigned char -> unsigned long long multiplication */
+      false                     /* do not use support routine for unsigned long x unsigned char -> unsigned long long multiplication */
     },
     {
       m6502_emitDebuggerSymbol,
       {
 	m6502_dwarfRegNum,
-	NULL,
-	NULL,
+	0,                          /* cfiSame */
+	0,                          /* cfiUndef */
 	4,                          /* addressSize */
 	14,                         /* regNumRet */
 	15,                         /* regNumSP */
 	-1,                         /* regNumBP */
-	1,                          /* offsetSP */
+	1                           /* offsetSP */
       },
     },
     {
@@ -185,10 +185,10 @@ PORT huc6280_port =
       {8,16,32},                /* sizeofMatchJump[] */
       {8,16,32},                /* sizeofRangeCompare[] */
       5,                        /* sizeofSubtract */
-      10,                       /* sizeofDispatch */
+      10                        /* sizeofDispatch */
     },
     "_",
-    huc6280_init,
+    _init,
     m6502_parseOptions,
     m6502_options,
     NULL,
@@ -199,7 +199,7 @@ PORT huc6280_port =
     0,
     NULL,
     m6502_keywords,
-    huc6280_genAssemblerStart,  /* genAssemblerStart */
+    _genAssemblerStart,         /* genAssemblerStart */
     m6502_genAssemblerEnd,      /* genAssemblerEnd */
     m6502_genIVT,               /* local IVT generation code */
     m6502_genXINIT,             /* genXINIT code */

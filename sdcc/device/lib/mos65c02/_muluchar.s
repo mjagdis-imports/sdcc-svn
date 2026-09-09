@@ -61,7 +61,7 @@ ___umul8:
 L0:    	bcc	L1
         clc
         adc     *arg1
-L1:    	ror
+L1:    	ror	a
         ror     *arg2
         dey
         bne    	L0

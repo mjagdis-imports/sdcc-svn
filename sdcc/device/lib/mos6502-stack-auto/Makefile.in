@@ -1,4 +1,4 @@
-# libc/mos6502 Makefile
+# libc/mos6502-stack-auto Makefile
 
 VPATH  = @srcdir@
 srcdir = @srcdir@

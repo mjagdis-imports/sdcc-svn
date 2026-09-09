@@ -32,21 +32,19 @@
 ;--------------------------------------------------------
 ; exported symbols
 ;--------------------------------------------------------
-	.globl ___setjmp    ; 
+	.globl ___setjmp
         .globl _longjmp
-	
+
 ;--------------------------------------------------------
 ; overlayable function parameters in zero page
 ;--------------------------------------------------------
 	.area	OSEG    (PAG, OVR)
-_longjmp_PARM_2:
-        .ds 2
 
 ;--------------------------------------------------------
 ; local aliases
 ;--------------------------------------------------------
 	.define ptr "DPTR"
-	.define rv "_longjmp_PARM_2"
+	.define rv "___SDCC_m6502_ret0"
 
 ;--------------------------------------------------------
 ; code
@@ -61,13 +59,13 @@ ___setjmp:
         stx	*(ptr + 1)		; msb(buf)
         sta	*(ptr + 0)		; lsb(buf)
 
-        ; save stack pointer
+; save stack pointer
         tsx
-        ldy	#0
+        ldy	#0x00
         txa
         sta	[ptr],y
 
-        ; save return address
+; save return address
         lda	0x101,x
         iny
         sta	[ptr],y
@@ -75,8 +73,8 @@ ___setjmp:
         iny
         sta	[ptr],y
 
-        ; return 0
-        lda	#0
+; return 0
+        lda	#0x00
         tax
         rts
 
@@ -88,22 +86,22 @@ _longjmp:
         stx	*(ptr + 1)		; msb(buf)
         sta	*(ptr + 0)		; lsb(buf)
 
-        ; discard return address
-		pla
-		pla
-		; save return value
+; discard return address
+	pla
+	pla
+; save return value
         pla
-        sta *(rv + 0)
+        sta	*(rv + 0)
         pla
-        sta *(rv + 1)
+        sta	*(rv + 1)
 
-        ; restore stack pointer
-        ldy	#0
+; restore stack pointer
+        ldy	#0x00
         lda	[ptr],y
         tax
         txs
 
-        ; set return address
+; set return address
         iny
         lda	[ptr],y
         sta	0x101,x
@@ -112,10 +110,10 @@ _longjmp:
         sta	0x102,x
 
 ; return rv ? rv : 1;
-        lda *(rv + 0)
-        ldx *(rv + 1)
-        ora *(rv + 1)
-        bne 0001$
+        lda	*(rv + 0)
+        ldx	*(rv + 1)
+        ora	*(rv + 1)
+        bne	ret
         lda	#0x01
-0001$:
+ret:
         rts

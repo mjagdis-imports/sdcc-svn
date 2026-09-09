@@ -39,6 +39,15 @@
       support/regression/ports/uc65c02-stack-auto/spec.mk,
       support/regression/ports/uc65c02-stack-auto/uCsim.cmd:
       Add mos65c02-stack-auto target and regression.
+    * device/lib/mos6502-stack-auto/Makefile.in,
+      device/lib/mos6502-stack-auto/_muluchar.s,
+      device/lib/mos6502-stack-auto/_setjmp.s,
+      device/lib/mos65c02/_muluchar.s,
+      device/lib/mos65c02/_setjmp.s,
+      src/mos6502/port_huc6280.c,
+      src/mos6502/port_mos6502.c,
+      src/mos6502/port_mos65c02.c:
+      Small cleanups.
 
 2026-09-08 Maarten Brock <sourceforge.brock AT dse.nl>
 
