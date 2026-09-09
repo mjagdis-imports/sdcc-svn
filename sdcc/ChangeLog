@@ -18,6 +18,27 @@
       src/mos6502/stackops.c,
       src/mos6502/tempops.c:
       Improve handling of enhanced instructions.
+    * configure,
+      configure.ac,
+      device/lib/Makefile.in,
+      device/lib/clean.mk,
+      device/lib/mos65c02/_muluchar.s,
+      device/lib/mos65c02/_setjmp.s,
+      support/regression/MakeList,
+      support/regression/ports/uc65c02/spec.mk,
+      device/lib/mos65c02-stack-auto,
+      device/lib/mos65c02-stack-auto/Makefile.in,
+      device/lib/mos65c02-stack-auto/__sdcc_indirect_jsr.s,
+      device/lib/mos65c02-stack-auto/__sdcc_regs.s,
+      device/lib/mos65c02-stack-auto/_muluchar.s,
+      device/lib/mos65c02-stack-auto/_setjmp.s,
+      device/lib/mos65c02-stack-auto/atomic_flag_test_and_set.c,
+      device/lib/mos65c02-stack-auto/crt0.s,
+      support/regression/ports/uc65c02-stack-auto,
+      support/regression/ports/uc65c02-stack-auto/support.c,
+      support/regression/ports/uc65c02-stack-auto/spec.mk,
+      support/regression/ports/uc65c02-stack-auto/uCsim.cmd:
+      Add mos65c02-stack-auto target and regression.
 
 2026-09-08 Maarten Brock <sourceforge.brock AT dse.nl>
 

@@ -223,6 +223,7 @@ endif
 
 ifeq ($(OPT_DISABLE_MOS65C02), 0)
 TARGETS        += model-mos65c02
+TARGETS        += model-mos65c02-stack-auto
 endif
 
 ifeq ($(OPT_DISABLE_HUC6280), 0)
@@ -512,6 +513,11 @@ model-mos65c02:
 	  $(MAKE) MODELFLAGS="-mmos65c02" PORT=mos65c02 objects-mos6502 || exit 1; \
 	fi
 
+model-mos65c02-stack-auto:
+	if grep '^mos6502$$' $(top_builddir)/ports.build > /dev/null; then \
+	  $(MAKE) MODELFLAGS="-mmos65c02 --stack-auto" PORT=mos65c02-stack-auto objects-mos6502 || exit 1; \
+	fi
+
 model-huc6280:
 	if grep '^mos6502$$' $(top_builddir)/ports.build > /dev/null; then \
 	  $(MAKE) MODELFLAGS="-mhuc6280" PORT=huc6280 objects-mos6502 || exit 1; \
@@ -736,7 +742,7 @@ clean_intermediate-pic16:
 clean_intermediate-pic14:
 	$(MAKE) -C $(PORT) clean-intermediate
 
-# Compiling and installing everything and runing test
+# Compiling and installing everything and running test
 # ---------------------------------------------------
 install: all installdirs
 	[ ! -d "$(BUILDDIR)" ] || $(CP_U) -r $(BUILDDIR)/* $(sdcc_libdir)
