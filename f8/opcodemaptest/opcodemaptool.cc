@@ -921,51 +921,62 @@ inline static void init_table_random(uint8_t *table)
 	}
 }
 
+inline static void swap_columns(uint8_t *table, unsigned int rowlength, unsigned int columnheight, uint8_t s0, uint8_t s1)
+{
+	printf("%u x %u table, swapping columns %u, %u\n", (unsigned)rowlength, (unsigned)columnheight, (unsigned)s0, (unsigned)s1);
+	for(unsigned int i = 0; i < columnheight; i++)
+	{
+		// trap stays at 0.
+		if(rowlength * i + s0 == 0 || rowlength * i + s1 == 0)
+			continue;
+
+		uint8_t tmp = table[rowlength * i + s0];
+		table[rowlength * i + s0] = table[rowlength * i + s1];
+		table[rowlength * i + s1] = tmp;
+	}
+}
+
+inline static void swap_rows(uint8_t *table, unsigned int rowlength, unsigned int columnheight, uint8_t s0, uint8_t s1)
+{
+	printf("%u x %u table, swapping rows %u, %u\n", (unsigned)rowlength, (unsigned)columnheight, (unsigned)s0, (unsigned)s1);
+	for(unsigned int i = 0; i < rowlength; i++)
+	{
+		// trap stays at 0.
+		if(rowlength * s0 + i == 0 || rowlength * s1 + i == 0)
+			continue;
+
+		uint8_t tmp = table[rowlength * s0 + i];
+		table[rowlength * s0 + i] = table[rowlength * s1 + i];
+		table[rowlength * s1 + i] = tmp;
+	}
+}
+
 // Modify opcode table by swapping columns or rows in a random table layout.
 inline static void modify_table_random(uint8_t *table)
 {
 	unsigned int rowlength, columnheight;
-	bool swap_rows;
+	bool rows;
 	rowlength = 0;
 	getrandom (&rowlength, 1, 0);
-	swap_rows = rowlength & 0x10;
+	rows = rowlength & 0x10;
 	rowlength %= 9;
 	rowlength = 1 << rowlength;
 	columnheight = NUM_OPCODES / rowlength;
 
 	uint8_t select[2];
 	getrandom (&select, 2, 0);
-	if(!swap_rows) // Swap columns
+	if(!rows) // Swap columns
 	{
 		select[0] %= rowlength;
 		select[1] %= rowlength;
-		printf("%u x %u table, swapping columns %u, %u\n", (unsigned)rowlength, (unsigned)columnheight, (unsigned)select[0], (unsigned)select[1]);
-		for(unsigned int i = 0; i < columnheight; i++)
-		{
-			// trap stays at 0.
-			if(rowlength * i + select[0] == 0 || rowlength * i + select[1] == 0)
-				continue;
-
-			uint8_t tmp = table[rowlength * i + select[0]];
-			table[rowlength * i + select[0]] = table[rowlength * i + select[1]];
-			table[rowlength * i + select[1]] = tmp;
-		}
+		swap_columns(table, rowlength, columnheight, select[0], select[1]);
 	}
 	else // Swap rows
 	{
 		select[0] %= columnheight;
 		select[1] %= columnheight;
 		printf("%u x %u table, swapping rows %u, %u\n", (unsigned)rowlength, (unsigned)columnheight, (unsigned)select[0], (unsigned)select[1]);
-		for(unsigned int i = 0; i < rowlength; i++)
-		{
-			// trap stays at 0.
-			if(rowlength * select[0] + i == 0 || rowlength * select[1] + i == 0)
-				continue;
-
-			uint8_t tmp = table[rowlength * select[0] + i];
-			table[rowlength * select[0] + i] = table[rowlength * select[1] + i];
-			table[rowlength * select[1] + i] = tmp;
-		}
+		swap_rows(table, rowlength, columnheight, select[0], select[1]);
 	}
 }
 
@@ -1166,7 +1177,7 @@ int main(int argc, char **argv)
 	uint8_t table[NUM_OPCODES];
 	unsigned int n = 1;
 
-	if (argc == 3)
+	if (argc == 3 || argc == 5)
 	{
 		long l = strtol(argv[2], 0, 0);
 		if(l < 0 || l == LONG_MAX || l > INT_MAX)
@@ -1237,6 +1248,36 @@ int main(int argc, char **argv)
 				modify_table_random(table);
 			add_opcodemap(table);
 		}
+		write_opcodemapstable();
+		create_opcodemapsfiles();
+	}
+	else if (argc == 5 && !strcmp(argv[1], "swaprows"))
+	{
+		read_opcodemapstable();
+		std::map <std::vector<uint8_t>, unsigned long int>::iterator it;
+		for(it = opcodemapstable.begin(); it != opcodemapstable.end(); it++)
+		{
+			if (it->second == n)
+				break;
+		}
+		memcpy(table, it->first.data(), NUM_OPCODES);
+		swap_rows(table, 16, 16, strtol(argv[3], 0, 0), strtol(argv[4], 0, 0));
+		add_opcodemap(table);
+		write_opcodemapstable();
+		create_opcodemapsfiles();
+	}
+	else if (argc == 5 && !strcmp(argv[1], "swapcolumns"))
+	{
+		read_opcodemapstable();
+		std::map <std::vector<uint8_t>, unsigned long int>::iterator it;
+		for(it = opcodemapstable.begin(); it != opcodemapstable.end(); it++)
+		{
+			if (it->second == n)
+				break;
+		}
+		memcpy(table, it->first.data(), NUM_OPCODES);
+		swap_columns(table, 16, 16, strtol(argv[3], 0, 0), strtol(argv[4], 0, 0));
+		add_opcodemap(table);
 		write_opcodemapstable();
 		create_opcodemapsfiles();
 	}

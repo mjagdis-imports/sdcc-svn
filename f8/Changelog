@@ -1,3 +1,8 @@
+2026-09-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* opcodemaptest/opcodemaptool.cc:
+	  Support for manual row/column swap.
+
 2026-08-27 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* opcodemaptest/opcodemaptool.cc:
