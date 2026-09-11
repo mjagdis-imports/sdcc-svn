@@ -1,3 +1,8 @@
+2026-09-11 Gabriele Gorla <gorlik@yahoo.com>
+
+	* device/lib/mc51/Makefile.in:
+      remove crtxpushr0 and crtxpopr0 from build dependencies.
+
 2026-09-08 Maarten Brock <sourceforge.brock AT dse.nl>
 
 	* device/include/ctype.h,
