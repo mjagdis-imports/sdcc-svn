@@ -183,7 +183,7 @@ diag(void)
 
 
 /* sdas specific */
-/*)Function     VOID    warnBanner()
+/*)Function     void    warnBanner()
  *
  *      The function warnBanner() prints a generic warning message
  *      header (including the current source file/line) and positions

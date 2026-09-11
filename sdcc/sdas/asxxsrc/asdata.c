@@ -246,8 +246,8 @@ int	alevel;		/*	area stack pointer
 struct	area *astack[16]; /*	area stack
 			 */
 int	flevel;		/*	IF-ELSE-ENDIF flag (false != 0)
-                         *      the flag will be non zero
-                         *      for false conditional case
+				 *	the flag will be non zero
+				 *	for false conditional case
 			 */
 int	ftflevel;	/*	IIFF-IIFT-IIFTF FLAG
 			 */
@@ -310,7 +310,7 @@ int	kflag;		/*	-k, disable error output to .lst file
 			 */
 int	lflag;		/*	-l, generate listing flag
 			 */
-int     nflag;          /*      -n, don't resolve global assigned value symbols flag
+int	nflag;	/*	-n, don't resolve global assigned value symbols flag
 			 */
 int	oflag;		/*	-o, generate relocatable output flag
 			 */
@@ -334,7 +334,7 @@ int	yflag;		/*	-y, enable SDCC Debug Symbols
 			 */
 int	zflag;		/*	-z, disable symbol case sensitivity
 			 */
-int     waddrmode;      /*      WORD Address mode flag
+int	waddrmode;	/*	WORD Address mode flag
 			 */
 int	a_bytes;	/*	REL file T Line address length
 			 */
@@ -374,10 +374,10 @@ char	*ex[NERR];	/*	array of error string pointers
 char	*ip;		/*	pointer into the assembler-source
 			 *	text line in ib[]
 			 */
-char    *ib;            /*      assembler-source text line for processing
-                         */
-char    *ic;            /*      assembler-source text line for listing
-                         */
+char	*ib;		/*	assembler-source text line for processing
+			 */
+char	*ic;		/*	assembler-source text line for listing
+			 */
 char	*il;		/*	pointer to the assembler-source
 			 *	text line to be listed
 			 */
@@ -404,7 +404,7 @@ char	tb[NTITL];	/*	Title string buffer
 			 */
 char	stb[NSBTL];	/*	Subtitle string buffer
 			 */
-char    erb[NINPUT+4];  /*      Error string buffer
+char	erb[NINPUT+4];	/*	Error string buffer
 			 */
 
 char	symtbl[] = { "Symbol Table" };
@@ -413,9 +413,9 @@ char	aretbl[] = { "Area Table" };
 char	module[NCPS+2];	/*	module name string
 			 */
 /* sdas specific */
-int     org_cnt;        /*      .org directive counter
+int	org_cnt;		/*	.org directive counter
 			 */
-char    *optsdcc;       /*      sdcc compile options
+char	*optsdcc;	/*	sdcc compile options
 			 */
 /* end sdas specific */
 
@@ -467,7 +467,7 @@ struct	mne	*mnehash[NHASH];
  *		int	s_ref;		Ref. number
  *		a_uint	s_addr;		Address
  * sdas specific
- *              a_uint  s_org;          Start Address if absolute
+ *		a_uint	s_org;		Start Address if absolute
  * end sdas specific
  *	};
  */
@@ -513,8 +513,8 @@ struct  area    area[] = {
     {NULL,      "_CODE",        0,      0,      0,      A_CON|A_REL}
 };
 
-struct  area    *areap; /*      pointer to an area structure
-                         */
+struct	area	*areap;	/*	pointer to an area structure
+			 */
 
 /*
  *	The bank structure contains the parameter values for a

@@ -43,8 +43,8 @@ char	*dsft	= "asm";
 #define	OPCY_SDP	((char) (0xFF))
 #define	OPCY_ERR	((char) (0xFE))
 
-/*      OPCY_NONE       ((char) (0x80)) */
-/*      OPCY_MASK       ((char) (0x7F)) */
+/*	OPCY_NONE	((char) (0x80)) */
+/*	OPCY_MASK	((char) (0x7F)) */
 
 #define	UN	((char) (OPCY_NONE | 0x00))
 
@@ -80,9 +80,9 @@ static char i51pg1[256] = {
 void
 machine(struct mne *mp)
 {
-        a_uint op;
-        int t, t1, v1;
-        struct expr e, e1;
+	a_uint op;
+	int t, t1, v1;
+	struct expr e, e1;
 
 	clrexpr(&e);
 	clrexpr(&e1);
@@ -100,7 +100,7 @@ machine(struct mne *mp)
 		 * Top 3 bits become the MSBs of the op-code.
 		 */
 		expr(&e, 0);
-                outrwm(&e, R_J11, op);
+		outrwm(&e, R_J11, op);
 		break;
 
 	case S_JMP16:
@@ -252,12 +252,12 @@ machine(struct mne *mp)
 				outab(op + 0x32);
 				outrb(&e1, R_PAG0);
 				break;
-			
+
 			case S_NOT_BIT:
 				outab(op + 0x60);
 				outrb(&e1, R_PAG0);
 				break;
-			
+
 			default:
 				xerr('a', "Invalid Addressing Mode.");
 			}
@@ -459,7 +459,7 @@ machine(struct mne *mp)
 
 	case S_BR:  /* JC, JNC, JZ, JNZ */
 		/* Relative branch */
-                /* sdcc svn rev #4994: fixed bug 1865114 */
+		/* sdcc svn rev #4994: fixed bug 1865114 */
 		expr(&e1, 0);
 		outab(op);
 
@@ -538,7 +538,7 @@ machine(struct mne *mp)
 	case S_DJNZ:
 		/* Dir,dest;  Reg,dest */
 		t = addr(&e);
-                /* sdcc svn rev #4994: fixed bug 1865114 */
+		/* sdcc svn rev #4994: fixed bug 1865114 */
 		comma(1);
 		expr(&e1, 0);
 
@@ -795,9 +795,9 @@ minit(void)
 	hilo = 1;
 
 	/*
-         * Address Space
+	 * Address Space
 	 */
-        exprmasks(3);
+	exprmasks(3);
 
 	/*
 	 * First time only:

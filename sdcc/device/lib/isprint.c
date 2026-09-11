@@ -32,6 +32,8 @@
 
 int isprint (int c)
 {
-  return (c >= ' ' && c <= '~');
+  if ((c & 0xff00) != 0)
+    return 0;
+  return ((unsigned char)c >= ' ' && (unsigned char)c <= '~');
 }
 

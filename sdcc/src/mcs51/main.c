@@ -650,38 +650,38 @@ mcs51operanddata;
 
 static mcs51operanddata mcs51operandDataTable[] =
 {
-  {"a",    A_IDX,   -1},
-  {"ab",   A_IDX,   B_IDX},
-  {"ac",   CND_IDX, -1},
-  {"acc",  A_IDX,   -1},
-  {"ar0",  R0_IDX,  -1},
-  {"ar1",  R1_IDX,  -1},
-  {"ar2",  R2_IDX,  -1},
-  {"ar3",  R3_IDX,  -1},
-  {"ar4",  R4_IDX,  -1},
-  {"ar5",  R5_IDX,  -1},
-  {"ar6",  R6_IDX,  -1},
-  {"ar7",  R7_IDX,  -1},
-  {"b",    B_IDX,   -1},
+  {"a",       A_IDX,   -1},
+  {"ab",      A_IDX,   B_IDX},
+  {"ac",      CND_IDX, -1},
+  {"acc",     A_IDX,   -1},
+  {"ar0",     R0_IDX,  -1},
+  {"ar1",     R1_IDX,  -1},
+  {"ar2",     R2_IDX,  -1},
+  {"ar3",     R3_IDX,  -1},
+  {"ar4",     R4_IDX,  -1},
+  {"ar5",     R5_IDX,  -1},
+  {"ar6",     R6_IDX,  -1},
+  {"ar7",     R7_IDX,  -1},
+  {"b",       B_IDX,   -1},
   {"bits",    B0_IDX,  -1},
-  {"c",    CND_IDX, -1},
-  {"cy",   CND_IDX, -1},
-  {"dph",  DPH_IDX, -1},
-  {"dpl",  DPL_IDX, -1},
-  {"dptr", DPL_IDX, DPH_IDX},
-  {"f0",   CND_IDX, -1},
-  {"f1",   CND_IDX, -1},
-  {"ov",   CND_IDX, -1},
-  {"p",    CND_IDX, -1},
-  {"psw",  CND_IDX, -1},
-  {"r0",   R0_IDX,  -1},
-  {"r1",   R1_IDX,  -1},
-  {"r2",   R2_IDX,  -1},
-  {"r3",   R3_IDX,  -1},
-  {"r4",   R4_IDX,  -1},
-  {"r5",   R5_IDX,  -1},
-  {"r6",   R6_IDX,  -1},
-  {"r7",   R7_IDX,  -1},
+  {"c",       CND_IDX, -1},
+  {"cy",      CND_IDX, -1},
+  {"dph",     DPH_IDX, -1},
+  {"dpl",     DPL_IDX, -1},
+  {"dptr",    DPL_IDX, DPH_IDX},
+  {"f0",      CND_IDX, -1},
+  {"f1",      CND_IDX, -1},
+  {"ov",      CND_IDX, -1},
+  {"p",       CND_IDX, -1},
+  {"psw",     CND_IDX, -1},
+  {"r0",      R0_IDX,  -1},
+  {"r1",      R1_IDX,  -1},
+  {"r2",      R2_IDX,  -1},
+  {"r3",      R3_IDX,  -1},
+  {"r4",      R4_IDX,  -1},
+  {"r5",      R5_IDX,  -1},
+  {"r6",      R6_IDX,  -1},
+  {"r7",      R7_IDX,  -1},
 };
 
 static int
@@ -706,6 +706,22 @@ updateOpRW (asmLineNode *aln, const char *op_in, const char *optype)
   strncpy (op, op_in, 31);
   op[31] = '\0';
 
+  /* ISR push/pop for saving/restoring register banks use direct addressing
+     in the form "(rbank<b> + offset)".
+     Handle at least r0-r7, so that the insns in the function body will see
+     that r0-r7 will be overwritten by the pop insns in the end. */
+  if (strstr(op, "(rbank0+") == op && isdigit(op[8]) && op[9] == ')' && currFunc &&
+      IFFUNC_ISISR (currFunc->type) && FUNC_REGBANK (currFunc->type) == 0)
+    {
+      unsigned n = op[8] - '0';
+      if (n <= 7)
+       {
+        op[0] = 'r';
+        op[1] = op[8];
+        op[2] = '\0';
+       }
+    }
+
   char *bit_sep;
   if (bit_sep = strchr (op, '.'))
     *bit_sep = '\0';
@@ -718,7 +734,7 @@ updateOpRW (asmLineNode *aln, const char *op_in, const char *optype)
                    sizeof(mcs51operandDataTable)/sizeof(mcs51operanddata),
                    sizeof(mcs51operanddata), mcs51operandCompare);
 
-  if (opdat && strchr(optype,'r'))
+  if (opdat && strchr(optype, 'r'))
     {
       if (opdat->regIdx1 == B0_IDX)
         {
@@ -784,50 +800,50 @@ mcs51opcodedata;
 
 static const mcs51opcodedata mcs51opcodeDataTable[] =
 {
-  {"acall","j", "",   "",   ""},
-  {"add",  "",  "w",  "rw", "r"},
-  {"addc", "",  "rw", "rw", "r"},
-  {"ajmp", "j", "",   "",   ""},
-  {"anl",  "",  "",   "rw", "r"},
-  {"cjne", "j", "w",  "r",  "r"},
-  {"clr",  "",  "",   "w",  ""},
-  {"cpl",  "",  "",   "rw", ""},
-  {"da",   "",  "rw", "rw", ""},
-  {"dec",  "",  "",   "rw", ""},
-  {"div",  "",  "w",  "rw", ""},
-  {"djnz", "j", "",   "rw", ""},
-  {"inc",  "",  "",   "rw", ""},
-  {"jb",   "j", "",   "r",  ""},
-  {"jbc",  "j", "",   "rw", ""},
-  {"jc",   "j", "r",  "",   ""},
-  {"jmp",  "j", "",   "",   ""},
-  {"jnb",  "j", "",   "r",  ""},
-  {"jnc",  "j", "r",  "",   ""},
-  {"jnz",  "j", "",   "",   ""},
-  {"jz",   "j", "",   "",   ""},
-  {"lcall","j", "",   "",   ""},
-  {"ljmp", "j", "",   "",   ""},
-  {"mov",  "",  "",   "w",  "r"},
-  {"movc", "",  "",   "w",  "r"},
-  {"movx", "",  "",   "w",  "r"},
-  {"mul",  "",  "w",  "rw", ""},
-  {"nop",  "",  "",   "",   ""},
-  {"orl",  "",  "",   "rw", "r"},
-  {"pop",  "",  "",   "w",  ""},
-  {"push", "",  "",   "r",  ""},
-  {"ret",  "j", "",   "",   ""},
-  {"reti", "j", "",   "",   ""},
-  {"rl",   "",  "",   "rw", ""},
-  {"rlc",  "",  "rw", "rw", ""},
-  {"rr",   "",  "",   "rw", ""},
-  {"rrc",  "",  "rw", "rw", ""},
-  {"setb", "",  "",   "w",  ""},
-  {"sjmp", "j", "",   "",   ""},
-  {"subb", "",  "rw", "rw", "r"},
-  {"swap", "",  "",   "rw", ""},
+  {"acall","j", "",   "",   ""  },
+  {"add",  "",  "w",  "rw", "r" },
+  {"addc", "",  "rw", "rw", "r" },
+  {"ajmp", "j", "",   "",   ""  },
+  {"anl",  "",  "",   "rw", "r" },
+  {"cjne", "j", "w",  "r",  "r" },
+  {"clr",  "",  "",   "w",  ""  },
+  {"cpl",  "",  "",   "rw", ""  },
+  {"da",   "",  "rw", "rw", ""  },
+  {"dec",  "",  "",   "rw", ""  },
+  {"div",  "",  "w",  "rw", ""  },
+  {"djnz", "j", "",   "rw", ""  },
+  {"inc",  "",  "",   "rw", ""  },
+  {"jb",   "j", "",   "r",  ""  },
+  {"jbc",  "j", "",   "rw", ""  },
+  {"jc",   "j", "r",  "",   ""  },
+  {"jmp",  "j", "",   "",   ""  },
+  {"jnb",  "j", "",   "r",  ""  },
+  {"jnc",  "j", "r",  "",   ""  },
+  {"jnz",  "j", "",   "",   ""  },
+  {"jz",   "j", "",   "",   ""  },
+  {"lcall","j", "",   "",   ""  },
+  {"ljmp", "j", "",   "",   ""  },
+  {"mov",  "",  "",   "w",  "r" },
+  {"movc", "",  "",   "w",  "r" },
+  {"movx", "",  "",   "w",  "r" },
+  {"mul",  "",  "w",  "rw", ""  },
+  {"nop",  "",  "",   "",   ""  },
+  {"orl",  "",  "",   "rw", "r" },
+  {"pop",  "",  "",   "w",  ""  },
+  {"push", "",  "",   "r",  ""  },
+  {"ret",  "j", "",   "",   ""  },
+  {"reti", "j", "",   "",   ""  },
+  {"rl",   "",  "",   "rw", ""  },
+  {"rlc",  "",  "rw", "rw", ""  },
+  {"rr",   "",  "",   "rw", ""  },
+  {"rrc",  "",  "rw", "rw", ""  },
+  {"setb", "",  "",   "w",  ""  },
+  {"sjmp", "j", "",   "",   ""  },
+  {"subb", "",  "rw", "rw", "r" },
+  {"swap", "",  "",   "rw", ""  },
   {"xch",  "",  "",   "rw", "rw"},
   {"xchd", "",  "",   "rw", "rw"},
-  {"xrl",  "",  "",   "rw", "r"},
+  {"xrl",  "",  "",   "rw", "r" },
 };
 
 static int
@@ -915,9 +931,9 @@ asmLineNodeFromLineNode (lineNode *ln)
       updateOpRW (aln, op2, opdat->op2type);
       if (!strcmp (inst, "jnz") || !strcmp (inst, "jz"))
         aln->regsRead = bitVectSetBit (aln->regsRead, A_IDX);
-      if (strchr(opdat->pswtype,'r'))
+      if (strchr(opdat->pswtype, 'r'))
         aln->regsRead = bitVectSetBit (aln->regsRead, CND_IDX);
-      if (strchr(opdat->pswtype,'w'))
+      if (strchr(opdat->pswtype, 'w'))
         aln->regsWritten = bitVectSetBit (aln->regsWritten, CND_IDX);
     }
 

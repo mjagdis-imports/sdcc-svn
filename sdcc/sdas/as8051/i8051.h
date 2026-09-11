@@ -132,7 +132,7 @@ extern struct PreDef preDef[];
 extern	struct	adsym	reg51[];
 extern	int		addr(struct expr *esp);
 extern	int		admode(struct adsym *sp);
-extern  int             any(int c, char *str);
+extern	int		any(int c, char *str);
 extern	int		srch(char *str);
 extern	int		reg(void);
 

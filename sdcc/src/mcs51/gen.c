@@ -2946,7 +2946,7 @@ inExcludeList (char *s)
 /* xstackRegisters - create bitmask for registers on xstack        */
 /*-----------------------------------------------------------------*/
 static int
-xstackRegisters (bitVect * rsave, bool push, int count, char szRegs[32])
+xstackRegisters (bitVect * rsave, char szRegs[32])
 {
   int i;
   int mask = 0;
@@ -2960,25 +2960,18 @@ xstackRegisters (bitVect * rsave, bool push, int count, char szRegs[32])
           reg_info *reg = REG_WITH_INDEX (i);
           if (reg->type == REG_BIT)
             {
-              mask |= 0x01;
+              mask |= 0x0100;
               strncat (szRegs, reg->base, 31);
             }
           else
             {
-              if (i == R0_IDX)
-                {
-                  mask |= 0x100;
-                }
-              else
-                {
-                  //set bit(n) for Rn
-                  mask |= (0x01 << reg->offset);
-                }
+              //set bit(n) for Rn
+              mask |= (0x01 << reg->offset);
               strncat (szRegs, reg->name, 31);
             }
         }
     }
-  return mask ^ 0xFF;           //invert all bits for jbc
+  return mask ^ 0xFFF;          //invert all bits for jbc
 }
 
 /*-----------------------------------------------------------------*/
@@ -3026,8 +3019,11 @@ saveRegisters (iCode * lic)
         }
     }
   else
-    /* save only the registers in use at this time */
-    rsave = bitVectCopy (ic->rMask);
+    {
+      /* save only the registers in use at this time */
+      rsave = bitVectCopy (ic->rMask);
+    }
+
   /* but skip the ones for the result */
   rsave = bitVectCplAnd (rsave, mcs51_rUmaskForOp (IC_RESULT (ic)));
 
@@ -3067,18 +3063,15 @@ saveRegisters (iCode * lic)
         }
       else if (count != 0)
         {
-          if ((FUNC_REGBANK (currFunc->type) == 0) && optimize.codeSize)
+          if (optimize.codeSize)
             {
               char szRegs[32];
-              int mask = xstackRegisters (rsave, TRUE, count, szRegs);
+              int mask = xstackRegisters (rsave, szRegs);
               if (BINUSE)
                 emitpush ("b");
-              emitcode ("mov", "a,#0x%02x", count);
+              emitcode ("mov", "a,#0x%02x", ((mask >> 4) & 0xf0u) | count & 0x0fu);
               emitcode ("mov", "b,#0x%02x", mask & 0xffu);
-              if (mask & 0x100)
-                emitcode ("lcall", "___sdcc_xpush_regs_r0\t;(%s)", szRegs);
-              else
-                emitcode ("lcall", "___sdcc_xpush_regs\t;(%s)", szRegs);
+              emitcode ("lcall", "sdcc_xpush_regs\t;(%s)", szRegs);
               genLine.lineCurr->isInline = 1;
               if (BINUSE)
                 emitpop ("b");
@@ -3163,8 +3156,11 @@ unsaveRegisters (iCode * ic)
         }
     }
   else
-    /* restore only the registers in use at this time */
-    rsave = bitVectCopy (ic->rMask);
+    {
+      /* restore only the registers in use at this time */
+      rsave = bitVectCopy (ic->rMask);
+    }
+
   /* but skip the ones for the result */
   rsave = bitVectCplAnd (rsave, mcs51_rUmaskForOp (IC_RESULT (ic)));
 
@@ -3202,15 +3198,13 @@ unsaveRegisters (iCode * ic)
         }
       else if (count != 0)
         {
-          if ((FUNC_REGBANK (currFunc->type) == 0) && optimize.codeSize)
+          if (optimize.codeSize)
             {
               char szRegs[32];
-              int mask = xstackRegisters (rsave, FALSE, count, szRegs);
+              int mask = xstackRegisters (rsave, szRegs);
+              emitcode ("mov", "a,#0x%02x", ((mask >> 4) & 0xf0u) | count & 0x0fu);
               emitcode ("mov", "b,#0x%02x", mask & 0xffu);
-              if (mask & 0x100)
-                emitcode ("lcall", "___sdcc_xpop_regs_r0\t;(%s)", szRegs);
-              else
-                emitcode ("lcall", "___sdcc_xpop_regs\t;(%s)", szRegs);
+              emitcode ("lcall", "sdcc_xpop_regs\t;(%s)", szRegs);
               genLine.lineCurr->isInline = 1;
               _G.stack.xpushed -= count;
             }
@@ -3532,10 +3526,12 @@ genPointerPush (iCode *ic)
       else
         emitpush ("acc");
       if (i + 1 < size)
-        if (p_type == POINTER || p_type == IPOINTER || p_type == PPOINTER)
-          emitcode ("inc", "%s", preg->name);
-        else
-          emitcode ("inc", "dptr");
+        {
+          if (p_type == POINTER || p_type == IPOINTER || p_type == PPOINTER)
+            emitcode ("inc", "%s", preg->name);
+          else
+            emitcode ("inc", "dptr");
+        }
     }
 
   if (aop)
@@ -3607,74 +3603,131 @@ emitDummyCall(void)
 /* saveRBank - saves an entire register bank on the stack          */
 /*-----------------------------------------------------------------*/
 static void
-saveRBank (int bank, iCode * ic, bool pushPsw)
+saveRBank (int bank, bool r0free, int newBank, bool pushBits, bool pushDpl, bool pushDph, bool pushB)
 {
   int i;
-  int count = 8 + (pushPsw ? 1 : 0);
-  asmop *aop = NULL;
+  int count = (bank >= 0 ? 8 : 0) + (newBank >= 0 ? 1 : 0) + (pushBits ? 1 : 0) + (pushDpl ? 1 : 0) + (pushDph ? 1 : 0);
   reg_info *r = NULL;
+
+  if (count == 0)
+    return;
 
   if (options.useXstack)
     {
-      if (!ic)
+      /* Assume r0 is available for use. */
+      r = REG_WITH_INDEX (R0_IDX);
+      if (!r0free)
+        emitpush (r->dname);
+
+      if (newBank >= 0)
         {
-          /* Assume r0 is available for use. */
-          r = REG_WITH_INDEX (R0_IDX);
+          emitpush ("psw");
+          emitcode ("mov", "psw,#!constbyte", (unsigned)(newBank << 3) & 0x00ffu);
+        }
+      /* Allocate space first. */
+      emitcode ("mov", "%s,%s", r->name, spname);
+      if (count > 2)
+        {
+          MOVA (r->name);
+          emitcode ("add", "a,#!constbyte", (unsigned)count);
+          emitcode ("mov", "%s,a", spname);
         }
       else
         {
-          aop = newAsmop (0);
-          r = getFreePtr (ic, aop, FALSE);
+          emitcode ("inc", "%s", spname);
+          if (count > 1)
+            emitcode ("inc", "%s", spname);
         }
-      // allocate space first
-      emitcode ("mov", "%s,%s", r->name, spname);
-      MOVA (r->name);
-      emitcode ("add", "a,#!constbyte", (unsigned)count);
-      emitcode ("mov", "%s,a", spname);
-    }
 
-  for (i = 0; i < 8; i++)
-    {
-      if (options.useXstack)
+      if (newBank >= 0)
         {
-          emitcode ("mov", "a,(%s+%d)", regs8051[i].base, 8 * bank + regs8051[i].offset);
+          emitpop ("acc");
           emitcode ("movx", "@%s,a", r->name);
           _G.stack.xpushed++;
           if (--count)
             emitcode ("inc", "%s", r->name);
         }
-      else
-        {
-          char buf[16] = "";
-          SNPRINTF (buf, 16, "(%s+%d)", regs8051[i].base, 8 * bank + regs8051[i].offset);
-          emitpush (buf);
-        }
-    }
 
-  if (pushPsw)
-    {
-      if (options.useXstack)
+      if (bank >= 0)
         {
-          emitcode ("mov", "a,psw");
+          for (i = 0; i < 8; i++)
+            {
+              if (!r0free && i == 0)
+                emitpop ("acc");
+              else
+                emitcode ("mov", "a,(rbank%d+%d)", bank, regs8051[i].offset);
+              emitcode ("movx", "@%s,a", r->name);
+              _G.stack.xpushed++;
+              if (--count)
+                emitcode ("inc", "%s", r->name);
+            }
+        }
+
+      if (pushBits)
+        {
+          emitcode ("mov", "a,bits");
           emitcode ("movx", "@%s,a", r->name);
           _G.stack.xpushed++;
+          if (--count)
+            emitcode ("inc", "%s", r->name);
         }
-      else
+
+      if (pushDpl)
+        {
+          emitcode ("mov", "a,dpl");
+          emitcode ("movx", "@%s,a", r->name);
+          _G.stack.xpushed++;
+          if (--count)
+            emitcode ("inc", "%s", r->name);
+        }
+
+      if (pushDph)
+        {
+          emitcode ("mov", "a,dph");
+          emitcode ("movx", "@%s,a", r->name);
+          _G.stack.xpushed++;
+          if (--count)
+            emitcode ("inc", "%s", r->name);
+        }
+
+      if (pushB)
+        {
+          emitcode ("mov", "a,b");
+          emitcode ("movx", "@%s,a", r->name);
+          _G.stack.xpushed++;
+          if (--count)
+            emitcode ("inc", "%s", r->name);
+        }
+    }
+  else
+    {
+      if (newBank >= 0)
         {
           emitpush ("psw");
+          emitcode ("mov", "psw,#!constbyte", (unsigned)(newBank << 3) & 0x00ffu);
         }
 
-      emitcode ("mov", "psw,#!constbyte", (unsigned)(bank << 3) & 0x00ffu);
-    }
+      if (bank >= 0)
+        {
+          for (i = 0; i < 8; i++)
+            {
+              char buf[16] = "";
+              SNPRINTF (buf, 16, "(rbank%d+%d)", bank, regs8051[i].offset);
+              emitpush (buf);
+            }
+        }
 
-  if (aop)
-    {
-      freeAsmop (NULL, aop, ic, TRUE);
-    }
+      if (pushBits)
+        emitpush ("bits");
 
-  if (ic)
-    {
-      ic->bankSaved = 1;
+      if (pushDpl)
+        emitpush ("dpl");
+
+      if (pushDph)
+        emitpush ("dph");
+
+      if (pushB)
+        emitpush ("b");
     }
 }
 
@@ -3682,80 +3735,175 @@ saveRBank (int bank, iCode * ic, bool pushPsw)
 /* unsaveRBank - restores the register bank from stack             */
 /*-----------------------------------------------------------------*/
 static void
-unsaveRBank (int bank, iCode * ic, bool popPsw)
+unsaveRBank (int bank, bool r0free, bool popPsw, bool popBits, bool popDpl, bool popDph, bool popB)
 {
   int i;
-  asmop *aop = NULL;
   reg_info *r = NULL;
+
+  if (bank < 0 && !popPsw && !popBits && !popDpl && !popDph && !popB)
+    return;
 
   if (options.useXstack)
     {
-      if (!ic)
-        {
-          /* Assume r0 is available for use. */
-          r = REG_WITH_INDEX (R0_IDX);
-        }
-      else
-        {
-          aop = newAsmop (0);
-          r = getFreePtr (ic, aop, FALSE);
-        }
+      /* Assume r0 is available for use. */
+      r = REG_WITH_INDEX (R0_IDX);
       emitcode ("mov", "%s,%s", r->name, spname);
-    }
 
-  if (popPsw)
-    {
-      if (options.useXstack)
+      if (popB)
+        {
+          emitcode ("dec", "%s", r->name);
+          emitcode ("movx", "a,@%s", r->name);
+          emitcode ("mov", "b,a");
+          _G.stack.xpushed--;
+        }
+
+      if (popDph)
+        {
+          emitcode ("dec", "%s", r->name);
+          emitcode ("movx", "a,@%s", r->name);
+          emitcode ("mov", "dph,a");
+          _G.stack.xpushed--;
+        }
+
+      if (popDpl)
+        {
+          emitcode ("dec", "%s", r->name);
+          emitcode ("movx", "a,@%s", r->name);
+          emitcode ("mov", "dpl,a");
+          _G.stack.xpushed--;
+        }
+
+      if (popBits)
+        {
+          emitcode ("dec", "%s", r->name);
+          emitcode ("movx", "a,@%s", r->name);
+          emitcode ("mov", "bits,a");
+          _G.stack.xpushed--;
+        }
+
+      if (bank >= 0)
+        {
+          for (i = 7; i >= 0; i--)
+            {
+              emitcode ("dec", "%s", r->name);
+              emitcode ("movx", "a,@%s", r->name);
+              if (r0free)
+                emitcode ("mov", "(rbank%d+%d),a", bank, regs8051[i].offset);
+              else
+                emitpush ("acc");
+              _G.stack.xpushed--;
+            }
+        }
+
+      if (popPsw)
         {
           emitcode ("dec", "%s", r->name);
           emitcode ("movx", "a,@%s", r->name);
           emitcode ("mov", "psw,a");
           _G.stack.xpushed--;
         }
-      else
-        {
-          emitpop ("psw");
-        }
-    }
 
-  for (i = 7; i >= 0; i--)
-    {
-      if (options.useXstack)
-        {
-          emitcode ("dec", "%s", r->name);
-          emitcode ("movx", "a,@%s", r->name);
-          emitcode ("mov", "(%s+%d),a", regs8051[i].base, 8 * bank + regs8051[i].offset);
-          _G.stack.xpushed--;
-        }
-      else
-        {
-          char buf[16] = "";
-          SNPRINTF (buf, 16, "(%s+%d)", regs8051[i].base, 8 * bank + regs8051[i].offset);
-          emitpop (buf);
-        }
-    }
-
-  if (options.useXstack)
-    {
       emitcode ("mov", "%s,%s", spname, r->name);
+      if (!r0free && bank >= 0)
+        emitpop (r->dname);
     }
-
-  if (aop)
+  else
     {
-      freeAsmop (NULL, aop, ic, TRUE);
+      if (popB)
+        emitpop ("b");
+
+      if (popDph)
+        emitpop ("dph");
+
+      if (popDpl)
+        emitpop ("dpl");
+
+      if (popBits)
+        emitpop ("bits");
+
+      if (bank >= 0)
+        {
+          for (i = 7; i >= 0; i--)
+            {
+              char buf[16] = "";
+              SNPRINTF (buf, 16, "(rbank%d+%d)", bank, regs8051[i].offset);
+              emitpop (buf);
+            }
+        }
+
+      if (popPsw)
+        emitpop ("psw");
     }
 }
 
 /*-----------------------------------------------------------------*/
-/* genSend - gen code for SEND                                     */
+/* genSendBits - gen code for SEND of bit parameters               */
 /*-----------------------------------------------------------------*/
-static void
-genSend (set *sendSet)
+static bool
+genSendBits (set *sendSet)
 {
   iCode *sic;
   int bit_count = 0;
+  int bits_set = 0;
+  int bits_setmask = 0;
+  int bits_clr = 0;
+  int bits_clrmask = 0;
+  int bits_inplace = 0;
+  int bits_overlap = 0;
+  const char *bitsreg = "b";
 
-  /* first we do all bit parameters */
+  for (sic = setFirstItem (sendSet); sic; sic = setNextItem (sendSet))
+    {
+      if (sic->argreg > 1000)
+        {
+          int bit = sic->argreg - 1001;
+
+          /* if left is a literal then we know what the value is */
+          if (IS_OP_LITERAL (IC_LEFT (sic)))
+            {
+              if (((int) operandLitValue (IC_LEFT (sic))))
+                {
+                  bits_set++;
+                  bits_setmask |= 1<<bit;
+                }
+              else
+                {
+                  bits_clr++;
+                  bits_clrmask |= 1<<bit;
+                }
+            }
+          /* if the type is a bit register check the position */
+          else if (IS_SYMOP (IC_LEFT (sic)) && OP_SYMBOL (IC_LEFT (sic))->regs[0]->type == REG_BIT)
+            {
+              if (OP_SYMBOL (IC_LEFT (sic))->regs[0]->rIdx == B0_IDX + bit)
+                bits_inplace |= 1<<bit;
+              else
+                bits_overlap |= 1<<bit;
+            }
+          bit_count++;
+        }
+    }
+
+  if (!bit_count)
+    return false;
+
+  D (emitcode (";", "genSendBits 0:%02X 1:%02X", bits_clrmask, bits_setmask));
+
+  if (!bits_overlap)       /* no copy of bits[n] to bits[m], write direct to bits */
+    bitsreg = "bits";
+  else if (bits_inplace)   /* some bits are already in the right place */
+    emitcode ("mov", "b,bits");
+
+  if (bits_set > 1)
+    emitcode ("orl", "%s,#%02X", bitsreg, bits_setmask);
+  else
+    bits_setmask = 0;
+
+  if (bits_clr > 1)
+    emitcode ("anl", "%s,#%02X", bitsreg, (~bits_clrmask) & 0xFF);
+  else
+    bits_clrmask = 0;
+
   for (sic = setFirstItem (sendSet); sic; sic = setNextItem (sendSet))
     {
       if (sic->argreg > 1000)
@@ -3769,36 +3917,59 @@ genSend (set *sendSet)
           if (AOP_TYPE (IC_LEFT (sic)) == AOP_LIT)
             {
               if (((int) operandLitValue (IC_LEFT (sic))))
-                emitcode ("setb", "b.%d", bit);
+                {
+                  if ((bits_setmask & 1<<bit) == 0)
+                    emitcode ("setb", "%s[%d]", bitsreg, bit);
+                }
               else
-                emitcode ("clr", "b.%d", bit);
+                {
+                  if ((bits_clrmask & 1<<bit) == 0)
+                    emitcode ("clr", "%s[%d]", bitsreg, bit);
+                }
             }
           else
+            {
+              if ((bits_inplace & 1<<bit) == 0)
                 {
                   /* we need to or */
                   toCarry (IC_LEFT (sic));
-              emitcode ("mov", "b.%d,c", bit);
+                  emitcode ("mov", "%s[%d],c", bitsreg, bit);
                 }
-          bit_count++;
+            }
           BitBankUsed = 1;
 
           freeAsmop (IC_LEFT (sic), NULL, sic, TRUE);
         }
 }
+    return bits_overlap;
+}
 
-  if (options.useXstack || bit_count || setFirstItem (sendSet) && operandSize (IC_LEFT ((iCode *)(setFirstItem (sendSet)))) >= 6)
+/*-----------------------------------------------------------------*/
+/* genSend - gen code for SEND                                     */
+/*-----------------------------------------------------------------*/
+static void
+genSend (set *sendSet)
 {
-      if (bit_count)
+  iCode *sic;
+
+  /* first check all bit parameters */
+  bool bits_in_b = genSendBits (sendSet);
+
+  if (options.useXstack || bits_in_b || setFirstItem (sendSet) && operandSize (IC_LEFT ((iCode *)(setFirstItem (sendSet)))) >= 6)
+{
+      if (bits_in_b)
         BITSINB++;
       saveRegisters (setFirstItem (sendSet));
-      if (bit_count)
+      if (bits_in_b)
         BITSINB--;
     }
 
-  if (bit_count)
+  if (bits_in_b)
     {
       emitcode ("mov", "bits,b");
     }
+
+  D (emitcode (";", "genSend"));
 
   /* then we do all other parameters */
   for (sic = setFirstItem (sendSet); sic; sic = setNextItem (sendSet))
@@ -4324,7 +4495,7 @@ genPcall (iCode * ic)
             }
 
           /* make the call */
-          emitcode (call, "__sdcc_call_dptr");
+          emitcode (call, "sdcc_call_dptr");
         }
     }
 
@@ -4431,7 +4602,7 @@ genFunction (iCode * ic)
 {
   symbol *sym = OP_SYMBOL (IC_LEFT (ic));
   sym_link *ftype = operandType (IC_LEFT (ic));
-  bool switchedPSW = FALSE;
+  bool switchedPSW = false;
   int calleesaves_saved_register = -1;
   int stackAdjust = sym->stack;
   char *freereg = NULL;
@@ -4462,12 +4633,7 @@ genFunction (iCode * ic)
       for (i = 0; i < mcs51_nRegs; i++)
         {
           if (regs8051[i].type != REG_BIT)
-            {
-              if (EQ (regs8051[i].base, "0"))
-                emitcode ("", "%s !equ !constbyte", regs8051[i].dname, 8 * rbank + regs8051[i].offset);
-              else
-                emitcode ("", "%s !equ %s + !constbyte", regs8051[i].dname, regs8051[i].base, 8 * rbank + regs8051[i].offset);
-            }
+            emitcode ("", "%s !equ rbank%d + !constbyte", regs8051[i].dname, rbank, regs8051[i].offset);
         }
     }
 
@@ -4481,6 +4647,10 @@ genFunction (iCode * ic)
   if (IFFUNC_ISISR (ftype))
     {
       bitVect *rsavebits;
+      bool pushBits = false;
+      bool pushDpl  = !inExcludeList ("dpl");
+      bool pushDph  = !inExcludeList ("dph");
+      bool pushB    = !inExcludeList ("b");
 
       /* weird but possible, one should better use a different priority */
       /* if critical function then turn interrupts off */
@@ -4494,7 +4664,7 @@ genFunction (iCode * ic)
         {
           if (!inExcludeList ("bits"))
             {
-              emitpush ("bits");
+              pushBits = true;
               BitBankUsed = 1;
             }
         }
@@ -4502,41 +4672,58 @@ genFunction (iCode * ic)
 
       if (!inExcludeList ("acc"))
         emitpush ("acc");
-      if (!inExcludeList ("b"))
-        emitpush ("b");
-      if (!inExcludeList ("dpl"))
-        emitpush ("dpl");
-      if (!inExcludeList ("dph"))
-        emitpush ("dph");
+
       /* if this isr has no bank i.e. is going to
          run with bank 0 , then we need to save more
          registers :-) */
       if (!FUNC_REGBANK (ftype))
         {
-          int i;
-
           /* if this function does not call any other
              function then we can be economical and
              save only those registers that are used */
           if (!IFFUNC_HASFCALL (ftype))
             {
+              if (!switchedPSW)
+                {
+                  emitpush ("psw");
+                  emitcode ("mov", "psw,#!constbyte", (FUNC_REGBANK (ftype) << 3) & 0x00ffu);
+                }
+              switchedPSW = true;
+
               /* if any registers used */
               if (!bitVectIsZero (sym->regsUsed))
                 {
+                  bool bits_pushed = !pushBits;
                   /* save the registers used */
-                  for (i = 0; i < sym->regsUsed->size; i++)
+                  for (int i = 0; i < sym->regsUsed->size; i++)
                     {
                       if (bitVectBitValue (sym->regsUsed, i))
-                        pushReg (i, TRUE);
+                        bits_pushed = pushReg (i, bits_pushed);
                     }
                 }
+              pushBits = false;
+
+              if (pushDpl)
+                emitpush ("dpl");
+              pushDpl = false;
+              if (pushDph)
+                emitpush ("dph");
+              pushDph = false;
+              if (pushB)
+                emitpush ("b");
+              pushB = false;
             }
           else
             {
-              /* this function has a function call. We cannot
-                 determine register usage so we will have to push the
-                 entire bank */
-              saveRBank (0, ic, FALSE);
+              /* this function has a function call. We cannot determine
+                 register usage so we will have to push the entire bank */
+              saveRBank (0, false, FUNC_REGBANK (ftype), pushBits, pushDpl, pushDph, pushB);
+              switchedPSW = true;
+              pushBits = false;
+              pushDpl = false;
+              pushDph = false;
+              pushB = false;
+              ic->bankSaved = 1;
             }
         }
       else
@@ -4553,10 +4740,7 @@ genFunction (iCode * ic)
 
           if (IFFUNC_HASFCALL (ftype))
             {
-              iCode *i;
-              int ix;
-
-              for (i = ic; i; i = i->next)
+              for (iCode *i = ic; i; i = i->next)
                 {
                   sym_link *dtype = NULL;
 
@@ -4572,14 +4756,6 @@ genFunction (iCode * ic)
                     }
                   if (i->op == PCALL)
                     {
-                      /* This is a mess; we have no idea what
-                       * register bank the called function might
-                       * use.
-                       *
-                       * The only thing I can think of to do is
-                       * throw a warning and hope.
-                       */
-//                      werror (W_FUNCPTR_IN_USING_ISR);
                       dtype = operandType (IC_LEFT (i))->next;
                     }
                   if (dtype && FUNC_REGBANK (dtype) != FUNC_REGBANK (ftype))
@@ -4599,38 +4775,38 @@ genFunction (iCode * ic)
                     }
                 }
 
-              if (banksToSave && options.useXstack)
+              for (int rbank = 0; rbank < MAX_REGISTER_BANKS; rbank++)
                 {
-                  /* Since we aren't passing it an ic,
-                   * saveRBank will assume r0 is available to abuse.
-                   *
-                   * So switch to our (trashable) bank now, so
-                   * the caller's R0 isn't trashed.
-                   */
-                  emitpush ("psw");
-                  emitcode ("mov", "psw,#!constbyte", (FUNC_REGBANK (ftype) << 3) & 0x00ffu);
-                  switchedPSW = TRUE;
-                }
-
-              for (ix = 0; ix < MAX_REGISTER_BANKS; ix++)
-                {
-                  if (banksToSave & (1 << ix))
+                  if (banksToSave & (1 << rbank))
                     {
-                      saveRBank (ix, NULL, FALSE);
+                      saveRBank (rbank, true, switchedPSW ? -1 : FUNC_REGBANK (ftype),
+                                 pushBits, pushDpl, pushDph, pushB);
+                      switchedPSW = true;
+                      pushBits = false;
+                      pushDpl = false;
+                      pushDph = false;
+                      pushB = false;
                     }
                 }
             }
+
           // TODO: this needs a closer look
           SPEC_ISR_SAVED_BANKS (currFunc->etype) = banksToSave;
+
+          saveRBank (-1, true, switchedPSW ? -1 : FUNC_REGBANK (ftype),
+                     pushBits, pushDpl, pushDph, pushB);
+          switchedPSW = true;
+          pushBits = false;
+          pushDpl = false;
+          pushDph = false;
+          pushB = false;
         }
 
-      /* Set the register bank to the desired value if nothing else */
-      /* has done so yet. */
-      if (!switchedPSW)
-        {
-          emitpush ("psw");
-          emitcode ("mov", "psw,#!constbyte", (FUNC_REGBANK (ftype) << 3) & 0x00ffu);
-        }
+      wassert (switchedPSW);
+      wassert (!pushBits);
+      wassert (!pushDpl);
+      wassert (!pushDph);
+      wassert (!pushB);
     }
   else
     {
@@ -4909,6 +5085,8 @@ genEndFunction (iCode * ic)
       return;
     }
 
+  D (emitcode (";", "genEndFunction"));
+
   _G.stack.xpushed = _G.stack.xpushedregs;
   _G.stack.pushed = _G.stack.pushedregs;
 
@@ -5010,18 +5188,20 @@ genEndFunction (iCode * ic)
   /* restore the register bank */
   if (IFFUNC_ISISR (ftype))
     {
-      if (!FUNC_REGBANK (ftype) || !options.useXstack)
-        {
-          /* Special case of ISR using non-zero bank with useXstack
-           * is handled below.
-           */
-          emitpop ("psw");
-        }
-    }
-
-  if (IFFUNC_ISISR (ftype))
-    {
       bitVect *rsavebits;
+      bool popPsw  = true;
+      bool popBits = false;
+      bool popDpl  = !inExcludeList ("dpl");
+      bool popDph  = !inExcludeList ("dph");
+      bool popB    = !inExcludeList ("b");
+
+      rsavebits = bitVectIntersect (bitVectCopy (mcs51_allBitregs ()), sym->regsUsed);
+      if (IFFUNC_HASFCALL (ftype) || !bitVectIsZero (rsavebits))
+        {
+          if (!inExcludeList ("bits"))
+            popBits = true;
+        }
+      freeBitVect (rsavebits);
 
       /* now we need to restore the registers */
       /* if this isr has no bank i.e. is going to
@@ -5029,29 +5209,47 @@ genEndFunction (iCode * ic)
          registers :-) */
       if (!FUNC_REGBANK (ftype))
         {
-          int i;
           /* if this function does not call any other
              function then we can be economical and
              save only those registers that are used */
           if (!IFFUNC_HASFCALL (ftype))
             {
+              if (popB)
+                emitpop ("b");
+              popB = false;
+              if (popDph)
+                emitpop ("dph");
+              popDph = false;
+              if (popDpl)
+                emitpop ("dpl");
+              popDpl = false;
+
               /* if any registers used */
               if (!bitVectIsZero (sym->regsUsed))
                 {
+                  bool bits_popped = !popBits;
                   /* restore the registers used */
-                  for (i = sym->regsUsed->size; i >= 0; i--)
+                  for (int i = sym->regsUsed->size; i >= 0; i--)
                     {
                       if (bitVectBitValue (sym->regsUsed, i))
-                        popReg (i, TRUE);
+                        bits_popped = popReg (i, bits_popped);
                     }
                 }
+              popBits = false;
+
+              emitpop ("psw");
+              popPsw = false;
             }
           else
             {
-              /* this function has a function call. We cannot
-                 determine register usage so we will have to pop the
-                 entire bank */
-              unsaveRBank (0, ic, FALSE);
+              /* this function has a function call. We cannot determine
+                 register usage so we will have to pop the entire bank */
+              unsaveRBank (0, false, popPsw, popBits, popDpl, popDph, popB);
+              popPsw = false;
+              popBits = false;
+              popDpl = false;
+              popDph = false;
+              popB = false;
             }
         }
       else
@@ -5062,41 +5260,43 @@ genEndFunction (iCode * ic)
            * in reverse order.
            */
           unsigned savedBanks = SPEC_ISR_SAVED_BANKS (currFunc->etype);
-          int ix;
 
-          for (ix = MAX_REGISTER_BANKS - 1; ix >= 0; ix--)
+          for (int rbank = MAX_REGISTER_BANKS - 1; rbank >= 0; rbank--)
             {
-              if (savedBanks & (1 << ix))
+              if (savedBanks & (1u << rbank))
                 {
-                  unsaveRBank (ix, NULL, FALSE);
+                  savedBanks &= ~(1u << rbank);
+                  if (savedBanks)
+                    {
+                      unsaveRBank (rbank, true, false, false, false, false, false);
+                    }
+                  else
+                    {
+                      unsaveRBank (rbank, true, popPsw, popBits, popDpl, popDph, popB);
+                      popPsw = false;
+                      popBits = false;
+                      popDpl = false;
+                      popDph = false;
+                      popB = false;
+                    }
                 }
             }
-
-          if (options.useXstack)
-            {
-              /* Restore bank AFTER calling unsaveRBank,
-               * since it can trash r0.
-               */
-              emitpop ("psw");
-            }
+          unsaveRBank (-1, true, popPsw, popBits, popDpl, popDph, popB);
+          popPsw = false;
+          popBits = false;
+          popDpl = false;
+          popDph = false;
+          popB = false;
         }
 
-      if (!inExcludeList ("dph"))
-        emitpop ("dph");
-      if (!inExcludeList ("dpl"))
-        emitpop ("dpl");
-      if (!inExcludeList ("b"))
-        emitpop ("b");
+      wassert (!popPsw);
+      wassert (!popBits);
+      wassert (!popDpl);
+      wassert (!popDph);
+      wassert (!popB);
+
       if (!inExcludeList ("acc"))
         emitpop ("acc");
-
-      rsavebits = bitVectIntersect (bitVectCopy (mcs51_allBitregs ()), sym->regsUsed);
-      if (IFFUNC_HASFCALL (ftype) || !bitVectIsZero (rsavebits))
-        {
-          if (!inExcludeList ("bits"))
-            emitpop ("bits");
-        }
-      freeBitVect (rsavebits);
 
       /* weird but possible, one should better use a different priority */
       /* if critical function then turn interrupts back on */
@@ -5423,6 +5623,7 @@ genRet (iCode *ic)
 
   if (IS_BIT (_G.currentFunc->etype))
     {
+      D (emitcode (";", "Returning a bit"));
       if (!IS_OP_RUONLY (IC_LEFT (ic)))
         toCarry (IC_LEFT (ic));
     }
@@ -5756,7 +5957,7 @@ genPlus (iCode * ic)
       /* if result in bit space */
       if (AOP_TYPE (IC_RESULT (ic)) == AOP_CRY)
         {
-          if (ulFromVal (AOP (IC_RIGHT (ic))->aopu.aop_lit) != 0L)
+          if (ulFromVal (AOP (IC_RIGHT (ic))->aopu.aop_lit))
             emitcode ("cpl", "c");
           outBitC (IC_RESULT (ic));
         }
@@ -7027,7 +7228,7 @@ static void
 genCmp (operand * left, operand * right, operand * result, iCode * ifx, int sign, iCode * ic)
 {
   int size, offset = 0;
-  unsigned long long lit = 0L;
+  unsigned long long lit = 0;
   bool rightInB;
 
   D (emitcode (";", "genCmp"));
@@ -7047,7 +7248,7 @@ genCmp (operand * left, operand * right, operand * result, iCode * ifx, int sign
           emitpush (opGet (right, offset++, FALSE, TRUE));
         }
       loadDptrFromOperand (left, TRUE);
-      emitcode ("lcall", "___gptr_cmp");
+      emitcode ("lcall", "sdcc_gptr_cmp");
       for (offset = 0; offset < GPTRSIZE; offset++)
         emitpop (NULL);
     }
@@ -7074,7 +7275,7 @@ genCmp (operand * left, operand * right, operand * result, iCode * ifx, int sign
             {
               lit = ullFromVal (AOP (right)->aopu.aop_lit);
               /* optimize if(x < 0) or if(x >= 0) */
-              if (lit == 0ll)
+              if (lit == 0)
                 {
                   if (!sign)
                     {
@@ -7285,7 +7486,7 @@ gencjneshort (operand * left, operand * right, symbol * lbl)
           emitpush (opGet (right, offset++, FALSE, TRUE));
         }
       loadDptrFromOperand (left, TRUE);
-      emitcode ("lcall", "___gptr_cmp");
+      emitcode ("lcall", "sdcc_gptr_cmp");
       for (offset = 0; offset < GPTRSIZE; offset++)
         emitpop (NULL);
       emitcode ("jnz", "!tlabel", labelKey2num (lbl->key));
@@ -7437,9 +7638,8 @@ gencjneshort (operand * left, operand * right, symbol * lbl)
 
       while (size--)
         {
-          const char *r;
           MOVA (opGet (left, offset, FALSE, FALSE));
-          r = opGet (right, offset, FALSE, TRUE);
+          const char *r = opGet (right, offset, FALSE, TRUE);
           if (EQ (r, zero))
             emitcode ("jnz", "!tlabel", labelKey2num (lbl->key));
           else
@@ -7866,7 +8066,7 @@ genAnd (iCode * ic, iCode * ifx)
 {
   operand *left, *right, *result;
   int size, offset = 0;
-  unsigned long long lit = 0ull;
+  unsigned long long lit = 0;
 
   D (emitcode (";", "genAnd"));
 
@@ -8310,7 +8510,7 @@ genOr (iCode * ic, iCode * ifx)
 {
   operand *left, *right, *result;
   int size, offset = 0;
-  unsigned long lit = 0L;
+  unsigned long long lit = 0;
 
   D (emitcode (";", "genOr"));
 
@@ -8348,7 +8548,7 @@ genOr (iCode * ic, iCode * ifx)
     }
   if (AOP_TYPE (right) == AOP_LIT)
     {
-      lit = ulFromVal (AOP (right)->aopu.aop_lit);
+      lit = ullFromVal (AOP (right)->aopu.aop_lit);
     }
 
   size = AOP_SIZE (result);

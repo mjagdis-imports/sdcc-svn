@@ -857,18 +857,18 @@ printIvalType (symbol * sym, sym_link * type, initList * ilist, struct dbuf_s *o
       if (!!(val = initPointer (ilist, type, 0)))
         {
           int i, size = getSize (type), le = port->little_endian, top = (options.model == MODEL_FLAT24) ? 3 : 2;;
-          dbuf_printf (oBuf, "\t.byte ");
+          dbuf_tprintf (oBuf, "\t!db ");
           for (i = (le ? 0 : size - 1); le ? (i < size) : (i > -1); i += (le ? 1 : -1))
             {
               if (i == 0)
-			    if (strlen (val->name) > 0)
+                if (strlen (val->name) > 0)
                   dbuf_printf (oBuf, "%s", val->name);
-				else
+                else
                   dbuf_printf (oBuf, "#0x00");
               else if (0 < i && i < top)
-			    if (strlen (val->name) > 0)
+                if (strlen (val->name) > 0)
                   dbuf_printf (oBuf, "(%s >> %d)", val->name, i * 8);
-				else
+                else
                   dbuf_printf (oBuf, "#0x00");
               else
                 dbuf_printf (oBuf, "#0x00");
@@ -1197,7 +1197,9 @@ printIvalStruct (symbol *sym, sym_link *type, initList *ilist, struct dbuf_s *oB
                   iloop = iloop ? iloop->next : NULL;
             }
           else if (IS_BITFIELD (sflds->type))
-            written += printIvalBitFields (&sflds, &iloop, oBuf);
+            {
+              written += printIvalBitFields (&sflds, &iloop, oBuf);
+            }
           else
             {
               printIval (sym, sflds->type, iloop, oBuf, 1);
@@ -2453,13 +2455,13 @@ glue (void)
           fprintf (asmFile, "; overlayable register banks\n");
           fprintf (asmFile, "%s", iComments2);
           if (RegBankUsed[0])
-            fprintf (asmFile, "\t.area REG_BANK_0\t(REL,OVR,DATA)\n\t.ds 8\n");
+            fprintf (asmFile, "\t.area REG_BANK_0\t(REL,OVR,DATA)\nrbank0:\t.ds 8\n");
           if (RegBankUsed[1] || options.parms_in_bank1)
-            fprintf (asmFile, "\t.area REG_BANK_1\t(REL,OVR,DATA)\n\t.ds 8\n");
+            fprintf (asmFile, "\t.area REG_BANK_1\t(REL,OVR,DATA)\nrbank1:\t.ds 8\n");
           if (RegBankUsed[2])
-            fprintf (asmFile, "\t.area REG_BANK_2\t(REL,OVR,DATA)\n\t.ds 8\n");
+            fprintf (asmFile, "\t.area REG_BANK_2\t(REL,OVR,DATA)\nrbank2:\t.ds 8\n");
           if (RegBankUsed[3])
-            fprintf (asmFile, "\t.area REG_BANK_3\t(REL,OVR,DATA)\n\t.ds 8\n");
+            fprintf (asmFile, "\t.area REG_BANK_3\t(REL,OVR,DATA)\nrbank3:\t.ds 8\n");
         }
       if (BitBankUsed)
         {

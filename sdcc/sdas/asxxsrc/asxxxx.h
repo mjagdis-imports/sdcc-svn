@@ -1,7 +1,7 @@
 /* asxxxx.h */
 
 /*
- *  Copyright (C) 1989-2025  Alan R. Baldwin
+ *  Copyright (C) 1989-2026  Alan R. Baldwin
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -170,9 +170,9 @@
 #define	RTTERM	')'		/* Right expression delimeter */
 
 #define NCPS	256		/* Characters per symbol */
-#define ASXHUGE     1000        /* A huge number */
+#define ASXHUGE	1000	/* A huge number */
 #define NERR	3		/* Errors per line */
-#define NINPUT	1024		/* Input buffer size */
+#define NINPUT	1024	/* Input buffer size */
 #define NCODE	380		/* Listing code buffer size */
 #define NTITL	80		/* Title buffer size */
 #define	NSBTL	80		/* SubTitle buffer size */
@@ -183,7 +183,7 @@
 #define	MAXINC	6		/* Maximum nesting of include files */
 #define	MAXMCR	20		/* Maximum nesting of macro expansions */
 #define	MAXIF	10		/* Maximum nesting of if/else/endif */
-#define FILSPC      PATH_MAX    /* Chars. in filespec */
+#define	FILSPC	PATH_MAX	/* Chars. in filespec */
 
 #define NLIST	0		/* No listing */
 #define SLIST	1		/* Source only */
@@ -193,6 +193,7 @@
 #define	ELIST	5		/* Equate or IF conditional evaluation */
 
 #define	HLR_NLST	0x0080	/* For HLR file only */
+
 #define	LIST_ERR	0x0001	/* Error Code(s) */
 #define	LIST_LOC	0x0002	/* Location */
 #define	LIST_BIN	0x0004	/* Generated Binary Value(s)*/
@@ -219,9 +220,9 @@
 
 #define	LIST_TORF	0x8000	/* IF-ENDIF Conditional Overide Flag */
 
-#define T_ASM   0               /* Assembler Source File */
-#define T_INCL  1               /* Assembler Include File */
-#define T_MACRO 2               /* Assembler Macro */
+#define	T_ASM		1	/* Assembler Source File */
+#define	T_INCL		2	/* Assembler Include File */
+#define	T_MACRO		3	/* Assembler Macro */
 
 /*
  * Opcode Cycle definitions (Must Be The Same In ASxxxx / ASLink)
@@ -276,9 +277,9 @@ typedef	signed INT32 v_sint;
  *	The area structure contains the parameter values for a
  *	specific program or data section.  The area structure
  *	is a linked list of areas.  The initial default area
- *      is "_CODE" defined in asdata.c, the next area structure
+ *	is "_CODE" defined in asdata.c, the next area structure
  *	will be linked to this structure through the structure
- *      element 'struct area *a_ap'.  The structure contains the
+ *	element 'struct area *a_ap'.  The structure contains the
  *	area name, area reference number ("_CODE" is 0) determined
  *	by the order of .area directives, area size determined
  *	from the total code and/or data in an area, area fuzz is
@@ -295,7 +296,7 @@ struct	area
 	a_uint	a_fuzz;		/* Area fuzz */
 	int	a_flag;		/* Area flags */
 /* sdas specific */
-        a_uint  a_addr;         /* Area address */
+	a_uint	a_addr;		/* Area address */
 /* end sdas specific */
 };
 
@@ -307,7 +308,7 @@ struct	area
  *
  *	   7     6     5     4     3     2     1     0
  *	+-----+-----+-----+-----+-----+-----+-----+-----+
- *      | BIT |XDATA|DATA | PAG | ABS | OVR |     |     |
+ *	| BIT |XDATA|DATA | PAG | ABS | OVR |     |     |
  *	+-----+-----+-----+-----+-----+-----+-----+-----+
  */
 
@@ -338,7 +339,7 @@ struct	area
  *
  *	   7     6     5     4     3     2     1     0
  *	+-----+-----+-----+-----+-----+-----+-----+-----+
- *      | MSB | PAGn| PAG0| USGN| BYT2| PCR | SYM | BYT |
+ *	| MSB | PAGn| PAG0| USGN| BYT2| PCR | SYM | BYT |
  *	+-----+-----+-----+-----+-----+-----+-----+-----+
  */
 
@@ -459,7 +460,7 @@ struct	mne
  *	defined in asdata.c.  The entry 'struct tsym *s_tsym'
  *	links any temporary symbols following this symbol and
  *	preceeding the next normal symbol.  The structure also
- *      contains the symbol's name, type (NEW or USER),
+ *	contains the symbol's name, type (NEW or USER),
  *	flag (global, assigned, and multiply defined), a pointer
  *	to the area structure defining where the symbol is
  *	located, a reference number assigned by outgsd() in
@@ -477,20 +478,29 @@ struct	sym
 	int	s_ref;		/* Ref. number */
 	a_uint	s_addr;		/* Address */
 /* sdas specific */
-        a_uint  s_org;          /* Start Address if absolute */
+	a_uint	s_org;		/* Start Address if absolute */
 /* end sdas specific */
 };
 
-#define S_EOL           040     /* End mark for ___pst files */
+#define	S_EOL		040	/* End mark for ___pst files */
 
+/*
+ * Symbol Types
+ */
 #define	S_NEW		0	/* New  Name (External) */
 #define	S_USER		1	/* User Name (Assigned) */
 
+/*
+ * Symbol Flags
+ */
 #define	S_LCL		001	/* Local Variable */
 #define	S_GBL		002	/* Global Variable */
 #define	S_ASG		004	/* Assigned Value */
 #define	S_MDF		010	/* Multiple Definition */
 
+/*
+ * Assembler Directive Codes
+ */
 #define	S_OPTN		1	/* .enabl, .dsabl */
 #define	  O_ENBL     1		/* .enabl */
 #define	  O_DSBL     0		/* .dsabl */
@@ -503,7 +513,7 @@ struct	sym
 #define	  I_CODE     0		/* .include */
 #define	  I_BNRY     1		/* .incbin */
 #define	S_AREA		6	/* .area */
-#define S_ATYP          7       /* .area type */
+#define	S_ATYP		7	/* .area type */
 #define	S_ORG		8	/* .org */
 #define	S_RADIX		9	/* .radix */
 #define	S_GLOBL		10	/* .globl */
@@ -780,7 +790,7 @@ struct	expr
 		struct area *e_ap;
 		struct sym  *e_sp;
 	} e_base;		/* Rel. base */
-        int     e_rlcf;         /* Rel. flags */
+	int	e_rlcf;		/* Rel. flags */
 };
 
 /*
@@ -1073,8 +1083,8 @@ extern	int	kflag;		/*	-k, disable error output to .lst file
 				 */
 extern	int	lflag;		/*	-l, generate listing flag
 				 */
-extern  int     nflag;          /*      -n, don't resolve global symbols flag
-                                 */
+extern	int	nflag;		/*	-n, don't resolve global symbols flag
+				 */
 extern	int	oflag;		/*	-o, generate relocatable output flag
 				 */
 extern	int	pflag;		/*	-p, disable listing pagination
@@ -1101,7 +1111,7 @@ extern	int	yflag;		/*	-y, enable SDCC Debug Symbols
 
 extern	int	zflag;		/*	-z, disable symbol case sensitivity
 				 */
-extern  int     waddrmode;      /*      WORD Address mode flag
+extern	int	waddrmode;	/*	WORD Address mode flag
 				 */
 extern	int	a_bytes;	/*	REL file T Line address length
 				 */
@@ -1143,8 +1153,8 @@ extern	struct	area	*areap;	/*	pointer to an area structure
 				 */
 extern	struct	bank	*bankp;	/*	pointer to a bank structure
 				 */
-extern  struct  area    area[]; /*      array of 1 area
-                                 */
+extern	struct	area	area[];	/*	array of 1 area
+				 */
 extern	struct	def	*defp;	/*	pointer to a def structure
 				 */
 extern	struct	sym	sym[];	/*	array of 1 symbol
@@ -1169,10 +1179,10 @@ extern	int	exmode;		/*	expanded error code mode
 extern	char	*ip;		/*	pointer into the assembler-source
 				 *	text line in ib[]
 				 */
-extern  char    *ib;            /*      assembler-source text line for processing
+extern	char	*ib;	/*	assembler-source text line for processing
 				 */
-extern  char    *ic;            /*      assembler-source text line for listing
-                                 */
+extern	char	*ic;	/*	assembler-source text line for listing
+				 */
 extern	char	*il;		/*	pointer to the assembler-source
 				 *	text line to be listed
 				 */
@@ -1199,7 +1209,7 @@ extern	char	tb[NTITL];	/*	Title string buffer
 				 */
 extern	char	stb[NSBTL];	/*	Subtitle string buffer
 				 */
-extern  char    erb[NINPUT+4];  /*      Error string buffer
+extern	char	erb[NINPUT+4];	/*	Error string buffer
 				 */
 extern	char	symtbl[];	/*	string "Symbol Table"
 				 */
@@ -1215,18 +1225,18 @@ extern	FILE	*ofp;		/*	relocation output file handle
 				 */
 extern	FILE	*tfp;		/*	symbol table output file handle
 				 */
-extern  unsigned char ctype[256]; /*    array of character types, one per
-                                 *      ASCII/OEM character
+extern	unsigned char	ctype[256];	/*	array of character types, one per
+				 *      ASCII/OEM character
 				 */
-extern  char    ccase[256];     /*      an array of characters which
+extern	char	ccase[256];	/*	an array of characters which
 				 *	perform the case translation function
 				 */
 /*sdas specific */
-extern  int     asfatal;        /*      ASxxxx fatal error counter
+extern	int	asfatal;	/*	ASxxxx fatal error counter
 				 */
-extern  int     org_cnt;        /*      .org directive counter
+extern	int	org_cnt;	/*	.org directive counter
 				 */
-extern  char    *optsdcc;       /*      sdcc compile options
+extern	char	*optsdcc;	/*	sdcc compile options
 				 */
 /*end sdas specific */
 
@@ -1258,7 +1268,7 @@ extern	char *		strrchr();
 
 /* asmain.c */
 extern	FILE *		afile(char *fn, char *ft, int wf);
-extern  void            afilex(char *fn, char *ft);
+extern	void		afilex(char *fn, char *ft);
 extern	void		asexit(int i);
 extern	void		asmbl(void);
 extern	void		boundary(a_uint n);
@@ -1324,13 +1334,13 @@ extern	struct	area *	alookup(char *id);
 extern	void		asfree(void);
 extern	struct	bank *	blookup(char *id);
 extern	struct	def *	dlookup(char *id);
-extern  int             hash(const char *p, int flag);
-extern  struct  sym *   lookup(const char *id);
+extern	int		hash(const char *p, int flag);
+extern	struct	sym *	lookup(const char *id);
 extern	struct	mne *	mlookup(char *id);
 extern	char *		new(unsigned int n);
 extern	struct	sym *	slookup(char *id);
-extern  char *          strsto(const char *str);
-extern  int             symeq(const char *p1, const char *p2, int flag);
+extern	char *		strsto(const char *str);
+extern	int		symeq(const char *p1, const char *p2, int flag);
 extern	void		syminit(void);
 extern	void		symglob(void);
 
@@ -1344,31 +1354,31 @@ extern	char *		geterr(int c);
 extern	void		qerr(void);
 extern	void		rerr(void);
 /* sdas specific */
-extern  void            warnBanner(void);
+extern	void		warnBanner(void);
 /* end sdas specific */
 
 /* asexpr.c */
 extern	void		abscheck(struct expr *esp);
 extern	a_uint		absexpr(void);
+extern	void		binop(int c, struct expr *esp, struct expr *re);
 extern	void		clrexpr(struct expr *esp);
 extern	int		digit(int c, int r);
-extern	int		is_digit(int c, int r);
-extern	void		exprmasks(int n);
 extern	void		expr(struct expr *esp, int n);
-extern	void		binop(int c, struct expr *esp, struct expr *re);
+extern	void		exprmasks(int n);
 extern	int		is_abs(struct expr *esp);
+extern	int		is_digit(int c, int r);
 extern	int		oprio(int c);
 extern	a_uint		rngchk(a_uint n);
 extern	void		term(struct expr *esp);
 
 /* asdbg */
-extern  char *          BaseFileName(struct asmf *currFile, int spacesToUnderscores);
+extern	char *		BaseFileName(struct asmf *currFile, int spacesToUnderscores);
 extern	void		DefineNoICE_Line(void);
 extern	void		DefineSDCC_Line(void);
 
 /* aslist.c */
 extern	void		list(void);
-extern  void            list1(char *wp, int *wpt, int nb, int n, int f, int g);
+extern	void		list1(char *wp, int *wpt, int nb, int n, int f, int g);
 extern	void		list2(int t);
 extern	void		listhlr(int hlr_lst, int hlr_mode, int hlr_nb);
 extern	void		lstsym(FILE *fp);
@@ -1389,7 +1399,7 @@ extern	void		outall(void);
 extern	void		outdot(void);
 extern	void		outbuf(char *s);
 extern	void		outchk(int nt, int nr);
-extern  void            outradix(void);
+extern	void		outradix(void);
 extern	void		outgsd(void);
 extern	void		outsym(struct sym *sp);
 extern	void		outab(a_uint v);
@@ -1405,7 +1415,7 @@ extern	void		outr4b(struct expr *esp, int r);
 extern	void		outrxb(int i, struct expr *esp, int r);
 extern	void		outrbm(struct expr *esp, int r, a_uint v);
 extern	void		outrwm(struct expr *esp, int r, a_uint v);
-extern  void            outrwp(struct expr *esp, a_uint op, a_uint mask, int jump);
+extern	void		outrwp(struct expr *esp, a_uint op, a_uint mask, int jump);
 extern	void		outr3bm(struct expr *esp, int r, a_uint v);
 extern	void		outr4bm(struct expr *esp, int r, a_uint v);
 extern	void		outrxbm(int i, struct expr *esp, int r, a_uint v);
@@ -1495,7 +1505,7 @@ extern	int		dgt(int rdx, char *str, int n);
 
 /* sdas specific */
 /* strcmpi.c */
-extern  int as_strcmpi(const char *s1, const char *s2);
-extern  int as_strncmpi(const char *s1, const char *s2, size_t n);
+extern	int		as_strcmpi(const char *s1, const char *s2);
+extern	int		as_strncmpi(const char *s1, const char *s2, size_t n);
 /* end sdas specific */
 

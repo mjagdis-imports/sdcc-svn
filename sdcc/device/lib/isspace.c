@@ -35,15 +35,12 @@
 #undef isspace
 #endif
 
-// ' ' and '\n' are most common; '\t' to '\r' ordered by value
+// ' ' and '\n' are most common
 int isspace (int c)
 {
-#if defined ( __SDCC_sm83 ) || defined ( __SDCC_z80 ) ||  defined ( __SDCC_z80n ) ||  defined ( __SDCC_z180 ) ||  defined ( __SDCC_ez80 ) ||  defined ( __SDCC_mos6502 ) 
-  if((c & 0xff00) != 0)
+  if ((c & 0xff00) != 0)
     return 0;
-  return ((unsigned char)c == ' ' || (unsigned char)c == '\t' || (unsigned char)c == '\n' || (unsigned char)c == '\v' || (unsigned char)c == '\f' || (unsigned char)c == '\r');
-#else
-  return (c == ' ' || c == '\t' || c == '\n' || c == '\v' || c == '\f' || c == '\r');
-#endif
+  return ((unsigned char)c == ' '  || (unsigned char)c == '\n' || (unsigned char)c == '\t' ||
+          (unsigned char)c == '\r' || (unsigned char)c == '\f' || (unsigned char)c == '\v');
 }
 

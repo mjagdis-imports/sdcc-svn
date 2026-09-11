@@ -281,7 +281,7 @@ mlookup(char *id)
 	h = hash(id, 1);
 	mp = mnehash[h];
 	while (mp) {
-		if(symeq(id, mp->m_id, 1))
+		if (symeq(id, mp->m_id, 1))
 			return (mp);
 		mp = mp->m_mp;
 	}
@@ -322,7 +322,7 @@ slookup(char *id)
 	h = hash(id, zflag);
 	sp = symhash[h];
 	while (sp) {
-		if(symeq(id, sp->s_id, zflag))
+		if (symeq(id, sp->s_id, zflag))
 			return (sp);
 		sp = sp->s_sp;
 	}
@@ -350,7 +350,7 @@ slookup(char *id)
  *
  *	functions called:
  *		int	hash()		assym.c
- *              char *  new()           assym.c
+ *		char *	new()		assym.c
  *		char *	strsto()	assym.c
  *		int	symeq()		assym.c
  *
@@ -368,7 +368,7 @@ lookup(const char *id)
 	h = hash(id, zflag);
 	sp = symhash[h];
 	while (sp) {
-		if(symeq(id, sp->s_id, zflag))
+		if (symeq(id, sp->s_id, zflag))
 			return (sp);
 		sp = sp->s_sp;
 	}

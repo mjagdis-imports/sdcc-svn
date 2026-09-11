@@ -32,6 +32,8 @@
 
 int iscntrl (int c)
 {
-  return (c < ' ' || c == 0x7f);
+  if ((c & 0xff00) != 0)
+    return 1;
+  return ((unsigned char)c < ' ' || (unsigned char)c == 0x7f);
 }
 

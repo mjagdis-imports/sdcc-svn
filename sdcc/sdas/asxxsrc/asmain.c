@@ -2410,7 +2410,7 @@ loop:
 #if SDCDB
 			/*
 			 * SDCC Debug Information
-                         * if cdb information then generate the line info
+			 * if cdb information then generate the line info
 			 */
 			if (yflag && (pass == 1)) {
 				DefineSDCC_Line();
@@ -2421,12 +2421,12 @@ loop:
 		break;
 	}
 
-        if (is_sdas()) {
-                if ((c = endline()) != 0) {
-                        err('q');
+	if (is_sdas()) {
+		if ((c = endline()) != 0) {
+			err('q');
 		}
 	}
-        else {
+	else {
 		goto loop;
 	}
 }
@@ -2635,7 +2635,7 @@ boundary(a_uint n)
  *		void	expr()		asexpr.c
  *		void	err()		assubr.c
  *		sym  *	lookup()	assym.c
- *              void    outall()        asout.c
+ *		void    outall()	asout.c
  *		void	rerr()		assubr.c
  *
  *	side effects:

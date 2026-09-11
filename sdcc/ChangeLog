@@ -1,53 +1,89 @@
+2026-09-08 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* device/include/ctype.h,
+	* device/lib/iscntrl.c,
+	* device/lib/isgraph.c,
+	* device/lib/isprint.c,
+	* device/lib/isspace.c,
+	* device/lib/isxdigit.c: also check msb, for all targets
+	* device/lib/mcs51/crtxpushr0.asm,
+	* device/lib/mcs51/crtxpopr0.asm: removed
+	* device/lib/mcs51/crtxpop.asm,
+	* device/lib/mcs51/crtxpush.asm: use acc[4-7] also as mask,
+	  add dpl & dph support,
+	  made register bank independent
+	* device/lib/mcs51/crtcall.asm,
+	* device/lib/mcs51/gptr_cmp.asm: moved out of C namespace
+	* src/SDCCglue.c: gave the register banks a label rbank<n>
+	* src/mcs51/main.c (updateOpRW): added push/pop register bank 0 check,
+	  inspired by part of 0013 in patch #466 by Oleg Endo
+	* src/mcs51/gen.c (xstackRegisters): removed unsued parameters,
+	  reordered bitmask, added R0 support
+	  (saveRegisters, unsaveRegisters): use larger bitmask,
+	  support all register banks,
+	  call renamed sdcc_xpush_regs / sdcc_xpop_regs,
+	  no longer need ___sdcc_xpush_regs_r0 / ___sdcc_xpop_regs_r0
+	  (saveRBank, unsaveRBank): added parameters to support switching
+	  register bank and saving psw, bits, dpl, dph & b, also on xstack
+	  (genSendBits): factored out of genSend(),
+	  optimize literal assignments, already in place bits & try not to use B
+	  (genPcall): use renamed sdcc_call_dptr
+	  (genFunction): use rbank<n> labels for equ's
+	  let saveRBank() push psw, bits, dpl, dph & b, possibly on xstack
+	  (genEndFunction): let unsaveRBank() pop psw, bits, dpl, dph & b,
+	  possibly from xstack
+	  (genCmp, gencjneshort): used renamed sdcc_gptr_cmp
+
 2026-09-08 Gabriele Gorla <gorlik@yahoo.com>
 
 	* support/regression/Makefile.in,
-      support/regression/ports/mos6502:
+	  support/regression/ports/mos6502:
 	  Removed unmantained support for sim65.
-    * support/regression/ports/uc65c02/uCsim.cmd,
-      support/regression/ports/uc65c02/spec.mk,
-      support/regression/ports/uc6502/spec.mk,
-      support/regression/ports/uc6502-stack-auto/spec.mk,
-      support/regression/ports/uc6280/spec.mk:
-      Spec files cleanup.
-    * src/mos6502/gen.c,
-      src/mos6502/m6502.h,
-      src/mos6502/main.c,
-      src/mos6502/port_huc6280.c,
-      src/mos6502/port_mos6502.c,
-      src/mos6502/port_mos65c02.c,
-      src/mos6502/stackops.c,
-      src/mos6502/tempops.c:
-      Improve handling of enhanced instructions.
-    * configure,
-      configure.ac,
-      device/lib/Makefile.in,
-      device/lib/clean.mk,
-      device/lib/mos65c02/_muluchar.s,
-      device/lib/mos65c02/_setjmp.s,
-      support/regression/MakeList,
-      support/regression/ports/uc65c02/spec.mk,
-      device/lib/mos65c02-stack-auto,
-      device/lib/mos65c02-stack-auto/Makefile.in,
-      device/lib/mos65c02-stack-auto/__sdcc_indirect_jsr.s,
-      device/lib/mos65c02-stack-auto/__sdcc_regs.s,
-      device/lib/mos65c02-stack-auto/_muluchar.s,
-      device/lib/mos65c02-stack-auto/_setjmp.s,
-      device/lib/mos65c02-stack-auto/atomic_flag_test_and_set.c,
-      device/lib/mos65c02-stack-auto/crt0.s,
-      support/regression/ports/uc65c02-stack-auto,
-      support/regression/ports/uc65c02-stack-auto/support.c,
-      support/regression/ports/uc65c02-stack-auto/spec.mk,
-      support/regression/ports/uc65c02-stack-auto/uCsim.cmd:
-      Add mos65c02-stack-auto target and regression.
-    * device/lib/mos6502-stack-auto/Makefile.in,
-      device/lib/mos6502-stack-auto/_muluchar.s,
-      device/lib/mos6502-stack-auto/_setjmp.s,
-      device/lib/mos65c02/_muluchar.s,
-      device/lib/mos65c02/_setjmp.s,
-      src/mos6502/port_huc6280.c,
-      src/mos6502/port_mos6502.c,
-      src/mos6502/port_mos65c02.c:
-      Small cleanups.
+	* support/regression/ports/uc65c02/uCsim.cmd,
+	  support/regression/ports/uc65c02/spec.mk,
+	  support/regression/ports/uc6502/spec.mk,
+	  support/regression/ports/uc6502-stack-auto/spec.mk,
+	  support/regression/ports/uc6280/spec.mk:
+	  Spec files cleanup.
+	* src/mos6502/gen.c,
+	  src/mos6502/m6502.h,
+	  src/mos6502/main.c,
+	  src/mos6502/port_huc6280.c,
+	  src/mos6502/port_mos6502.c,
+	  src/mos6502/port_mos65c02.c,
+	  src/mos6502/stackops.c,
+	  src/mos6502/tempops.c:
+	  Improve handling of enhanced instructions.
+	* configure,
+	  configure.ac,
+	  device/lib/Makefile.in,
+	  device/lib/clean.mk,
+	  device/lib/mos65c02/_muluchar.s,
+	  device/lib/mos65c02/_setjmp.s,
+	  support/regression/MakeList,
+	  support/regression/ports/uc65c02/spec.mk,
+	  device/lib/mos65c02-stack-auto,
+	  device/lib/mos65c02-stack-auto/Makefile.in,
+	  device/lib/mos65c02-stack-auto/__sdcc_indirect_jsr.s,
+	  device/lib/mos65c02-stack-auto/__sdcc_regs.s,
+	  device/lib/mos65c02-stack-auto/_muluchar.s,
+	  device/lib/mos65c02-stack-auto/_setjmp.s,
+	  device/lib/mos65c02-stack-auto/atomic_flag_test_and_set.c,
+	  device/lib/mos65c02-stack-auto/crt0.s,
+	  support/regression/ports/uc65c02-stack-auto,
+	  support/regression/ports/uc65c02-stack-auto/support.c,
+	  support/regression/ports/uc65c02-stack-auto/spec.mk,
+	  support/regression/ports/uc65c02-stack-auto/uCsim.cmd:
+	  Add mos65c02-stack-auto target and regression.
+	* device/lib/mos6502-stack-auto/Makefile.in,
+	  device/lib/mos6502-stack-auto/_muluchar.s,
+	  device/lib/mos6502-stack-auto/_setjmp.s,
+	  device/lib/mos65c02/_muluchar.s,
+	  device/lib/mos65c02/_setjmp.s,
+	  src/mos6502/port_huc6280.c,
+	  src/mos6502/port_mos6502.c,
+	  src/mos6502/port_mos65c02.c:
+	  Small cleanups.
 
 2026-09-08 Maarten Brock <sourceforge.brock AT dse.nl>
 

@@ -39,6 +39,6 @@
 
 	.area HOME    (CODE)
 
-__sdcc_call_dptr::
+sdcc_call_dptr::
 	clr	a
 	jmp	@a+dptr

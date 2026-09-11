@@ -157,10 +157,10 @@ struct	mne	mne[] = {
 /*    {	NULL,	".end",		S_END,		0,	0	},	*/
 
 /* sdas specific */
-/*    {   NULL,   ".df",          S_FLOAT,        0,      0       },	*/
-/*    {   NULL,   ".uleb128",     S_ULEB128,      0,      0       },	*/
-/*    {   NULL,   ".sleb128",     S_SLEB128,      0,      0       },	*/
-    {   NULL,   ".optsdcc",     S_OPTSDCC,      0,      0       },
+/*    {	NULL,	".df",		S_FLOAT,	0,	0	},	*/
+/*    {	NULL,	".uleb128",	S_ULEB128,	0,	0	},	*/
+/*    {	NULL,	".sleb128",	S_SLEB128,	0,	0	},	*/
+    {	NULL,	".optsdcc",	S_OPTSDCC,	0,	0	},
 /* end sdas specific */
 
 	/* Macro Processor */

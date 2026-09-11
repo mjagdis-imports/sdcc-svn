@@ -35,18 +35,17 @@ bits:
 
 	.area HOME    (CODE)
 
-; Pop registers r1..r7 & bits from xstack
-; Expect mask in B
-___sdcc_xpop_regs::
+; Pop registers r0..r7, dpl, dph & bits from xstack
+; Expect mask in ACC[7-4] & B
+sdcc_xpop_regs::
+	push	acc		;save mask in high nibble of acc
 	mov	a,r0
 	mov	r0,_spx
-___sdcc_xpop::
-	push acc
 	jbc	B.0,00100$	;if B(0)=0 then
 	dec	r0
-	movx	a,@r0		;pop bits
-	mov	bits,a
+	movx	a,@r0		;pop R0
 00100$:
+	push	acc		;save R0 for return
 	jbc	B.1,00101$	;if B(1)=0 then
 	dec	r0
 	movx	a,@r0		;pop R1
@@ -82,6 +81,24 @@ ___sdcc_xpop::
 	movx	a,@r0		;pop R7
 	mov	r7,a
 00107$:
+	pop	acc
+	pop	B		;retrieve mask from high nibble of acc into B
+	push	acc
+	jbc	B.4,00108$	;if B(4)=0 then
+	dec	r0
+	movx	a,@r0		;pop bits
+	mov	bits,a
+00108$:
+	jbc	B.5,00109$	;if B(5)=0 then
+	dec	r0
+	movx	a,@r0		;pop dpl
+	mov	dpl,a
+00109$:
+	jbc	B.6,00110$	;if B(6)=0 then
+	dec	r0
+	movx	a,@r0		;pop dph
+	mov	dph,a
+00110$:
 	mov	_spx,r0
 	pop	acc
 	mov	r0,a
