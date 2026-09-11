@@ -1,3 +1,7 @@
+2026-09-11 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* snap.php: updated regex for parsing Summary lines
+
 2026-08-21 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* snap.php:

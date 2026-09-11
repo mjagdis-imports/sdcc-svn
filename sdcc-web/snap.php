@@ -14,7 +14,7 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
    GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License 
+   You should have received a copy of the GNU General Public License
    along with this library; see the file COPYING. If not, write to the
    Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA.
@@ -202,9 +202,9 @@ function rt_failed($fname)
 {
   if ($handle = fopen($fname, "r")) {
     while ($line = fgets($handle)) {
-      # Summary for 'host': 0 failures, 4244 tests, 596 test cases, 0 bytes, 0 ticks
+      # Summary for 'host' : 0 failures, 4244 tests, 596 test cases, 0 bytes, 0 ticks
       if (preg_match('/^Summary/', $line)) {
-        $failures = preg_replace('/^Summary for \'.+\':.* (\d+) failures, \d+ tests, \d+ test cases, \d+ bytes, \d+ ticks/',
+        $failures = preg_replace('/^Summary for \'.+\'\w*:.* (\d+) failures, \d+ tests, \d+ test cases, \d+ bytes, \d+ ticks/',
           '$1', $line);
         if ($failures && $failures > 0)
           return true;
@@ -212,7 +212,7 @@ function rt_failed($fname)
       if (preg_match('/Error/', $line) || preg_match('/invalid instructions/', $line))
         return true;
     }
-  
+
     return false;
   }
   else
@@ -225,7 +225,7 @@ function display_files($descdir, $lsDir, $cldir, $rtdir, $subdir)
   $lsDir->chDir($subdir);
 
   foreach ($lsDir->entries() as $file) {
-    if ($file != "HEADER.html" && $file != ".htaccess") { 
+    if ($file != "HEADER.html" && $file != ".htaccess") {
       $attr = $lsDir->getAttr($file);
       $file_name[$numfiles] = $file;
       $file_size[$numfiles] = $attr["size"];
