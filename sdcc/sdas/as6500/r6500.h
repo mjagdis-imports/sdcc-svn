@@ -84,15 +84,18 @@ struct adsym
  */
 #define S_IMMED	40
 #define S_ACC	41
-#define S_DIR	42
-#define S_EXT	43
-#define S_IND	44
-#define S_DINDX	45
-#define S_DINDY	46
-#define S_INDX	47
-#define S_INDY	48
-#define S_IPREX	49
-#define S_IPSTY	50
+#define S_IND	42
+#define S_IPREX	43
+#define S_IPSTY	44
+/*
+ * DONOT Change Order
+ */
+#define S_EXT	50
+#define S_DIR	51
+#define S_INDX	52
+#define S_DINDX	53
+#define S_INDY	54
+#define S_DINDY	55
 
 /*
  * 650X and 651X Instructions
@@ -147,6 +150,7 @@ struct adsym
 extern	struct	adsym	axy[];
 extern	int		addr(struct expr *esp);
 extern	int		admode(struct adsym *sp);
+extern	int		espmode(struct expr *esp, int s);
 extern	int		srch(char *str);
 
 	/* r65mch.c */
