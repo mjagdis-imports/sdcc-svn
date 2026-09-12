@@ -40,7 +40,7 @@
  *		int	comma()
  *		char	endline()
  *		int	get()
- *              int     getdstr()
+ *		int	getdstr()
  *		int	getdlm()
  *		void	getid()
  *		int	getmap()
@@ -93,7 +93,7 @@
  *		int	get()		aslex.c
  *		int	getnb()		aslex.c
  *		void	unget()		aslex.c
- *              void    qerr()          assubr.c
+ *		void	qerr()		assubr.c
  *
  *	side effects:
  *		Use of getnb(), get(), and unget() updates the
@@ -156,7 +156,7 @@ getid(char *id, int c)
  *		int	get()		aslex.c
  *		int	getnb()		aslex.c
  *		void	unget()		aslex.c
- *              void    qerr()          assubr.c
+ *		void	qerr()		assubr.c
  *
  *	side effects:
  *		use of getnb(), get(), and unget() updates the
@@ -203,7 +203,7 @@ getst(char *id, int c)
  *	called functions:
  *		int	get()		aslex.c
  *		int	getdlm()	aslex.c
- *              void    qerr()          assubr.c
+ *		void	qerr()		assubr.c
  *
  *	side effects:
  *		Returns the character string delimited by the
@@ -252,7 +252,7 @@ getdstr(char *str, int slen)
  *		int	get()		aslex.c
  *		int	getnb()		aslex.c
  *		int	more()		aslex.c
- *              void    qerr()          assubr.c
+ *		void	qerr()		assubr.c
  *
  *	side effects:
  *		scans ip to the first non 'SPACE' or 'TAB' character
@@ -403,7 +403,7 @@ unget(int c)
  *
  *	called functions:
  *		int	get()		aslex.c
- *              void    qerr()          assubr.c
+ *		void	qerr()		assubr.c
  *
  *	side effects:
  *		use of get() updates the global pointer ip the position
@@ -422,6 +422,13 @@ getmap(int d)
 	if (c == '\\') {
 		c = get();
 		switch (c) {
+
+		default:
+			unget(c);
+
+		case '\\':
+			c = '\\';
+			break;
 
 		case 'b':
 			c = '\b';
@@ -459,11 +466,6 @@ getmap(int d)
 			}
 			unget(c);
 			c = v;
-			break;
-
-		default:
-			unget(c);
-			c = '\\';
 			break;
 		}
 	}

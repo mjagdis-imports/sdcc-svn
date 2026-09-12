@@ -223,7 +223,7 @@ machine(struct mne *mp)
 		opcycles = OPCY_SDP;
 		zpg = dot.s_area;
 		if (more()) {
-			expr(&e1, 0);
+			expr(&e1);
 			if (e1.e_flag == 0 && e1.e_base.e_ap == NULL) {
 				if (e1.e_addr) {
 					e1.e_addr = 0;
@@ -286,7 +286,7 @@ machine(struct mne *mp)
 			break;
 		} /* Fall Through */
 	case S_BRA:
-		expr(&e1, 0);
+		expr(&e1);
 		outab(op);
 		if (mchpcr(&e1, &v1, 1)) {
 			if ((v1 < -128) || (v1 > 127))
@@ -393,20 +393,20 @@ machine(struct mne *mp)
 
 	case S_TYP3:
 		t1 = addr(&e1);
-                espv = e1.e_addr;
+		espv = e1.e_addr;
 		if (t1 != S_IMMED)
 			xerr('a', "Require Immediate(#) For First Argument.");
 		comma(1);
 		t2 = addr(&e2);
 		if (t2 != S_DIR)
 			xerr('a', "Require Direct Mode For Second Argument.");
-                outab(op + 2*(espv&0x07));
+		outab(op + 2*(espv&0x07));
 		outrb(&e2, R_PAG0);
 		break;
 
 	case S_TYP4:
 		t1 = addr(&e1);
-                espv = e1.e_addr;
+		espv = e1.e_addr;
 		if (t1 != S_IMMED)
 			xerr('a', "Require Immediate(#) For First Argument.");
 		comma(1);
@@ -414,8 +414,8 @@ machine(struct mne *mp)
 		if (t2 != S_DIR)
 			xerr('a', "Require Direct Mode For Second Argument.");
 		comma(1);
-		expr(&e3, 0);
-                outab(op + 2*(espv&0x07));
+		expr(&e3);
+		outab(op + 2*(espv&0x07));
 		outrb(&e2, R_PAG0);
 		if (mchpcr(&e3, &v3, 1)) {
 			if ((v3 < -128) || (v3 > 127))
@@ -524,7 +524,7 @@ machine(struct mne *mp)
 		}
 		t1 = addr(&e1);
 		comma(1);
-		expr(&e2, 0);
+		expr(&e2);
 		if (t1 == S_IMMED) {
 			outab(op);
 			outrb(&e1, 0);
@@ -569,7 +569,7 @@ machine(struct mne *mp)
 		if (t1 != S_IMMED)
 			xerr('a', "Immediate(#) First Argument Required.");
 		comma(1);
-		expr(&e2, 0);
+		expr(&e2);
 		outab(op);
 		outrb(&e1, 0);
 		if (mchpcr(&e2, &v2, 1)) {
@@ -591,7 +591,7 @@ machine(struct mne *mp)
 		}
 		t1 = addr(&e1);
 		comma(1);
-		expr(&e2, 0);
+		expr(&e2);
 		if (t1 == S_DIR || t1 == S_EXT) {
 			outab(op);
 			outrb(&e1, R_PAG0);
@@ -628,7 +628,7 @@ machine(struct mne *mp)
 			xerr('o', "A 68HC(S)08 Instruction.");
 			break;
 		}
-		expr(&e1, 0);
+		expr(&e1);
 		outab(op);
 		if (mchpcr(&e1, &v1, 1)) {
 			if ((v1 < -128) || (v1 > 127))

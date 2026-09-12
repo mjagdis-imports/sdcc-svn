@@ -44,11 +44,11 @@ struct adsym reg51[] = {	/* R0 thru R7 registers */
     {	"R5",	R5	},
     {	"R6",	R6	},
     {	"R7",	R7	},
+    {	"AB",	AB	},
     {	"A",	A	},
     {	"DPTR", DPTR	},
     {	"PC",	PC	},
     {	"C",	C	},
-    {	"AB",	AB	},
     {	"",	0x00	}
 };
 
@@ -61,7 +61,7 @@ addr(struct expr *esp)
 
 	if ((c = getnb()) == '#') {
 		/*  Immediate mode */
-		expr(esp, 0);
+		expr(esp);
 		esp->e_mode = S_IMMED;
 	} 
 	else if (c == '@') {
@@ -102,12 +102,12 @@ addr(struct expr *esp)
 	else if (c == '*') {
 		if ((c = getnb()) == '/') {
 			/* Force inverted bit */
-			expr(esp, 0);
+			expr(esp);
 			esp->e_mode = S_NOT_BIT;
 		} else {
 			unget(c);
 			/* Force direct page */
-			expr(esp, 0);
+			expr(esp);
 			esp->e_mode = S_DIR;
 		}
 		if (esp->e_addr & ~0xFF)
@@ -115,7 +115,7 @@ addr(struct expr *esp)
 	} 
 	else if (c == '/') {
 		/* Force inverted bit  */
-		expr(esp, 0);
+		expr(esp);
 		esp->e_mode = S_NOT_BIT;
 	} 
 	else {
@@ -146,7 +146,7 @@ addr(struct expr *esp)
 		} else {
 			/* Must be an expression */
 			esp->e_addr = 0;		/* Vasiliy Petrov */
-			expr(esp, 0);
+			expr(esp);
 			if ((!esp->e_flag)
 				&& (esp->e_base.e_ap==NULL)
 				&& !(esp->e_addr & ~0xFF)) {

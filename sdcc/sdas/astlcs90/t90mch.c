@@ -1,7 +1,11 @@
 /* t90mch.c */
 
 /*
- *  Copyright (C) 2013 Rainer Keuchel
+ *  Copyright (C) 2026  Alan R. Baldwin
+ *
+ *  A rewrite of the
+ *    Port to the SDAS fork of ASxxxx by Rainer Keuchel (C) 2013
+ *    Port to ASxxxx from the SDASTLCS90 by Philip Klaus Krause 2025
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -33,7 +37,7 @@
 #define GET_IND_REG(T) ((T) - S_IDBC)
 #define GET_COND_FROM_MODE(V) ((V) & 0xFF)
 
-char *cpu = "Toshiba TLCS90";
+char *cpu = "Toshiba TLCS90 Series";
 char *dsft = "asm";
 
 /*
@@ -687,7 +691,7 @@ machine(struct mne *mp)
           op = 0x18;
         }
 
-      //expr(&e2, 0);
+      //expr(&e2);
       t2 = addr(&e2);
 
       if(rf == S_DJNZ)
@@ -702,7 +706,7 @@ machine(struct mne *mp)
 
               comma(1);
 
-              expr(&e2, 0);
+              expr(&e2);
             }
         }
 
@@ -1999,7 +2003,6 @@ machine(struct mne *mp)
 /*
  * Branch/Jump PCR Mode Check
  */
-
 int
 mchpcr(struct expr *esp)
 {
@@ -2021,7 +2024,6 @@ mchpcr(struct expr *esp)
       esp->e_flag = 1;
       esp->e_base.e_sp = &sym[1];
     }
-
   return(0);
 }
 
@@ -2029,8 +2031,8 @@ mchpcr(struct expr *esp)
  * Machine dependent initialization
  */
 
-VOID
-minit()
+void
+minit(void)
 {
   /*
    * Byte Order

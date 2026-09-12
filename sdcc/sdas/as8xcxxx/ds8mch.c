@@ -172,7 +172,7 @@ machine(struct mne *mp)
 		sp->s_flag |= S_ASG;
 
 		if (more()) {
-			expr(&e, 0);
+			expr(&e);
 			abscheck(&e);
 			sp->s_addr = e.e_addr;
 		} else {
@@ -190,7 +190,7 @@ machine(struct mne *mp)
 			xerr('o', "Not a 16 or 24 Bit machine.");
 			break;
 		}
-		expr(&e, 0);
+		expr(&e);
 		abscheck(&e);
 		amode = (int) e.e_addr;
 		if ((amode < 0) || (amode > 2)) {
@@ -198,7 +198,7 @@ machine(struct mne *mp)
 			xerr('o', "Valid values are 0 -> 2.");
 		}
 		if ((c = getnb()) == ',') {
-			expr(&e1, 0);
+			expr(&e1);
 			abscheck(&e1);
 			if (e1.e_addr != 0) {
 /* mov	ta,#0aah */		outab(0x075);	outab(0x0C7);	outab(0x0AA);
@@ -230,16 +230,16 @@ machine(struct mne *mp)
 		break;
 
 	case S_JMP11:
-		expr(&e, 0);
+		expr(&e);
 		if (amode == 2) {
-                        outr3bm(&e, R_J19, op);
+			outr3bm(&e, R_J19, op);
 		} else {
-                        outrwm(&e, R_J11, op);
+			outrwm(&e, R_J11, op);
 		}
 		break;
 
 	case S_JMP16:
-		expr(&e, 0);
+		expr(&e);
 		outab(op);
 		if (amode == 2) {
 			outr3b(&e, R_NORM);
@@ -584,7 +584,7 @@ machine(struct mne *mp)
 		outrb(&e, R_PAG0);
 
 		comma(1);
-		expr(&e1, 0);
+		expr(&e1);
 		if (mchpcr(&e1, &v1, 1)) {
 			if ((v1 < -128) || (v1 > 127))
 				xerr('a', "Branching Range Exceeded.");
@@ -599,7 +599,7 @@ machine(struct mne *mp)
         case S_BR:  /* JC, JNC, JZ, JNZ */
 		/* Relative branch */
 		outab(op);
-		expr(&e1, 0);
+		expr(&e1);
 		if (mchpcr(&e1, &v1, 1)) {
 			if ((v1 < -128) || (v1 > 127))
 				xerr('a', "Branching Range Exceeded.");
@@ -650,7 +650,7 @@ machine(struct mne *mp)
 
 		/* branch destination */
 		comma(1);
-		expr(&e1, 0);
+		expr(&e1);
 		if (mchpcr(&e1, &v1, 1)) {
 			if ((v1 < -128) || (v1 > 127))
 				xerr('a', "Branching Range Exceeded.");
@@ -682,7 +682,7 @@ machine(struct mne *mp)
 
 		/* branch destination */
 		comma(1);
-		expr(&e1, 0);
+		expr(&e1);
 		if (mchpcr(&e1, &v1, 1)) {
 			if ((v1 < -128) || (v1 > 127))
 				xerr('a', "Branching Range Exceeded.");
@@ -905,11 +905,11 @@ mchpcr(struct expr *esp, int *v, int n)
 void
 minit(void)
 {
-        struct sym      *sp;
-        struct PreDef   *pd;
-        int i;
-        char pid[8];
-        char *p;
+	struct sym      *sp;
+	struct PreDef   *pd;
+	int i;
+	char pid[8];
+	char *p;
 
 	/*
 	 * Byte Order
@@ -918,38 +918,38 @@ minit(void)
 
 	amode = 0;
 	/*
-         * First time only:
-         *      add the pre-defined symbols to the table
-         *      as local symbols.
+	 * First time only:
+	 *      add the pre-defined symbols to the table
+	 *      as local symbols.
 	 */
 	if (pass == 0) {
 		ds8_bytes = 0;
 		mchtyp = X_DS8XCXXX;
 		sym[2].s_addr = X_DS8XCXXX;
 
-                pd = preDef;
-                while (pd->id) {
-                        strcpy(pid, pd->id);
-                        for (i=0; i<2; i++) {
-                                /*
-                                 * i == 0,  Create Upper Case Symbols
-                                 * i == 1,  Create Lower Case Symbols
-                                 */
-                                if (i == 1) {
-                                        p = pid;
-                                        while (*p) {
-                                                *p = ccase[*p & 0x007F];
-                                                p++;
+		pd = preDef;
+		while (pd->id) {
+			strcpy(pid, pd->id);
+			for (i=0; i<2; i++) {
+				/*
+				 * i == 0,  Create Upper Case Symbols
+				 * i == 1,  Create Lower Case Symbols
+				 */
+				if (i == 1) {
+					p = pid;
+					while (*p) {
+						*p = ccase[*p & 0x007F];
+						p++;
 					}
 				}
-                                sp = lookup(pid);
-                                if (sp->s_type == S_NEW) {
-                                        sp->s_addr = pd->value;
-                                        sp->s_type = S_USER;
-                                        sp->s_flag = S_LCL | S_ASG;
+				sp = lookup(pid);
+				if (sp->s_type == S_NEW) {
+					sp->s_addr = pd->value;
+					sp->s_type = S_USER;
+					sp->s_flag = S_LCL | S_ASG;
 				}
 			}
-                        pd++;
+			pd++;
 		}
 	}
 }

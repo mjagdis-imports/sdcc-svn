@@ -62,7 +62,7 @@ addr(struct expr *esp)
 	ip = p;
 
 	if ((c = getnb()) == '#') {
-		expr(esp, 0);
+		expr(esp);
 		esp->e_mode = S_IMMED;
 	} else
 	if (c == LFIND) {
@@ -85,11 +85,11 @@ addr(struct expr *esp)
 			mode = S_R16X;
 		} else {
 			mode = S_INDM;
-			expr(esp, 0);
+			expr(esp);
 			esp->e_mode = mode;
 		}
 		if (indx) {
-                        esp->e_mode = (mode + indx)&0xFF;
+			esp->e_mode = (mode + indx)&0xFF;
 			esp->e_base.e_ap = NULL;
 		}
 		if ((c = getnb()) != RTIND) {
@@ -97,7 +97,7 @@ addr(struct expr *esp)
 			if (indx && ((indx & 0xFF)==IX || (indx & 0xFF)==IY)) {
 				if (mchtyp == X_8080)
 					xerr('a', "8080: No IX or IY.");
-				expr(esp, 0);
+				expr(esp);
 				esp->e_mode = S_INDR + (indx&0xFF);
 			}
 			if ((c = getnb()) != RTIND)
@@ -128,11 +128,11 @@ addr(struct expr *esp)
 		if ((indx = admode(R16X)) != 0) {
 			mode = S_R16X;
 		} else
-                if ((indx = admode(R8MB)) != 0) {
-                        mode = S_R8MB;
+		if ((indx = admode(R8MB)) != 0) {
+			mode = S_R8MB;
 		} else {
 			mode = S_USER;
-			expr(esp, 0);
+			expr(esp);
 			esp->e_mode = mode;
 		}
 		if (indx) {

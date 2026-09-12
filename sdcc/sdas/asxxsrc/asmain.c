@@ -700,7 +700,7 @@ main(int argc, char *argv[])
  *		CONSTANT	NHASH	number of symbol hash buckets
  *		int		pass	current assembler pass
  *		int		passcnt	number of passes completeed
- *		int		passfuz addressing fuzz at end of pass
+ *		a_uint		passfuz addressing fuzz at end of pass
  *		int		passJLH	flag indicating pass to dump NOICE comments
  *		int		passlmt	pass limit value [0 or defined in minit()]
  *		int		tflag	-t option flag
@@ -2077,7 +2077,7 @@ loop:
 			case 'x':	radix = 16;	break;	/* X */
 			default:				/* 2, 8, 10, 16 */
 				unget(c);
-				expr(&e1, 0);
+				expr(&e1);
 				if (is_abs(&e1)) {
 					v = e1.e_addr;
 					if ((v == 2) || (v == 8) ||
@@ -2134,11 +2134,11 @@ loop:
                 case O_2BYTE:
 			do {
 				clrexpr(&e1);
-				expr(&e1, 0);
-                                if (mp->m_valu == O_1BYTE) {
-                                        outrb(&e1, R_NORM);
+				expr(&e1);
+				if (mp->m_valu == O_1BYTE) {
+					outrb(&e1, R_NORM);
 				} else {
-                                        outrw(&e1, R_NORM);
+					outrw(&e1, R_NORM);
 				}
 			} while ((c = getnb()) == ',');
 			unget(c);
@@ -2148,114 +2148,114 @@ loop:
 		}
 		break;
 
-        /* sdas z80 specific */
-        case S_FLOAT:
+	/* sdas z80 specific */
+	case S_FLOAT:
 		do {
-                        double f1, f2;
-                        unsigned int mantissa, exponent;
-                        char readbuffer[80];
+			double f1, f2;
+			unsigned int mantissa, exponent;
+			char readbuffer[80];
 
-                        getid(readbuffer, ' '); /* Hack :) */
-                        if ((c = getnb()) == '.') {
-                                getid(&readbuffer[strlen(readbuffer)], '.');
+			getid(readbuffer, ' '); /* Hack :) */
+			if ((c = getnb()) == '.') {
+				getid(&readbuffer[strlen(readbuffer)], '.');
 			}
-                        else
+			else
 				unget(c);
 
-                        f1 = strtod(readbuffer, (char **)NULL);
-                        /* Convert f1 to a gb-lib type fp
-                         * 24 bit mantissa followed by 7 bit exp and 1 bit sign
+			f1 = strtod(readbuffer, (char **)NULL);
+			/* Convert f1 to a gb-lib type fp
+			 * 24 bit mantissa followed by 7 bit exp and 1 bit sign
 			 */
 
-                        if (f1 != 0) {
-                                f2 = floor(log(fabs(f1)) / log(2)) + 1;
-                                mantissa = (unsigned int) ((0x1000000 * fabs(f1)) / exp(f2 * log(2)));
-                                mantissa &= 0xffffff;
-                                exponent = (unsigned int) (f2 + 0x40) ;
-                                if (f1 < 0)
-                                        exponent |=0x80;
+			if (f1 != 0) {
+				f2 = floor(log(fabs(f1)) / log(2)) + 1;
+				mantissa = (unsigned int) ((0x1000000 * fabs(f1)) / exp(f2 * log(2)));
+				mantissa &= 0xffffff;
+				exponent = (unsigned int) (f2 + 0x40) ;
+				if (f1 < 0)
+					exponent |=0x80;
 			}
-                        else {
-                                mantissa = 0;
-                                exponent = 0;
+			else {
+				mantissa = 0;
+				exponent = 0;
 			}
 
-                        outab(mantissa & 0xff);
-                        outab((mantissa >> 8) & 0xff);
-                        outab((mantissa >> 16) & 0xff);
-                        outab(exponent & 0xff);
+			outab(mantissa & 0xff);
+			outab((mantissa >> 8) & 0xff);
+			outab((mantissa >> 16) & 0xff);
+			outab(exponent & 0xff);
 
-                } while ((c = getnb()) == ',');
-                unget(c);
+		} while ((c = getnb()) == ',');
+		unget(c);
 		break;
-        /* end sdas z80 specific */
+	/* end sdas z80 specific */
 
-        /* sdas hc08 specific */
-        case S_ULEB128:
-        case S_SLEB128:
+	/* sdas hc08 specific */
+	case S_ULEB128:
+	case S_SLEB128:
 		do {
-                        a_uint val = absexpr();
-                        int bit = sizeof(val)*8 - 1;
-                        int impliedBit;
+			a_uint val = absexpr();
+			int bit = sizeof(val)*8 - 1;
+			int impliedBit;
 
-                        if (mp->m_type == S_ULEB128) {
-                                impliedBit = 0;
+			if (mp->m_type == S_ULEB128) {
+				impliedBit = 0;
 			} else {
-                                impliedBit = (val & (1 << bit)) ? 1 : 0;
+				impliedBit = (val & (1 << bit)) ? 1 : 0;
 			}
-                        while ((bit>0) && (((val & (1 << bit)) ? 1 : 0) == impliedBit)) {
-                                bit--;
+			while ((bit>0) && (((val & (1 << bit)) ? 1 : 0) == impliedBit)) {
+				bit--;
 			}
-                        if (mp->m_type == S_SLEB128) {
-                                bit++;
+			if (mp->m_type == S_SLEB128) {
+				bit++;
 			}
-                        while (bit>=0) {
-                                if (bit<7) {
-                                        outab(val & 0x7f);
+			while (bit>=0) {
+				if (bit<7) {
+					outab(val & 0x7f);
 				} else {
-                                        outab(0x80 | (val & 0x7f));
+					outab(0x80 | (val & 0x7f));
 				}
-                                bit -= 7;
-                                val >>= 7;
+				bit -= 7;
+				val >>= 7;
 			}
-                } while ((c = getnb()) == ',');
-                unget(c);
+		} while ((c = getnb()) == ',');
+		unget(c);
 		break;
-        /* end sdas hc08 specific */
+	/* end sdas hc08 specific */
 
 	case S_BLK:
 		clrexpr(&e1);
-		expr(&e1, 0);
-                outchk(ASXHUGE,ASXHUGE);
-                dot.s_addr += e1.e_addr*mp->m_valu;
+		expr(&e1);
+		outchk(ASXHUGE,ASXHUGE);
+		dot.s_addr += e1.e_addr*mp->m_valu;
 		lmode = BLIST;
 		break;
 
 	case S_ASCIX:
 		switch(mp->m_valu) {
-                case O_ASCII:
+		case O_ASCII:
 		case O_ASCIZ:
-                        if ((d = getnb()) == '\0')
+			if ((d = getnb()) == '\0')
 				qerr();
-                        while ((c = getmap(d)) >= 0)
-                                outab(c);
-                        if (mp->m_valu == O_ASCIZ)
-                                outab(0);
+			while ((c = getmap(d)) >= 0)
+				outab(c);
+			if (mp->m_valu == O_ASCIZ)
+				outab(0);
 			break;
 
 		case O_ASCIS:
-                        if ((d = getnb()) == '\0')
+			if ((d = getnb()) == '\0')
 				qerr();
-                        c = getmap(d);
-                        while (c >= 0) {
-                                int n2;
-                                if ((n2 = getmap(d)) >= 0) {
+			c = getmap(d);
+			while (c >= 0) {
+				int n2;
+				if ((n2 = getmap(d)) >= 0) {
 					outab(c);
 				} else {
-                                        outab(c | 0x80);
+					outab(c | 0x80);
 				}
-                                n = n2;
-                                c = n2;
+				n = n2;
+				c = n2;
 			}
 			break;
 		default:
@@ -2362,7 +2362,7 @@ loop:
 	case S_ERROR:
 		clrexpr(&e1);
 		if (more()) {
-			expr(&e1, 0);
+			expr(&e1);
 		}
 		if (e1.e_addr != 0) {
 			err('e');
@@ -2400,7 +2400,7 @@ loop:
 #if NOICE
 			/*
 			 * NoICE	JLH
-                         * if -j, generate a line number symbol
+			 * if -j, generate a line number symbol
 			 */
 			if (jflag && (pass == 1)) {
 				DefineNoICE_Line();
@@ -2649,10 +2649,9 @@ equate(char *id, struct expr *e1, a_uint equtype)
 	struct sym *sp;
 
 	clrexpr(e1);
-	expr(e1, 0);
+	expr(e1);
 
 	sp = lookup(id);
-
 	if (sp == &dot) {
 		outall();
 		if (e1->e_flag || e1->e_base.e_ap != dot.s_area)
@@ -2888,15 +2887,15 @@ fndidx(char *str)
  *		area *	nap		pointer to the new area structure
  *
  *	The function newdot():
- *              (1)     copies the current values of fuzz and the last
- *                      address into the current area referenced by dot
- *              (2)     loads dot with the pointer to the new area and
+ *		(1)	copies the current values of fuzz and the last
+ *			address into the current area referenced by dot
+ *		(2)	loads dot with the pointer to the new area and
  *			loads the fuzz and last address parameters
- *              (3)     outall() is called to flush any remaining
+ *		(3)	outall() is called to flush any remaining
  *			bufferred code from the old area to the output
  *
  *	local variables:
- *              area *  oap             pointer to old area
+ *		area *	oap		pointer to old area
  *
  *	global variables:
  *		sym	dot		defined as sym[0]
@@ -2908,7 +2907,7 @@ fndidx(char *str)
  *		none
  *
  *	side effects:
- *              Current area saved, new area loaded, buffers flushed.
+ *		Current area saved, new area loaded, buffers flushed.
  */
 
 void
@@ -2920,34 +2919,34 @@ newdot(struct area *nap)
         /* fprintf (stderr, "%s dot.s_area->a_size: %d dot.s_addr: %d\n",
                 oap->a_id, dot.s_area->a_size, dot.s_addr); */
 	oap->a_fuzz = fuzz;
-        if (oap->a_flag & A_OVR) {
-                // the size of an overlay is the biggest size encountered
-                if (oap->a_size < dot.s_addr) {
-                        oap->a_size = dot.s_addr;
+	if (oap->a_flag & A_OVR) {
+		// the size of an overlay is the biggest size encountered
+		if (oap->a_size < dot.s_addr) {
+			oap->a_size = dot.s_addr;
 		}
 	}
-        else if (oap->a_flag & A_ABS) {
-                oap->a_addr = dot.s_org;
-                oap->a_size += dot.s_addr - dot.s_org;
-                dot.s_addr = dot.s_org = 0;
+	else if (oap->a_flag & A_ABS) {
+		oap->a_addr = dot.s_org;
+		oap->a_size += dot.s_addr - dot.s_org;
+		dot.s_addr = dot.s_org = 0;
 	}
-        else {
-                oap->a_addr = 0;
-                oap->a_size = dot.s_addr;
+	else {
+		oap->a_addr = 0;
+		oap->a_size = dot.s_addr;
 	}
-        if (nap->a_flag & A_OVR) {
-                // a new overlay starts at 0, no fuzz
+	if (nap->a_flag & A_OVR) {
+		// a new overlay starts at 0, no fuzz
 		dot.s_addr = 0;
 		fuzz = 0;
 	}
-        else if (nap->a_flag & A_ABS) {
-                // a new absolute starts at org, no fuzz
-                dot.s_addr = dot.s_org;
+	else if (nap->a_flag & A_ABS) {
+		// a new absolute starts at org, no fuzz
+		dot.s_addr = dot.s_org;
 		fuzz = 0;
 	}
-        else {
-                dot.s_addr = nap->a_size;
-                fuzz = nap->a_fuzz;
+	else {
+		dot.s_addr = nap->a_size;
+		fuzz = nap->a_fuzz;
 	}
 	dot.s_area = nap;
 	outall();
@@ -3060,11 +3059,11 @@ usage(void)
 {
 	char   **dp;
 
-        fprintf(stderr, "\n%s Assembler %s  (%s)\n\n", is_sdas() ? "sdas" : "ASxxxx", VERSION, cpu);
-        fprintf(stderr, "\nCopyright (C) %s  Alan R. Baldwin", COPYRIGHT);
-        fprintf(stderr, "\nThis program comes with ABSOLUTELY NO WARRANTY.\n\n");
+	fprintf(stderr, "\n%s Assembler %s  (%s)\n\n", is_sdas() ? "sdas" : "ASxxxx", VERSION, cpu);
+	fprintf(stderr, "\nCopyright (C) %s  Alan R. Baldwin", COPYRIGHT);
+	fprintf(stderr, "\nThis program comes with ABSOLUTELY NO WARRANTY.\n\n");
 	for (dp = usetxt; *dp; dp++) {
-                fprintf(stderr, "%s\n", *dp);
+		fprintf(stderr, "%s\n", *dp);
 	}
 }
 

@@ -1,7 +1,11 @@
 /* t90.h */
 
 /*
- *  Copyright (C) 1989-2009  Alan R. Baldwin
+ *  Copyright (C) 2026  Alan R. Baldwin
+ *
+ *  A rewrite of the
+ *    Port to the SDAS fork of ASxxxx by Rainer Keuchel (C) 2013
+ *    Port to ASxxxx from the SDASTLCS90 by Philip Klaus Krause 2025
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -24,10 +28,6 @@
 
 /*
  * Extensions: P. Felber
- */
-
-/*
- * TLCS90 Port: R. Keuchel
  */
 
 /*
@@ -64,52 +64,56 @@
  */
 
 /*
-F - always False
-T - always True
-Z Z = 1 Result zero
-NZ Z = 0 Result not zero
-C C = 1 Carry is Set
-NC C = 0 Carry is not Set
-PL or P S = 0 Result positive; >= 0
-MI or M S = 1 Result negative; < 0
-NE Z = 0 Result not zero
-EQ Z = 1 Result zero
-OV P/V = 1 Overflow ocurred
-NOV P/V = 0 Overflow didn't occur
-PE P/V = 1 Result has even Parity
-PO P/V = 0 Result has odd Parity
-GE (S xor P/V) = 0 Result (signed) is >= 0
-LT (S xor P/V) = 1 Result (signed) is < 0
-GT [Z or (S xor P/V)] = 0 Result (signed) is > 0
-LE [Z or (S xor P/V)] = 1 Result (signed) is <= 0
-UGE C = 0 Result (unsigned) is >= 0
-ULT C = 1 Result (unsigned) is < 0
-UGT (C or Z) = 0 Result (unsigned) is > 0
-ULE (C or Z) = 1 Result (unsigned) is <= 0
+ *	F	always False
+ *	T	always True
+ *	Z	Z = 1 Result zero
+ *	NE / NZ	Z = 0 Result not zero
+ *	C	C = 1 Carry is Set
+ *	NC	C = 0 Carry is not Set
+ *	PL / P	S = 0 Result positive; >= 0
+ *	MI / M	S = 1 Result negative; < 0
+ *	NE	Z = 0 Result not zero
+ *	EQ / Z	Z = 1 Result zero
+ *	OV	P/V = 1 Overflow ocurred
+ *	NOV	P/V = 0 Overflow didn't occur
+ *	PE	P/V = 1 Result has even Parity
+ *	PO	P/V = 0 Result has odd Parity
+ *	GE	(S xor P/V) = 0 Result (signed) is >= 0
+ *	LT	(S xor P/V) = 1 Result (signed) is < 0
+ *	GT	[Z or (S xor P/V)] = 0 Result (signed) is > 0
+ *	LE	[Z or (S xor P/V)] = 1 Result (signed) is <= 0
+ *	UGE	C = 0 Result (unsigned) is >= 0
+ *	ULT	C = 1 Result (unsigned) is < 0
+ *	UGT	(C or Z) = 0 Result (unsigned) is > 0
+ *	ULE (C or Z) = 1 Result (unsigned) is <= 0
 */
 
-#define CS	0x7
+#define F	0x0
+#define LT	0x1
+#define LE	0x2
+#define ULE	0x3
+#define OV	0x4
 #define EQ	0x6
-#define F       0x0
-#define GE      0x9
-#define GT      0xA
-#define LE      0x2
-#define LT      0x1
-#define M	0x5
-#define NC	0xF
-#define NE	0xE
+#define CS	0x7
+#define T	0x8
+#define GE	0x9
+#define GT	0xA
+#define UGT	0xB
 #define NOV	0xC
-#define NZ	0xE
-#define OV      0x4
-#define P       0xD
-#define PE      0x4
+#define NE	0xE
+#define NC	0xF
+
+#define PE	0x4
 #define PO	0xC
-#define T       0x8
-#define UGE     0xF
-#define UGT     0xB
-#define ULE     0x3
-#define ULT	0x7
+
+#define M	0x5
+#define P	0xD
+
 #define Z	0x6
+#define NZ	0xE
+
+#define ULT	0x7
+#define UGE	0xF
 
 /*
  * Symbol types
@@ -240,8 +244,6 @@ extern	struct	adsym	CND[];
 
 	/* machine dependent functions */
 
-#ifdef	OTHERSYSTEM
-	
 	/* t90adr.c */
 extern	int		addr(struct expr *esp);
 extern	int		admode(struct adsym *sp);
@@ -249,20 +251,7 @@ extern	int		srch(char *str);
 
 	/* t90mch.c */
 extern	int		genop(int pop, int op, struct expr *esp, int f);
-extern	VOID		machine(struct mne *mp);
+extern	void		machine(struct mne *mp);
 extern	int		mchpcr(struct expr *esp);
-extern	VOID		minit(void);
+extern	void		minit(void);
 
-#else
-
-	/* t90adr.c */
-extern	int		addr();
-extern	int		admode();
-extern	int		srch();
-
-	/* t90mch.c */
-extern	VOID		machine();
-extern	int		mchpcr();
-extern	VOID		minit();
-
-#endif

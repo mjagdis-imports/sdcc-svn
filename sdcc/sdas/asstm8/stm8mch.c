@@ -1933,7 +1933,7 @@ void machine(struct mne *mp)
 
 	case S_JR:
 	case S_CALLR:
-		expr(&e1, 0);
+		expr(&e1);
 		outab(op);
 		if (mchpcr(&e1)) {
 			v1 = (int) (e1.e_addr - dot.s_addr - 1);
@@ -1955,7 +1955,7 @@ void machine(struct mne *mp)
 		t2 = addr(&e2);
 		v2 = (int) e2.e_addr;
 		comma(1);
-		expr(&e3, 0);
+		expr(&e3);
 		if (((t1 != S_SHORT) && (t1 != S_LONG)) || (t2 != S_IMM)) {
 			xerr('a', "First argument must be an address.");
 			break;

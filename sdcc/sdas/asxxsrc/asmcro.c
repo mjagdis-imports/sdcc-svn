@@ -94,6 +94,7 @@
  *		void	clrexpr()	asexpr.c
  *		int	comma()		aslex.c
  *		void	err()		assubr.c
+ *		void	expr()		asexpr.c
  *		void	getdarg()	asmcro.c
  *		int	getid()		aslex.c
  *		int	getdlm()	aslex.c
@@ -325,7 +326,7 @@ mcrprc(int code)
 		sp->s_area = NULL;
 		comma(0);
 		clrexpr(&e1);
-		expr(&e1, 0);
+		expr(&e1);
 		lmode = ELIST;
 		laddr = sp->s_addr = (e1.e_flag || e1.e_base.e_ap) ? 1 : 0;
 		break;
@@ -342,7 +343,7 @@ mcrprc(int code)
 		sp->s_area = NULL;
 		comma(0);
 		clrexpr(&e1);
-		expr(&e1, 0);
+		expr(&e1);
 		lmode = ELIST;
 		laddr = sp->s_addr = e1.e_addr;
 		break;

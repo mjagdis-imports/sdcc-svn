@@ -69,7 +69,7 @@ addr(struct expr *esp)
 
 	rcode = 0;
 	if ((c = getnb()) == '#') {
-		expr(esp, 0);
+		expr(esp);
 		esp->e_mode = S_IMM;
 	} else
 	if (c == '[') {
@@ -178,11 +178,11 @@ addr1(struct expr *esp)
 	int c;
 
 	if ((c = getnb()) == '*') {
-		expr(esp, 0);
+		expr(esp);
 		esp->e_mode = S_SHORT;
 	} else {
 		unget(c);
-		expr(esp, 0);
+		expr(esp);
 		esp->e_mode = S_LONG;
 	}
 	return (esp->e_mode);

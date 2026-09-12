@@ -54,10 +54,11 @@ addr(struct expr *esp)
 	ip = p;
 
 	if ((c = getnb()) == '#') {
-		expr(esp, 0);
+		expr(esp);
 		esp->e_mode = S_IMMED;
-	} else if (c == '*') {
-		expr(esp, 0);
+	} else
+	if (c == '*') {
+		expr(esp);
 			esp->e_mode = S_DIR;	/* ___  *arg */
 		if (more()) {
 			comma(1);
@@ -73,11 +74,12 @@ addr(struct expr *esp)
 				break;
 			}
 		}
-	} else if (c == '[') {
+	} else
+	if (c == '[') {
 		if ((c = getnb()) != '*') {
 			unget(c);
 		}
-		expr(esp, 0);
+		expr(esp);
 		if ((c = getnb()) == ']') {
 			if (more()) {
 				comma(1);
@@ -111,7 +113,8 @@ addr(struct expr *esp)
 		default:
 			if (!more()) {
 				esp->e_mode = S_ACC;	/* ___  BLANK  ->  ___  A */
-			} else if (comma(0)) {
+			} else
+			if (comma(0)) {
 				switch(admode(axy)) {
 				case S_X:	/* ___  ,X */
 					esp->e_mode = espmode(esp, S_INDX);
@@ -124,7 +127,7 @@ addr(struct expr *esp)
 					break;
 				}
 			} else {
-				expr(esp, 0);
+				expr(esp);
 				if (more()) {
 					comma(1);
 					switch(admode(axy)) {

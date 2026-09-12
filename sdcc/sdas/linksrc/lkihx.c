@@ -28,9 +28,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>. */
  *  Intel Hex format.
  *
  *  lkihx.c contains the following functions:
- *      VOID    hexRecord(addr, rtvalIndex)
- *      VOID    ihx(i)
- *      VOID    ihxExtendedLinearAddress(a)
+ *      void    hexRecord(addr, rtvalIndex)
+ *      void    ihx(i)
+ *      void    ihxExtendedLinearAddress(a)
  *
  *  local variables: hexPageOverrun, lastHexAddr
  */
@@ -132,7 +132,7 @@ unsigned int lastHexAddr = 0;
  *      lastHexAddr is updated
  */
 
-VOID
+void
 hexRecord(unsigned addr, int rtvalIndex)
 {
     a_uint chksum;
@@ -202,14 +202,14 @@ hexRecord(unsigned addr, int rtvalIndex)
  *      a_uint  rtval[]     relocated data
  *
  *  functions called:
- *      VOID hexRecord()    lkihx.c
+ *      void hexRecord()    lkihx.c
  *      int fprintf()       c_library
  *
  *  side effects:
  *      The sequence of rtval[0], rtval[1] is eventually changed.
  */
 
-VOID
+void
 ihx(int i)
 {
     a_uint n;
@@ -235,7 +235,7 @@ ihx(int i)
  * It resets the value of lastHexAddr.
  */
 
-VOID
+void
 ihxNewArea()
 {
     lastHexAddr = 0;
@@ -261,7 +261,7 @@ ihxNewArea()
  *      The data is output to the file defined by ofp.
  *      hexPageOverrun and lastHexAddr is cleared
  */
-VOID
+void
 ihxExtendedLinearAddress(a_uint a)
 {
     a_uint  chksum;

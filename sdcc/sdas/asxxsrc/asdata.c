@@ -1,7 +1,7 @@
 /* asdata.c */
 
 /*
- *  Copyright (C) 1989-2025  Alan R. Baldwin
+ *  Copyright (C) 1989-2026  Alan R. Baldwin
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -88,7 +88,7 @@ int	passcnt;	/* number of passes executed
 			 */
 int	passJLH;	/* JLH output pass
 			 */
-int	passfuz;	/* residual fuss after pass == 1
+a_uint	passfuz;	/* residual fuss after pass == 1
 			 */
 
 /*
@@ -446,11 +446,11 @@ struct	mne	*mnehash[NHASH];
 /*
  *	The sym structure is a linked list of symbols defined
  *	in the assembler source files.  The first symbol is "."
- *	defined here.  The entry 'struct tsym *s_tsym'
+ *	defined in asdata.c.  The entry 'struct tsym *s_tsym'
  *	links any temporary symbols following this symbol and
  *	preceeding the next normal symbol.  The structure also
- *	contains the symbol's name, type (USER or NEW), flag
- *	(global, assigned, and multiply defined), a pointer
+ *	contains the symbol's name, type (USER or NEW),
+ *	flag(global, assigned, and multiply defined), a pointer
  *	to the area structure defining where the symbol is
  *	located, a reference number assigned by outgsd() in
  *	asout.c, and the symbols address relative to the base
@@ -489,9 +489,9 @@ struct	sym *symhash[NHASH];	/*	array of pointers to NHASH
  *	The area structure contains the parameter values for a
  *	specific program or data section.  The area structure
  *	is a linked list of areas.  The initial default area
- *      is "_CODE" defined here, the next area structure
+ *	is "_CODE" defined here, the next area structure
  *	will be linked to this structure through the structure
- *      element 'struct area *a_ap'.  The structure contains the
+ *	element 'struct area *a_ap'.  The structure contains the
  *	area name, area reference number ("_CODE" is 0) determined
  *	by the order of .area directives, area size determined
  *	from the total code and/or data in an area, area fuzz is

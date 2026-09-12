@@ -77,14 +77,14 @@ addr(struct expr *esp)
 	ip = p;
 
 	if ((c = getnb()) == '#') {
-		expr(esp, 0);
+		expr(esp);
 		esp->e_mode = S_IMMED;
 #if 0
-                /* ljm - leading digit is used for offset for dd(ix|iy|sp) */
-        } else if ((c == '-') || ((c >= '0') && (c <= '9'))) {
-          unget(c);
-          expr(esp, 0);
-          esp->e_mode = S_IMMED;
+		/* ljm - leading digit is used for offset for dd(ix|iy|sp) */
+	} else if ((c == '-') || ((c >= '0') && (c <= '9'))) {
+		unget(c);
+		expr(esp, 0);
+		esp->e_mode = S_IMMED;
 #endif
 	} else
 	if (c == LFIND) {
@@ -122,7 +122,7 @@ addr(struct expr *esp)
 			mode = S_INDR;
 		} else {
 			mode = S_INDM;
-			expr(esp, 0);
+			expr(esp);
 			esp->e_mode = mode;
 		}
 		if (indx) {
@@ -189,7 +189,7 @@ addr(struct expr *esp)
                         mode = S_R16SU;
 		} else {
 			mode = S_USER;
-			expr(esp, 0);
+			expr(esp);
 			esp->e_mode = mode;
 		}
 		if (indx) {

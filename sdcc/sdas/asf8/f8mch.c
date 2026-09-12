@@ -54,10 +54,10 @@ int	bb[NB];
 #define	P4	((char) (OPCY_NONE | 0x04))
 
 /*
- * stm8 Opcode Cycle Pages
+ * F8 Opcode Cycle Pages
  */
 
-static char  stm8pg[256] = {
+static char  f8pg[256] = {
 /*--*--* 0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F */
 /*--*--* -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - */
 /*00*/   1, 1, 1, 1, 1,UN, 1, 1, 1, 1, 1,UN, 1, 1, 1, 1,
@@ -163,13 +163,13 @@ static char  pg92[256] = {  /* P4: PreByte == 92 */
 };
 
 static char *Page[5] = {
-    stm8pg, pg72, pg90, pg91, pg92
+    f8pg, pg72, pg90, pg91, pg92
 };
 
 /*
  * Process a machine op.
  */
-VOID
+void
 machine(struct mne *mp)
 {
 	struct expr e1, e2, e3;
@@ -947,7 +947,7 @@ sex:
         case S_JR2:
                 outab(OPCODE_SWAPOP);
 	case S_JR:
-		expr(&e1, 0);
+		expr(&e1);
 		outab(op);
 		if(mchpcr(&e1)) {
 			int v1 = (int)(e1.e_addr - dot.s_addr + 1);
@@ -978,7 +978,7 @@ sex:
 			altaccw(Z);
 		else
 			aerr();
-		expr(&e2, 0);
+		expr(&e2);
 		outab(op);
 		if(mchpcr(&e2)) {
 			int v2 = (int)(e2.e_addr - dot.s_addr + 1);
@@ -1081,7 +1081,7 @@ sex:
 	}
 
 	if (opcycles == OPCY_NONE) {
-		opcycles = stm8pg[cb[0] & 0xFF];
+		opcycles = f8pg[cb[0] & 0xFF];
 		if ((opcycles & OPCY_NONE) && (opcycles & OPCY_MASK)) {
 			opcycles = Page[opcycles & OPCY_MASK][cb[1] & 0xFF];
 		}
@@ -1091,7 +1091,7 @@ sex:
 /*
  * Disable Opcode Cycles with aerr()
  */
-VOID
+void
 opcy_aerr()
 {
 	opcycles = OPCY_SKP;
@@ -1173,7 +1173,7 @@ d_mode(struct expr *e)
  * Generate an 'a' error if the absolute
  * value is not a valid unsigned or signed value.
  */
-VOID
+void
 valu_aerr(struct expr *e, int n)
 {
 	int v;
@@ -1224,7 +1224,7 @@ mchpcr(struct expr *esp)
 /*
  * Machine specific initialization.
  */
-VOID
+void
 minit()
 {
 	/*

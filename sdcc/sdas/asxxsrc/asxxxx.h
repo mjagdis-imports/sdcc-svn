@@ -46,9 +46,6 @@
  *      - raise NCPS to 256 like in upstream
  */
  
-#define VOID    void
-#define OTHERSYSTEM
-
 /*
  * System Include Files
  */
@@ -64,7 +61,7 @@
  */
 
 #define	VERSION	"V05.50.4+NoICE+SDCCmods-WIP-R14"
-#define	COPYRIGHT "2025"
+#define	COPYRIGHT "2026"
 
 /*
  * To include NoICE Debugging set non-zero
@@ -108,10 +105,6 @@
 /* The DEFAULT is 'int' is 32 bits */
 #ifndef	INT32
 #define		INT32	int
-#endif
-
-#if !defined(__BORLANDC__) && !defined(_MSC_VER)
-#include <unistd.h>
 #endif
 
 /*)Module	asxxxx.h
@@ -1363,7 +1356,8 @@ extern	a_uint		absexpr(void);
 extern	void		binop(int c, struct expr *esp, struct expr *re);
 extern	void		clrexpr(struct expr *esp);
 extern	int		digit(int c, int r);
-extern	void		expr(struct expr *esp, int n);
+extern	void		expr(struct expr *esp);
+extern	void		exprx(struct expr *esp, int n);
 extern	void		exprmasks(int n);
 extern	int		is_abs(struct expr *esp);
 extern	int		is_digit(int c, int r);
@@ -1481,7 +1475,7 @@ extern	int	nflglmt;
 extern	int	passlmt;
 extern	int	passcnt;
 extern	int	passJLH;
-extern	int	passfuz;
+extern	a_uint	passfuz;
 
 /* asxcnv.c */
 

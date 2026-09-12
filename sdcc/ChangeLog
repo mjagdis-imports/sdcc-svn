@@ -1,3 +1,50 @@
+2026-09-12 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* sdas/gpl3.txt,
+	* sdas/COPYING3: moved COPYING3 to sdas/gpl3.txt
+	* sdas/asxxsrc/asxxxx.h: small merge with asxxxx v6.10
+	  removed VOID & OTHERSYSTEM macros,
+	  removed #include <unistd.h>,
+	  removed priority parameter from expr(),
+	  added binop() & exprx(),
+	  passfuz is a_uint
+	* sdas/asxxsrc/asdata.c: passfuz
+	* sdas/asxxsrc/asexpr.c: factored out binop() & exprx()
+	* sdas/asxxsrc/aslex.c (getmap): parse '\\'
+	* sdas/asf8/f8.h,
+	* sdas/aspdk/pdk.h,
+	* sdas/aspdk/pdkmch.c,
+	* sdas/astlcs90/t90.h,
+	* sdas/linksrc/lkihx.c: replaced VOID by void
+	* sdas/asxxsrc/asmain.c,
+	* sdas/asxxsrc/asmcro.c,
+	* sdas/as6500/r65adr.c,
+	* sdas/as6500/r65mch.c,
+	* sdas/as6808/m08adr.c,
+	* sdas/as6808/m08mch.c,
+	* sdas/as8051/i51adr.c,
+	* sdas/as8051/i51mch.c,
+	* sdas/as8xcxxx/ds8adr.c,
+	* sdas/as8xcxxx/ds8mch.c,
+	* sdas/asf8/f8adr.c,
+	* sdas/asf8/f8mch.c,
+	* sdas/asgb/gbadr.c,
+	* sdas/asgb/gbmch.c,
+	* sdas/aspdk/pdkadr.c,
+	* sdas/aspdk13/pdk13mch.c,
+	* sdas/aspdk14/pdk14mch.c,
+	* sdas/aspdk15/pdk15mch.c,
+	* sdas/aspdk16/pdk16mch.c,
+	* sdas/asrab/rabadr.c,
+	* sdas/asrab/rabmch.c,
+	* sdas/asstm8/stm8adr.c,
+	* sdas/asstm8/stm8mch.c,
+	* sdas/astlcs90/t90adr.c,
+	* sdas/astlcs90/t90mch.c,
+	* sdas/asz80/z80adr.c,
+	* sdas/asz80/z80mch.c: use simplified expr()
+	* sdas/linksrc/lksdcclib.c: removed OTHERSYSTEM
+
 2026-09-12 Gabriele Gorla <gorlik@yahoo.com>
 
 	* sdas/as6500/r6500.h,
@@ -14,9 +61,9 @@
 2026-09-11 Gabriele Gorla <gorlik@yahoo.com>
 
 	* device/lib/mc51/Makefile.in:
-      remove crtxpushr0 and crtxpopr0 from build dependencies.
+	  remove crtxpushr0 and crtxpopr0 from build dependencies.
 
-2026-09-08 Maarten Brock <sourceforge.brock AT dse.nl>
+2026-09-11 Maarten Brock <sourceforge.brock AT dse.nl>
 
 	* device/include/ctype.h,
 	* device/lib/iscntrl.c,
@@ -24,8 +71,9 @@
 	* device/lib/isprint.c,
 	* device/lib/isspace.c,
 	* device/lib/isxdigit.c: also check msb, for all targets
+	* device/lib/Makefile.in,
 	* device/lib/mcs51/crtxpushr0.asm,
-	* device/lib/mcs51/crtxpopr0.asm: removed
+	* device/lib/mcs51/crtxpopr0.asm: removed r0 specials
 	* device/lib/mcs51/crtxpop.asm,
 	* device/lib/mcs51/crtxpush.asm: use acc[4-7] also as mask,
 	  add dpl & dph support,

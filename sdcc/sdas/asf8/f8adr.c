@@ -21,7 +21,6 @@
  * Alan R. Baldwin
  * 721 Berkeley St.
  * Kent, Ohio  44240
- * 
  */
 
 #include "asxxxx.h"
@@ -70,7 +69,7 @@ addr(struct expr *esp)
 
 	rcode = 0;
 	if ((c = getnb()) == '#') {
-		expr(esp, 0);
+		expr(esp);
 		esp->e_mode = S_IMM;
 	} else
 	if (c == '(') {
@@ -83,7 +82,7 @@ addr(struct expr *esp)
 			if (getnb() != ')')
 				aerr();
 		} else if((d = getnb()) == '(') {
-			expr(esp, 0);
+			expr(esp);
 			comma(1);
 			rcode = admode(REG);
 			if (rcode & 0xff != SP)
@@ -95,7 +94,7 @@ addr(struct expr *esp)
 				aerr();
 		} else { // Relative addressing
 			unget(d);
-			expr(esp, 0);
+			expr(esp);
 			comma(1);
 			if ((rcode = admode(REG)) != 0) {
 				rcode = rcode & 0xFF;
@@ -121,7 +120,7 @@ addr(struct expr *esp)
 			rcode = rcode & 0xFF;
 			esp->e_mode = S_REG;
 		} else {
-			expr(esp, 0);
+			expr(esp);
 			esp->e_mode = S_DIR;
 		}
 	}
