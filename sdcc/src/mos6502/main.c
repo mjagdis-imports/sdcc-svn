@@ -175,6 +175,8 @@ m6502_finaliseOptions (void)
   if(options.data_loc > 240)
     werror (W_DATA_LOC_RANGE);
 
+  STACK_TOP = options.stack_loc & 0xff00;
+
   istack->ptrType = FPOINTER;
 }
 

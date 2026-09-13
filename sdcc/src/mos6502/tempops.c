@@ -30,6 +30,11 @@
 #include "gen.h"
 #include "dbuf_string.h"
 
+static const char *TEMPFMT = "*(REGTEMP+%d)";
+static const char *TEMPFMT_IND = "[REGTEMP+%d]";
+//static char *TEMPFMT_IY = "[REGTEMP+%d],y";
+//static char *TEMPFMT_IX = "[(REGTEMP+%d),x]";
+
 static reg_info *save_reg = NULL;
 
 bool

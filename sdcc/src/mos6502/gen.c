@@ -57,16 +57,13 @@ static asmop *m6502_aop_pass[8];
 asmop m6502_tsxaop;
 
 const char *IMMDFMT = "#0x%02x";
-const char *TEMPFMT = "*(REGTEMP+%d)";
-const char *TEMPFMT_IND = "[REGTEMP+%d]";
-//static char *TEMPFMT_IY = "[REGTEMP+%d],y";
 
 const char *IDXFMT_X = "0x%x,x";
-//static char *TEMPFMT_IX = "[(REGTEMP+%d),x]";
 const char *DPTRFMT = "*(DPTR+%d)";
 const char *INDFMT_IY = "[%s],y";
+const char *INDFMT    = "[%s]";
 
-const int STACK_TOP = 0x100;
+int STACK_TOP;
 
 
 const char m6502_cmp[3][4] = { "cmp", "cpx", "cpy" };
@@ -1502,18 +1499,21 @@ m6502_storeRegToAop (reg_info *reg, asmop * aop, int loffset)
           m6502_emitComment (REGOPS, "      %s - XA", __func__);
           // options.stackAuto
           //        m6502_pushReg(m6502_reg_a, true);
-          needloadx = storeRegTempIfUsed (m6502_reg_x);
-          storeRegTemp (m6502_reg_a, false);
+          storeRegTemp (m6502_reg_x, true);
+          storeRegTemp (m6502_reg_a, true);
           m6502_transferRegReg (m6502_reg_x, m6502_reg_a, true);
           m6502_emitTSX ();
           m6502_emitOp ("sta", aopAdrStr (aop, loffset + 1, false));
           //        m6502_pullReg(m6502_reg_a);
           m6502_loadRegTemp (m6502_reg_a);
           m6502_emitOp ("sta", aopAdrStr (aop, loffset, false));
-          m6502_loadOrFreeRegTemp (m6502_reg_x, needloadx);
+     //     if(m6502_reg_x->isDead)
+    //        m6502_loadRegTemp (NULL);
+     //     else
+            m6502_loadRegTemp (m6502_reg_x);
           break;
         case XY_IDX:
-          needloada = storeRegTempIfUsed (m6502_reg_a);
+          needloada = storeRegTempIfSurv (m6502_reg_a);
           needloadx = storeRegTempIfUsed (m6502_reg_x);
           m6502_transferRegReg (m6502_reg_x, m6502_reg_a, true);
           m6502_emitTSX ();
@@ -4481,7 +4481,7 @@ genPointerPush (iCode *ic)
 
       int size = getSize (operandType (left)->next);
       while (size--)
-        {
+       {
           m6502_loadRegFromConst (m6502_reg_y, yoff+size);
           m6502_emitOp ("lda", INDFMT_IY, "DPTR");
           m6502_pushReg (m6502_reg_a, true);
@@ -8108,18 +8108,12 @@ static void genAddrOf (iCode * ic)
         {
           m6502_reg_a->aop = &m6502_tsxaop;
           m6502_reg_a->stackOffset += offset;
-          if (m6502_opts.sub == SUB_HUC6280)
-            m6502_loadRegFromConst (m6502_reg_x, 0x21); // stack top = 0x2100
-          else
-            m6502_loadRegFromConst (m6502_reg_x, 0x01); // stack top = 0x0100
+          m6502_loadRegFromConst (m6502_reg_x, STACK_TOP>>8);
         }
       else
         {
           m6502_storeRegToAop (m6502_reg_a, AOP (result), 0);
-          if (m6502_opts.sub == SUB_HUC6280)
-            m6502_loadRegFromConst (m6502_reg_a, 0x21); // stack top = 0x2100
-          else
-            m6502_loadRegFromConst (m6502_reg_a, 0x01); // stack top = 0x0100
+          m6502_loadRegFromConst (m6502_reg_a, STACK_TOP>>8);
           m6502_storeRegToAop (m6502_reg_a, AOP (result), 1);
         }
       m6502_loadOrFreeRegTemp (m6502_reg_x, needloadx);

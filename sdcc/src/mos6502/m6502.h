@@ -73,6 +73,7 @@ void m6502_emitDebuggerSymbol (const char *);
 
 #define HAS_EXT_STACK_OPS (IS_MOS65C02 || IS_HUC6280)
 #define HAS_EXT_ACC_OPS   (IS_MOS65C02 || IS_HUC6280)
+#define HAS_EXT_ADDR      (IS_MOS65C02 || IS_HUC6280)
 #define HAS_STZ       (IS_MOS65C02 || IS_HUC6280)
 #define HAS_REG_CLR   (IS_HUC6280)
 #define HAS_REG_SWAP  (IS_HUC6280)

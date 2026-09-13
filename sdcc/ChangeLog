@@ -1,3 +1,12 @@
+2026-09-13 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c,
+	  src/mos6502/gen.h,
+	  src/mos6502/m6502.h,
+	  src/mos6502/main.c,
+	  src/mos6502/tempops.c:
+	  Fix stack handling for huc6280.
+
 2026-09-12 Gabriele Gorla <gorlik@yahoo.com>
 
 	* sim/ucsim/src/sims/mos6502.src/huc6280.cc,
