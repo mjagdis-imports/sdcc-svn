@@ -320,7 +320,7 @@ cl_mos6502::disassc(t_addr addr, chars *comment)
 	      l= rom->read(addr+1);
 	      work.appendf("($%02x", l);
 	      addr_name(l, rom, &work);
-	      work.append(",Y)");
+	      work.append("),Y");
 	      a= read_addr(rom, l) + rY;
 	      temp.appendf("; [$%04x]=$%02x", a, rom->read(a));
 	      break;

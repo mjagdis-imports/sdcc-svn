@@ -3,6 +3,8 @@
 	* sim/ucsim/src/sims/mos6502.src/huc6280.cc,
 	  sim/ucsim/src/sims/mos6502.src/huc6502.cc:
 	  Improve HuC6280 interrupt handling.
+	* sim/ucsim/src/sims/mos6502.src/huc6502.cc:
+	  Fix typo in disassembler.
 
 2026-09-12 Maarten Brock <sourceforge.brock AT dse.nl>
 
