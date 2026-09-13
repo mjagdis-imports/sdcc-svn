@@ -27,7 +27,10 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 #include <ctype.h>
 
+#include "dregcl.h"
+
 #include "glob.h"
+#include "irqcl.h"
 
 #include "huc6280cl.h"
 
@@ -96,7 +99,7 @@ cl_huc6280::init(void)
 }
 
 void
-cl_mos6502::mk_hw_elements(void)
+cl_huc6280::mk_hw_elements(void)
 {
   class cl_hw *h;
   
