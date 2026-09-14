@@ -1,3 +1,9 @@
+2026-09-14 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* snapshots.desc/amd64-unknown-linux2.5.desc,
+	  snapshots.desc/x86_64-linux-gnu.desc:
+	  Update snapshot machine descriptions.
+
 2026-09-11 Maarten Brock <sourceforge.brock AT dse.nl>
 
 	* snap.php: updated regex for parsing Summary lines

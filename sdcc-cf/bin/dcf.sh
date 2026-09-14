@@ -171,7 +171,7 @@ log_it ()
 }
 
 
-# Only keep most recent 7 in dir on fsr server (and most recent 14 files for regression test logs - the one for non-radomized tests and the psudo-randomized one).
+# Only keep most recent 7 in dir on fsr server (and most recent 14 files for regression test logs - the one for non-randomized tests and the pseudo-randomized one).
 rm_old_versions ()
 {
   local i j k
