@@ -91,9 +91,9 @@ _longjmp:
 	pla
 ; save return value
         pla
-        sta *(rv + 0)
+        sta	*(rv + 0)
         pla
-        sta *(rv + 1)
+        sta	*(rv + 1)
 
 ; restore stack pointer
         ldy	#0x00
@@ -110,9 +110,9 @@ _longjmp:
         sta	0x102,x
 
 ; return rv ? rv : 1;
-        lda *(rv + 0)
-        ldx *(rv + 1)
-        ora *(rv + 1)
+        lda	*(rv + 0)
+        ldx	*(rv + 1)
+        ora	*(rv + 1)
         bne	ret
         lda	#0x01
 ret:

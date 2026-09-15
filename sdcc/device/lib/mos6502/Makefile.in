@@ -63,13 +63,14 @@ MOS6502_SDCC = $(COMMON_SDCC) \
   ldiv.c \
   sprintf.c \
   vprintf.c \
-  atomic_flag_clear.c
+  atomic_flag_clear.c \
+  atomic_flag_test_and_set.c
 
 MOS6502SOURCES = $(addprefix ../,$(MOS6502_FLOAT) $(MOS6502_INT) $(MOS6502_LONG) $(MOS6502_LONGLONG) $(MOS6502_SDCC))
 MOS6502OBJECTS = $(patsubst %.c,%.rel,$(MOS6502_FLOAT) $(MOS6502_INT) $(MOS6502_LONG) $(MOS6502_LONGLONG) $(MOS6502_SDCC))
 
 OBJ = __sdcc_regs.rel __sdcc_indirect_jsr.rel\
-      _setjmp.rel atomic_flag_test_and_set.rel \
+      _setjmp.rel  \
       _floatlib.rel
 
 LIB = mos6502.lib

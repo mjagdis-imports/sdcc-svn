@@ -1,3 +1,11 @@
+2026-09-15 Gabriele Gorla <gorlik@yahoo.com>
+
+	* device/lib/huc6280/_memset.s
+	  device/lib/huc6280/memcpy.s
+	  device/lib/mos6502/Makefile.in
+	  device/lib/mos65c02-stack-auto/_setjmp.s
+	  Small cosmetic fixes to mos6502 library files.
+
 2026-09-13 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/mos6502/gen.c,

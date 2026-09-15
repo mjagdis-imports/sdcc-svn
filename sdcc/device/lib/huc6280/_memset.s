@@ -73,8 +73,8 @@ _memset:
 page_loop:
 	sta	[dst],y
 	iny
-	sta	[dst],y
-	iny
+;	sta	[dst],y
+;	iny
 	bne	page_loop
 	inc	*dst+1
 	dex

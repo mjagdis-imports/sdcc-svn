@@ -60,6 +60,15 @@ ___memcpy_PARM_3:
 	.define src   "___memcpy_PARM_2"
 	.define count "___memcpy_PARM_3"
 
+
+;	.area DATA
+;TII_memcpy:
+;	.db	0x73	; TII
+;	.dw	0x0000
+;	.dw	0x0000
+;	.dw	0x0000
+;	.dw	0x60	; RTS
+
 ;--------------------------------------------------------
 ; code
 ;--------------------------------------------------------
