@@ -598,6 +598,7 @@ main(int argc, char *argv[])
 		lop  = NLPP;
 		incfil = 0;
 		maxinc = 0;
+		alevel = 0;
 		srcline = 0;
 		asmline = 0;
 		incline = 0;
@@ -1088,6 +1089,8 @@ asexit(int i)
  *		int	m_type		mnemonic type
  *
  *	global variables:
+ *		int	alevel		area stack pointer
+ *		struct area *astack[]	area stack
  *		area *	areap		pointer to an area structure
  *		char	ctype[]		array of character types, one per
  *					ASCII character
@@ -1997,6 +2000,22 @@ loop:
         /* end sdas specific */
 
 	case S_AREA:
+		if (mp->m_valu == O_POP) {
+			if (alevel == 0) {
+				xerr('q', "Area Stack Is Empty");
+			}
+			newdot(astack[--alevel]);
+			lmode = SLIST;
+			break;
+		} else
+		if (mp->m_valu == O_PSH) {
+			if (alevel >= 16) {
+				xerr('q', "Area Stack Is Full");
+			}
+			astack[alevel++] = dot.s_area;
+			lmode = SLIST;
+			break;
+		}
 		getid(id, -1);
                 uaf = 0;
                 uf  = A_CON|A_REL;

@@ -11,6 +11,23 @@
 	  sim/ucsim/src/core/sim.src/uccl.h,
 	  sim/ucsim/src/sims/mos6502.src/huc6280cl.h:
 	  Make HuC6280 default load rom to "rom_chip".
+	* sdas/as6500/r65pst.c,
+	  sdas/as6808/m08pst.c,
+	  sdas/as8051/i51pst.c,
+	  sdas/as8xcxxx/ds8pst.c,
+	  sdas/asf8/f8pst.c,
+	  sdas/asgb/gbpst.c,
+	  sdas/aspdk13/pdk13pst.c,
+	  sdas/aspdk14/pdk14pst.c,
+	  sdas/aspdk15/pdk15pst.c,
+	  sdas/aspdk16/pdk16pst.c,
+	  sdas/asrab/rabpst.c,
+	  sdas/asstm8/stm8pst.c,
+	  sdas/astlcs90/t90pst.c,
+	  sdas/asxxsrc/asmain.c,
+	  sdas/asxxsrc/asxxxx.h,
+	  sdas/asz80/z80pst.c:
+	  Enable .psharea and .poparea from upstream asxxxx.
  
 2026-09-13 Gabriele Gorla <gorlik@yahoo.com>
 

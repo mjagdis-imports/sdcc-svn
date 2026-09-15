@@ -506,6 +506,8 @@ struct	sym
 #define	  I_CODE     0		/* .include */
 #define	  I_BNRY     1		/* .incbin */
 #define	S_AREA		6	/* .area */
+#define	  O_PSH	     1		/* .psharea */
+#define	  O_POP	     2		/* .poparea */
 #define	S_ATYP		7	/* .area type */
 #define	S_ORG		8	/* .org */
 #define	S_RADIX		9	/* .radix */
