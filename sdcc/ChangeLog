@@ -7,6 +7,10 @@
 	  Small cosmetic fixes to mos6502 library files.
 	* device/lib/huc6280/crt0.s:
       Setup the HuC6280 MMU.
+	* sim/ucsim/src/core/sim.src/uc.cc,
+	  sim/ucsim/src/core/sim.src/uccl.h,
+	  sim/ucsim/src/sims/mos6502.src/huc6280cl.h:
+	  Make HuC6280 default load rom to "rom_chip".
  
 2026-09-13 Gabriele Gorla <gorlik@yahoo.com>
 
