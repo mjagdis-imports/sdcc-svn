@@ -28,6 +28,7 @@
 ;--------------------------------------------------------------------------
 
 	.module crt0
+	.huc6280
 
 ;--------------------------------------------------------
 ;  Ordering of segments for the linker.
@@ -47,13 +48,40 @@
 	.area XINIT
 
 ;--------------------------------------------------------
+;  Memory mapped register init location
+;  Must be in the range 0x0000-0x1ff5
+;--------------------------------------------------------
+__mmap_init = 0x1f00
+
+;--------------------------------------------------------
 ;  Reset/interrupt vectors
 ;--------------------------------------------------------
 	.area CODEIVT (ABS)
-	.org  0xfffa
+	.org  0x1ff6
+	.dw	__sdcc_gs_init_startup ; IRQ2 (EXT/BRK)
+	.dw	__sdcc_gs_init_startup ; IRQ1 (VDC)
+	.dw	__sdcc_gs_init_startup ; TIMER
 	.dw	__sdcc_gs_init_startup ; NMI
-	.dw	__sdcc_gs_init_startup ; RESET
-	.dw	__sdcc_gs_init_startup ; IRQ/BRK
+	.dw	__mmap_init|0xe000     ; RESET
+ 
+    .area MMAP_INIT (ABS)
+	.org __mmap_init
+	lda	#0xff
+	tam0
+	lda	#0x01 ; should be #0xf8 DATA
+	tam1
+	lda	#0x02 ; CODE
+	tam2
+	inc a
+	tam3
+	inc a
+	tam4
+	inc a
+	tam5
+	inc a
+	tam6
+; MSR7 is set to 0 at reset
+    jmp __sdcc_gs_init_startup
 
 ;--------------------------------------------------------
 ;  Startup Code
@@ -62,7 +90,7 @@
 __sdcc_gs_init_startup:
 	ldx	#0xff
 	txs
-;	ldx	#0x01         ; MSB of stack ptr
+;	ldx	#0x21         ; MSB of stack ptr
 ;	stx	__BASEPTR+1
 
 ;; Skip initialisation of global variables if __sdcc_external_startup
@@ -79,13 +107,14 @@ __sdcc_init_data:
 	ldy	#<l_ZP
 	beq	00101$
 00100$:
-	sta	*0,X
+	sta	*0,x
 	inx
 	dey
 	bne	00100$
 00101$:
 
 ; initialize DATA
+;	shoul use TII
 	lda	#>l_XINIT
 	sta	*___memcpy_PARM_3+1
 	lda	#<l_XINIT
