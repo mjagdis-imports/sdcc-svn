@@ -1,6 +1,6 @@
 /* bug-4056.c
 
-   Some cases of missing diagnostics on pointer arithmetic on incompletet types.
+   Some cases of missing diagnostics on pointer arithmetic on incomplete types.
  */
 
 #ifdef TEST1
@@ -15,7 +15,6 @@ void dec(void) // Not affected by bug
 {
 	p--; /* WARNING */
 }
-
 
 void add(void) // Affected by bug
 {

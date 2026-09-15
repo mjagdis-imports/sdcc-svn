@@ -31,7 +31,7 @@
 #include "dbuf_string.h"
 
 static const char *TEMPFMT = "*(REGTEMP+%d)";
-static const char *TEMPFMT_IND = "[REGTEMP+%d]";
+//static const char *TEMPFMT_IND = "[REGTEMP+%d]";
 //static char *TEMPFMT_IY = "[REGTEMP+%d],y";
 //static char *TEMPFMT_IX = "[(REGTEMP+%d),x]";
 
@@ -107,8 +107,8 @@ m6502_storeRegTempi(reg_info * reg, bool freereg, bool force)
           m6502_emitComment(REGOPS|VVDBG, "  %s: virtual store %s+%d",__func__,
 			    reg->aop->aopu.aop_dir, reg->aopofs);
         }
-      else 
-        {    
+      else
+        {
 	  m6502_emitOp (storeOp, TEMPFMT, _S.tempOfs);
         }
       _S.tempOfs++;
@@ -125,7 +125,7 @@ m6502_storeRegTempi(reg_info * reg, bool freereg, bool force)
       emitcode("ERROR", "%s : bad reg %02x (%s)", __func__, regidx, reg->name);
       break;
     }
-  
+
   if (freereg)
     m6502_freeReg (reg);
 
@@ -144,7 +144,7 @@ void
 m6502_loadRegTempAt (reg_info * reg, int offset)
 {
   char loadOp[4] = "ld?";
-  
+
   if (offset<0 || offset>_S.tempOfs)
     {
       emitcode("ERROR", " %s - called with illegal offset %d (tempOfs=%d)", __func__, offset, _S.tempOfs);
@@ -184,7 +184,7 @@ m6502_loadRegTempAt (reg_info * reg, int offset)
     default:
       emitcode("ERROR","%s - called with illegal regidx %d", __func__, reg->rIdx);
     }
-  
+
   reg->aop=_S.tempAttr[offset].aop;
   reg->aopofs=_S.tempAttr[offset].aopofs;
   reg->stackOffset=_S.tempAttr[offset].stackOffset;

@@ -7,19 +7,19 @@
 #   under the terms of the GNU General Public License as published by the
 #   Free Software Foundation; either version 2, or (at your option) any
 #   later version.
-#   
+#
 #   This program is distributed in the hope that it will be useful,
 #   but WITHOUT ANY WARRANTY; without even the implied warranty of
 #   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #   GNU General Public License for more details.
-#   
+#
 #   You should have received a copy of the GNU General Public License
 #   along with this program; if not, write to the Free Software
 #   Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-#   
+#
 #   In other words, you are welcome to use, share and improve this program.
 #   You are forbidden to forbid anyone else to use, share and improve
-#   what you give them.   Help stamp out software-hoarding!  
+#   what you give them.   Help stamp out software-hoarding!
 #---------------------------------------------------------------------------
 
 from __future__ import print_function
@@ -32,7 +32,7 @@ extramacrodefs = {}
 
 gcc = {
     "CC":"gcc",
-    "CCFLAGS":"-c -pedantic -Wall -DPORT_HOST=1",
+    "CCFLAGS":"-S -pedantic -Wall -DPORT_HOST=1",
     "CCDEF":"-D",
     "CCOUTPUT":"-o",
     "C89":"-std=c89",
@@ -47,7 +47,7 @@ gcc = {
 
 sdcc = {
     "CC":"../../bin/sdcc",
-    "CCFLAGS":"-c -m{port}",
+    "CCFLAGS":"-S -m{port}",
     "CCDEF":"-D",
     "CCOUTPUT":"-o",
     "CCINCLUDEDIR":"-I",
@@ -78,7 +78,10 @@ testmodes = {
         "extra-defines": {
             "__has_bit":"1",
             "__has_data":"1",
+            "__has_idata":"1",
+            "__has_pdata":"1",
             "__has_xdata":"1",
+            "__has_code":"1",
             "__has_reentrant":"1"
         }
     },
@@ -92,7 +95,10 @@ testmodes = {
         "extra-defines" : {
             "__has_bit":"1",
             "__has_data":"1",
+            "__has_idata":"1",
+            "__has_pdata":"1",
             "__has_xdata":"1",
+            "__has_code":"1",
             "__has_reentrant":"1"
         }
     },
@@ -106,7 +112,10 @@ testmodes = {
         "extra-defines": {
             "__has_bit":"1",
             "__has_data":"1",
+            "__has_idata":"1",
+            "__has_pdata":"1",
             "__has_xdata":"1",
+            "__has_code":"1",
             "__has_reentrant":"1"
         }
     },
@@ -116,7 +125,10 @@ testmodes = {
         "extra-defines": {
             "__has_bit":"1",
             "__has_data":"1",
+            "__has_idata":"1",
+            "__has_pdata":"1",
             "__has_xdata":"1",
+            "__has_code":"1",
             "__has_reentrant":"1"
         }
     },
@@ -138,6 +150,7 @@ testmodes = {
         "compiler":sdcc,
         "port":"r2k",
         "extra-defines": {
+            "__has_xdata":"1",
             "__has_z88dk_fastcall":"1"
         }
     },
@@ -145,6 +158,7 @@ testmodes = {
         "compiler":sdcc,
         "port":"r4k",
         "extra-defines": {
+            "__has_xdata":"1",
             "__has_z88dk_fastcall":"1"
         }
     },
@@ -159,6 +173,7 @@ testmodes = {
         "compiler":sdcc,
         "port":"tlcs90",
         "extra-defines": {
+            "__has_xdata":"1",
             "__has_z88dk_fastcall":"1"
         }
     },
@@ -292,7 +307,7 @@ def parseInputfile(inputfilename):
         # See if a new test is being defined
         for testtype in ["ERROR", "WARNING", "IGNORE"]:
             p = line.find(testtype);
-            if p>=0:
+            if p>=0 and not line.startswith('//'):
                 # Found a test definition
                 qualifier = line[p+len(testtype):].strip()
                 p = qualifier.find("*/")
@@ -314,7 +329,10 @@ def parseInputfile(inputfilename):
 def parseResults(output):
     results = {}
     for line in output:
-        print(line, end=' ')
+        try:
+            print(line.rstrip())
+        except:
+            print(line.encode())
 
         if line.count("SIGSEG"):
             results[0] = ["FAULT", line.strip()]
@@ -342,7 +360,10 @@ def parseResults(output):
            if re.search(ignoreExpr,msgtext)!=None:
                ignore = 1
         if not ignore:
-            results[linenumber]=[msgtype,msg[2].strip()]
+            if not linenumber in results:
+                results[linenumber] = { msgtype: msg[2].strip() }
+            else:
+                results[linenumber][msgtype] = msg[2].strip()
     return results
 
 def showUsage():
@@ -366,14 +387,15 @@ compilermode = testmode["compiler"]
 port = expandPyExpr(testmode["port"])
 cc = expandPyExpr(compilermode["CC"])
 ccflags = expandPyExpr(compilermode["CCFLAGS"])
+outputfilenamebase = None
 if "flags" in testmode:
-    ccflags = " ".join([ccflags,expandPyExpr(testmode["flags"])])
+    ccflags = " ".join([ccflags, expandPyExpr(testmode["flags"])])
 if len(sys.argv)>=4:
     if "CCOUTPUT" in compilermode:
-        ccflags = " ".join([ccflags,expandPyExpr(compilermode["CCOUTPUT"]),sys.argv[3]])
+        outputfilenamebase = sys.argv[3]
 if len(sys.argv)>=5:
     if "CCINCLUDEDIR" in compilermode:
-        ccflags = " ".join([ccflags,expandPyExpr(compilermode["CCINCLUDEDIR"]),sys.argv[4]])
+        ccflags = " ".join([ccflags, expandPyExpr(compilermode["CCINCLUDEDIR"]), sys.argv[4]])
 if "defined" in compilermode:
     addDefines(compilermode["defined"], False)
 if "defined" in testmode:
@@ -413,7 +435,9 @@ for testname in list(testcases.keys()):
         ccstd = compilermode["C99"]
     else:
         ccstd = ""
-    cmd = " ".join([cc,ccflags,ccstd,ccdef,inputfilename])
+    if outputfilenamebase:
+        ccoutput = " ".join([expandPyExpr(compilermode["CCOUTPUT"]), outputfilenamebase+'_'+testname+'.asm'])
+    cmd = " ".join([cc, ccflags, ccoutput, ccstd, ccdef, inputfilename])
     print()
     print(cmd)
     spawn = Popen(args=cmd.split(), bufsize=-1, stdout = PIPE, stderr = STDOUT, close_fds=True)
@@ -432,21 +456,24 @@ for testname in list(testcases.keys()):
     for checkline in list(testcases[testname].keys()):
         testcount = testcount + 1
         if checkline in results:
+            for wanted in testcases[testname][checkline]:
+                if wanted != "IGNORE" and not wanted in results[checkline]:
+                    print(f"--- FAIL: expected {wanted} at {inputfilename}:{checkline}, got {list(results[checkline].keys())}")
+                    failurecount = failurecount + 1
             if "IGNORE" in testcases[testname][checkline]:
                 testcount = testcount - 1  #this isn't really a test
             del results[checkline]
         else:
             for wanted in testcases[testname][checkline]:
                 if not wanted=="IGNORE":
-                    print("--- FAIL: expected %s" % wanted, end=' ')
-                    print("at %s:%d" % (inputfilename, checkline))
+                    print(f"--- FAIL: expected {wanted} at {inputfilename}:{checkline}")
                     failurecount = failurecount + 1
 
-    # Output any unexpected diagnostics    
+    # Output any unexpected diagnostics
     for checkline in list(results.keys()):
-        print('--- FAIL: unexpected message "%s" ' % results[checkline][1], end=' ')
-        print("at %s:%d" % (inputfilename, checkline))
-        failurecount = failurecount + 1
+        for msg in results[checkline]:
+            print(f'--- FAIL: unexpected message "{results[checkline][msg]}" at {inputfilename}:{checkline}')
+            failurecount = failurecount + 1
 
 print()
 print("--- Summary: %d/%d/%d: " % (failurecount, testcount, casecount), end=' ')

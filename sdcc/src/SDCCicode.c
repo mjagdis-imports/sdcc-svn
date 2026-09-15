@@ -2850,7 +2850,12 @@ geniCodePostInc (operand * op)
 
   size = (IS_PTR (rvtype) ? getSize (rvtype->next) : 1);
   if (size == 0)
-    werror (W_SIZEOF_VOID);
+    {
+      if (!IS_VOID (rvtype->next))
+        werror (E_UNKNOWN_SIZE, IS_SYMOP (rv) ? OP_SYMBOL (rv)->name : "<no name>");
+      else
+        werror (W_SIZEOF_VOID);
+    }
   if (IS_FLOAT (rvtype))
     ic = newiCode ('+', srcOp, operandFromValue (constFloatVal ("1.0"), false));
   else if (IS_FIXED16X16 (rvtype))
@@ -2891,7 +2896,12 @@ geniCodePreInc (operand * op, bool lvalue)
 
   size = (IS_PTR (roptype) ? getSize (roptype->next) : 1);
   if (size == 0)
-    werror (W_SIZEOF_VOID);
+    {
+      if (!IS_VOID (roptype->next))
+        werror (E_UNKNOWN_SIZE, IS_SYMOP (rop) ? OP_SYMBOL (rop)->name : "<no name>");
+      else
+        werror (W_SIZEOF_VOID);
+    }
   if (IS_FLOAT (roptype))
     ic = newiCode ('+', rop, operandFromValue (constFloatVal ("1.0"), false));
   else if (IS_FIXED16X16 (roptype))
@@ -2949,7 +2959,12 @@ geniCodePostDec (operand * op)
 
   size = (IS_PTR (rvtype) ? getSize (rvtype->next) : 1);
   if (size == 0)
-    werror (W_SIZEOF_VOID);
+    {
+      if (!IS_VOID (rvtype->next))
+        werror (E_UNKNOWN_SIZE, IS_SYMOP (rv) ? OP_SYMBOL (rv)->name : "<no name>");
+      else
+        werror (W_SIZEOF_VOID);
+    }
   if (IS_FLOAT (rvtype))
     ic = newiCode ('-', srcOp, operandFromValue (constFloatVal ("1.0"), false));
   else if (IS_FIXED16X16 (rvtype))
@@ -2990,7 +3005,12 @@ geniCodePreDec (operand * op, bool lvalue)
 
   size = (IS_PTR (roptype) ? getSize (roptype->next) : 1);
   if (size == 0)
-    werror (W_SIZEOF_VOID);
+    {
+      if (!IS_VOID (roptype->next))
+        werror (E_UNKNOWN_SIZE, IS_SYMOP (rop) ? OP_SYMBOL (rop)->name : "<no name>");
+      else
+        werror (W_SIZEOF_VOID);
+    }
   if (IS_FLOAT (roptype))
     ic = newiCode ('-', rop, operandFromValue (constFloatVal ("1.0"), false));
   else if (IS_FIXED16X16 (roptype))

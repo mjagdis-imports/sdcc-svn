@@ -1,3 +1,27 @@
+2026-09-15 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* src/SDCCicode.c (geniCodePostInc, geniCodePreInc, geniCodePostDec,
+	  geniCodePreDec): throw E_UNKNOWN_SIZE for incomplete struct
+	* src/mos6502/tempops.c: fixed warning
+	* support/valdiag/valdiag.py: no need to assemble,
+	  added __has_idata, __has_pdata, __has_code for mcs51 & ds390,
+	  added __has_xdata for r2k, r4k & tlcs90,
+	  skip completely commented out lines,
+	  print bytes when normal print fails due to unsupported utf-8,
+	  record both ERROR and WARNING tests,
+	  generate separate asm files per test,
+	  test ERROR as ERROR and WARNIGN as WARNING,
+	  use some f-strings
+	* support/valdiag/tests/tentdecl.c: use __has_data,
+	  change IGNORE to ERROR for fixed bug #2735,
+	  removed #ifdef __SDCC checks and validDeclaraction
+	* support/valdiag/tests/_Optional-draft-2026-04-17.c,
+	* support/valdiag/tests/_Optional.c,
+	* support/valdiag/tests/bug-2798.c,
+	* support/valdiag/tests/bug-3012.c,
+	* support/valdiag/tests/restrict.c,
+	* support/valdiag/tests/undefinedc23.c: fixed ERROR/WARNING mix-ups
+
 2026-09-15 Gabriele Gorla <gorlik@yahoo.com>
 
 	* device/lib/huc6280/_memset.s,
@@ -6,7 +30,7 @@
 	  device/lib/mos65c02-stack-auto/_setjmp.s:
 	  Small cosmetic fixes to mos6502 library files.
 	* device/lib/huc6280/crt0.s:
-      Setup the HuC6280 MMU.
+	  Setup the HuC6280 MMU.
 	* sim/ucsim/src/core/sim.src/uc.cc,
 	  sim/ucsim/src/core/sim.src/uccl.h,
 	  sim/ucsim/src/sims/mos6502.src/huc6280cl.h:
@@ -28,7 +52,7 @@
 	  sdas/asxxsrc/asxxxx.h,
 	  sdas/asz80/z80pst.c:
 	  Enable .psharea and .poparea from upstream asxxxx.
- 
+
 2026-09-13 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/mos6502/gen.c,
