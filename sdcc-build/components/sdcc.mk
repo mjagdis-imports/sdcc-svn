@@ -107,19 +107,19 @@ ifeq ($(CROSSCOMPILING), 1)
 		mkdir -p $(REGTESTDIR); \
 		rm -rf $(_SDCCDIR)/support/regression/gen $(_SDCCDIR)/support/regression/results; \
 		for i in $(CROSSREGTESTTARGETS) ; do \
-		  WINEDEBUG=fixme-all $(MAKE) $(MAKESILENTFLAG) $(MAKEJOBFLAGS) -C $(_SDCCDIR)/support/regression SDCC_HOME=$(BUILDDIR) SDCC_EXTRA_DIR=$(SRCDIR)/sdcc-extra $$i CROSSCOMPILING=$(CROSSCOMPILING) SDCC="$(WINE) sdcc" WINE=$(WINE) $(CC_FOR_BUILD_STR) 2>&1 | tee -a $(REGTESTLOG); \
+		  WINEDEBUG=fixme-all $(MAKE) $(MAKESILENTFLAG) $(MAKEJOBFLAGS) -C $(_SDCCDIR)/support/regression SDCC_HOME=$(BUILDDIR) SDCC_EXTRA_DIR=$(SRCDIR)/sdcc-extra $$i CROSSCOMPILING=$(CROSSCOMPILING) SDCC="$(WINE) sdcc" WINE=$(WINE) $(CC_FOR_BUILD_STR) 2>&1 | tee -a >(gzip > $(REGTESTLOG)); \
 		  wineserver -k || true; \
 		done; \
-		# WINEDEBUG=fixme-all $(MAKE) $(MAKESILENTFLAG) -C $(_SDCCDIR)/support/valdiag SDCC_HOME=$(BUILDDIR) SDCC_EXTRA_DIR=$(SRCDIR)/sdcc-extra test-ports CROSSCOMPILING=$(CROSSCOMPILING) SDCC="$(WINE) sdcc" WINE=$(WINE) $(CC_FOR_BUILD_STR) 2>&1 | tee -a $(REGTESTLOG); \
+		# WINEDEBUG=fixme-all $(MAKE) $(MAKESILENTFLAG) -C $(_SDCCDIR)/support/valdiag SDCC_HOME=$(BUILDDIR) SDCC_EXTRA_DIR=$(SRCDIR)/sdcc-extra test-ports CROSSCOMPILING=$(CROSSCOMPILING) SDCC="$(WINE) sdcc" WINE=$(WINE) $(CC_FOR_BUILD_STR) 2>&1 | tee -a >(gzip > $(REGTESTLOG)); \
 	fi
 else
 	# perform regression tests
 	mkdir -p $(REGTESTDIR); \
 	for i in $(REGTESTTARGETS) ; do \
-	  $(MAKE) $(MAKESILENTFLAG) $(MAKEJOBFLAGS) -C $(_SDCCDIR)/support/regression SDCC_HOME=$(BUILDDIR) SDCC_EXTRA_DIR=$(SRCDIR)/sdcc-extra $$i 2>&1 | tee -a $(REGTESTLOG); \
+	  $(MAKE) $(MAKESILENTFLAG) $(MAKEJOBFLAGS) -C $(_SDCCDIR)/support/regression SDCC_HOME=$(BUILDDIR) SDCC_EXTRA_DIR=$(SRCDIR)/sdcc-extra $$i 2>&1 | tee -a >(gzip > $(REGTESTLOG)); \
 	done; \
-	$(MAKE) $(MAKESILENTFLAG) -C $(_SDCCDIR)/support/valdiag SDCC_HOME=$(BUILDDIR) SDCC_EXTRA_DIR=$(SRCDIR)/sdcc-extra test-ports 2>&1 | tee -a $(REGTESTLOG); \
-	$(MAKE) $(MAKESILENTFLAG) $(MAKEJOBFLAGS) -C $(_SDCCDIR)/support/regression SDCC_HOME=$(BUILDDIR) SDCC_EXTRA_DIR=$(SRCDIR)/sdcc-extra random-tests-$(RANDTESTNUM) V=1 2>&1 | tee -a $(RANDREGTESTLOG)
+	$(MAKE) $(MAKESILENTFLAG) -C $(_SDCCDIR)/support/valdiag SDCC_HOME=$(BUILDDIR) SDCC_EXTRA_DIR=$(SRCDIR)/sdcc-extra test-ports 2>&1 | tee -a >(gzip > $(REGTESTLOG)); \
+	$(MAKE) $(MAKESILENTFLAG) $(MAKEJOBFLAGS) -C $(_SDCCDIR)/support/regression SDCC_HOME=$(BUILDDIR) SDCC_EXTRA_DIR=$(SRCDIR)/sdcc-extra random-tests-$(RANDTESTNUM) 2>&1 | tee -a >(gzip > $(RANDREGTESTLOG))
 endif
 	echo "--- Regression testing finished on `date` ---"
 

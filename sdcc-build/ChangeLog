@@ -1,3 +1,10 @@
+
+2026-08-20 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* lib/variables.mk,
+	  components/sdcc.mk:
+	  gzip compression for regression test logs.
+
 2026-08-14 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* sdcc-build/lib/fetch.mk,

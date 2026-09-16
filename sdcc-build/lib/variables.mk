@@ -84,10 +84,10 @@ REGTESTTARGETS = $(THIRD_REGTESTTARGETS)
 # Directory for regression test log file
 REGTESTDIR = $(HTDOCSDIR)/regression_test_results/$(TARGET_PLATFORM)
 # Regression test log file
-REGTESTLOG = $(REGTESTDIR)/regression-test-$(TARGET_PLATFORM)-$(SNAPSHOTID)-$(HOSTNAME).log
+REGTESTLOG = $(REGTESTDIR)/regression-test-$(TARGET_PLATFORM)-$(SNAPSHOTID)-$(HOSTNAME).log.gz
 
 RANDTESTNUM = 0
-RANDREGTESTLOG = $(REGTESTDIR)/rand-regression-test-$(TARGET_PLATFORM)-$(SNAPSHOTID)-$(HOSTNAME).log
+RANDREGTESTLOG = $(REGTESTDIR)/rand-regression-test-$(TARGET_PLATFORM)-$(SNAPSHOTID)-$(HOSTNAME).log.gz
 
 # Directory for regression test log file
 CHLOGDIR = $(HTDOCSDIR)/changelog_heads
