@@ -70,6 +70,14 @@ int	(*mchoptn_ptr)(char *id, int v);
 
 int	aserr;		/*	ASxxxx error counter
 			 */
+int	rlerr;		/*	Relocation error counter
+			 */
+int	rprterr;	/*	report expr() errors
+			 */
+int	ignrerr;	/*	ignore expr() errors
+			 */
+int	rlsym;		/*	Relocation symbol counter
+			 */
 int	trcflags;	/*	ASxxxx tracing flags
 			 */
 jmp_buf	jump_env;	/*	compiler dependent structure
@@ -280,6 +288,8 @@ int	mcrline;	/*	current macro line number
 int	radix;		/*	current number conversion radix:
 			 *	2 (binary), 8 (octal), 10 (decimal),
 			 *	16 (hexadecimal)
+			 */
+int	expr_radix;	/*	expression process radix
 			 */
 int	line;		/*	current assembler source
 			 *	line number

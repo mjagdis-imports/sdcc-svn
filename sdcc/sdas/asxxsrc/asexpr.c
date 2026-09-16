@@ -87,9 +87,24 @@ void
 expr(struct expr *esp)
 {
 	/*
+	 * Set ignore error
+	 * Clear The Inhibit Flag
+	 * Reset Relocation Error Count
+	 * Preset expr_radix
+	 */
+	ignrerr = (rprterr ? 0 : 1);
+	expr_radix = radix;
+	rlerr = 0;
+
+	/*
 	 * Process Expression
 	 */
 	exprx(esp, 0);
+	/*
+	 * Reset error processing
+	 */
+	rprterr = 0;
+	ignrerr = 0;
 }
 
 /*)Function	void	exprx(esp, n)

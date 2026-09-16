@@ -1,3 +1,11 @@
+2026-09-15 Gabriele Gorla <gorlik@yahoo.com>
+
+	* sdas/asxxsrc/asdata.c,
+	  sdas/asxxsrc/asexpr.c,
+	  sdas/asxxsrc/asxxxx.h,
+	  sdas/asrab/rabadr.c:
+	  More asxxxx small upstream changes.
+
 2026-09-15 Maarten Brock <sourceforge.brock AT dse.nl>
 
 	* src/SDCCicode.c (geniCodePostInc, geniCodePreInc, geniCodePostDec,

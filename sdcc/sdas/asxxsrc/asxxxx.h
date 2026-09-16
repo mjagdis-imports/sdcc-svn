@@ -954,6 +954,16 @@ struct	memlnk {
 
 extern	int	aserr;		/*	ASxxxx error counter
 				 */
+/* sdas specific */
+extern	int	rlerr;		/*	Relocation error counter
+				 */
+extern	int	rprterr;	/*	report expr() errors
+				 */
+extern	int	ignrerr;	/*	ignore expr() errors
+				 */
+extern	int	rlsym;		/*	Relocation symbol counter
+				 */
+/* end sdas specific */
 extern	int	trcflags;	/*	ASxxxx tracing flags
 				 */
 extern	jmp_buf	jump_env;	/*	compiler dependent structure
@@ -1045,6 +1055,8 @@ extern	int	mcrline;	/*	current macro line number
 extern	int	radix;		/*	current number conversion radix:
 				 *	2 (binary), 8 (octal), 10 (decimal),
 				 *	16 (hexadecimal)
+				 */
+extern	int	expr_radix;	/*	expression process radix
 				 */
 extern	int	line;		/*	current assembler source line number
 				 */

@@ -83,7 +83,7 @@ addr(struct expr *esp)
 		/* ljm - leading digit is used for offset for dd(ix|iy|sp) */
 	} else if ((c == '-') || ((c >= '0') && (c <= '9'))) {
 		unget(c);
-		expr(esp, 0);
+		expr(esp);
 		esp->e_mode = S_IMMED;
 #endif
 	} else
