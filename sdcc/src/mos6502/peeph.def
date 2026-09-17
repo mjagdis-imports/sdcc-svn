@@ -951,83 +951,83 @@ replace restart {
 
 replace restart {
 	bne	%1
-	jmp	%2
+	%3	%2
 %1:
 } by {
 	beq	%2
-	; Peephole BNE - inverted bne and eliminated jmp
+	; Peephole BNE - inverted bne and eliminated %3
 %1:
-} if labelInRange(%2), labelRefCountChange(%1 -1)
+} if same(%3 'jmp' 'bra'), labelInRange(%2), labelRefCountChange(%1 -1)
 
 replace restart {
 	beq	%1
-	jmp	%2
+	%3	%2
 %1:
 } by {
 	bne	%2
-	; Peephole BEQ - inverted beq and eliminated jmp
+	; Peephole BEQ - inverted beq and eliminated %3
 %1:
-} if labelInRange(%2), labelRefCountChange(%1 -1)
+} if same(%3 'jmp' 'bra'), labelInRange(%2), labelRefCountChange(%1 -1)
 
 replace restart {
 	bcc	%1
-	jmp	%2
+	%3	%2
 %1:
 } by {
 	bcs	%2
-	; Peephole BCC - inverted bcc and eliminated jmp
+	; Peephole BCC - inverted bcc and eliminated %3
 %1:
-} if labelInRange(%2), labelRefCountChange(%1 -1)
+} if same(%3 'jmp' 'bra'), labelInRange(%2), labelRefCountChange(%1 -1)
 
 replace restart {
 	bcs	%1
-	jmp	%2
+	%3	%2
 %1:
 } by {
 	bcc	%2
-	; Peephole BCS - inverted bcs and eliminated jmp
+	; Peephole BCS - inverted bcs and eliminated %3
 %1:
-} if labelInRange(%2), labelRefCountChange(%1 -1)
+} if same(%3 'jmp' 'bra'), labelInRange(%2), labelRefCountChange(%1 -1)
 
 replace restart {
 	bpl	%1
-	jmp	%2
+	%3	%2
 %1:
 } by {
 	bmi	%2
-	; Peephole BPL - inverted bpl and eliminated jmp
+	; Peephole BPL - inverted bpl and eliminated %3
 %1:
-} if labelInRange(%2), labelRefCountChange(%1 -1)
+} if same(%3 'jmp' 'bra'), labelInRange(%2), labelRefCountChange(%1 -1)
 
 replace restart {
 	bmi	%1
-	jmp	%2
+	%3	%2
 %1:
 } by {
 	bpl	%2
-	; Peephole BMI - inverted bmi and eliminated jmp
+	; Peephole BMI - inverted bmi and eliminated %3
 %1:
-} if labelInRange(%2), labelRefCountChange(%1 -1)
+} if same(%3 'jmp' 'bra'), labelInRange(%2), labelRefCountChange(%1 -1)
 
 replace restart {
 	bvc	%1
-	jmp	%2
+	%3	%2
 %1:
 } by {
 	bvs	%2
-	; Peephole BVC - inverted bvc and eliminated jmp
+	; Peephole BVC - inverted bvc and eliminated %3
 %1:
-} if labelInRange(%2), labelRefCountChange(%1 -1)
+} if same(%3 'jmp' 'bra'), labelInRange(%2), labelRefCountChange(%1 -1)
 
 replace restart {
 	bvs	%1
-	jmp	%2
+	%3	%2
 %1:
 } by {
 	bvc	%2
-	; Peephole BVS - inverted bvs and eliminated jmp
+	; Peephole BVS - inverted bvs and eliminated %3
 %1:
-} if labelInRange(%2), labelRefCountChange(%1 -1)
+} if same(%3 'jmp' 'bra'), labelInRange(%2), labelRefCountChange(%1 -1)
 
 ////////////////////////////////////////////////////////
 // Replace branch to jmp with branch

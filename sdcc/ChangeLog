@@ -25,6 +25,8 @@
 	  support/regression/tests/vaargs-c23.c.in,
 	  support/regression/tests/vaargs.c.in:
 	  Move several test exclusion to MakeList.
+	* src/mos6502/peeph.def:
+	  Add branch inversion followed by bra.
 
 2026-09-16 Gabriele Gorla <gorlik@yahoo.com>
 
