@@ -36,11 +36,14 @@ EXCLUDE_pdk15-stack-auto += \
 EXCLUDE_ARCH_pdk += \
 	tst_bug1520966 \
 	tst_bug1551947 \
+	tst_bug-2756 \
 	tst_lonesha256 \
 	tst_sha3-256 \
 	tst_wcsto
 EXCLUDE_mcs51-small += \
+	tst_bug-2756 \
 	tst_bug-3873
+
 EXCLUDE_ARCH_mos6502 += \
 	tst_bug-3129
 
@@ -150,6 +153,7 @@ EXCLUDE_s08-stack-auto += \
 EXCLUDE_ARCH_mos6502 += \
 	gte_pr30185 \
 	gte_pr58365 \
+	tst_sha3-256 \
 	tst_gcc-torture-execute-20001026-1
 
 # mcs51, hc08, s08 and pdk14 have restrictions on function pointers wrt. reentrancy
@@ -165,6 +169,7 @@ EXCLUDE_nostructret = \
 	gte_991019-1 \
 	gte_pr30185 \
 	gte_pr58365 \
+	tst_sha3-256 \
 	tst_gcc-torture-execute-20001026-1 \
 	tst_gcc-torture-execute-931005-1 \
 	tst_gcc-torture-execute-950628-1 \
@@ -174,9 +179,21 @@ EXCLUDE_nostructret = \
 	tst_gcc-torture-execute-990525-2 \
 	tst_gcc-torture-execute-pr39120
 
-EXCLUDE_hc08 += $(EXCLUDE_nostructret)
-EXCLUDE_s08 += $(EXCLUDE_nostructret)
-EXCLUDE_s08-stack-auto += $(EXCLUDE_nostructret)
+# target does not support __sfr
+EXCLUDE_host += \
+	tst_bug-3165
+EXCLUDE_ARCH_hc08 += \
+	tst_bug-3165
+EXCLUDE_ARCH_mos6502 += \
+	tst_bug-3165
+EXCLUDE_ARCH_f8 += \
+	tst_bug-3165
+EXCLUDE_ARCH_stm8 += \
+	tst_bug-3165
+EXCLUDE_tlcs90 += \
+	tst_bug-3165
+
+EXCLUDE_ARCH_hc08 += $(EXCLUDE_nostructret)
 EXCLUDE_ds390 += $(EXCLUDE_nostructret)
 
 # TODO: Check these

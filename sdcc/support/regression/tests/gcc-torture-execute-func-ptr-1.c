@@ -8,22 +8,20 @@
 #pragma std_c99
 #endif
 
-static double f (float a);
-static double (*fp) (float a);
+static double f (float a) __reentrant;
+static double (*fp) (float a) __reentrant;
 
 void
 testTortureExecute (void)
 {
-#if !defined(__SDCC_hc08) && !defined(__SDCC_s08) && !defined(__SDCC_mos6502) && !defined(__SDCC_mos65c02) && !defined(__SDCC_huc6280) && !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15)
   fp = f;
   if (fp ((float) 1) != 1.0)
     ASSERT (0);
   return;
-#endif
 }
 
 static double
-f (float a)
+f (float a) __reentrant
 {
   return a;
 }
