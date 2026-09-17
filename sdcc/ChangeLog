@@ -1,3 +1,13 @@
+2026-09-17 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* src/ds390/main.c (port): unqualified pointer cannot point to __sfr
+	* src/mcs51/main.c (port): unqualified pointer cannot point to __sfr
+	* support/valdiag/tests/bug-2798.c: fail &sfr for mcs51 & ds390 too
+	* support/valdiag/valdiag.py,
+	* support/valdiag/Makefile.in: added huc6280,
+	  compact *.out into *.log,
+	  collate *.log into <port>.sum
+
 2026-09-17 Gabriele Gorla <gorlik@yahoo.com>
 
 	* device/lib/huc6280/_setjmp.s,
@@ -45,7 +55,7 @@
 	  More asxxxx small upstream changes.
 	* sdas/asxxsrc/asdbg.c,
 	  sdas/asxxsrc/asxxxx.h:
-      Debug printing from upstream asxxxx.
+	  Debug printing from upstream asxxxx.
 
 2026-09-15 Maarten Brock <sourceforge.brock AT dse.nl>
 

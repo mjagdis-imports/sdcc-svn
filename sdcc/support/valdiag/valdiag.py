@@ -213,6 +213,15 @@ testmodes = {
             "__has_reentrant":"1"
         }
     },
+    "huc6280":{
+        "compiler":sdcc,
+        "port":"huc6280",
+        "extra-defines": {
+            "__has_data":"1",
+            "__has_xdata":"1",
+            "__has_reentrant":"1"
+        }
+    },
     "stm8":{
         "compiler":sdcc,
         "port":"stm8",
