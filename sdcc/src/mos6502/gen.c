@@ -1547,13 +1547,16 @@ m6502_loadRegFromConst (reg_info * reg, int c)
 {
   m6502_emitComment (REGOPS, __func__ );
 
-  switch (reg->rIdx) {
-  case A_IDX:
-    c &= 0xff;
-    if (reg->isLitConst && reg->litConst == c)
-      break;
+  c &= 0xff;
+  if (reg->isLitConst && reg->litConst == c)
+    goto end;
 
-    if (m6502_reg_y->isLitConst && m6502_reg_y->litConst == c)
+  switch (reg->rIdx)
+    {
+  case A_IDX:
+    if (c==0 && HAS_REG_CLR)
+      m6502_emitOp ("cla", "");
+    else if (m6502_reg_y->isLitConst && m6502_reg_y->litConst == c)
       m6502_transferRegReg (m6502_reg_y, reg, false);
     else if (m6502_reg_x->isLitConst && m6502_reg_x->litConst == c)
       m6502_transferRegReg (m6502_reg_x, reg, false);
@@ -1561,11 +1564,10 @@ m6502_loadRegFromConst (reg_info * reg, int c)
       m6502_emitOp ("lda", IMMDFMT, (unsigned int)c);
     break;
   case X_IDX:
-    c &= 0xff;
-    if (reg->isLitConst)
+    if (c==0 && HAS_REG_CLR)
+      m6502_emitOp ("clx", "");
+    else if (reg->isLitConst)
       {
-        if (reg->litConst == c)
-          break;
         if (((reg->litConst + 1) & 0xff) == c)
           {
             m6502_emitOp ("inx", "");
@@ -1591,11 +1593,10 @@ m6502_loadRegFromConst (reg_info * reg, int c)
       }
     break;
   case Y_IDX:
-    c &= 0xff;
-    if (reg->isLitConst)
+    if (c==0 && HAS_REG_CLR)
+      m6502_emitOp ("cly", "");
+    else if (reg->isLitConst)
       {
-        if (reg->litConst == c)
-          break;
         if (((reg->litConst + 1) & 0xff) == c)
           {
             m6502_emitOp ("iny", "");
@@ -1635,6 +1636,7 @@ m6502_loadRegFromConst (reg_info * reg, int c)
     return;
   }
 
+end:
   m6502_dirtyReg (reg);
   reg->isLitConst = 1;
   reg->litConst = c;

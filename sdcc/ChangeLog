@@ -27,6 +27,8 @@
 	  Move several test exclusion to MakeList.
 	* src/mos6502/peeph.def:
 	  Add branch inversion followed by bra.
+	* src/mos6502/gen.c:
+	  Add CLA, CLX, CLY code path to loadRegFromConst().
 
 2026-09-16 Gabriele Gorla <gorlik@yahoo.com>
 
