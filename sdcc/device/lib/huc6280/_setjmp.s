@@ -28,6 +28,7 @@
 ;-------------------------------------------------------------------------
 
 	.module _setjmp
+	.huc6280
 
 ;--------------------------------------------------------
 ; exported symbols
@@ -64,20 +65,20 @@ ___setjmp:
 
         ; save stack pointer
         tsx
-        ldy	#0
         txa
+        cly
         sta	[ptr],y
 
         ; save return address
-        lda	0x101,x
+        lda	0x2101,x
         iny
         sta	[ptr],y
-        lda	0x102,x
+        lda	0x2102,x
         iny
         sta	[ptr],y
 
         ; return 0
-        lda	#0
+        cla
         tax
         rts
 
@@ -90,7 +91,7 @@ _longjmp:
         sta	*(ptr + 0)		; lsb(buf)
 
         ; restore stack pointer
-        ldy	#0
+        cly
         lda	[ptr],y
         tax
         txs
@@ -98,10 +99,10 @@ _longjmp:
         ; set return address
         iny
         lda	[ptr],y
-        sta	0x101,x
+        sta	0x2101,x
         iny
         lda	[ptr],y
-        sta	0x102,x
+        sta	0x2102,x
 
 ; return rv ? rv : 1;
         lda	*(rv + 0)

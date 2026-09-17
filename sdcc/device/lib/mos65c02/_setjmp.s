@@ -64,8 +64,8 @@ ___setjmp:
 
 ; save stack pointer
         tsx
-        ldy	#0x00
         txa
+        ldy	#0x00
         sta	[ptr],y
 
 ; save return address

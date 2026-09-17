@@ -1,5 +1,13 @@
 2026-09-16 Gabriele Gorla <gorlik@yahoo.com>
 
+	* device/lib/huc6280/_setjmp.s,
+	  device/lib/mos65c02/_setjmp.s,
+	  support/regression/ports/uc6280/support.c,
+	  support/regression/ports/uc6280/uCsim.cmd:
+	  Fix last HuC6280 regression failures.
+
+2026-09-16 Gabriele Gorla <gorlik@yahoo.com>
+
 	* sim/ucsim/src/sims/mos6502.src/inst.cc,
 	  sim/ucsim/src/sims/mos6502.src/mos65c02.cc:
 	  Fix Bug #4079
