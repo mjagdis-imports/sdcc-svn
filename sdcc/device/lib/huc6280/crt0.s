@@ -67,20 +67,21 @@ __mmap_init = 0x1f00
     .area MMAP_INIT (ABS)
 	.org __mmap_init
 	lda	#0xff
-	tam0
-	lda	#0x01 ; should be #0xf8 DATA
-	tam1
-	lda	#0x02 ; CODE
-	tam2
+	tam0		; 0x0000-0x1fff <- 0x1fe000-0x1fffff
+	lda	#0x01 	; should be #0xf8 DATA (8k)
+	tam1		; 0x2000-0x3fff <- 0x1f0000-0x1f1fff
+	lda	#0x02 	; should be start of CODE
+	tam2		; 0x4000-0x5fff <- 0x004000-0x005fff
 	inc a
-	tam3
+	tam3		; 0x6000-0x7fff <- 0x006000-0x007fff
 	inc a
-	tam4
+	tam4		; 0x8000-0x9fff <- 0x008000-0x009fff
 	inc a
-	tam5
+	tam5		; 0xa000-0xbfff <- 0x00a000-0x00bfff
 	inc a
-	tam6
+	tam6		; 0xc000-0xdfff <- 0x00c000-0x00dfff
 ; MSR7 is set to 0 at reset
+				; 0xe000-0xffff <- 0x000000-0x001fff
     jmp __sdcc_gs_init_startup
 
 ;--------------------------------------------------------
@@ -105,27 +106,20 @@ __sdcc_init_data:
 	lda	#0x00
 	ldx	#<s_ZP
 	ldy	#<l_ZP
-	beq	00101$
-00100$:
+	beq	skipZP
+ZPloop:
 	sta	*0,x
 	inx
 	dey
-	bne	00100$
-00101$:
+	bne	ZPloop
+skipZP:
 
 ; initialize DATA
-;	shoul use TII
-	lda	#>l_XINIT
-	sta	*___memcpy_PARM_3+1
-	lda	#<l_XINIT
-	sta	*___memcpy_PARM_3
-	lda	#>s_XINIT
-	sta	*___memcpy_PARM_2+1
-	lda	#<s_XINIT
-	sta	*___memcpy_PARM_2
-	lda	#<s_DATA
-	ldx	#>s_DATA
-	jsr	___memcpy
+	lda	# (<l_XINIT)
+	ora # (>l_XINIT)
+	beq	skip
+	tii s_XINIT, s_DATA, l_XINIT
+skip:
 
 ; clear BSS
 	lda	#>l_BSS

@@ -395,7 +395,12 @@ __STDC_MEMREVERSE8U(64)
 #if defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_r2k) || defined(__SDCC_r2ka) || defined(__SDCC_r3ka) || defined (__SDCC_ez80) || defined (__SDCC_z80n) || defined(__SDCC_r800)
 #define __memcpy(dst, src, n) __builtin_memcpy(dst, src, n)
 #else
+#if defined(__SDCC_huc6280)
+// huc memcpy needs parameters in DATA (not ZP)
+extern void *__memcpy (void * restrict dest, const void * restrict src, size_t n);
+#else
 extern void *__memcpy (void * restrict dest, const void * _NEAR restrict src, _NEAR size_t n);
+#endif
 #endif
 
 #if __STDC_ENDIAN_NATIVE__ == __STDC_ENDIAN_LITTLE__

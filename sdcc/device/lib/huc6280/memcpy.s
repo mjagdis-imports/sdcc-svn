@@ -1,9 +1,7 @@
 ;-------------------------------------------------------------------------
 ;   memcpy.s - standarc C library
 ;
-;   Copyright (C) 2003, Ullrich von Bassewitz
-;   Copyright (C) 2009, Christian Krueger
-;   Copyright (C) 2022-2023, Gabriele Gorla
+;   Copyright (C) 2026, Gabriele Gorla
 ;
 ;   This library is free software; you can redistribute it and/or modify it
 ;   under the terms of the GNU General Public License as published by the
@@ -42,32 +40,25 @@
 	.globl _memcpy
 
 ;--------------------------------------------------------
-; overlayable function parameters in zero page
-;--------------------------------------------------------
-	.area	OSEG    (PAG, OVR)
-_memcpy_PARM_2:
-___memcpy_PARM_2:
-	.ds 2
-_memcpy_PARM_3:
-___memcpy_PARM_3:
-	.ds 2
-
-;--------------------------------------------------------
 ; local aliases
 ;--------------------------------------------------------
-	.define save  "___SDCC_m6502_ret0"
-	.define dst   "DPTR"
+;	.define dst   "DPTR"
 	.define src   "___memcpy_PARM_2"
 	.define count "___memcpy_PARM_3"
 
 
-;	.area DATA
-;TII_memcpy:
-;	.db	0x73	; TII
-;	.dw	0x0000
-;	.dw	0x0000
-;	.dw	0x0000
-;	.dw	0x60	; RTS
+	.area DATA
+TII_memcpy:
+	.db	0x73	; TII
+_memcpy_PARM_2:
+___memcpy_PARM_2:
+	.dw	0x0000
+dst:
+	.dw	0x0000
+_memcpy_PARM_3:
+___memcpy_PARM_3:
+	.dw	0x0000
+	.dw	0x60	; RTS
 
 ;--------------------------------------------------------
 ; code
@@ -76,37 +67,13 @@ ___memcpy_PARM_3:
 
 _memcpy:
 ___memcpy:
-;	sta	*save+0
-	sta	*dst+0
-	stx	*dst+1
-	stx	*save
+	sta	dst+0
+	lda count+0
+	ora count+1
+	beq end		; len == 0
+	stx dst+1
+	jsr TII_memcpy
 
-	ldy	#0		; cly
-	ldx	*count+1
-	beq	last_bytes
-page_loop:
-	lda	[src],y
-	sta	[dst],y
-	iny
-	lda	[src],y
-	sta	[dst],y
-	iny
-	bne	page_loop
-	inc	*src+1
-	inc	*dst+1
-	dex
-	bne	page_loop
-
-last_bytes:
-	ldx	*count+0
-	beq	end
-byte_loop:
-	lda	[src],y
-	sta	[dst],y
-	iny
-	dex
-	bne	byte_loop
 end:
-	lda	*dst+0
-	ldx	*save
+	lda	dst+0
 	rts

@@ -300,7 +300,12 @@ extern void __xdata *memcpyx(void __xdata *, void __xdata *, int) __naked;
 #endif
 #define memset(dst, c, n) __builtin_memset(dst, c, n)
 #else
+#ifdef __SDCC_huc6280
+// huc memcpy needs parameters in DATA (not ZP)
+extern void *__memcpy (void *dest, const void *src, size_t n);
+#else
 extern void *__memcpy (void *dest, const void *_NEAR src, _NEAR size_t n);
+#endif
 #define memcpy(dst, src, n) __memcpy(dst, src, n)
 #endif
 
