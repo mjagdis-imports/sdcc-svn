@@ -46,6 +46,8 @@
 	  Use TII in crt0 and memcpy.	  
 	* src/mos6502/gen.c:
 	  Refactor loadRegFromConst().
+	* support/regression/tests/bug-3385.c:
+	  Enable test to hc08/s08 port.
 
 2026-09-16 Gabriele Gorla <gorlik@yahoo.com>
 
