@@ -5,6 +5,9 @@
 	  sdas/asxxsrc/asxxxx.h,
 	  sdas/asrab/rabadr.c:
 	  More asxxxx small upstream changes.
+	* sdas/asxxsrc/asdbg.c,
+	  sdas/asxxsrc/asxxxx.h:
+      Debug printing from upstream asxxxx.
 
 2026-09-15 Maarten Brock <sourceforge.brock AT dse.nl>
 

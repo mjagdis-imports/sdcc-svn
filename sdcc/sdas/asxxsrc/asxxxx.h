@@ -1383,6 +1383,11 @@ extern	void		term(struct expr *esp);
 extern	char *		BaseFileName(struct asmf *currFile, int spacesToUnderscores);
 extern	void		DefineNoICE_Line(void);
 extern	void		DefineSDCC_Line(void);
+extern	void		prntexpr(struct expr *esp, int flg);
+extern	void		prntsym(struct sym *sp);
+extern	void		prnttsym(struct sym *sp);
+extern	void		prntarea(struct area *ap);
+extern	void		prntbank(struct bank *bp);
 
 /* aslist.c */
 extern	void		list(void);
