@@ -1,3 +1,9 @@
+2026-09-16 Gabriele Gorla <gorlik@yahoo.com>
+
+	* sim/ucsim/src/sims/mos6502.src/inst.cc,
+	  sim/ucsim/src/sims/mos6502.src/mos65c02.cc:
+	  Fix Bug #4079
+
 2026-09-15 Gabriele Gorla <gorlik@yahoo.com>
 
 	* sdas/asxxsrc/asdata.c,
