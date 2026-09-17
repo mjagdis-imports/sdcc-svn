@@ -44,6 +44,8 @@
 	  device/lib/huc6280/crt0.s,
 	  device/lib/huc6280/memcpy.s:
 	  Use TII in crt0 and memcpy.	  
+	* src/mos6502/gen.c:
+	  Refactor loadRegFromConst().
 
 2026-09-16 Gabriele Gorla <gorlik@yahoo.com>
 

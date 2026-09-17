@@ -1563,10 +1563,15 @@ m6502_loadRegFromConst (reg_info * reg, int c)
     else
       m6502_emitOp ("lda", IMMDFMT, (unsigned int)c);
     break;
+
   case X_IDX:
     if (c==0 && HAS_REG_CLR)
       m6502_emitOp ("clx", "");
-    else if (reg->isLitConst)
+    else if (m6502_reg_a->isLitConst && m6502_reg_a->litConst == c)
+      m6502_transferRegReg (m6502_reg_a, reg, false);
+    else
+      {
+        if (reg->isLitConst)
       {
         if (((reg->litConst + 1) & 0xff) == c)
           {
@@ -1579,23 +1584,18 @@ m6502_loadRegFromConst (reg_info * reg, int c)
             break;
           }
       }
-
-    if (m6502_reg_a->isLitConst && m6502_reg_a->litConst == c)
-      m6502_transferRegReg (m6502_reg_a, reg, false);
-    /*
-      TODO does not work for X<->Y
-      else if (m6502_reg_y->isLitConst && m6502_reg_y->litConst == c)
-      m6502_transferRegReg (m6502_reg_y, reg, false);
-    */
-    else
-      {
         m6502_emitOp ("ldx", IMMDFMT, (unsigned int)c);
       }
     break;
+
   case Y_IDX:
     if (c==0 && HAS_REG_CLR)
       m6502_emitOp ("cly", "");
-    else if (reg->isLitConst)
+    else if (m6502_reg_a->isLitConst && m6502_reg_a->litConst == c)
+      m6502_transferRegReg (m6502_reg_a, reg, false);
+    else
+      {
+ if (reg->isLitConst)
       {
         if (((reg->litConst + 1) & 0xff) == c)
           {
@@ -1609,28 +1609,22 @@ m6502_loadRegFromConst (reg_info * reg, int c)
           }
       }
 
-    if (m6502_reg_a->isLitConst && m6502_reg_a->litConst == c)
-      m6502_transferRegReg (m6502_reg_a, reg, false);
-    /*
-      TODO does not work for X<->Y
-      else if (m6502_reg_x->isLitConst && m6502_reg_x->litConst == c)
-      m6502_transferRegReg (m6502_reg_x, reg, false);
-    */
-    else
-      {
         m6502_emitOp ("ldy", IMMDFMT, (unsigned int)c);
       }
     break;
+
   case XA_IDX:
     c &= 0xffff;
     m6502_loadRegFromConst (m6502_reg_x, c >> 8);
     m6502_loadRegFromConst (m6502_reg_a, c);
     break;
+
   case XY_IDX:
     c &= 0xffff;
     m6502_loadRegFromConst (m6502_reg_x, c >> 8);
     m6502_loadRegFromConst (m6502_reg_y, c);
     break;
+
   default:
     emitcode ("ERROR", "bad reg 0x%02x in %s", reg->rIdx, __func__);
     return;
