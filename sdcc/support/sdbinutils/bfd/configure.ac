@@ -163,7 +163,7 @@ AC_ARG_WITH(separate-debug-dir,
 [DEBUGDIR="${withval}"])
 AC_SUBST(DEBUGDIR)
 
-ACX_PKGVERSION([GNU Binutils])
+ACX_PKGVERSION([sdbinutils derived from GNU Binutils])
 ACX_BUGURL([https://sourceware.org/bugzilla/])
 
 AM_BINUTILS_WARNINGS
