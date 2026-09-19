@@ -27,7 +27,7 @@ const struct op string_binop2[] = {
 void testBug(void)
 {
 #ifdef __SDCC
-#if !defined(__SDCC_mcs51) && !defined(__SDCC_ds390) /* mcs51, hc08, s08 and pdk14 have restrictions on function pointers wrt. reentrancy */
+#if !(defined(__SDCC_mcs51) && !defined(__SDCC_STACK_AUTO))
 	ASSERT(((int (*)(long, long))(string_binop1[0].op_func))(1, 1) == 0);
 	ASSERT(((int (*)(long, long))(string_binop1[0].op_func))(1, 2) == 1);
 	ASSERT(((int (*)(long, long))(string_binop2[0].op_func))(1, 1) == 0);

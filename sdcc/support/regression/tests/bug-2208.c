@@ -4,7 +4,6 @@
 
 #include <testfwk.h>
 
-#if !defined(__SDCC_mcs51) && !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) && !defined(__SDCC_pic14) // Lack of memory
 typedef
     struct SDCCBUG_Card {
         signed char suit, rank;
@@ -46,11 +45,9 @@ void SDCCBUG_DealCardsTo (unsigned char player)
         i += 1;
     }
 }
-#endif
 
 void testBug(void)
 {
-#if !defined(__SDCC_mcs51) && !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) && !defined(__SDCC_pic14) // Lack of memory
 	SDCCBUG_packN = 1;
 	SDCCBUG_skill = 1;
 	SDCCBUG_pack[SDCCBUG_packN].suit = 23;
@@ -62,6 +59,5 @@ void testBug(void)
 	ASSERT(SDCCBUG_hand[0][1].suit == 23);
 	ASSERT(SDCCBUG_hand[0][1].rank == 42);
 	ASSERT(!SDCCBUG_packN);
-#endif
 }
 

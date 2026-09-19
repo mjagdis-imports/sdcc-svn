@@ -4,8 +4,6 @@
 
 #include <testfwk.h>
 
-#if !defined(PORT_HOST) && !defined(__SDCC_hc08) && !defined(__SDCC_s08) && !defined(SDCC_MOS) && !defined(__SDCC_sm83) && !defined(__SDCC_stm8) && !defined(__SDCC_tlcs90) && !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) && !defined(__SDCC_f8) && !defined(__SDCC_f8l)
-
 #define UCHAR	unsigned char
 
 __sfr __at 0xf0 rGPIO_B_Output_Enable;
@@ -28,7 +26,6 @@ UCHAR _Check_B_By_B(UCHAR iAndMask)		// pull low
 
 	return iVal;
 }
-#endif
 
 void
 testBug (void)

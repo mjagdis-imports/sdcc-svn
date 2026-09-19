@@ -12,8 +12,6 @@ typedef unsigned short u16;
 
 static u16 vn[20];
 
-#ifndef __SDCC_pdk14 // Lack of memory
-#ifndef __SDCC_pic16
 void crash1()
 {
   int m = 4, n = 4;
@@ -35,8 +33,6 @@ void crash2()
     vn[i] = (v[i] >> s) | (v[i-1] << 16-s);
   vn[0] = v[0] >> s;
 }
-#endif
-#endif
 
 void testBug(void)
 {

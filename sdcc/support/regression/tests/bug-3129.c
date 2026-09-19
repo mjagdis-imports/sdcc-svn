@@ -9,7 +9,6 @@
 #pragma disable_warning 85
 #endif
 
-#if !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) && !defined(__SDCC_mcs51) && !defined(__SDCC_ds390) // Lack of memory
 extern const char stdcbench_name_version_string[];
 
 unsigned long stdcbench(void);
@@ -458,13 +457,10 @@ extern void c90lib_lnlc(void);
 union stdcbench_buffer stdcbench_buffer;
 
 const char stdcbench_name_version_string[] = "stdcbench 0.6";
-#endif
 
 void
 testBug(void)
 {
-#if !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) && !defined(__SDCC_mcs51) && !defined(__SDCC_ds390) // Lack of memory
 	c90lib_lnlc();
-#endif
 }
 
