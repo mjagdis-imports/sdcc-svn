@@ -1,5 +1,10 @@
+2026-08-19 Philipp Klaus Krause <philipp@colecovision.eu>
 
-2026-08-20 Philipp Klaus Krause <philipp@colecovision.eu>
+	* lib/variables.mk,
+	  components/sdcc.mk:
+	  Use temporary files instead of on-the fly gzip compression for regression test logs to avoid use of bash-specific process substitution shell feature.
+
+2026-09-16 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* lib/variables.mk,
 	  components/sdcc.mk:
