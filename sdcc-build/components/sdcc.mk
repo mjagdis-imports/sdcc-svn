@@ -111,7 +111,7 @@ ifeq ($(CROSSCOMPILING), 1)
 		  wineserver -k || true; \
 		done; \
 		# WINEDEBUG=fixme-all $(MAKE) $(MAKESILENTFLAG) -C $(_SDCCDIR)/support/valdiag SDCC_HOME=$(BUILDDIR) SDCC_EXTRA_DIR=$(SRCDIR)/sdcc-extra test-ports CROSSCOMPILING=$(CROSSCOMPILING) SDCC="$(WINE) sdcc" WINE=$(WINE) $(CC_FOR_BUILD_STR) 2>&1 | tee -a $(REGTESTLOG); \
-		gzip -9 $(REGTESTLOG); \
+		gzip -f -9 $(REGTESTLOG); \
 	fi
 else
 	# perform regression tests
@@ -120,9 +120,9 @@ else
 	  $(MAKE) $(MAKESILENTFLAG) $(MAKEJOBFLAGS) -C $(_SDCCDIR)/support/regression SDCC_HOME=$(BUILDDIR) SDCC_EXTRA_DIR=$(SRCDIR)/sdcc-extra $$i 2>&1 | tee -a $(REGTESTLOG); \
 	done; \
 	$(MAKE) $(MAKESILENTFLAG) -C $(_SDCCDIR)/support/valdiag SDCC_HOME=$(BUILDDIR) SDCC_EXTRA_DIR=$(SRCDIR)/sdcc-extra test-ports 2>&1 | tee -a $(REGTESTLOG); \
-	gzip -9 $(REGTESTLOG); \
+	gzip -f -9 $(REGTESTLOG); \
 	$(MAKE) $(MAKESILENTFLAG) $(MAKEJOBFLAGS) -C $(_SDCCDIR)/support/regression SDCC_HOME=$(BUILDDIR) SDCC_EXTRA_DIR=$(SRCDIR)/sdcc-extra random-tests-$(RANDTESTNUM) 2>&1 | tee -a $(RANDREGTESTLOG); \
-	gzip -9 $(RANDREGTESTLOG)
+	gzip -f -9 $(RANDREGTESTLOG)
 endif
 	echo "--- Regression testing finished on `date` ---"
 
