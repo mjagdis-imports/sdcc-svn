@@ -1,4 +1,8 @@
-2026-08-20 Philipp Klaus Krause <philipp@colecovision.eu>
+2026-09-19 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* snap.php: fixed regex for parsing Summary lines
+
+2026-09-16 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* snap.php:
 	  gzip compression for regression test logs.

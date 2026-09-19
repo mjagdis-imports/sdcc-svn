@@ -204,8 +204,7 @@ function rt_failed($fname)
     while ($line = gzgets($handle)) {
       # Summary for 'host' : 0 failures, 4244 tests, 596 test cases, 0 bytes, 0 ticks
       if (preg_match('/^Summary/', $line)) {
-        $failures = preg_replace('/^Summary for \'.+\'\w*:.* (\d+) failures, \d+ tests, \d+ test cases, \d+ bytes, \d+ ticks/',
-          '$1', $line);
+        $failures = preg_replace('/^Summary for \'.+\'\s*:\s*(\d+) failures.*/', '$1', $line);
         if ($failures && $failures > 0) {
           gzclose($handle);
           return true;
