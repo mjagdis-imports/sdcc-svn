@@ -1,3 +1,8 @@
+2026-09-20 Gabriele Gorla <gorlik@yahoo.com>
+
+	* support/regression/tests/bug-3381.c:
+	  Add regression test for bug #3381.
+
 2026-09-19 Gabriele Gorla <gorlik@yahoo.com>
 
 	* support/regression/MakeList,
