@@ -182,13 +182,21 @@ EXCLUDE_s08-stack-auto += \
 	tst_gcc-torture-execute-usad-run
 
 # SDCC bug #3982 -> feature request #1019 - implement structreturn of size >8
+# struct return of size>8 works only for non-reentrant functions
 EXCLUDE_ARCH_mos6502 += \
+	tst_gcc-torture-execute-struct-ret-1
+EXCLUDE_uc6502-stack-auto += \
 	gte_pr30185 \
 	gte_pr58365 \
 	tst_sha3-256 \
 	tst_gcc-torture-execute-20001026-1 \
-	tst_gcc-torture-execute-pr60017 \
-	tst_gcc-torture-execute-struct-ret-1
+	tst_gcc-torture-execute-pr60017
+EXCLUDE_uc65c02-stack-auto += \
+	gte_pr30185 \
+	gte_pr58365 \
+	tst_sha3-256 \
+	tst_gcc-torture-execute-20001026-1 \
+	tst_gcc-torture-execute-pr60017
 
 # mcs51, hc08, s08 and pdk have restrictions on function pointers wrt. reentrancy
 EXCLUDE_ARCH_mos6502 += \
