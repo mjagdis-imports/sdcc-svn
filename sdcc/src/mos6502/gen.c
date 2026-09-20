@@ -4602,6 +4602,8 @@ genCall (iCode * ic)
 
   etype = getSpec (dtype);
 
+  sym_link *ftype = IS_FUNCPTR (dtype) ? dtype->next : dtype;
+
   const bool bigreturn = (getSize (ftype->next) > 4) || IS_STRUCT (ftype->next); // Return value of big type or returning struct or union.
 
 
