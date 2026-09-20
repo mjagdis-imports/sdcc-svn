@@ -14,7 +14,7 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
    GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License 
+   You should have received a copy of the GNU General Public License
    along with this library; see the file COPYING. If not, write to the
    Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA.
@@ -200,19 +200,23 @@ function file_name_to_revision($fname)
 
 function rt_failed($fname)
 {
-  if ($handle = fopen($fname, "r")) {
-    while ($line = fgets($handle)) {
-      # Summary for 'host': 0 failures, 4244 tests, 596 test cases, 0 bytes, 0 ticks
+  if ($handle = gzopen($fname, "r")) {
+    while ($line = gzgets($handle)) {
+      # Summary for 'host' : 0 failures, 4244 tests, 596 test cases, 0 bytes, 0 ticks
       if (preg_match('/^Summary/', $line)) {
-        $failures = preg_replace('/^Summary for \'.+\':.* (\d+) failures, \d+ tests, \d+ test cases, \d+ bytes, \d+ ticks/',
-          '$1', $line);
-        if ($failures && $failures > 0)
+        $failures = preg_replace('/^Summary for \'.+\'\s*:\s*(\d+) failures.*/', '$1', $line);
+        if ($failures && $failures > 0) {
+          gzclose($handle);
           return true;
+        }
       }
-      if (preg_match('/Error/', $line) || preg_match('/invalid instructions/', $line))
+      if (preg_match('/Error/', $line) || preg_match('/invalid instructions/', $line)) {
+        gzclose($handle);
         return true;
+      }
     }
-  
+    gzclose($handle);
+
     return false;
   }
   else
@@ -225,7 +229,7 @@ function display_files($descdir, $lsDir, $cldir, $rtdir, $subdir)
   $lsDir->chDir($subdir);
 
   foreach ($lsDir->entries() as $file) {
-    if ($file != "HEADER.html" && $file != ".htaccess") { 
+    if ($file != "HEADER.html" && $file != ".htaccess") {
       $attr = $lsDir->getAttr($file);
       $file_name[$numfiles] = $file;
       $file_size[$numfiles] = $attr["size"];
@@ -283,7 +287,7 @@ function display_files($descdir, $lsDir, $cldir, $rtdir, $subdir)
     $rt = '&nbsp;';
     $rrt = '&nbsp;';
     if ($rtdir) {
-      $rtpath = $rtdir . '/' . $subdir . '/regression-test-' . file_name_to_snapshot_id($file_name[$i]) . '.log';
+      $rtpath = $rtdir . '/' . $subdir . '/regression-test-' . file_name_to_snapshot_id($file_name[$i]) . '.log.gz';
       if (is_file($rtpath)) {
         $rtpathp = preg_replace("/\s/", "%20", $rtpath);
         $failed = rt_failed($rtpathp);
@@ -293,7 +297,7 @@ function display_files($descdir, $lsDir, $cldir, $rtdir, $subdir)
           $rtIcon = '18dot2a.gif';
         $rt = "<a href=\"$rtpathp\"><img src=\"/images/$rtIcon\" border=\"0\" alt=\"Regression Test Log\" /></a>";
       }
-      $rrtpath = $rtdir . '/' . $subdir . '/rand-regression-test-' . file_name_to_snapshot_id($file_name[$i]) . '.log';
+      $rrtpath = $rtdir . '/' . $subdir . '/rand-regression-test-' . file_name_to_snapshot_id($file_name[$i]) . '.log.gz';
       if (is_file($rrtpath)) {
         $rrtpathp = preg_replace("/\s/", "%20", $rrtpath);
         $failed = rt_failed($rrtpathp);

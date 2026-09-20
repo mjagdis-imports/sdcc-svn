@@ -28,7 +28,7 @@ replace restart {
 }
 
 replace restart {
-// saving 1 byte, loosing 1 cycle but maybe allowing peephole 3.b to start
+// saving 1 byte, losing 1 cycle but maybe allowing peephole 3.b to start
 	mov	%1,#0x00
 	mov	%2,#0x00
 	mov	a,%3
@@ -291,6 +291,82 @@ replace {
 //	mov	r%1,_bp
 //	inc	r%1
 //}
+
+// from genlshFixed
+replace {
+	add	a,#%2
+	mov	r%1,a
+	inc	r%1
+	inc	r%1
+	inc	r%1
+	inc	r%1
+	inc	r%1
+	inc	r%1
+	mov	a,@r0
+} by {
+	;	Peephole 104.a	optimized increment
+	add	a,#(%2 + 6)
+	mov	r%1,a
+	mov	a,@r0
+}
+
+replace {
+	add	a,#%2
+	mov	r%1,a
+	inc	r%1
+	inc	r%1
+	inc	r%1
+	inc	r%1
+	inc	r%1
+	mov	a,@r0
+} by {
+	;	Peephole 104.b	optimized increment
+	add	a,#(%2 + 5)
+	mov	r%1,a
+	mov	a,@r0
+}
+
+replace {
+	add	a,#%2
+	mov	r%1,a
+	inc	r%1
+	inc	r%1
+	inc	r%1
+	inc	r%1
+	mov	a,@r0
+} by {
+	;	Peephole 104.c	optimized increment
+	add	a,#(%2 + 4)
+	mov	r%1,a
+	mov	a,@r0
+}
+
+replace {
+	add	a,#%2
+	mov	r%1,a
+	inc	r%1
+	inc	r%1
+	inc	r%1
+	mov	a,@r0
+} by {
+	;	Peephole 104.d	optimized increment
+	add	a,#(%2 + 3)
+	mov	r%1,a
+	mov	a,@r0
+}
+
+replace {
+	add	a,#%2
+	mov	r%1,a
+	inc	r%1
+	inc	r%1
+	mov	a,@r0
+} by {
+	;	Peephole 104.e	optimized increment
+	add	a,#(%2 + 2)
+	mov	r%1,a
+	mov	a,@r0
+}
 
 replace {
 	mov	%1,a
@@ -695,6 +771,83 @@ replace {
 	sjmp	%4
 %3:
 } if labelRefCount %3 4
+
+replace {
+	cjne	%1,%2,%3
+	setb	c
+	sjmp	%4
+%3:
+	clr	c
+%4:
+	mov	%5,c
+} by {
+	;	Peephole 116.a	jump optimization (carry not set)
+	clr	%5
+	cjne	%1,%2,%3
+	setb	%5
+%3:
+} if labelRefCount(%3 1), labelRefCount(%4 1), labelRefCountChange(%4 -1)
+
+replace {
+	cjne	%1,%2,%3
+	cjne	%10,%11,%3
+	setb	c
+	sjmp	%4
+%3:
+	clr	c
+%4:
+	mov	%5,c
+} by {
+	;	Peephole 116.b	jump optimization (carry not set)
+	clr	%5
+	cjne	%1,%2,%3
+	cjne	%10,%11,%3
+	setb	%5
+%3:
+} if labelRefCount(%3 2), labelRefCount(%4 1), labelRefCountChange(%4 -1)
+
+// does not appear in regression tests
+//replace {
+//	cjne	%1,%2,%3
+//	cjne	%10,%11,%3
+//	cjne	%12,%13,%3
+//	setb	c
+//	sjmp	%4
+//%3:
+//	clr	c
+//%4:
+//	mov	%5,c
+//} by {
+//	;	Peephole 116.c	jump optimization (carry not set)
+//	clr	%5
+//	cjne	%1,%2,%3
+//	cjne	%10,%11,%3
+//	cjne	%12,%13,%3
+//	setb	%5
+//%3:
+//} if labelRefCount(%3 3), labelRefCount(%4 1), labelRefCountChange(%4 -1)
+
+replace {
+	cjne	%1,%2,%3
+	cjne	%10,%11,%3
+	cjne	%12,%13,%3
+	cjne	%14,%15,%3
+	setb	c
+	sjmp	%4
+%3:
+	clr	c
+%4:
+	mov	%5,c
+} by {
+	;	Peephole 116.d	jump optimization (carry not set)
+	clr	%5
+	cjne	%1,%2,%3
+	cjne	%10,%11,%3
+	cjne	%12,%13,%3
+	cjne	%14,%15,%3
+	setb	%5
+%3:
+} if labelRefCount(%3 4), labelRefCount(%4 1), labelRefCountChange(%4 -1)
 
 replace {
 	push	psw
@@ -1363,12 +1516,12 @@ replace {
 
 // this one will screw assigns to volatile/sfr's
 replace {
-	mov  %1,%2
-	mov  %2,%1
+	mov	%1,%2
+	mov	%2,%1
 } by {
-	mov  %1,%2
+	mov	%1,%2
 	;	Peephole 177.a	removed redundant mov
-} if notVolatile %1 %2
+} if notVolatile(%1 %2)
 
 // applies to f.e. scott-add.asm (--model-large)
 replace {
@@ -4114,63 +4267,70 @@ replace restart {
 } by {
 	ljmp	%6
 	; peephole 257.a jumped to %6 directly instead of via %5.
-} if labelIsUncondJump(), notSame(%5 %6), labelRefCountChange(%5 -1), labelRefCountChange(%6 +1)
+} if label5IsUncondJumpTo6(), notSame(%5 %6), labelRefCountChange(%5 -1), labelRefCountChange(%6 +1)
+
+replace restart {
+	sjmp	%5
+} by {
+	sjmp	%6
+	; peephole 257.b jumped to %6 directly instead of via %5.
+} if label5IsUncondJumpTo6(), labelInRange(%6), notSame(%5 %6), labelRefCountChange(%5 -1), labelRefCountChange(%6 +1)
 
 replace restart {
 	sjmp	%5
 } by {
 	ljmp	%6
-	; peephole 257.b jumped to %6 directly instead of via %5.
-} if labelIsUncondJump(), notSame(%5 %6), labelRefCountChange(%5 -1), labelRefCountChange(%6 +1)
+	; peephole 257.c jumped to %6 directly instead of via %5.
+} if label5IsUncondJumpTo6(), notInJumpTable(), notSame(%5 %6), labelRefCountChange(%5 -1), labelRefCountChange(%6 +1)
 
 replace restart {
 	jz	%5
 } by {
 	jz	%6
-	; peephole 257.c jumped to %6 directly instead of via %5.
-} if labelIsUncondJump(), labelInRange(%6), notSame(%5 %6), labelRefCountChange(%5 -1), labelRefCountChange(%6 +1)
+	; peephole 257.d jumped to %6 directly instead of via %5.
+} if label5IsUncondJumpTo6(), labelInRange(%6), notSame(%5 %6), labelRefCountChange(%5 -1), labelRefCountChange(%6 +1)
 
 replace restart {
 	jnz	%5
 } by {
 	jnz	%6
-	; peephole 257.d jumped to %6 directly instead of via %5.
-} if labelIsUncondJump(), labelInRange(%6), notSame(%5 %6), labelRefCountChange(%5 -1), labelRefCountChange(%6 +1)
+	; peephole 257.e jumped to %6 directly instead of via %5.
+} if label5IsUncondJumpTo6(), labelInRange(%6), notSame(%5 %6), labelRefCountChange(%5 -1), labelRefCountChange(%6 +1)
 
 replace restart {
 	jc	%5
 } by {
 	jc	%6
-	; peephole 257.e jumped to %6 directly instead of via %5.
-} if labelIsUncondJump(), labelInRange(%6), notSame(%5 %6), labelRefCountChange(%5 -1), labelRefCountChange(%6 +1)
+	; peephole 257.f jumped to %6 directly instead of via %5.
+} if label5IsUncondJumpTo6(), labelInRange(%6), notSame(%5 %6), labelRefCountChange(%5 -1), labelRefCountChange(%6 +1)
 
 replace restart {
 	jnc	%5
 } by {
 	jnc	%6
-	; peephole 257.f jumped to %6 directly instead of via %5.
-} if labelIsUncondJump(), labelInRange(%6), notSame(%5 %6), labelRefCountChange(%5 -1), labelRefCountChange(%6 +1)
+	; peephole 257.g jumped to %6 directly instead of via %5.
+} if label5IsUncondJumpTo6(), labelInRange(%6), notSame(%5 %6), labelRefCountChange(%5 -1), labelRefCountChange(%6 +1)
 
 replace restart {
 	jb	%1,%5
 } by {
 	jb	%1,%6
-	; peephole 257.g jumped to %6 directly instead of via %5.
-} if labelIsUncondJump(), labelInRange(%6), notSame(%5 %6), labelRefCountChange(%5 -1), labelRefCountChange(%6 +1)
+	; peephole 257.h jumped to %6 directly instead of via %5.
+} if label5IsUncondJumpTo6(), labelInRange(%6), notSame(%5 %6), labelRefCountChange(%5 -1), labelRefCountChange(%6 +1)
 
 replace restart {
 	jnb	%1,%5
 } by {
 	jnb	%1,%6
-	; peephole 257.h jumped to %6 directly instead of via %5.
-} if labelIsUncondJump(), labelInRange(%6), notSame(%5 %6), labelRefCountChange(%5 -1), labelRefCountChange(%6 +1)
+	; peephole 257.i jumped to %6 directly instead of via %5.
+} if label5IsUncondJumpTo6(), labelInRange(%6), notSame(%5 %6), labelRefCountChange(%5 -1), labelRefCountChange(%6 +1)
 
 replace restart {
 	jbc	%1,%5
 } by {
 	jbc	%1,%6
-	; peephole 257.i jumped to %6 directly instead of via %5.
-} if labelIsUncondJump(), labelInRange(%6), notSame(%5 %6), labelRefCountChange(%5 -1), labelRefCountChange(%6 +1)
+	; peephole 257.j jumped to %6 directly instead of via %5.
+} if label5IsUncondJumpTo6(), labelInRange(%6), notSame(%5 %6), labelRefCountChange(%5 -1), labelRefCountChange(%6 +1)
 
 
 // in_byte<<=1; if(in_bit) in_byte|=1;
@@ -5035,18 +5195,19 @@ replace restart {
 } if deadMove(%1)
 
 replace restart {
-	mov	%1, %2
-} by {
-	;	Peephole 302 removed dead mov %1, %2
-} if notVolatile(%2), notUsed(%1)
-
-replace restart {
 	mov	%1, a
 	mov	%2, %1
 } by {
+	mov	%1, a
 	mov	%2, a
-	;	Peephole 303 used a directly instead of going through %1
-} if notVolatile(%1), notUsed(%1)
+	;	Peephole 302 read from a instead of %1
+} if notVolatile(%1), notSame(%2 'a')
+
+replace restart {
+	mov	%1, %2
+} by {
+	;	Peephole 303 removed dead mov %1, %2
+} if notVolatile(%1 %2), notUsed(%1)
 
 // applies to: void test( char c ) { if( c ) func1(); else func2(); }
 replace {

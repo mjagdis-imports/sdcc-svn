@@ -82,6 +82,13 @@
 #define PACK(s,e,m)	((s) | ((unsigned long)(e) << 23) | (m))
 #endif
 
+#undef _NEAR
+#if (defined(__SDCC_mos6502) /*|| defined(__SDCC_mos65c02) || defined(__SDCC_huc6280) */ )&& !defined(__SDCC_STACK_AUTO)
+#define _NEAR __data
+#else
+#define _NEAR
+#endif
+
 #define __SDCC_FLOAT_NONBANKED __SDCC_NONBANKED
 
 float __uchar2fs (unsigned char) __SDCC_FLOAT_NONBANKED;
@@ -105,13 +112,13 @@ unsigned long long __fs2ulonglong (float) __SDCC_FLOAT_NONBANKED;
 signed long long __fs2longlong (float) __SDCC_FLOAT_NONBANKED;
 #endif
 
-float __fsadd (float, float) __SDCC_FLOAT_NONBANKED;
-float __fssub (float, float) __SDCC_FLOAT_NONBANKED;
-float __fsmul (float, float) __SDCC_FLOAT_NONBANKED;
+float __fsadd (_NEAR float, _NEAR float) __SDCC_FLOAT_NONBANKED;
+float __fssub (_NEAR float, _NEAR float) __SDCC_FLOAT_NONBANKED;
+float __fsmul (_NEAR float, _NEAR float) __SDCC_FLOAT_NONBANKED;
 float __fsdiv (float, float) __SDCC_FLOAT_NONBANKED;
 
-_Bool __fslt (float, float) __SDCC_FLOAT_NONBANKED;
-_Bool __fseq (float, float) __SDCC_FLOAT_NONBANKED;
+_Bool __fslt (_NEAR float, _NEAR float) __SDCC_FLOAT_NONBANKED;
+_Bool __fseq (_NEAR float, _NEAR float) __SDCC_FLOAT_NONBANKED;
 _Bool __fsgt (float, float) __SDCC_FLOAT_NONBANKED;
 
 

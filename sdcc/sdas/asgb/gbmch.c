@@ -1,7 +1,7 @@
 /* gbmch.c */
 
 /*
- *  Copyright (C) 1989-2025  Alan R. Baldwin
+ *  Copyright (C) 1989-2026  Alan R. Baldwin
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -20,14 +20,6 @@
  * Alan R. Baldwin
  * 721 Berkeley St.
  * Kent, Ohio  44240
- */
-
-/*
- * xerr messages Copyright (C) 1989-2021  Alan R. Baldwin
- * from ASxxxx 5.40
- * Things missing that exist in 5.40:
- * .rel format
- * cycle counting
  */
 
 /*
@@ -119,8 +111,8 @@ static char *gbPage[2] = {
 void
 machine(struct mne *mp)
 {
-        int op, t1, t2;
-        struct expr e1, e2;
+	int op, t1, t2;
+	struct expr e1, e2;
 	int rf, v1, v2;
 	int d,c,i,th,tl,oops; /* for dealing with .tile */
 
@@ -130,7 +122,7 @@ machine(struct mne *mp)
 	rf = mp->m_type;
 	switch (rf) {
 
-        case S_INH1:
+	case S_INH1:
 		outab(op);
 		break;
 
@@ -168,18 +160,18 @@ machine(struct mne *mp)
 		break;
 
         case S_IM:
-		expr(&e1, 0);
+		expr(&e1);
 		abscheck(&e1);
-                if (e1.e_addr > 2) {
-                        xerr('a', "Valid values are 0 -> 2.");
-                        e1.e_addr = 0;
+		if (e1.e_addr > 2) {
+			xerr('a', "Valid values are 0 -> 2.");
+			e1.e_addr = 0;
 		}
 		outab(op);
-                outab(imtab[(int) e1.e_addr]);
+		outab(imtab[(int) e1.e_addr]);
 		break;
 
 	case S_BIT:
-		expr(&e1, 0);
+		expr(&e1);
 		t1 = 0;
 		v1 = (int) e1.e_addr;
 		if (v1 > 7) {
@@ -207,11 +199,11 @@ machine(struct mne *mp)
 		if (genop(0xCB, op, &e2, 0) || t1)
 			xerr('a', "Invalid Addressing Mode.");
 		break;
-        
-        /* TODO: where is S_SWAP? */
 
-        case S_AND:
-        case S_SUB:
+	/* TODO: where is S_SWAP? */
+
+	case S_AND:
+	case S_SUB:
 		t1 = 0;
 		t2 = addr(&e2);
 		if (more()) {
@@ -225,8 +217,8 @@ machine(struct mne *mp)
 			xerr('a', "Invalid Addressing Mode.");
 		break;
 
-        case S_ADC:
-        case S_SBC:
+	case S_ADC:
+	case S_SBC:
 		t1 = addr(&e1);
 		t2 = 0;
 		if (more()) {
@@ -275,7 +267,7 @@ machine(struct mne *mp)
 			}
 		}
 		/*
-                 * 0xE8 : ADD SP,#n
+		 * 0xE8 : ADD SP,#n
 		 */
 		if ((t1 == S_R16) && (t2 == S_IMMED)) {
                         if (rf != S_ADD ) {
@@ -311,130 +303,130 @@ machine(struct mne *mp)
 		v2 = (int) e2.e_addr;
 
 		if ((t1 == S_R16) && (t2 == S_IMMED)) {
-                        outab(0x01 | (v1<<4));
-                        outrw(&e2, 0);
+			outab(0x01 | (v1<<4));
+			outrw(&e2, 0);
 			break;
 		}
 		if ((t2 == S_R8) && (t1 == S_IDHL)) {
 			outab(0x70|v2);
-                        if (t1 != S_IDHL)
-                                outrb(&e1, 0);
+			if (t1 != S_IDHL)
+				outrb(&e1, 0);
 			break;
 		}
-                if ((t2 == S_IMMED) && (t1 == S_IDHL)) {
-                        outab(0x36);
-                        if (t1 != S_IDHL)
-                                outrb(&e1, 0);
-                        outrb(&e2, 0);
+		if ((t2 == S_IMMED) && (t1 == S_IDHL)) {
+			outab(0x36);
+			if (t1 != S_IDHL)
+				outrb(&e1, 0);
+			outrb(&e2, 0);
 			break;
 		}
 		if ((t1 == S_R16) && (v1 == SP)) {
-                        if ((t2 == S_R16) && (v2 == HL)) {
-                                outab(0xF9);
+			if ((t2 == S_R16) && (v2 == HL)) {
+				outab(0xF9);
 				break;
 			}
 		}
 		if ((t1 == S_R8) && (v1 == A)) {
-                        if ((t2 == S_IDBC) || (t2 == S_IDDE)) {
-                                outab(0x0A | ((t2-S_INDR)<<4));
+			if ((t2 == S_IDBC) || (t2 == S_IDDE)) {
+				outab(0x0A | ((t2-S_INDR)<<4));
 				break;
 			}
 		}
 		if ((t2 == S_R8) && (v2 == A)) {
-                        if ((t1 == S_IDBC) || (t1 == S_IDDE)) {
-                                outab(0x02 | ((t1-S_INDR)<<4));
+			if ((t1 == S_IDBC) || (t1 == S_IDDE)) {
+				outab(0x02 | ((t1-S_INDR)<<4));
 				break;
 			}
 		}
 		/*
-                 * 0x08 : LD (nn),SP
+		 * 0x08 : LD (nn),SP
 		 */
-                if ((t1 == S_INDM) && (t2 == S_R16) && (v2 == SP)) {
-                        outab(0x08);
+		if ((t1 == S_INDM) && (t2 == S_R16) && (v2 == SP)) {
+			outab(0x08);
 			outrw(&e1, 0);
 			break;
 		}
 		/*
-                 * 0xEA : LD (nn),A
-                 * 0xFA : LD A,(nn)
+		 * 0xEA : LD (nn),A
+		 * 0xFA : LD A,(nn)
 		 */
-                if ((t1 == S_INDM) && (t2 == S_R8) && (v2 == A)) {
-                        outab(0xEA);
+		if ((t1 == S_INDM) && (t2 == S_R8) && (v2 == A)) {
+			outab(0xEA);
 			outrw(&e1, 0);
 			break;
 		}
-                if ((t2 == S_INDM) && (t1 == S_R8) && (v1 == A)) {
-                        outab(0xFA);
-                        outrw(&e2, 0);
+		if ((t2 == S_INDM) && (t1 == S_R8) && (v1 == A)) {
+			outab(0xFA);
+			outrw(&e2, 0);
 			break;
 		}
 		/*
-                 * 0x32 : LD (HL-),A
-                 * 0x3A : LD A,(HL-)
+		 * 0x32 : LD (HL-),A
+		 * 0x3A : LD A,(HL-)
 		 */
-                if ((t1 == S_R8) && (v1 == A) && (t2 == S_IDHLD)) {
-                        outab(0x3A);
+		if ((t1 == S_R8) && (v1 == A) && (t2 == S_IDHLD)) {
+			outab(0x3A);
 			break;
 		}
-                if ((t2 == S_R8) && (v2 == A) && (t1 == S_IDHLD)) {
-                        outab(0x32);
+		if ((t2 == S_R8) && (v2 == A) && (t1 == S_IDHLD)) {
+			outab(0x32);
 			break;
 		}
 		/*
-                 * 0x22 : LD (HL+),A
-                 * 0x2A : LD A,(HL+)
+		 * 0x22 : LD (HL+),A
+		 * 0x2A : LD A,(HL+)
 		 */
-                if ((t1 == S_R8) && (v1 == A) && (t2 == S_IDHLI)) {
-                        outab(0x2A);
+		if ((t1 == S_R8) && (v1 == A) && (t2 == S_IDHLI)) {
+			outab(0x2A);
 			break;
 		}
-                if ((t2 == S_R8) && (v2 == A) && (t1 == S_IDHLI)) {
-                        outab(0x22);
+		if ((t2 == S_R8) && (v2 == A) && (t1 == S_IDHLI)) {
+			outab(0x22);
 			break;
 		}
 		xerr('a', "Invalid Addressing Mode.");
 		break;
 
-        /* TODO: find out where this handled in upstream */
-        case S_STOP:    /* 0x10 */
+	/* TODO: find out where this handled in upstream */
+	case S_STOP:    /* 0x10 */
 		/*
-                 * 0x10 : STOP
+		 * 0x10 : STOP
 		 */
 		outab(op);
 		outab(0x00);
 		break;
 
-        case S_LDA:     /* 0xE8 */ /* extension */
+	case S_LDA:     /* 0xE8 */ /* extension */
 		/*
-                 * 0xE8 : LDA SP,#n(SP)
-                 * 0xF8 : LDA HL,#n(SP)
+		 * 0xE8 : LDA SP,#n(SP)
+		 * 0xF8 : LDA HL,#n(SP)
 		 */
 		t1 = addr(&e1);
 		comma(1);
 		t2 = addr(&e2);
-                if ((t1 == S_R16) && (e1.e_addr == SP) && (t2 == S_INDR+SP)) {
-                        outab(0xE8);
-                        outrb(&e2,0);
+		if ((t1 == S_R16) && (e1.e_addr == SP) && (t2 == S_INDR+SP)) {
+			outab(0xE8);
+			outrb(&e2,0);
 			break;
 		}
-                if ((t1 == S_R16) && (e1.e_addr == HL) && (t2 == S_INDR+SP)) {
-                        outab(0xF8);
-                        outrb(&e2,0);
+		if ((t1 == S_R16) && (e1.e_addr == HL) && (t2 == S_INDR+SP)) {
+			outab(0xF8);
+			outrb(&e2,0);
 			break;
 		}
 		xerr('a', "Invalid Addressing Mode.");
 		break;
 
-        case S_LDHL:    /* 0xF8 */ /* extension */
+	case S_LDHL:    /* 0xF8 */ /* extension */
 		/*
-                 * 0xF8 : LDHL SP,#n
+		 * 0xF8 : LDHL SP,#n
 		 */
 		t1 = addr(&e1);
 		comma(1);
 		t2 = addr(&e2);
-                if ((t1 == S_R16) && (e1.e_addr == SP) && (t2 == S_IMMED)) {
-                        outab(0xF8);
-                        outrb(&e2,0);
+		if ((t1 == S_R16) && (e1.e_addr == SP) && (t2 == S_IMMED)) {
+			outab(0xF8);
+			outrb(&e2,0);
 			break;
 		}
 		xerr('a', "Invalid Addressing Mode.");
@@ -474,18 +466,17 @@ machine(struct mne *mp)
 			}
 			comma(1);
 		}
-		expr(&e2, 0);
+		expr(&e2);
 		outab(op);
-                if (mchpcr(&e2)) {
-                        v2 = (int) (e2.e_addr - dot.s_addr - 1);
-                        if (pass == 2 && ((v2 < -128) || (v2 > 127)))
+		if (mchpcr(&e2, &v2, 1)) {
+			if ((v2 < -128) || (v2 > 127))
 				xerr('a', "Branching Range Exceeded.");
 			outab(v2);
 		} else {
 			outrb(&e2, R_PCR);
 		}
-                if (e2.e_mode != S_USER)
-                        rerr();
+		if (e2.e_mode != S_USER)
+			rerr();
 		break;
 
 	case S_CALL:
@@ -495,7 +486,7 @@ machine(struct mne *mp)
 		} else {
 			op = 0xCD;
 		}
-		expr(&e1, 0);
+		expr(&e1);
 		outab(op);
 		outrw(&e1, 0);
 		break;
@@ -504,13 +495,13 @@ machine(struct mne *mp)
 		if ((v1 = admode(CND)) != 0) {
 			op |= (v1&0xFF)<<3;
 			comma(1);
-			expr(&e1, 0);
+			expr(&e1);
 			outab(op);
 			outrw(&e1, 0);
 			break;
 		}
 		t1 = addr(&e1);
-                if (t1 == S_USER) {
+		if (t1 == S_USER) {
 			outab(0xC3);
 			outrw(&e1, 0);
 			break;
@@ -524,10 +515,10 @@ machine(struct mne *mp)
 
 	case S_LDH:
 		/*
-                 * 0xE0 : LDH (n),A = LD ($FF00+n),A
-                 * 0xE2 : LDH (C),A = LD ($FF00+C),A
-                 * 0xF0 : LDH A,(n) = LD A,($FF00+n)
-                 * 0xF2 : LDH A,(C) = LD A,($FF00+C)
+		 * 0xE0 : LDH (n),A = LD ($FF00+n),A
+		 * 0xE2 : LDH (C),A = LD ($FF00+C),A
+		 * 0xF0 : LDH A,(n) = LD A,($FF00+n)
+		 * 0xF2 : LDH A,(C) = LD A,($FF00+C)
 		 */
 
 		t1 = addr(&e1);
@@ -658,8 +649,8 @@ machine(struct mne *mp)
 		  xerr('q', "Missing TILE terminator.");
 		  break;
 		}
-
 		break;
+
 	default:
 		opcycles = OPCY_ERR;
 		xerr('o', "Internal Opcode Error.");
@@ -709,9 +700,25 @@ genop(int pop, int op, struct expr *esp, int f)
  * Branch/Jump PCR Mode Check
  */
 int
-mchpcr(struct expr *esp)
+mchpcr(struct expr *esp, int *v, int n)
 {
 	if (esp->e_base.e_ap == dot.s_area) {
+		if (v != NULL) {
+#if 1
+			/* Allows branching from top-to-bottom and bottom-to-top */
+ 			*v = (int) (esp->e_addr - dot.s_addr - n);
+			/* only bits 'a_mask' are significant, make circular */
+			if (*v & s_mask) {
+				*v |= (int) ~a_mask;
+			}
+			else {
+				*v &= (int) a_mask;
+			}
+#else
+			/* Disallows branching from top-to-bottom and bottom-to-top */
+			*v = (int) ((esp->e_addr & a_mask) - (dot.s_addr & a_mask) - n);
+#endif
+		}
 		return(1);
 	}
 	if (esp->e_flag==0 && esp->e_base.e_ap==NULL) {
@@ -741,8 +748,8 @@ minit(void)
 	hilo = 0;
 
 	/*
-         * Address Space
+	 * Address Space
 	 */
-        exprmasks(4);
+	exprmasks(4);
 }
 

@@ -88,7 +88,7 @@ _Optional U *poat; // valid: poat has type "_Optional int (*)[15]"
 // Test case from N3422
 #ifdef TEST8
 _Optional int *f(float); // valid
-_Optional int f2(float); /* ERROR */ // invalid: int is not a referenced type
+_Optional int f2(float); /* WARNING */ // function qualifier ignored
 _Optional int (*fp)(float); /* IGNORE */ // invalid: int is not a referenced type // BUG!
 #endif
 
@@ -318,7 +318,7 @@ int spider(_Optional int *i)
 
 // _Optional on function parameters
 #ifdef TEST18
-int f(_Optional int); /* WARNING */
+int f(_Optional int); /* ERROR */
 
 int g(_Optional int *);
 

@@ -40,7 +40,7 @@
  *		int	comma()
  *		char	endline()
  *		int	get()
- *              int     getdstr()
+ *		int	getdstr()
  *		int	getdlm()
  *		void	getid()
  *		int	getmap()
@@ -93,7 +93,7 @@
  *		int	get()		aslex.c
  *		int	getnb()		aslex.c
  *		void	unget()		aslex.c
- *              void    qerr()          assubr.c
+ *		void	qerr()		assubr.c
  *
  *	side effects:
  *		Use of getnb(), get(), and unget() updates the
@@ -156,7 +156,7 @@ getid(char *id, int c)
  *		int	get()		aslex.c
  *		int	getnb()		aslex.c
  *		void	unget()		aslex.c
- *              void    qerr()          assubr.c
+ *		void	qerr()		assubr.c
  *
  *	side effects:
  *		use of getnb(), get(), and unget() updates the
@@ -203,7 +203,7 @@ getst(char *id, int c)
  *	called functions:
  *		int	get()		aslex.c
  *		int	getdlm()	aslex.c
- *              void    qerr()          assubr.c
+ *		void	qerr()		assubr.c
  *
  *	side effects:
  *		Returns the character string delimited by the
@@ -252,7 +252,7 @@ getdstr(char *str, int slen)
  *		int	get()		aslex.c
  *		int	getnb()		aslex.c
  *		int	more()		aslex.c
- *              void    qerr()          assubr.c
+ *		void	qerr()		assubr.c
  *
  *	side effects:
  *		scans ip to the first non 'SPACE' or 'TAB' character
@@ -403,7 +403,7 @@ unget(int c)
  *
  *	called functions:
  *		int	get()		aslex.c
- *              void    qerr()          assubr.c
+ *		void	qerr()		assubr.c
  *
  *	side effects:
  *		use of get() updates the global pointer ip the position
@@ -422,6 +422,13 @@ getmap(int d)
 	if (c == '\\') {
 		c = get();
 		switch (c) {
+
+		default:
+			unget(c);
+
+		case '\\':
+			c = '\\';
+			break;
 
 		case 'b':
 			c = '\b';
@@ -459,11 +466,6 @@ getmap(int d)
 			}
 			unget(c);
 			c = v;
-			break;
-
-		default:
-			unget(c);
-			c = '\\';
 			break;
 		}
 	}
@@ -512,7 +514,7 @@ comma(int flag)
 	return(1);
 }
 
-/*)Function     int     nxtline()
+/*)Function	int	nxtline(void)
  *
  *	The function nxtline() reads a line of assembler-source text
  *	from an assembly source text file, include file, or macro.
@@ -528,7 +530,7 @@ comma(int flag)
  *	a line,	or a (0) if all files have been read.
  *
  *	local variables:
- *              int     len             string length
+ *		int	len		string length
  *		struct asmf	*asmt	temporary pointer to the processing structure
  *
  *	global variables:
@@ -537,12 +539,12 @@ comma(int flag)
  *		asmf *	asmc 		pointer to current assembler file structure
  *		asmf *	asmi 		pointer to a queued include file structure
  *		asmf *	asmq 		pointer to a queued macro structure
- *              char *  ib              string buffer containing
+ *		char *	ib		string buffer containing
  *					assembler-source text line for processing
- *              char *  ic              string buffer containing
+ *		char *	ic		string buffer containing
  *					assembler-source text line for listing
  *		int	asmline		source file line number
- *              int     incfil          current include file count
+ *		int	incfil		current include file count
  *		int	incline		include file line number
  *		int	lnlist		LIST-NLIST state
  *		int	mcrline		macro line number
@@ -550,15 +552,15 @@ comma(int flag)
  *		int	uflag		-u, disable .list/.nlist processing
  *
  *	called functions:
- *              int     dbuf_init()
- *              int     dbuf_set_length()
- *              int     dbuf_getline()
- *              const char * dbuf_c_str()
- *              int     dbuf_append_str()
+ *		int	dbuf_init()
+ *		int	dbuf_set_length()
+ *		int	dbuf_getline()
+ *		const char * dbuf_c_str()
+ *		int	dbuf_append_str()
  *		void	chopcrlf()	aslex.c
  *		int	fclose()	c_library
  *		char *	fgetm()		asmcro.c
- *		VOID	scanline()	aslex.c
+ *		void	scanline()	aslex.c
  *		char *	strcpy()	c_library
  *
  *	side effects:
@@ -574,8 +576,9 @@ comma(int flag)
  * command line assembler source files, include files, and
  * macros is shown in a simplified manner in the following.
  *
- *      main[asmain] sequences the command line files by creating
- *      a linked list of asmf structures, one for each file.
+ *	main[asmain] sequences the assembly by creating a
+ *	linked list of asmf structures, one for each command
+ *	line string and one for each file.
  *
  *	asmf structures:
  *
@@ -613,7 +616,7 @@ comma(int flag)
  *	| asmp | -->|      | next | --> |      | next | --> ... --> |      | NULL |
  *	 ------      -------------       -------------               -------------
  *
- *      At the .include point link the asmi structure to asmc
+ *	At the .include point link set the asmi structure to asmc
  *	and then set asmc = asmi (the include file asmf structure).
  *
  *	If a source file invokes a macro then a new asmf structure is
@@ -636,7 +639,7 @@ comma(int flag)
  *	| asmp | -->|      | next | --> |      | next | --> ... --> |      | NULL |
  *	 ------      -------------       -------------               -------------
  *
- *      At the macro point link the asmq structure to asmc
+ *	At the macro point link set the asmq structure to asmc
  *	and then set asmc = asmq (the macro asmf structure).
  *
  *	Note that both include files and macros can be nested.
@@ -653,17 +656,17 @@ comma(int flag)
 int
 nxtline(void)
 {
-        static struct dbuf_s dbuf_ib;
-        static struct dbuf_s dbuf_ic;
-        size_t len = 0;
+	static struct dbuf_s dbuf_ib;
+	static struct dbuf_s dbuf_ic;
+	size_t len = 0;
 	struct asmf *asmt;
 
-        if (!dbuf_is_initialized (&dbuf_ib))
-                dbuf_init (&dbuf_ib, 1024);
-        if (!dbuf_is_initialized (&dbuf_ic))
-                dbuf_init (&dbuf_ic, 1024);
-        dbuf_set_length (&dbuf_ib, 0);
-        dbuf_set_length (&dbuf_ic, 0);
+	if (!dbuf_is_initialized (&dbuf_ib))
+		dbuf_init (&dbuf_ib, 1024);
+	if (!dbuf_is_initialized (&dbuf_ic))
+		dbuf_init (&dbuf_ic, 1024);
+	dbuf_set_length (&dbuf_ib, 0);
+	dbuf_set_length (&dbuf_ic, 0);
 
 loop:	if (asmc == NULL) return(0);
 
@@ -681,12 +684,12 @@ loop:	if (asmc == NULL) return(0);
 	if (asmq != NULL) {
 		asmc = asmq;
 		asmq = NULL;
-                mcrline = 0;
+		mcrline = 0;
 	}
 
 	switch(asmc->objtyp) {
 	case T_ASM:
-                if ((len = dbuf_getline (&dbuf_ib, asmc->fp)) == 0) {
+		if ((len = dbuf_getline (&dbuf_ib, asmc->fp)) == 0) {
 			if ((asmc->flevel != flevel) || (asmc->tlevel != tlevel)) {
 				err('i');
 				fprintf(stderr, "?ASxxxx-Error-<i> at end of assembler file\n");
@@ -713,7 +716,7 @@ loop:	if (asmc == NULL) return(0);
 		break;
 
 	case T_INCL:
-                if ((len = dbuf_getline (&dbuf_ib, asmc->fp)) == 0) {
+		if ((len = dbuf_getline (&dbuf_ib, asmc->fp)) == 0) {
 			fclose(asmc->fp);
 			incfil -= 1;
 			if ((asmc->flevel != flevel) || (asmc->tlevel != tlevel)) {
@@ -758,11 +761,11 @@ loop:	if (asmc == NULL) return(0);
 		break;
 
 	case T_MACRO:
-                dbuf_append(&dbuf_ib, "\0", dbuf_ib.alloc - 1);
-                ib = (char *)dbuf_c_str (&dbuf_ib);
-                ib = fgetm(ib, dbuf_ib.alloc - 1, asmc->fp);
-                if (ib == NULL) {
-                        dbuf_set_length(&dbuf_ib, 0);
+		dbuf_append(&dbuf_ib, "\0", dbuf_ib.alloc - 1);
+		ib = (char *)dbuf_c_str (&dbuf_ib);
+		ib = fgetm(ib, dbuf_ib.alloc - 1, asmc->fp);
+		if (ib == NULL) {
+			dbuf_set_length(&dbuf_ib, 0);
 			mcrfil -= 1;
 			srcline = asmc->line;
 			flevel = asmc->flevel;
@@ -777,8 +780,8 @@ loop:	if (asmc == NULL) return(0);
 			}
 			goto loop;
 		} else {
-                        len = strlen(ib);
-                        dbuf_set_length(&dbuf_ib, len);
+			len = strlen(ib);
+			dbuf_set_length(&dbuf_ib, len);
 			if (mcrline++ == 0) {
 				;
 			}
@@ -791,10 +794,10 @@ loop:	if (asmc == NULL) return(0);
 		asexit(ER_FATAL);
 		break;
 	}
-        ib = (char *)dbuf_c_str (&dbuf_ib);
+	ib = (char *)dbuf_c_str (&dbuf_ib);
 	chopcrlf(ib);
-        dbuf_append_str (&dbuf_ic, ib);
-        ic = (char *)dbuf_c_str (&dbuf_ic);
+	dbuf_append_str (&dbuf_ic, ib);
+	ic = (char *)dbuf_c_str (&dbuf_ic);
 	scanline();
 	return(1);
 }

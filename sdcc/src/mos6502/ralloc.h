@@ -86,7 +86,8 @@ typedef enum
     M6502OP_BBR,
     M6502OP_IDD,
     M6502OP_IDI,
-    M6502OP_CMP
+    M6502OP_CMP,
+    M6502OP_MT
   } m6505_op_type;
 
 /* opcode table */

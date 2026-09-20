@@ -147,18 +147,15 @@ extern asmop m6502_tsxaop;
 extern unsigned fReturnSizeM6502;
 extern bool m6502_assignment_optimal;
 extern struct m6502_state_t _S;
-extern const char m6502_builtins[];
 
-extern const char *IMMDFMT; // = "#0x%02x";
-extern const char *TEMPFMT_IND; // = "[REGTEMP+%d]";
-extern const char *IDXFMT_X; // = "0x%x,x";
-//extern char *TEMPFMT_IX; // = "[(REGTEMP+%d),x]";
+extern const char *IMMDFMT;   // = "#0x%02x";
+extern const char *IDXFMT_X;  // = "0x%x,x";
 
-extern const char *TEMPFMT; // = "*(REGTEMP+%d)";
-extern const char *DPTRFMT; // = "*(DPTR+%d)";
+extern const char *DPTRFMT;   // = "*(DPTR+%d)";
 extern const char *INDFMT_IY; // = "[%s],y";
+extern const char *INDFMT;    // = "[%s]";
 
-extern const int STACK_TOP; // = 0x100;
+extern int STACK_TOP; // = 0x0100 or 0x2100;
 
 // utility functions
 const char * m6502_regInfoStr();

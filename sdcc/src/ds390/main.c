@@ -1241,7 +1241,7 @@ PORT ds390_port =
     NULL,
     NULL,
     1,
-    true,                       // unqualified pointer can point to __sfr: TODO: CHECK IF THIS IS ACTUALLY SUPPORTED. Set to true to emulate behaviour of rpevious version of sdcc for now.
+    false,                      // unqualified pointer cannot point to __sfr
     1                           // No fancy alignments supported.
   },
   { NULL, NULL },
@@ -1602,7 +1602,7 @@ PORT tininative_port =
     NULL,
     NULL,
     1,
-    true,                       // unqualified pointer can point to __sfr: TODO: CHECK IF THIS IS ACTUALLY SUPPORTED. Set to true to emulate behaviour of rpevious version of sdcc for now.
+    false,                      // unqualified pointer cannot point to __sfr
     1                           // No fancy alignments supported.
   },
   { NULL, NULL },
@@ -1863,7 +1863,7 @@ PORT ds400_port =
     NULL,
     NULL,
     1,
-    true,                       // unqualified pointer can point to __sfr: TODO: CHECK IF THIS IS ACTUALLY SUPPORTED. Set to true to emulate behaviour of rpevious version of sdcc for now.
+    false,                      // unqualified pointer cannot point to __sfr
     1
   },
   { _ds400_generateRomDataArea, _ds400_linkRomDataArea },

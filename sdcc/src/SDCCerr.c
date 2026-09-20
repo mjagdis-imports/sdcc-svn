@@ -787,6 +787,8 @@ struct
      "string literal assigned to pointer to non-const", 0 },
   {W_QUALIFIED_RETURN, ERROR_LEVEL_WARNING,
      "qualifier on return type has no effect", 0},
+  {W_DATA_LOC_RANGE, ERROR_LEVEL_WARNING,
+     "--data-loc (ZP location) should be between 1 and 240", 0},
 };
 
 /* -------------------------------------------------------------------------------

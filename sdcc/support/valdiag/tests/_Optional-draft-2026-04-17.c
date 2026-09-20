@@ -101,7 +101,7 @@ _Optional int *poi;
 // fails: qualifier is dropped from controlling expression
 static_assert(_Generic(*poi,
                        _Optional int: 1,
-                       default: 0)); /* ERROR */
+                       default: 0)); /* WARNING */
 #endif
 
 // EXAMPLE 1 An implementation that performs data-flow analysis is encouraged to produce a
@@ -263,9 +263,9 @@ void atom(void)
   _Optional int *poi = (_Optional int *){nullptr};
 
   // constraint violation: type name is optional-qualified
-  poi = &(_Optional int){0}; /* WARNING */
-  (_Optional int){0}; /* WARNING */
-  (int *_Optional){nullptr}; /* WARNING */
+  poi = &(_Optional int){0}; /* ERROR */
+  (_Optional int){0}; /* ERROR */
+  (int *_Optional){nullptr}; /* ERROR */
 }
 #endif
 
@@ -380,7 +380,7 @@ int opt_fflush(_Optional FILE *stream)
 
 #define FLUSH_ONE(STREAM) opt_fflush(&*(STREAM))
 #define FLUSH_ALL()       opt_fflush(nullptr)
- 
+
 int main(void)
 {
   _Optional FILE *stream = fopen("test", "wb");
@@ -937,7 +937,7 @@ void lynne(void)
 void andy(_Optional int *poi)
 {
   int *pi;
-  
+
   pi = (int *)poi;          // does not constrain pi to non-null
   *(_Optional int *)pi = 2; // recommended diagnostic /* WARNING */
 }
@@ -1434,7 +1434,7 @@ TOPI *popi;     // treat popi but not *popi as potentially null
 TPOI poi;       // treat poi as potentially null
 TOPFRI *popfri; // treat popfri but not *popfri as maybe null
 TPOFRI pofri;   // treat pofri as potentially null
- 
+
 // constraint violation: object type is optional-qualified
 TOI oi; /* ERROR */
 X oi; /* ERROR */

@@ -4,7 +4,6 @@ cvt-1.c from the execute part of the gcc torture tests.
 
 #include <testfwk.h>
 
-#if !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) // Lack of memory
 static inline long
 g1 (double x)
 {
@@ -24,7 +23,6 @@ f (long i)
     ASSERT (0);
   return g2 (i);
 }
-#endif
 
 void
 testTortureExecute (void)

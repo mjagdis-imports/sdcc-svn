@@ -15,11 +15,6 @@
 #define LACK_OF_MEMORY
 #endif
 
-// bug #3924
-#if defined(SDCC_MOS) && defined(__SDCC_STACK_AUTO)
-#define LACK_OF_MEMORY
-#endif
-
 #pragma disable_warning 336
 
 #ifndef LACK_OF_MEMORY

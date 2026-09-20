@@ -16,7 +16,7 @@ override PORTDIR = ../build/$(PORT)
 
 OBJ = crtstart.rel crtxinit.rel crtxclear.rel crtclear.rel \
       crtpagesfr.rel crtbank.rel crtcall.rel \
-      crtxstack.rel crtxpush.rel crtxpushr0.rel crtxpop.rel crtxpopr0.rel \
+      crtxstack.rel crtxpush.rel crtxpop.rel \
       gptr_cmp.rel \
       atomic_flag_clear.rel sdcc_atomic_maybe_rollback.rel
 

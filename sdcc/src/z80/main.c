@@ -928,7 +928,6 @@ _setValues (void)
 static void
 _finaliseOptions (void)
 {
-  
   if (!options.std_c99 && port->c_preamble)
     port->c_preamble = z80_builtins_c90;
 
@@ -1121,7 +1120,7 @@ rab_genIVT (struct dbuf_s *oBuf, symbol **intTable, int intCount)
       werror (E_INT_BAD_INTNO, intCount - 1);
       intCount = RAB_INTERRUPTS_COUNT;
     }
-    
+
   for (int i = 0; i < intCount; i++)
     {
       dbuf_printf (oBuf, "\t.org\t0x%04x ; int %d - %s\n", (unsigned int)(0x200 + i * 0x10), i, rab_int_names[i]);
@@ -1373,7 +1372,7 @@ PORT z80_port =
   { NULL, NULL },
   1,                            /* ABI revision */
   { -1, 0, 0, 4, 0, 3, 0 },
-  { 
+  {
     -1,                         /* shifts never use support routines */
     true,                       // Use support routine for int x int -> long multiplication.
     false,                      /* do not use support routine for unsigned long x unsigned char -> unsigned long long multiplication */
@@ -1510,7 +1509,7 @@ PORT z80n_port =
   { NULL, NULL },
   1,                            /* ABI revision */
   { -1, 0, 0, 4, 0, 3, 0 },
-  { 
+  {
     -1,                         /* shifts never use support routines */
     false,                      /* do not use support routine for int x int -> long multiplication */
     false,                      /* do not use support routine for unsigned long x unsigned char -> unsigned long long multiplication */
@@ -1647,7 +1646,7 @@ PORT z180_port =
   { NULL, NULL },
   1,                            /* ABI revision */
   { -1, 0, 0, 4, 0, 3, 0 },
-  { 
+  {
     -1,                         /* shifts never use support routines */
     true,                       // Use support routine for int x int -> long multiplication.
     false,                      /* do not use support routine for unsigned long x unsigned char -> unsigned long long multiplication */
@@ -1783,7 +1782,7 @@ PORT r2k_port =
   { NULL, NULL },
   1,                            /* ABI revision */
   { -1, 0, 0, 4, 0, 2, 0 },
-  { 
+  {
     -1,                         /* shifts never use support routines */
     false,                      /* do not use support routine for int x int -> long multiplication */
     false,                      /* do not use support routine for unsigned long x unsigned char -> unsigned long long multiplication */
@@ -1920,7 +1919,7 @@ PORT r2ka_port =
   { NULL, NULL },
   1,                            /* ABI revision */
   { -1, 0, 0, 4, 0, 2, 0 },
-  { 
+  {
     -1,                         // shifts never use support routines
     true,                       // use support routine for unsigned int x unsigned int -> unsigned long multiplication
     true,                       // Use support routine for unsigned long x unsigned char -> unsigned long long multiplication.
@@ -2057,7 +2056,7 @@ PORT r3ka_port =
   { NULL, NULL },
   1,                            /* ABI revision */
   { -1, 0, 0, 4, 0, 2, 0 },
-  { 
+  {
     -1,                         // shifts never use support routines
     true,                       // use support routine for unsigned int x unsigned int -> unsigned long multiplication
     true,                       // Use support routine for unsigned long x unsigned char -> unsigned long long multiplication.
@@ -2194,7 +2193,7 @@ PORT r4k_port =
   { NULL, NULL },
   1,                            /* ABI revision */
   { -1, 0, 0, 4, 0, 2, 0 },
-  { 
+  {
     -1,                         /* shifts never use support routines */
     false,                      /* do not use support routine for int x int -> long multiplication */
     false,                      /* do not use support routine for unsigned long x unsigned char -> unsigned long long multiplication */
@@ -2331,7 +2330,7 @@ PORT r5k_port =
   { NULL, NULL },
   1,                            /* ABI revision */
   { -1, 0, 0, 4, 0, 2, 0 },
-  { 
+  {
     -1,                         /* shifts never use support routines */
     false,                      /* do not use support routine for int x int -> long multiplication */
     false,                      /* do not use support routine for unsigned long x unsigned char -> unsigned long long multiplication */
@@ -2468,7 +2467,7 @@ PORT r6k_port =
   { NULL, NULL },
   1,                            /* ABI revision */
   { -1, 0, 0, 4, 0, 2, 0 },
-  { 
+  {
     -1,                         /* shifts never use support routines */
     false,                      /* do not use support routine for int x int -> long multiplication */
     false,                      /* do not use support routine for unsigned long x unsigned char -> unsigned long long multiplication */
@@ -2607,7 +2606,7 @@ PORT sm83_port =
   { NULL, NULL },
   1,                            /* default ABI revision */
   { -1, 0, 0, 2, 0, 4, 0 },
-  { 
+  {
     -1,                         /* shifts never use support routines */
     false,                      /* do not use support routine for int x int -> long multiplication */
     false,                      /* do not use support routine for unsigned long x unsigned char -> unsigned long long multiplication */
@@ -2744,7 +2743,7 @@ PORT tlcs90_port =
   { NULL, NULL },
   1,                            /* ABI revision */
   { -1, 0, 0, 4, 0, 2, 0 },
-  { 
+  {
     -1,                         /* shifts never use support routines */
     false,                      /* do not use support routine for int x int -> long multiplication */
     false,                      /* do not use support routine for unsigned long x unsigned char -> unsigned long long multiplication */
@@ -2881,7 +2880,7 @@ PORT ez80_port =
   { NULL, NULL },
   1,                            /* ABI revision */
   { -1, 0, 0, 4, 0, 3, 0 },
-  { 
+  {
     -1,                         /* shifts never use support routines */
     true,                       // Use support routine for int x int -> long multiplication.
     false,                      /* do not use support routine for unsigned long x unsigned char -> unsigned long long multiplication */
@@ -3018,7 +3017,7 @@ PORT r800_port =
   { NULL, NULL },
   1,                            /* ABI revision */
   { -1, 0, 0, 4, 0, 3, 0 },
-  { 
+  {
     -1,                         /* shifts never use support routines */
     true,                       // Use support routine for int x int -> long multiplication.
     false,                      /* do not use support routine for unsigned long x unsigned char -> unsigned long long multiplication */

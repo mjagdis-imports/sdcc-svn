@@ -50,7 +50,7 @@ extern int toupper (int c);
 
 inline int isblank (int c)
 {
-  return ((unsigned char)c == ' ' || (unsigned char)c == '\t');
+  return (!(c & 0xff00) && ((unsigned char)c == ' ' || (unsigned char)c == '\t'));
 }
 
 #ifdef EOF
@@ -59,7 +59,7 @@ _Static_assert(!((unsigned char)EOF == ' ' || (unsigned char)EOF == '\t'), "EOF 
 
 inline int isdigit (int c)
 {
-  return ((unsigned char)c >= '0' && (unsigned char)c <= '9');
+  return (!(c & 0xff00) && ((unsigned char)c >= '0' && (unsigned char)c <= '9'));
 }
 
 #ifdef EOF

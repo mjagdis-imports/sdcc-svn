@@ -71,7 +71,7 @@ addr(struct expr *esp)
 	ip = p;
 
 	if ((c = getnb()) == '#') {
-		expr(esp, 0);
+		expr(esp);
 		esp->e_mode = S_IMMED;
 	} else
 	if (c == LFIND) {
@@ -86,12 +86,12 @@ addr(struct expr *esp)
 			aerr();
 		} else {
 			mode = S_INDM;
-			expr(esp, 0);
+			expr(esp);
 			esp->e_mode = mode;
 		}
 		if (indx) {
-                        esp->e_mode = (mode + indx)&0xFF;
-                        esp->e_base.e_ap = NULL;
+			esp->e_mode = (mode + indx)&0xFF;
+			esp->e_base.e_ap = NULL;
 		}
 		if ((c = getnb()) != RTIND)
 			xerr('q', "Missing ')'.");
@@ -106,23 +106,23 @@ addr(struct expr *esp)
 		if ((indx = admode(R16X)) != 0) {
 			mode = S_R16X;
 		} else {
-                        mode = S_USER;
-			expr(esp, 0);
+			mode = S_USER;
+			expr(esp);
 			esp->e_mode = mode;
 		}
 		if (indx) {
 			esp->e_addr = indx & 0xFF;
 			esp->e_mode = mode;
-                        esp->e_base.e_ap = NULL;
+			esp->e_base.e_ap = NULL;
 		}
-                if ((c = getnb()) == LFIND) {
-                        if ((indx=admode(R16))!=0) {
-                                esp->e_mode = S_INDR + (indx&0xFF);
-                        } else {
-                                aerr();
-                        }
-                        if ((c = getnb()) != RTIND)
-                                qerr();
+		if ((c = getnb()) == LFIND) {
+			if ((indx=admode(R16))!=0) {
+				esp->e_mode = S_INDR + (indx&0xFF);
+			} else {
+				aerr();
+			}
+			if ((c = getnb()) != RTIND)
+				qerr();
 		} else {
 			unget(c);
 		}
@@ -194,7 +194,7 @@ srch(char *str)
 	}
 
 	if (!*str)
-                if (!(ctype[*ptr & 0x007F] & LTR16) && (*ptr & 0x007F) != '-' && (*ptr & 0x007F) != '+') {
+		if (!(ctype[*ptr & 0x007F] & LTR16) && (*ptr & 0x007F) != '-' && (*ptr & 0x007F) != '+') {
 			ip = ptr;
 			return(1);
 		}
@@ -217,14 +217,14 @@ struct	adsym	R8[] = {
 };
 
 struct	adsym	R16[] = {
+    {   "hl-",  HLD|0400},
+    {	"hld",	HLD|0400},
+    {   "hl+",  HLI|0400},
+    {	"hli",	HLI|0400},
     {	"bc",	BC|0400	},
     {	"de",	DE|0400	},
     {	"hl",	HL|0400	},
     {	"sp",	SP|0400	},
-    {   "hl-",  HLD|0400},
-    {   "hl+",  HLI|0400},
-    {	"hld",	HLD|0400},
-    {	"hli",	HLI|0400},
     {	"",	0000	}
 };
 

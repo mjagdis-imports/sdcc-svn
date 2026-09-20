@@ -31,11 +31,11 @@
 #include "asxxxx.h"
 #include "pdk.h"
 
-static VOID outpdkaw(struct inst inst, struct expr e) {
+static void outpdkaw(struct inst inst, struct expr e) {
         outaw(inst.op | (e.e_addr & inst.mask));
 }
 
-static VOID outpdkrm(struct inst inst, struct expr e) {
+static void outpdkrm(struct inst inst, struct expr e) {
         /* Don't generate relocatable data if everything is constant. */
         if (is_abs(&e)) {
                 outpdkaw(inst, e);
@@ -44,13 +44,13 @@ static VOID outpdkrm(struct inst inst, struct expr e) {
         }
 }
 
-static VOID outpdka(struct inst inst) {
+static void outpdka(struct inst inst) {
         struct expr e;
         clrexpr(&e);
         outpdkaw(inst, e);
 }
 
-VOID emov(a_uint op,
+void emov(a_uint op,
           struct inst def,
           struct inst ioa,
           struct inst aio,
@@ -83,7 +83,7 @@ VOID emov(a_uint op,
                 aerr();
 }
 
-VOID eidxm(struct inst am, struct inst ma) {
+void eidxm(struct inst am, struct inst ma) {
         struct expr e, e1;
         clrexpr(&e);
         clrexpr(&e1);
@@ -101,7 +101,7 @@ VOID eidxm(struct inst am, struct inst ma) {
                 aerr();
 }
 
-VOID earith(struct inst def,
+void earith(struct inst def,
             struct inst ma,
             struct inst am) {
         struct expr e, e1;
@@ -124,7 +124,7 @@ VOID earith(struct inst def,
                 aerr();
 }
 
-VOID earithc(struct inst ma,
+void earithc(struct inst ma,
              struct inst am,
              struct inst m,
              struct inst a) {
@@ -153,7 +153,7 @@ VOID earithc(struct inst ma,
                 aerr();
 }
 
-VOID eshift(struct inst a,
+void eshift(struct inst a,
             struct inst m) {
         struct expr e;
         clrexpr(&e);
@@ -168,7 +168,7 @@ VOID eshift(struct inst a,
                 aerr();
 }
 
-VOID ebit(a_uint op,
+void ebit(a_uint op,
           struct inst def,
           struct inst ma,
           struct inst am,
@@ -209,7 +209,7 @@ VOID ebit(a_uint op,
                 aerr();
 }
 
-VOID enot(struct inst def, struct inst m) {
+void enot(struct inst def, struct inst m) {
         struct expr e;
         clrexpr(&e);
         int t = more() ? addr(&e, false) : S_A;
@@ -222,7 +222,7 @@ VOID enot(struct inst def, struct inst m) {
                 aerr();
 }
 
-VOID ebitn(a_uint op, struct inst io, struct inst m, int offset) {
+void ebitn(a_uint op, struct inst io, struct inst m, int offset) {
         bool ioAdr = op & PDK_OPCODE_ADR_IO;
         struct expr e, e1;
         clrexpr(&e);
@@ -245,7 +245,7 @@ VOID ebitn(a_uint op, struct inst io, struct inst m, int offset) {
                 aerr();
 }
 
-VOID eskip(struct inst def, struct inst m) {
+void eskip(struct inst def, struct inst m) {
         struct expr e;
         clrexpr(&e);
         int t = addr(&e, false);
@@ -263,12 +263,12 @@ VOID eskip(struct inst def, struct inst m) {
                 aerr();
 }
 
-VOID ezsn(struct inst def, struct inst m) {
+void ezsn(struct inst def, struct inst m) {
         /* IZSN and DZSN insts have the same params as NOT. */
         enot(def, m);
 }
 
-VOID eret(struct inst def, struct inst k) {
+void eret(struct inst def, struct inst k) {
         if (more()) {
                 struct expr e;
                 clrexpr(&e);
@@ -279,7 +279,7 @@ VOID eret(struct inst def, struct inst k) {
                 outpdka(def);
 }
 
-VOID eone(struct inst m) {
+void eone(struct inst m) {
         struct expr e;
         clrexpr(&e);
         if (addr(&e, false) != S_M)
@@ -288,7 +288,7 @@ VOID eone(struct inst m) {
         outpdkrm(m, e);
 }
 
-VOID exch(struct inst m) {
+void exch(struct inst m) {
         struct expr e;
         clrexpr(&e);
 
@@ -303,7 +303,7 @@ VOID exch(struct inst m) {
         outpdkrm(m, e);
 }
 
-VOID epupo(struct inst def) {
+void epupo(struct inst def) {
         if (more() && (def.op & 0x2000)) {
                 int t = getnb();
                 if (t != 'a')
@@ -315,7 +315,7 @@ VOID epupo(struct inst def) {
         outpdka(def);
 }
 
-VOID eopta(struct inst def) {
+void eopta(struct inst def) {
         if (more()) {
                 struct expr e;
                 clrexpr(&e);
@@ -325,7 +325,7 @@ VOID eopta(struct inst def) {
         outpdka(def);
 }
 
-VOID eswapc(a_uint op, struct inst iok, int offset) {
+void eswapc(a_uint op, struct inst iok, int offset) {
         bool ioAdr = op & PDK_OPCODE_ADR_IO;
         struct expr e, e1;
         clrexpr(&e);
@@ -342,7 +342,7 @@ VOID eswapc(a_uint op, struct inst iok, int offset) {
         outpdkaw(iok, e);
 }
 
-VOID espec(struct inst am, struct inst ma) {
+void espec(struct inst am, struct inst ma) {
         struct expr e, e1;
         clrexpr(&e);
         clrexpr(&e1);

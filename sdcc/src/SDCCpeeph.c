@@ -575,10 +575,10 @@ FBYNAME (labelIsReturnOnly)
 }
 
 /*-----------------------------------------------------------------*/
-/* labelIsUncondJump - Check if label %5 is followed by an         */
+/* label5IsUncondJumpTo6 - Check if label %5 is followed by an     */
 /* unconditional jump and put the destination of that jump in %6   */
 /*-----------------------------------------------------------------*/
-FBYNAME (labelIsUncondJump)
+FBYNAME (label5IsUncondJumpTo6)
 {
   /* assumes that %5 pattern variable has the label name */
   const char *label;
@@ -586,8 +586,9 @@ FBYNAME (labelIsUncondJump)
   const lineNode *pl;
   bool found = FALSE;
   int len;
-  const char *jpInst = NULL;
+  const char *jpInst1 = NULL;
   const char *jpInst2 = NULL;
+  const char *jpInst3 = NULL;
 
   label = hTabItemWithKey (vars, 5);
   if (!label)
@@ -648,34 +649,39 @@ FBYNAME (labelIsUncondJump)
 
   if (TARGET_MCS51_LIKE)
     {
-      jpInst = "ljmp";
+      jpInst1 = "ljmp";
       jpInst2 = "sjmp";
+      jpInst3 = "ajmp";
     }
   else if (TARGET_HC08_LIKE || TARGET_MOS6502_LIKE)
     {
-      jpInst = "jmp";
+      jpInst1 = "jmp";
       jpInst2 = "bra";
     }
   else if (TARGET_Z80_LIKE || TARGET_F8_LIKE)
     {
-      jpInst = "jp";
+      jpInst1 = "jp";
       jpInst2 = "jr";
     }
   else if (TARGET_IS_STM8)
     {
-      jpInst = (options.model == MODEL_LARGE ? "jpf" : "jp");
+      jpInst1 = (options.model == MODEL_LARGE ? "jpf" : "jp");
       jpInst2 = "jra";
     }
   else if (TARGET_PDK_LIKE)
     {
-      jpInst = "goto";
+      jpInst1 = "goto";
     }
-  len = strlen(jpInst);
-  if (strncmp(p, jpInst, len))
+  len = strlen(jpInst1);
+  if (strncmp(p, jpInst1, len))
     {
       len = jpInst2 ? strlen(jpInst2) : 0;
-      if(!jpInst2 || strncmp(p, jpInst2, len))
-        return FALSE; /* next line is no jump */
+      if (!jpInst2 || strncmp(p, jpInst2, len))
+        {
+          len = jpInst3 ? strlen(jpInst3) : 0;
+          if (!jpInst3 || strncmp(p, jpInst3, len))
+            return FALSE; /* next line is no jump */
+        }
     }
 
   p += len;
@@ -1314,7 +1320,7 @@ operandBaseName (const char *op)
         return op+1;
       if (!strcmp (op, "ab"))
         return "ab";
-      if (!strcmp (op, "acc") || !strncmp (op, "acc.", 4) || *op == 'a')
+      if (!strcmp (op, "a") || !strcmp (op, "acc") || !strncmp (op, "acc.", 4))
         return "a";
       // bug 1739475, temp fix
       if (op[0] == '@')
@@ -1431,6 +1437,9 @@ FBYNAME (notUsed)
       fprintf (stderr, "Function notUsed not initialized in port structure\n");
       return FALSE;
     }
+
+  if (currPl && currPl->ic && (currPl->ic->op == SEND || currPl->ic->op == RETURN))
+    return FALSE;
 
   set *operands = setFromConditionArgs (cmdLine, vars);
 
@@ -1933,9 +1942,13 @@ FBYNAME (notSame)
   while ((op1 = setFirstItem (operands)))
     {
       deleteSetItem (&operands, (void*)op1);
+      if (TARGET_MCS51_LIKE && op1[0] == 'a' && op1[1] == 'r' && isdigit(op1[2]))
+        op1++;
 
       for (op2 = setFirstItem (operands); op2; op2 = setNextItem (operands))
         {
+          if (TARGET_MCS51_LIKE && op2[0] == 'a' && op2[1] == 'r' && isdigit(op2[2]))
+            op2++;
           if (strcmp (op1, op2) == 0)
             {
               deleteSet (&operands);
@@ -1959,24 +1972,28 @@ FBYNAME (same)
     operands = setFromConditionArgs(cmdLine, vars);
 
     if (!operands)
-    {
+      {
         fprintf(stderr,
             "*** internal error: same peephole restriction"
             " malformed: %s\n", cmdLine);
         return FALSE;
-    }
+      }
 
     operands = reverseSet(operands);
 
     match = setFirstItem(operands);
+    if (TARGET_MCS51_LIKE && match[0] == 'a' && match[1] == 'r' && isdigit(match[2]))
+      match++;
     for (op = setNextItem(operands); op; op = setNextItem(operands))
-    {
+      {
+        if (TARGET_MCS51_LIKE && op[0] == 'a' && op[1] == 'r' && isdigit(op[2]))
+          op++;
         if (strcmp(match, op) == 0)
-        {
+          {
             deleteSet(&operands);
             return TRUE;
-        }
-    }
+          }
+      }
 
     deleteSet(&operands);
     return FALSE;
@@ -2666,7 +2683,7 @@ ftab[] =                                            // sorted on the number of t
     "removeParentheses", removeParentheses
   },
   {
-    "labelIsUncondJump", labelIsUncondJump          // 4
+    "label5IsUncondJumpTo6", label5IsUncondJumpTo6  // 4
   },
   {
     "deadMove", deadMove                            // 2

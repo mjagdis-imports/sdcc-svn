@@ -114,7 +114,7 @@ Clear_realloc (void *OldPtr, size_t OldSize, size_t NewSize)
   if (!NewPtr)
     {
       printf ("ERROR - No more memory\n");
-/*  werror(E_OUT_OF_MEM,__FILE__,NewSize);*/
+/*    werror(E_OUT_OF_MEM,__FILE__,NewSize);*/
       exit (1);
     }
 
@@ -142,7 +142,7 @@ Safe_realloc (void *OldPtr, size_t NewSize)
   if (!NewPtr)
     {
       printf ("ERROR - No more memory\n");
-/*  werror(E_OUT_OF_MEM,__FILE__,NewSize);*/
+/*    werror(E_OUT_OF_MEM,__FILE__,NewSize);*/
       exit (1);
     }
 
@@ -170,7 +170,7 @@ Safe_calloc (size_t Elements, size_t Size)
   if (!NewPtr)
     {
       printf ("ERROR - No more memory\n");
-/*  werror(E_OUT_OF_MEM,__FILE__,Size);*/
+/*    werror(E_OUT_OF_MEM,__FILE__,Size);*/
       exit (1);
     }
 
@@ -201,7 +201,7 @@ Safe_malloc (size_t Size)
   if (!NewPtr)
     {
       printf ("ERROR - No more memory\n");
-/*  werror(E_OUT_OF_MEM,__FILE__,Size);*/
+/*    werror(E_OUT_OF_MEM,__FILE__,Size);*/
       exit (1);
     }
 
@@ -223,12 +223,15 @@ Safe_free (void *p)
 char *
 Safe_strndup (const char *sz, size_t size)
 {
-  char *pret;
+  char *pret, *p;
   assert (sz);
 
   pret = Safe_alloc (size + 1);
-  strncpy (pret, sz, size);
-  pret[size] = '\0';
+  p = pret;
+  while (*sz && size--)
+    {
+      *p++ = *sz++;
+    }
 
   return pret;
 }

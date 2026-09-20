@@ -299,7 +299,7 @@ outaxb(int i, a_uint v)
 	/*
 	 * Update the Program Counter
 	 */
-        p_bytes = 1;
+	p_bytes = 1;
 	dot.s_addr += (i/p_bytes) + (i % p_bytes ? 1 : 0);
 }
 
@@ -461,10 +461,10 @@ outrxb(int i, struct expr *esp, int r)
 	int p_bytes;
 
 	if (pass == 2) {
-                if (esp->e_flag==0 && esp->e_base.e_ap==NULL) {
-                        /* This is a constant; simply write the
-                         * const byte to the T line and don't
-                         * generate any relocation info.
+		if (esp->e_flag==0 && esp->e_base.e_ap==NULL) {
+			/* This is a constant; simply write the
+			 * const byte to the T line and don't
+			 * generate any relocation info.
 			 */
 			/*
 			 * Mask Value Selection
@@ -495,7 +495,7 @@ outrxb(int i, struct expr *esp, int r)
 			 * Page0 Range Check
 			 */
 			if (((r & (R_SGND | R_USGN | R_PAGX | R_PCR)) == R_PAG0) &&
-			   ((n & esp->e_addr) != 0))
+			    ((n & esp->e_addr) != 0))
 				xerr('d', "Page 0 Address Error.");
 
 			out_lxb(i,esp->e_addr,0);
@@ -504,70 +504,69 @@ outrxb(int i, struct expr *esp, int r)
 				outatxb(i,esp->e_addr);
 			}
 		} else {
-                        if ((i == 1) && (!is_sdas() 
+			if ((i == 1) && (!is_sdas()
 				|| !(is_sdas_target_8051_like() || is_sdas_target_stm8() || is_sdas_target_rab()))) {
-                                r |= R_BYTE | R_BYTX | esp->e_rlcf;
-                                if (r & R_MSB) {
-                                        out_lb(hibyte(esp->e_addr),r|R_RELOC|R_HIGH);
+				r |= R_BYTE | R_BYTX | esp->e_rlcf;
+				if (r & R_MSB) {
+					out_lb(hibyte(esp->e_addr),r|R_RELOC|R_HIGH);
 				} else {
 					out_lb(lobyte(esp->e_addr),r|R_RELOC);
 				}
-                                if (oflag) {
-                                        outchk(a_bytes, 4);
-                                        out_txb(a_bytes, esp->e_addr);
-                                        if (esp->e_flag) {
-                                                n = esp->e_base.e_sp->s_ref;
-                                                r |= R_SYM;
-                                        } else {
-                                                n = esp->e_base.e_ap->a_ref;
+				if (oflag) {
+					outchk(a_bytes, 4);
+					out_txb(a_bytes, esp->e_addr);
+					if (esp->e_flag) {
+						n = esp->e_base.e_sp->s_ref;
+						r |= R_SYM;
+					} else {
+						n = esp->e_base.e_ap->a_ref;
 					}
-                                        *relp++ = r;
-                                        *relp++ = txtp - txt - a_bytes;
-                                        out_rw(n);
+					*relp++ = r;
+					*relp++ = txtp - txt - a_bytes;
+					out_rw(n);
 				}
 			} else {
-                                /* sdas mcs51 specific */
-                                /* We are generating a single byte of relocatable
-                                 * info.
-                                 *
-                                 * We generate a 24 bit address. The linker will
-                                 * select a single byte based on whether R_MSB or
-                                 * R_HIB is set.
-                                 */
-                                /* 24 bit mode. */
-                                r |= R_BYTE | R_BYT3 | esp->e_rlcf;
-                                if (r & R_HIB)
-                                {
-                                    /* Probably should mark this differently in the
-                                     * listing file.
-                                     */
-                                    out_lb(thrdbyte(esp->e_addr),r|R_RELOC|R_HIGH);
+				/* sdas mcs51 specific */
+				/* We are generating a single byte of relocatable
+				 * info.
+				 *
+				 * We generate a 24 bit address. The linker will
+				 * select a single byte based on whether R_MSB or
+				 * R_HIB is set.
+				 */
+				/* 24 bit mode. */
+				r |= R_BYTE | R_BYT3 | esp->e_rlcf;
+				if (r & R_HIB) {
+					/* Probably should mark this differently in the
+					 * listing file.
+					 */
+					out_lb(thrdbyte(esp->e_addr),r|R_RELOC|R_HIGH);
 				}
-                                else if (r & R_MSB) {
-                                    out_lb(hibyte(esp->e_addr),r|R_RELOC|R_HIGH);
+				else if (r & R_MSB) {
+					out_lb(hibyte(esp->e_addr),r|R_RELOC|R_HIGH);
 				} else {
-                                    out_lb(lobyte(esp->e_addr),r|R_RELOC);
+					out_lb(lobyte(esp->e_addr),r|R_RELOC);
 				}
-                                if (oflag) {
-                                    outchk(a_bytes, 5);
-                                    out_txb(a_bytes, esp->e_addr);
-                                    if (esp->e_flag) {
-                                            n = esp->e_base.e_sp->s_ref;
-                                            r |= R_SYM;
-                                    } else {
-                                            n = esp->e_base.e_ap->a_ref;
-                                    }
-                                    write_rmode(r, txtp - txt - a_bytes);
-                                    out_rw(n);
+				if (oflag) {
+					outchk(a_bytes, 5);
+					out_txb(a_bytes, esp->e_addr);
+					if (esp->e_flag) {
+						n = esp->e_base.e_sp->s_ref;
+						r |= R_SYM;
+					} else {
+						n = esp->e_base.e_ap->a_ref;
+					}
+					write_rmode(r, txtp - txt - a_bytes);
+					out_rw(n);
 				}
-                                /* end sdas mcs51 specific */
+				/* end sdas mcs51 specific */
 			}
 		}
 	}
 	/*
 	 * Update the Program Counter
 	 */
-        p_bytes = 1;
+	p_bytes = 1;
 	dot.s_addr += (i/p_bytes) + (i % p_bytes ? 1 : 0);
 }
 
@@ -611,77 +610,77 @@ outrxb(int i, struct expr *esp, int r)
 void
 outrw(struct expr *esp, int r)
 {
-        int n;
+	int n;
 
 	if (pass == 2) {
-                /* sdas specific */
-                if (is_sdas() && is_sdas_target_8051_like() && esp->e_addr > 0xffff) {
-                    warnBanner();
-                    fprintf(stderr,
-                            "large constant 0x%x truncated to 16 bits\n",
-                            esp->e_addr);
+		/* sdas specific */
+		if (is_sdas() && is_sdas_target_8051_like() && esp->e_addr > 0xffff) {
+			warnBanner();
+			fprintf(stderr,
+			        "large constant 0x%x truncated to 16 bits\n",
+			        esp->e_addr);
 		}
-                /* end sdas specific */
-                if (esp->e_flag==0 && esp->e_base.e_ap==NULL) {
-                        out_lxb(2,esp->e_addr,0);
+		/* end sdas specific */
+		if (esp->e_flag==0 && esp->e_base.e_ap==NULL) {
+			out_lxb(2,esp->e_addr,0);
 			if (oflag) {
-                                outchk(2,0);
-                                out_txb(2,esp->e_addr);
+				outchk(2,0);
+				out_txb(2,esp->e_addr);
 			}
 		} else {
-                        r |= R_WORD | esp->e_rlcf;
-                        if (r & R_BYTX) {
-                                rerr();
-                                if (r & R_MSB) {
-                                        out_lw(hibyte(esp->e_addr),r|R_RELOC);
+			r |= R_WORD | esp->e_rlcf;
+			if (r & R_BYTX) {
+				rerr();
+				if (r & R_MSB) {
+					out_lw(hibyte(esp->e_addr),r|R_RELOC);
 				} else {
-                                        out_lw(lobyte(esp->e_addr),r|R_RELOC);
+					out_lw(lobyte(esp->e_addr),r|R_RELOC);
 				}
 			} else {
-                                out_lw(esp->e_addr,r|R_RELOC);
+				out_lw(esp->e_addr,r|R_RELOC);
 			}
 			if (oflag) {
-                                if (!is_sdas() 
+				if (!is_sdas() 
 					|| !(is_sdas_target_8051_like() || is_sdas_target_stm8() || is_sdas_target_rab())) {
-                                        outchk(2, 4);
-                                        out_txb(2, esp->e_addr);
-                                        if (esp->e_flag) {
-                                                n = esp->e_base.e_sp->s_ref;
-                                                r |= R_SYM;
-                                        } else {
-                                                n = esp->e_base.e_ap->a_ref;
+					outchk(2, 4);
+					out_txb(2, esp->e_addr);
+					if (esp->e_flag) {
+						n = esp->e_base.e_sp->s_ref;
+						r |= R_SYM;
+					} else {
+						n = esp->e_base.e_ap->a_ref;
 					}
-                                        *relp++ = r;
-                                        *relp++ = txtp - txt - 2;
-                                        out_rw(n);
+					*relp++ = r;
+					*relp++ = txtp - txt - 2;
+					out_rw(n);
 				} else {
-                                        outchk(2, 5);
-                                        out_txb(2, esp->e_addr);
-                                        if (esp->e_flag) {
-                                                n = esp->e_base.e_sp->s_ref;
-                                                r |= R_SYM;
-                                        } else {
-                                                n = esp->e_base.e_ap->a_ref;
+					outchk(2, 5);
+					out_txb(2, esp->e_addr);
+					if (esp->e_flag) {
+						n = esp->e_base.e_sp->s_ref;
+						r |= R_SYM;
+					} else {
+						n = esp->e_base.e_ap->a_ref;
 					}
 
-                                        if (IS_C24(r))
-                                        {
-                                            /* If this happens, the linker will
-                                             * attempt to process this 16 bit field
-                                             * as 24 bits. That would be bad.
-                                             */
-                                            fprintf(stderr,
-                                                    "***Internal error: C24 out in "
-                                                    "outrw()\n");
-                                            rerr();
+					if (IS_C24(r))
+					{
+						/* If this happens, the linker will
+						 * attempt to process this 16 bit field
+						 * as 24 bits. That would be bad.
+						 */
+						fprintf(stderr,
+						        "***Internal error: C24 out in "
+						        "outrw()\n");
+						rerr();
 					}
-                                        write_rmode(r, txtp - txt - 2);
-                                        out_rw(n);
+					write_rmode(r, txtp - txt - 2);
+					out_rw(n);
 				}
 			}
 		}
 	}
-        dot.s_addr += 2;
+	dot.s_addr += 2;
 }
 
 /*)Function     void    outr3b(esp, r)
@@ -1004,13 +1003,13 @@ outchk(int nt, int nr)
 {
 	struct area *ap;
 
-        if (txtp+nt > &txt[NTXT] || relp+nr > &rel[NREL]) {
+	if (txtp+nt > &txt[NTXT] || relp+nr > &rel[NREL]) {
 		outbuf("R");
 	}
 	if (txtp == txt) {
 		out_txb(a_bytes,dot.s_addr);
 		if ((ap = dot.s_area) != NULL) {
-                        write_rmode(R_WORD|R_AREA, 0);
+			write_rmode(R_WORD|R_AREA, 0);
 			out_rw(ap->a_ref);
 		}
 	}
@@ -1062,11 +1061,11 @@ outbuf(char *s)
 void
 outradix()
 {
-        if (pass < 2)
-                return;
+	if (pass < 2)
+		return;
 
 	/*
-         * Output Radix
+	 * Output Radix
 	 */
 	if (xflag == 0) {
 		fprintf(ofp, "X%c%d\n", (int) hilo ? 'H' : 'L', a_bytes);
@@ -1788,7 +1787,7 @@ frthbyte(a_uint v)
 void
 outrwm(struct expr *esp, int r, a_uint v)
 {
-        int n;
+	int n;
 
 	if (pass == 2) {
                 if (!is_sdas() || !is_sdas_target_8051_like()) {
@@ -2037,5 +2036,6 @@ outrwp(struct expr *esp, a_uint op, a_uint mask, int jump)
 			out_rw(n);
 		}
 	}
-        dot.s_addr += 2;
+	dot.s_addr += 2;
 }
+

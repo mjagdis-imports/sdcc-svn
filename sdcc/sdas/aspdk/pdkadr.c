@@ -41,7 +41,7 @@ addr(struct expr *esp, bool ioAdr)
         switch (c) {
         case '#':
                 /* Immediate mode */
-                expr(esp, 0);
+                expr(esp);
                 esp->e_mode = S_K;
                 break;
 
@@ -70,7 +70,7 @@ addr(struct expr *esp, bool ioAdr)
         fallback:
                 unget(c);
 
-                expr(esp, 0);
+                expr(esp);
                 /* Memory spaces */
                 if (ioAdr)
                   esp->e_mode = S_IO;
@@ -96,7 +96,7 @@ pdkbit(struct expr *esp)
         switch (c) {
         case '#':
                 /* Bit number */
-                expr(esp, 0);
+                expr(esp);
                 esp->e_mode = S_K;
                 break;
 

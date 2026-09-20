@@ -1,7 +1,7 @@
 /* z80.h */
 
 /*
- *  Copyright (C) 1989-2025  Alan R. Baldwin
+ *  Copyright (C) 1989-2026  Alan R. Baldwin
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -112,9 +112,9 @@
 #define	S_INDB	40
 #define	S_IDC	41
 #define	S_INDR	50
-#define	S_IDBC	50
-#define	S_IDDE	51
-#define	S_IDHL	52
+#define	S_IDBC	50	/* (BC) */
+#define	S_IDDE	51	/* (DE) */
+#define	S_IDHL	52	/* (HL) */
 #define	S_IDSP	53
 #define	S_IDIX	55
 #define	S_IDIY	56
@@ -267,7 +267,7 @@ extern	int		genop(int pop, int op, struct expr *esp, int f);
 extern	int		gixiy(int v);
 extern	void		glilsis(int sfx, struct expr *esp);
 extern	void		machine(struct mne *mp);
-extern	int		mchpcr(struct expr *esp);
+extern	int		mchpcr(struct expr *esp, int *v, int n);
 extern	int		mchtyp;
 extern	void		minit(void);
 

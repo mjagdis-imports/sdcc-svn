@@ -48,7 +48,7 @@ m6502_pushReg (reg_info * reg, bool freereg)
       m6502_updateCFA ();
       break;
     case X_IDX:
-      if (IS_MOS65C02)
+      if (HAS_EXT_STACK_OPS)
         {
           m6502_emitOp ("phx", "");
         }
@@ -62,7 +62,7 @@ m6502_pushReg (reg_info * reg, bool freereg)
       m6502_updateCFA ();
       break;
     case Y_IDX:
-      if (IS_MOS65C02)
+      if (HAS_EXT_STACK_OPS)
         {
           m6502_emitOp ("phy", "");
         }
@@ -77,7 +77,12 @@ m6502_pushReg (reg_info * reg, bool freereg)
       break;
       // little-endian order
     case XA_IDX:
-      if(!IS_MOS65C02)
+      if(HAS_EXT_STACK_OPS)
+        {
+	  m6502_pushReg(m6502_reg_x, freereg);
+	  m6502_pushReg(m6502_reg_a, freereg);
+        }
+      else
         {
           if(m6502_reg_y->isFree)
             {
@@ -96,24 +101,19 @@ m6502_pushReg (reg_info * reg, bool freereg)
               m6502_pushReg(m6502_reg_a, freereg);
             }
         }
-      else
-        {
-	  m6502_pushReg(m6502_reg_x, freereg);
-	  m6502_pushReg(m6502_reg_a, freereg);
-        }
       break;
     case XY_IDX:
-      if(!IS_MOS65C02)
+      if(HAS_EXT_STACK_OPS)
+        {
+          m6502_pushReg(m6502_reg_x, freereg);
+          m6502_pushReg(m6502_reg_y, freereg);
+        }
+      else
         {
           needloada = storeRegTempIfUsed (m6502_reg_a);
           m6502_pushReg(m6502_reg_x, freereg);
           m6502_pushReg(m6502_reg_y, freereg);
           m6502_loadOrFreeRegTemp (m6502_reg_a, needloada);
-        }
-      else
-        {
-          m6502_pushReg(m6502_reg_x, freereg);
-          m6502_pushReg(m6502_reg_y, freereg);
         }
       break;
     default:
@@ -142,7 +142,7 @@ m6502_pullReg (reg_info * reg)
     m6502_updateCFA ();
     break;
   case X_IDX:
-    if (IS_MOS65C02)
+    if (HAS_EXT_STACK_OPS)
       {
         m6502_emitOp ("plx", "");
       }
@@ -157,7 +157,7 @@ m6502_pullReg (reg_info * reg)
     m6502_updateCFA ();
     break;
   case Y_IDX:
-    if (IS_MOS65C02)
+    if (HAS_EXT_STACK_OPS)
       {
         m6502_emitOp ("ply", "");
       }
