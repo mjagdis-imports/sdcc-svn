@@ -28,7 +28,7 @@ varargs_fn (char k, ...)
   ASSERT (xp == XP);
   gp = va_arg (arg, void *);
   ASSERT (gp == (void *)CP);
-#if defined(__SDCC_hc08) || defined(__SDCC_s08)
+#if !defined(__SDCC_mcs51)
   /* bug 2713 - casting literal pointer to generic pointer modified upper bits */
   ASSERT ((int)gp == 0x1234);
 #endif

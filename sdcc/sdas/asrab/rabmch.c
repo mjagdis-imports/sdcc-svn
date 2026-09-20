@@ -1,7 +1,7 @@
 /* rabmch.c */
 
 /*
- *  Copyright (C) 1989-2009  Alan R. Baldwin
+ *  Copyright (C) 1989-2026  Alan R. Baldwin
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -27,11 +27,6 @@
  * CERN
  * CH-1211 Geneva-23
  * email: Ulrich dot Raich at cern dot ch
- */
-
-/*
- * xerr messages Copyright (C) 1989-2021  Alan R. Baldwin
- * from ASxxxx 5.40
  */
 
 /*
@@ -99,16 +94,16 @@ machine(struct mne *mp)
 	switch (rf) {
 	case S_CPU:
 		switch (op) {
-		case T_R2K:   rab.cpu=R_2K;  rab.mode = R_NOMODE; break;
-		case T_R3KA:  rab.cpu=R_3KA; rab.mode = R_NOMODE; break;
-		case T_R4K00: rab.cpu=R_4K;  rab.mode = R_MODE00; break;
-		case T_R4K01: rab.cpu=R_4K;  rab.mode = R_MODE01; break;
-		case T_R4K10: rab.cpu=R_4K;  rab.mode = R_MODE10; break;
-		case T_R4K11: rab.cpu=R_4K;  rab.mode = R_MODE11; break;
-		case T_R6K00: rab.cpu=R_6K;  rab.mode = R_MODE00; break;
-		case T_R6K01: rab.cpu=R_6K;  rab.mode = R_MODE01; break;
-		case T_R6K10: rab.cpu=R_6K;  rab.mode = R_MODE10; break;
-		case T_R6K11: rab.cpu=R_6K;  rab.mode = R_MODE11; break;
+		case X_R2K:   rab.cpu=R_2K;  rab.mode = R_NOMODE; break;
+		case X_R3KA:  rab.cpu=R_3KA; rab.mode = R_NOMODE; break;
+		case X_R4K00: rab.cpu=R_4K;  rab.mode = R_MODE00; break;
+		case X_R4K01: rab.cpu=R_4K;  rab.mode = R_MODE01; break;
+		case X_R4K10: rab.cpu=R_4K;  rab.mode = R_MODE10; break;
+		case X_R4K11: rab.cpu=R_4K;  rab.mode = R_MODE11; break;
+		case X_R6K00: rab.cpu=R_6K;  rab.mode = R_MODE00; break;
+		case X_R6K01: rab.cpu=R_6K;  rab.mode = R_MODE01; break;
+		case X_R6K10: rab.cpu=R_6K;  rab.mode = R_MODE10; break;
+		case X_R6K11: rab.cpu=R_6K;  rab.mode = R_MODE11; break;
 		default: break;
 		}
 		sym[2].s_addr = op;
@@ -203,19 +198,19 @@ machine(struct mne *mp)
 
         /* Rabbit processor use the opcode to set interrupt level */
 	case S_IM:
-                /* ipset 0-3 */
-		expr(&e1, 0);
+		/* ipset 0-3 */
+		expr(&e1);
 		abscheck(&e1);
-                if (e1.e_addr > 3) {
-                        xerr('a', "Values of 0, 1, 2, and 3 are valid.");
+		if (e1.e_addr > 3) {
+			xerr('a', "Values of 0, 1, 2, and 3 are valid.");
 			break;
 		}
 		outab(op);
-                outab(ipset[e1.e_addr]);
+		outab(ipset[e1.e_addr]);
 		break;
 
 	case S_BIT:
-		expr(&e1, 0);
+		expr(&e1);
 		t1 = 0;
 		v1 = (int) e1.e_addr;
 		if (v1 > 7) {
@@ -224,7 +219,7 @@ machine(struct mne *mp)
 		}
 		op |= (v1<<3);
 		comma(1);
-                addr(&e2);
+		addr(&e2);
 		abscheck(&e1);
 		if (genop(0xCB, op, &e2, 0) || t1)
 			xerr('a', "Invalid Addressing Mode.");
@@ -1141,11 +1136,11 @@ machine(struct mne *mp)
 			outab(0xED); /* dwjnz */
 			op = 0x10; 
 		}
-		expr(&e2, 0);
+		expr(&e2);
 		outab(op);
-                if (mchpcr(&e2)) {
-                        v2 = (int) (e2.e_addr - dot.s_addr - 1);
-                        if (pass == 2 && ((v2 < -128) || (v2 > 127)))
+		if (mchpcr(&e2)) {
+			v2 = (int) (e2.e_addr - dot.s_addr - 1);
+			if (pass == 2 && ((v2 < -128) || (v2 > 127)))
 				xerr('a', "Branching Range Exceeded.");
 			outab(v2);
 		} else {
@@ -1178,7 +1173,7 @@ machine(struct mne *mp)
 		if (IS_MIN_6K(rab) && (v1 = admode(R6_CND)) != 0) {
 			op = 0x43 | (((v1)&0x3)<<3);
 			comma(1);
-			expr(&e1, 0);
+			expr(&e1);
                         if (IS_MODE_10(rab))
                                 outab(0x7F);
 			outab(op);
@@ -1188,7 +1183,7 @@ machine(struct mne *mp)
 		if ((v1 = admode(CND)) != 0) {
 			op |= (v1&0xFF)<<3;
 			comma(1);
-			expr(&e1, 0);
+			expr(&e1);
 			outab(op);
 			outrw(&e1, 0);
 			break;
@@ -1198,7 +1193,7 @@ machine(struct mne *mp)
 			((v1&0xFF) < CC_NZ)) {
 			op = 0xA2 | ((v1&0xFF)<<3);
 			comma(1);
-			expr(&e1, 0);
+			expr(&e1);
 			if (IS_MODE_10(rab))
 				outab( 0x7F );
 			outab(op);
@@ -1514,36 +1509,35 @@ machine(struct mne *mp)
 		xerr('a', "Invalid Addressing Mode.");
 		break;
       
-        case X_JRE:
-                if (!IS_MODE_10_OR_11(rab))
-                        xerr('o', "A Rabbit 4000 Instruction.");
-                if ((v1 = admode(ALT_CND)) != 0) {
-                        op += v1<<3;
+	case X_JRE:
+		if (!IS_MODE_10_OR_11(rab))
+			xerr('o', "A Rabbit 4000 Instruction.");
+		if ((v1 = admode(ALT_CND)) != 0) {
+			op += v1<<3;
 			comma(1);
-
 		} else {
-                        op = 0x98;
+			op = 0x98;
 		}
-		expr(&e2, 0);
+		expr(&e2);
 		if (op == 0x98 && IS_MODE_10(rab))
 			outab( 0x7F );
 		if (op != 0x98) {
 			outab( 0xED );
 		}
 		outab(op);
-                if (mchpcr(&e2)) {
-                        v2 = (int) (e2.e_addr - dot.s_addr - 2);
-                        if (pass == 2 && ((v2 < -32768) || (v2 > 32767)))
-                                aerr();
-                        outab( (v2 & 0xFF) );
-                        outab( (v2 >> 8) );
+		if (mchpcr(&e2)) {
+			v2 = (int) (e2.e_addr - dot.s_addr - 2);
+			if (pass == 2 && ((v2 < -32768) || (v2 > 32767)))
+				aerr();
+			outab( (v2 & 0xFF) );
+			outab( (v2 >> 8) );
 		} else {
 			rerr();
 		}
 		if (e2.e_mode != S_USER)
 			rerr();
 		break;
-      
+
         case X_CLR:
                 if (!(IS_MODE_10_OR_11(rab)))
                         xerr('o', "A Rabbit 4000 Instruction.");
@@ -1826,11 +1820,11 @@ minit(void)
 	hilo = 0;
 
 	/*
-         * Address Space
+	 * Address Space
 	 */
         exprmasks(3);
 	if (pass == 0) {
-		sym[2].s_addr = T_R2K;
+		sym[2].s_addr = X_R2K;
 	}
 }
 

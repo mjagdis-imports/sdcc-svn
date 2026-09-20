@@ -10,7 +10,6 @@
 
 #include <stdlib.h>
 
-#if !defined(__SDCC_pdk14) && !defined (__SDCC_pdk15) // Reentrancy
 int debug (void) { return 1; }
 int errors;
 
@@ -20,7 +19,7 @@ static int
 compare (const void *x, const void *y) __reentrant
 {
   const struct s *s1 = x, *s2 = y;
-  int (*compare1) (int);
+  int (*compare1) (int) __reentrant;
   int elt2;
 
   compare1 = s1->compare;
@@ -32,14 +31,11 @@ compare (const void *x, const void *y) __reentrant
 
 int bad_compare (int x) { return -x; }
 struct s array[2] = { { 1, bad_compare }, { -1, bad_compare } };
-#endif
 
 void
 testTortureExecute (void)
 {
-#if !defined(__SDCC_pdk14) && !defined (__SDCC_pdk15)
   qsort (array, 2, sizeof (struct s), compare);
   ASSERT (!(errors == 0));
-#endif
 }
 

@@ -5,7 +5,7 @@
 
 #include <testfwk.h>
 
-#if !defined(__SDCC_mcs51) && !defined(__SDCC_pdk13) && !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) // Lack of memory
+#if !(defined(__SDCC_mcs51) && (defined(__SDCC_MODEL_SMALL) || defined(__SDCC_MODEL_MEDIUM)) ) // Lack of memory
 
 #define max_scene_x 9
 #define max_scene_y 9
@@ -58,7 +58,7 @@ const scene_item_t scene_items[] = {
 void
 testBug(void)
 {
-#if !defined(__SDCC_mcs51) && !defined(__SDCC_pdk13) && !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) // Lack of memory
+#if !(defined(__SDCC_mcs51) && (defined(__SDCC_MODEL_SMALL) || defined(__SDCC_MODEL_MEDIUM)) ) // Lack of memory
     scene_to_map(scene_items, &collision_buf);
     
     ASSERT(collision_buf[0][0][max_scene_y - 1] == 2);

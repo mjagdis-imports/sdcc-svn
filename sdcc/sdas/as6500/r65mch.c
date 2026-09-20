@@ -43,6 +43,7 @@ int r6500;
 int r65f11;
 int r65c00;
 int r65c02;
+int huc6280;
 
 /*
  * Opcode Cycle Definitions
@@ -149,7 +150,29 @@ static char c02pg1[256] = {
 /*F0*/   4, 7, 6,UN,UN, 5, 6, 5, 2, 6, 4,UN,UN, 6, 7, 7
 };
 
-int mchtyp;
+#if 0
+static char hucpg1[256] = {
+/*--*--* 0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F */
+/*--*--* -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - */
+/*00*/   8, 7, 3, 4, 6, 4, 6, 7, 3, 2, 2,UN, 7, 5, 7, 6,
+/*10*/   4, 6, 5,UN, 5, 4, 6, 5, 2, 5, 2,UN, 6, 5, 7, 7,
+/*20*/   6, 6,UN,UN, 3, 3, 5, 5, 4, 2, 2,UN, 4, 4, 6, 7,
+/*30*/   4, 6, 5,UN, 4, 4, 6, 5, 2, 5, 2,UN, 5, 5, 7, 7,
+/*40*/   6, 6,UN,UN,UN, 3, 5, 5, 3, 2, 2,UN, 3, 4, 6, 7,
+/*50*/   4, 6, 5,UN,UN, 4, 6, 5, 2, 5, 3,UN,UN, 5, 7, 7,
+/*60*/   6, 7,UN,UN, 3, 4, 5, 5, 4, 3, 2,UN, 6, 5, 6, 7,
+/*70*/   4, 7, 6,UN, 4, 5, 6, 5, 2, 6, 4,UN, 6, 6, 7, 7,
+/*80*/   4, 6,UN,UN, 3, 3, 3, 5, 2, 2, 2,UN, 4, 4, 4, 7,
+/*90*/   4, 6, 5,UN, 4, 4, 4, 5, 2, 5, 2,UN, 4, 5, 5, 7,
+/*A0*/   2, 6, 2,UN, 3, 3, 3, 5, 2, 2, 2,UN, 4, 4, 4, 7,
+/*B0*/   4, 6, 5,UN, 4, 4, 4, 5, 2, 5, 2,UN, 5, 5, 5, 7,
+/*C0*/   2, 6,UN,UN, 3, 3, 5, 5, 2, 2, 2,UN, 4, 4, 6, 7,
+/*D0*/   4, 6, 5,UN,UN, 4, 6, 5, 2, 5, 3,UN,UN, 5, 7, 7,
+/*E0*/   2, 7,UN,UN, 3, 4, 5, 5, 2, 3, 2,UN, 4, 5, 6, 7,
+/*F0*/   4, 7, 6,UN,UN, 5, 6, 5, 2, 6, 4,UN,UN, 6, 7, 7
+};
+#endif
+
 struct area *zpg;
 
 int autodpcnst;
@@ -163,6 +186,7 @@ machine(struct mne *mp)
 {
 	int op, t1;
 	struct expr e1,e2;
+	struct sym *sp;
 	char id[NCPS];
 	int c, v1, v2;
 
@@ -175,7 +199,7 @@ machine(struct mne *mp)
 		opcycles = OPCY_SDP;
 		zpg = dot.s_area;
 		if (more()) {
-			expr(&e1, 0);
+			expr(&e1);
 			if (e1.e_flag == 0 && e1.e_base.e_ap == NULL) {
 				if (e1.e_addr) {
 					e1.e_addr = 0;
@@ -196,14 +220,26 @@ machine(struct mne *mp)
 		outdp(zpg, &e1, 0);
 		lmode = SLIST;
 		break;
+
+	case S_PGD:
+		do {
+			getid(id, -1);
+			sp = lookup(id);
+			sp->s_flag &= ~S_LCL;
+			sp->s_flag |=  S_GBL;
+			sp->s_area = (zpg != NULL) ? zpg : dot.s_area;
+ 		} while (comma(0));
+		lmode = SLIST;
+		break;
+
 	case S_CPU:
-		mchtyp = op;
-		switch(mchtyp) {
+		switch(op) {
 		case X_R6500:
 			opcycles = OPCY_6500;
 			r65f11 = 0;
 			r65c00 = 0;
 			r65c02 = 0;
+			huc6280 = 0;
 			break;
 
 		case X_R65F11:
@@ -211,6 +247,7 @@ machine(struct mne *mp)
 			r65f11 = 1;
 			r65c00 = 0;
 			r65c02 = 0;
+			huc6280 = 0;
 			break;
 
 		case X_R65C00:
@@ -218,19 +255,36 @@ machine(struct mne *mp)
 			r65f11 = 1;
 			r65c00 = 1;
 			r65c02 = 0;
+			huc6280 = 0;
 			break;
 
 		case X_R65C02:
-		opcycles = OPCY_65C02;
-		r65f11 = 1;
-		r65c00 = 1;
-		r65c02 = 1;
-		break;
+			opcycles = OPCY_65C02;
+			r65f11 = 1;
+			r65c00 = 1;
+			r65c02 = 1;
+			huc6280 = 0;
+			break;
+
+		case X_HUC6280:
+			opcycles = OPCY_65C02; // FIXME - shoube be HUC
+			r65f11 = 1;
+			r65c00 = 1;
+			r65c02 = 1;
+			huc6280 = 1;
+			break;
 		}
 		break;
 
+	case S_INH4:
+		if (!huc6280) {
+			while(more()) getnb();
+			xerr('o', "Invalid Huc6280 Instruction");
+			break;
+		}
+
 	case S_INH3:
-		if (r65c02) {
+		if (!r65c02) {
 			while(more()) getnb();
 			xerr('o', "Invalid 65C02 Instruction");
 			break;
@@ -247,6 +301,28 @@ machine(struct mne *mp)
 		outab(op);
 		break;
 
+	case S_TAM:
+	case S_TMA:
+		if (!huc6280) {
+			while(more()) getnb();
+			xerr('o', "Valid Only For The Huc6280");
+			break;
+		}
+                if(mp->m_type==S_TAM)
+			outab(0x53);
+		else
+			outab(0x43);
+
+		outab(op);
+		break;
+
+	case S_BRA3:
+		if (!huc6280) {
+			while(more()) getnb();
+			xerr('o', "Invalid Huc6820 Instruction");
+			break;
+		}
+
 	case S_BRA2:
 		if (!r65c00) {
 			while(more()) getnb();
@@ -255,7 +331,7 @@ machine(struct mne *mp)
 		}
 		
 	case S_BRA1:
-		expr(&e1, 0);
+		expr(&e1);
 		outab(op);
 		if (mchpcr(&e1, &v1, 1)) {
 			if ((v1 < -128) || (v1 > 127))
@@ -312,7 +388,7 @@ machine(struct mne *mp)
 
 	case S_DOP:
 		t1 = addr(&e1);
-		v1 = (int) e1.e_addr;
+		//v1 = (int) e1.e_addr;
 		switch (t1) {
 		case S_IPREX:
 			outab(op + 0x01);
@@ -498,8 +574,13 @@ machine(struct mne *mp)
 			outrb(&e1, R_PAG0);
 			break;
 		case S_INDY:
-			outab(op + 0x1E);
-			outrw(&e1, 0);
+			if (op == 0x80) {
+				outab(op + 0x16);
+				outrb(&e1, R_PAG0);
+			} else {
+				outab(op + 0x1E);
+				outrw(&e1, 0);
+			}
 			break;
 		default:
 			outab(op + 0x06);
@@ -531,8 +612,13 @@ machine(struct mne *mp)
 			outrb(&e1, R_PAG0);
 			break;
 		case S_INDX:
-			outab(op + 0x1C);
-			outrw(&e1, 0);
+			if (op == 0x80) {
+				outab(op + 0x14);
+				outrb(&e1, R_PAG0);
+			} else {
+				outab(op + 0x1C);
+				outrw(&e1, 0);
+			}
 			break;
 		default:
 			outab(op + 0x04);
@@ -550,9 +636,9 @@ machine(struct mne *mp)
 		}
 		if ((c = getnb()) != '*')
 			unget(c);
-		expr(&e1, 0);
+		expr(&e1);
 		comma(1);
-		expr(&e2, 0);
+		expr(&e2);
 		outab(op);
 		outrb(&e1, R_PAG0);
 		if (mchpcr(&e2, &v2, 1)) {
@@ -633,6 +719,47 @@ machine(struct mne *mp)
 		}
 		break;
 
+	case S_ST:
+		if (!huc6280) {
+			while(more()) getnb();
+			xerr('o', "Invalid Huc6820 Instruction");
+			break;
+		}
+
+		if(addr(&e1)==S_IMMED) {
+			outab(op);
+			outrb(&e1, 0);
+		} else {
+			aerr();
+                }
+		break;
+
+	case S_MT:
+		if (!huc6280) {
+			while(more()) getnb();
+			xerr('o', "Invalid Huc6820 Instruction");
+			break;
+		}
+		outab(op);
+		expr(&e2);
+		outrw(&e2, 0);
+		comma(1);
+		expr(&e2);
+		outrw(&e2, 0);
+		comma(1);
+		expr(&e2);
+		outrw(&e2, 0);
+		break;
+
+	case S_TST:
+		if (!huc6280) {
+			while(more()) getnb();
+			xerr('o', "Invalid Huc6820 Instruction");
+			break;
+		}
+		xerr('o', "Unimplemented opcode TST");
+		break;
+
 	default:
 		opcycles = OPCY_ERR;
 		err('o');
@@ -698,6 +825,21 @@ mchpcr(struct expr *esp, int *v, int n)
 }
 
 /*
+ * Machine specific .enable/.dsable terms.
+ */
+int
+mchoptn(char *id, int v)
+{
+	/* Automatic Direct Page (Constants) */
+	if (symeq(id, "autodpcnst", 1)) { autodpcnst = v; } else
+	/* Automatic Direct Page (Symbols) */
+	if (symeq(id, "autodpsmbl", 1)) { autodpsmbl = v; } else {
+		return(0);
+	}
+	return(1);
+}
+
+/*
  * Machine dependent initialization
  */
 void
@@ -721,9 +863,9 @@ minit(void)
 	/*
 	 * Default Machine
 	 */
-	mchtyp = X_R6500;
 	r6500  = 1;
 	r65f11 = 0;
 	r65c00 = 0;
 	r65c02 = 0;
+	huc6280 = 0;
 }

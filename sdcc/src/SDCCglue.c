@@ -691,11 +691,6 @@ printChar16 (struct dbuf_s *oBuf, const TYPE_TARGET_UINT *s, int plen)
       s++;
       pplen++;
     }
-  while (pplen < plen)
-    {
-      dbuf_tprintf (oBuf, "\t!db !constbyte\n", 0);
-      pplen++;
-    }
 }
 
 /*-----------------------------------------------------------------*/
@@ -721,11 +716,6 @@ printChar32 (struct dbuf_s *oBuf, const TYPE_TARGET_ULONG *s, int plen)
         dbuf_printf (oBuf, "\t.byte %d,%d,%d,%d\n", (*s >> 24) & 0xff, (*s >> 16) & 0xff, (*s >> 8) & 0xff,(*s >> 0) & 0xff);
 
       s++;
-      pplen++;
-    }
-  while (pplen < plen)
-    {
-      dbuf_tprintf (oBuf, "\t!db !constbyte\n", 0);
       pplen++;
     }
 }
@@ -867,18 +857,18 @@ printIvalType (symbol * sym, sym_link * type, initList * ilist, struct dbuf_s *o
       if (!!(val = initPointer (ilist, type, 0)))
         {
           int i, size = getSize (type), le = port->little_endian, top = (options.model == MODEL_FLAT24) ? 3 : 2;;
-          dbuf_printf (oBuf, "\t.byte ");
+          dbuf_tprintf (oBuf, "\t!db ");
           for (i = (le ? 0 : size - 1); le ? (i < size) : (i > -1); i += (le ? 1 : -1))
             {
               if (i == 0)
-			    if (strlen (val->name) > 0)
+                if (strlen (val->name) > 0)
                   dbuf_printf (oBuf, "%s", val->name);
-				else
+                else
                   dbuf_printf (oBuf, "#0x00");
               else if (0 < i && i < top)
-			    if (strlen (val->name) > 0)
+                if (strlen (val->name) > 0)
                   dbuf_printf (oBuf, "(%s >> %d)", val->name, i * 8);
-				else
+                else
                   dbuf_printf (oBuf, "#0x00");
               else
                 dbuf_printf (oBuf, "#0x00");
@@ -929,7 +919,7 @@ printIvalType (symbol * sym, sym_link * type, initList * ilist, struct dbuf_s *o
             }
           else
             {
-              dbuf_tprintf (oBuf, "\t!dbs\t; % d", aopLiteral (val, 0), (int) ulVal);
+              dbuf_tprintf (oBuf, "\t!dbs\t; %d", aopLiteral (val, 0), (int) ulVal);
             }
           if (isalnum ((int) ulVal))
             dbuf_tprintf (oBuf, "\t'%c'\n", (int) ulVal);
@@ -948,7 +938,7 @@ printIvalType (symbol * sym, sym_link * type, initList * ilist, struct dbuf_s *o
       if (IS_UNSIGNED (val->type))
         dbuf_printf (oBuf, "\t; %u\n", (unsigned int) ulVal);
       else
-        dbuf_printf (oBuf, "\t; % d\n", (int) ulVal);
+        dbuf_printf (oBuf, "\t; %d\n", (int) ulVal);
       break;
 
     case 4:
@@ -970,7 +960,7 @@ printIvalType (symbol * sym, sym_link * type, initList * ilist, struct dbuf_s *o
               if (IS_UNSIGNED (val->type))
                 dbuf_printf (oBuf, "\t; %u\n", (unsigned int) ulVal);
               else
-                dbuf_printf (oBuf, "\t; % d\n", (int) ulVal);
+                dbuf_printf (oBuf, "\t; %d\n", (int) ulVal);
             }
         }
       break;
@@ -1207,7 +1197,9 @@ printIvalStruct (symbol *sym, sym_link *type, initList *ilist, struct dbuf_s *oB
                   iloop = iloop ? iloop->next : NULL;
             }
           else if (IS_BITFIELD (sflds->type))
-            written += printIvalBitFields (&sflds, &iloop, oBuf);
+            {
+              written += printIvalBitFields (&sflds, &iloop, oBuf);
+            }
           else
             {
               printIval (sym, sflds->type, iloop, oBuf, 1);
@@ -2463,13 +2455,13 @@ glue (void)
           fprintf (asmFile, "; overlayable register banks\n");
           fprintf (asmFile, "%s", iComments2);
           if (RegBankUsed[0])
-            fprintf (asmFile, "\t.area REG_BANK_0\t(REL,OVR,DATA)\n\t.ds 8\n");
+            fprintf (asmFile, "\t.area REG_BANK_0\t(REL,OVR,DATA)\nrbank0:\t.ds 8\n");
           if (RegBankUsed[1] || options.parms_in_bank1)
-            fprintf (asmFile, "\t.area REG_BANK_1\t(REL,OVR,DATA)\n\t.ds 8\n");
+            fprintf (asmFile, "\t.area REG_BANK_1\t(REL,OVR,DATA)\nrbank1:\t.ds 8\n");
           if (RegBankUsed[2])
-            fprintf (asmFile, "\t.area REG_BANK_2\t(REL,OVR,DATA)\n\t.ds 8\n");
+            fprintf (asmFile, "\t.area REG_BANK_2\t(REL,OVR,DATA)\nrbank2:\t.ds 8\n");
           if (RegBankUsed[3])
-            fprintf (asmFile, "\t.area REG_BANK_3\t(REL,OVR,DATA)\n\t.ds 8\n");
+            fprintf (asmFile, "\t.area REG_BANK_3\t(REL,OVR,DATA)\nrbank3:\t.ds 8\n");
         }
       if (BitBankUsed)
         {
@@ -2478,14 +2470,6 @@ glue (void)
           fprintf (asmFile, "%s", iComments2);
           fprintf (asmFile, "\t.area BIT_BANK\t(REL,OVR,DATA)\n");
           fprintf (asmFile, "bits:\n\t.ds 1\n");
-          fprintf (asmFile, "\tb0 = bits[0]\n");
-          fprintf (asmFile, "\tb1 = bits[1]\n");
-          fprintf (asmFile, "\tb2 = bits[2]\n");
-          fprintf (asmFile, "\tb3 = bits[3]\n");
-          fprintf (asmFile, "\tb4 = bits[4]\n");
-          fprintf (asmFile, "\tb5 = bits[5]\n");
-          fprintf (asmFile, "\tb6 = bits[6]\n");
-          fprintf (asmFile, "\tb7 = bits[7]\n");
         }
     }
 

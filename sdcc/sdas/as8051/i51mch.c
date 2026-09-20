@@ -1,7 +1,7 @@
 /* i51mch.c */
 
 /*
- *  Copyright (C) 1998-2025  Alan R. Baldwin
+ *  Copyright (C) 1998-2026  Alan R. Baldwin
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -43,8 +43,8 @@ char	*dsft	= "asm";
 #define	OPCY_SDP	((char) (0xFF))
 #define	OPCY_ERR	((char) (0xFE))
 
-/*      OPCY_NONE       ((char) (0x80)) */
-/*      OPCY_MASK       ((char) (0x7F)) */
+/*	OPCY_NONE	((char) (0x80)) */
+/*	OPCY_MASK	((char) (0x7F)) */
 
 #define	UN	((char) (OPCY_NONE | 0x00))
 
@@ -80,15 +80,14 @@ static char i51pg1[256] = {
 void
 machine(struct mne *mp)
 {
-        a_uint op;
-        int t, t1, v1;
-        struct expr e, e1, e2;
+	a_uint op;
+	int t, t1, v1;
+	struct expr e, e1;
 
 	clrexpr(&e);
 	clrexpr(&e1);
-        clrexpr(&e2);
 
-        op = mp->m_valu;
+	op = (int) mp->m_valu;
 	switch (mp->m_type) {
 
 	case S_INH:
@@ -100,12 +99,12 @@ machine(struct mne *mp)
 		 * 11 bit destination.
 		 * Top 3 bits become the MSBs of the op-code.
 		 */
-		expr(&e, 0);
-                outrwm(&e, R_J11, op);
+		expr(&e);
+		outrwm(&e, R_J11, op);
 		break;
 
 	case S_JMP16:
-		expr(&e, 0);
+		expr(&e);
 		outab(op);
 		outrw(&e, R_NORM);
 		break;
@@ -253,12 +252,12 @@ machine(struct mne *mp)
 				outab(op + 0x32);
 				outrb(&e1, R_PAG0);
 				break;
-			
+
 			case S_NOT_BIT:
 				outab(op + 0x60);
 				outrb(&e1, R_PAG0);
 				break;
-			
+
 			default:
 				xerr('a', "Invalid Addressing Mode.");
 			}
@@ -442,15 +441,13 @@ machine(struct mne *mp)
 
 		/* Benny */
 		comma(1);
-		expr(&e1, 0);
+		expr(&e1);
 
 		outab(op);
 		outrb(&e, R_PAG0);
 
-                if (mchpcr(&e1)) {
-                        v1 = (int) (e1.e_addr - dot.s_addr - 1);
-                        /* sdcc svn rev #602: Fix some path problems */
-                        if (pass == 2 && ((v1 < -128) || (v1 > 127)))
+		if (mchpcr(&e1, &v1, 1)) {
+			if ((v1 < -128) || (v1 > 127))
 				xerr('a', "Branching Range Exceeded.");
 			outab(v1);
 		} else {
@@ -462,14 +459,12 @@ machine(struct mne *mp)
 
 	case S_BR:  /* JC, JNC, JZ, JNZ */
 		/* Relative branch */
-                /* sdcc svn rev #4994: fixed bug 1865114 */
-		expr(&e1, 0);
+		/* sdcc svn rev #4994: fixed bug 1865114 */
+		expr(&e1);
 		outab(op);
 
-                if (mchpcr(&e1)) {
-                        v1 = (int) (e1.e_addr - dot.s_addr - 1);
-                        /* sdcc svn rev #602: Fix some path problems */
-                        if (pass == 2 && ((v1 < -128) || (v1 > 127)))
+		if (mchpcr(&e1, &v1, 1)) {
+			if ((v1 < -128) || (v1 > 127))
 				xerr('a', "Branching Range Exceeded.");
 			outab(v1);
 		} else {
@@ -487,10 +482,10 @@ machine(struct mne *mp)
 
 		/* Benny */
 		comma(1);
-                expr(&e2, 0);
-
 		switch (t) {
 		case S_A:
+			clrexpr(&e);
+			expr(&e);
 			if (t1 == S_IMMED) {
 				outab(op + 4);
 				outrb(&e1, R_NORM);
@@ -504,14 +499,20 @@ machine(struct mne *mp)
 			break;
 
 		case S_AT_R:
-			outab(op + 6 + e.e_addr);
+			op = (op + 6 + (int) e.e_addr);
+			clrexpr(&e);
+			expr(&e);
+			outab(op);
 			if (t1 != S_IMMED)
 				xerr('a', "#__ is required second argument.");
 			outrb(&e1, R_NORM);
 			break;
 	
 		case S_REG:
-			outab(op + 8 + e.e_addr);
+			op = (op + 8 + (int) e.e_addr);
+			clrexpr(&e);
+			expr(&e);
+			outab(op);
 			if (t1 != S_IMMED)
 				xerr('a', "#__ is required second argument.");
 			outrb(&e1, R_NORM);
@@ -523,25 +524,23 @@ machine(struct mne *mp)
 		}
 
 		/* branch destination */
-                if (mchpcr(&e2)) {
-                        v1 = (int) (e2.e_addr - dot.s_addr - 1);
-                        /* sdcc svn rev #602: Fix some path problems */
-                        if (pass == 2 && ((v1 < -128) || (v1 > 127)))
+		if (mchpcr(&e, &v1, 1)) {
+			if ((v1 < -128) || (v1 > 127))
 				xerr('a', "Branching Range Exceeded.");
 			outab(v1);
 		} else {
-                        outrb(&e2, R_PCR);
+			outrb(&e, R_PCR);
 		}
-                if (e2.e_mode != S_USER)
+		if (e.e_mode != S_USER)
 			rerr();
 		break;
 
 	case S_DJNZ:
 		/* Dir,dest;  Reg,dest */
 		t = addr(&e);
-                /* sdcc svn rev #4994: fixed bug 1865114 */
+		/* sdcc svn rev #4994: fixed bug 1865114 */
 		comma(1);
-		expr(&e1, 0);
+		expr(&e1);
 
 		switch (t) {
 		case S_DIR:
@@ -559,11 +558,8 @@ machine(struct mne *mp)
 		}
 
 		/* branch destination */
-                /* sdcc svn rev #4994: fixed bug 1865114 */
-                if (mchpcr(&e1)) {
-                        v1 = (int) (e1.e_addr - dot.s_addr - 1);
-                        /* sdcc svn rev #602: Fix some path problems */
-                        if (pass == 2 && ((v1 < -128) || (v1 > 127)))
+		if (mchpcr(&e1, &v1, 1)) {
+			if ((v1 < -128) || (v1 > 127))
 				xerr('a', "Branching Range Exceeded.");
 			outab(v1);
 		} else {
@@ -702,6 +698,9 @@ machine(struct mne *mp)
 			e.e_addr = 0xE0;
 			e.e_mode = S_DIR;
 		} else
+		if (t == S_REG) {
+			e.e_mode = S_DIR;
+		} else
 		if ((t != S_DIR) && (t != S_EXT)) {
 			xerr('a', "Argument must be an address.");
 			break;
@@ -741,9 +740,25 @@ machine(struct mne *mp)
  * Branch/Jump PCR Mode Check
  */
 int
-mchpcr(struct expr *esp)
+mchpcr(struct expr *esp, int *v, int n)
 {
 	if (esp->e_base.e_ap == dot.s_area) {
+		if (v != NULL) {
+#if 1
+			/* Allows branching from top-to-bottom and bottom-to-top */
+ 			*v = (int) (esp->e_addr - dot.s_addr - n);
+			/* only bits 'a_mask' are significant, make circular */
+			if (*v & s_mask) {
+				*v |= (int) ~a_mask;
+			}
+			else {
+				*v &= (int) a_mask;
+			}
+#else
+			/* Disallows branching from top-to-bottom and bottom-to-top */
+			*v = (int) ((esp->e_addr & a_mask) - (dot.s_addr & a_mask) - n);
+#endif
+		}
 		return(1);
 	}
 	if (esp->e_flag==0 && esp->e_base.e_ap==NULL) {
@@ -765,8 +780,6 @@ mchpcr(struct expr *esp)
  * Machine specific initialization
  */
 
-static int beenHere = 0;        /* set non-zero if we have done that... */
-
 void
 minit(void)
 {
@@ -782,16 +795,16 @@ minit(void)
 	hilo = 1;
 
 	/*
-         * Address Space
+	 * Address Space
 	 */
-        exprmasks(3);
+	exprmasks(3);
 
 	/*
 	 * First time only:
 	 *	add the pre-defined symbols to the table
 	 *	as local symbols.
 	 */
-        if (beenHere == 0) {
+	if (pass == 0) {
 		pd = preDef;
 		while (pd->id) {
 			strcpy(pid, pd->id);
@@ -816,6 +829,5 @@ minit(void)
 			}
 			pd++;
 		}
-                beenHere = 1;
 	}
 }

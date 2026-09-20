@@ -5,8 +5,6 @@
 
 #include <testfwk.h>
 
-#if !defined(PORT_HOST) && !defined(__SDCC_stm8) && !defined(__SDCC_hc08) && !defined(__SDCC_s08) && !defined(__SDCC_mos6502) && !defined(__SDCC_mos65c02) && !defined(__SDCC_tlcs90) && !defined(__SDCC_f8) && !defined(__SDCC_f8l)
-
 unsigned char effect_y_line;
 #if defined(__SDCC_sm83)
 volatile __sfr __at(0xff02) reg_SCY;
@@ -23,7 +21,6 @@ void f(void) {
     effect_y_line = 10;
     reg_SCY = effect_y_line - reg_LY;
 }
-#endif
 
 void
 testBug(void)

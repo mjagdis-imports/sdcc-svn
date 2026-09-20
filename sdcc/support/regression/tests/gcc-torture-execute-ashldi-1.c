@@ -220,13 +220,13 @@ testTortureExecute (void)
     {
       unsigned long long y = variable_shift (data[0], i);
       if (y != data[i])
-	ASSERT (0);
+        ASSERT (0);
     }
   for (i = 0; i < BITS; ++i)
     {
       unsigned long long y = constant_shift (data[0], i);
       if (y != data[i])
-	ASSERT (0);
+        ASSERT (0);
     }
 #endif
 #endif

@@ -1,7 +1,7 @@
 /* r65adr.c */
 
 /*
- *  Copyright (C) 1995-2025  Alan R. Baldwin
+ *  Copyright (C) 1995-2026  Alan R. Baldwin
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -54,11 +54,11 @@ addr(struct expr *esp)
 	ip = p;
 
 	if ((c = getnb()) == '#') {
-		expr(esp, 0);
+		expr(esp);
 		esp->e_mode = S_IMMED;
 	} else
 	if (c == '*') {
-		expr(esp, 0);
+		expr(esp);
 			esp->e_mode = S_DIR;	/* ___  *arg */
 		if (more()) {
 			comma(1);
@@ -74,28 +74,31 @@ addr(struct expr *esp)
 				break;
 			}
 		}
-	} else if (c == '[') {
+	} else
+	if (c == '[') {
 		if ((c = getnb()) != '*') {
 			unget(c);
 		}
-		expr(esp, 0);
+		expr(esp);
 		if ((c = getnb()) == ']') {
 			if (more()) {
 				comma(1);
 				if (admode(axy) != S_Y)
-					qerr();
-				esp->e_mode = S_IPSTY;
+					qerr();		/* ___  (arg),X  Is Illegal */
+				esp->e_mode = S_IPSTY;	/* ___  (arg),Y */
 			} else {
-				esp->e_mode = S_IND;
+				esp->e_mode = S_IND;	/* ___  (arg) */
 			}
 		} else {
 			unget(c);
 			comma(1);
 			if (admode(axy) != S_X)
+				qerr();		/* ___  (arg,Y)  Is Illegal */
+			esp->e_mode = S_IPREX;	/* ___  (arg,X) */
+
+			if (getnb() != ']') {
 				qerr();
-			esp->e_mode = S_IPREX;
-			if (getnb() != ']')
-				qerr();
+			}
 		}
 	} else {
 		unget(c);
@@ -109,65 +112,83 @@ addr(struct expr *esp)
 			break;
 		default:
 			if (!more()) {
-			    esp->e_mode = S_ACC;	/* ___  BLANK  ->  ___  A */
-			} else {
-			    expr(esp, 0);
-			    if (more()) {
-				comma(1);
+				esp->e_mode = S_ACC;	/* ___  BLANK  ->  ___  A */
+			} else
+			if (comma(0)) {
 				switch(admode(axy)) {
-				case S_X:	/* ___  arg,X */
-					if ((!esp->e_flag)
-						&& (esp->e_base.e_ap==NULL)
-						&& !(esp->e_addr & ~0xFF)) {
-						esp->e_mode = S_DINDX;
-					} else {
-					    if ((!esp->e_flag)
-						    && (zpg != NULL)
-						    && (esp->e_base.e_ap==zpg)) {
-						    esp->e_mode = S_DINDX;
-					    } else {
-						    esp->e_mode = S_INDX;
-					    }
-					}
+				case S_X:	/* ___  ,X */
+					esp->e_mode = espmode(esp, S_INDX);
 					break;
-				case S_Y:	/* ___  arg,Y */
-					if ((!esp->e_flag)
-						&& (esp->e_base.e_ap==NULL)
-						&& !(esp->e_addr & ~0xFF)) {
-						esp->e_mode = S_DINDY;
-					} else {
-					    if ((!esp->e_flag)
-						    && (zpg != NULL)
-						    && (esp->e_base.e_ap==zpg)) {
-						    esp->e_mode = S_DINDY;
-					    } else {
-						    esp->e_mode = S_INDY;
-					    }
-					}
+				case S_Y:	/* ___  ,Y */
+					esp->e_mode = espmode(esp, S_INDY);
 					break;
 				default:
 					aerr();
 					break;
 				}
-			    } else {
-				if ((!esp->e_flag)
-				    && (esp->e_base.e_ap==NULL)
-				    && !(esp->e_addr & ~0xFF)) {
-					esp->e_mode = S_DIR;
-				} else {
-				    if ((!esp->e_flag)
-					    && (zpg != NULL)
-					    && (esp->e_base.e_ap==zpg)) {
-					    esp->e_mode = S_DIR;
-				    } else {
-					    esp->e_mode = S_EXT;
-				    }
+			} else {
+				expr(esp);
+				if (more()) {
+					comma(1);
+					switch(admode(axy)) {
+					case S_X:	/* ___  arg,X */
+						esp->e_mode = espmode(esp, S_INDX);
+						break;
+					case S_Y:	/* ___  arg,Y */
+						esp->e_mode = espmode(esp, S_INDY);
+						break;
+					default:
+						aerr();
+						break;
+					}
+				} else {	/* arg */
+					esp->e_mode = espmode(esp, S_EXT);
 				}
-			    }
 			}
 		}
 	}
 	return (esp->e_mode);
+}
+
+/*
+ * Evaluate For Direct Mode
+ *
+ * Addressing Modes Must Be
+ * Ordered From Long To Short:
+ *
+ *	S_EXT	+ 1	->	S_DIR
+ *	S_INDX	+ 1	->	S_DINDX
+ *	S_INDY	+ 1	->	S_DINDY
+ */
+int
+espmode(struct expr *esp, int s)
+{
+	int mode;
+
+	/* Constants In Direct Page */
+	if (autodpcnst
+	    && (!esp->e_flag)
+	    && (esp->e_base.e_ap == NULL)
+	    && !(esp->e_addr & ~0xFF)) {
+		mode = s + 1;
+	} else
+	/* Local Symbols In Direct Page */
+	if (autodpsmbl
+	    && (!esp->e_flag)
+	    && (zpg != NULL)
+	    && (esp->e_base.e_ap == zpg)) {
+		mode = s + 1;
+	} else
+	/* External Symbols In Direct Page */
+	if (autodpsmbl
+	    && (esp->e_flag)
+	    && (zpg != NULL)
+	    && (esp->e_base.e_sp->s_area == zpg)) {
+		mode = s + 1;
+	} else {
+		mode = s;
+	}
+	return(mode);
 }
 
 /*

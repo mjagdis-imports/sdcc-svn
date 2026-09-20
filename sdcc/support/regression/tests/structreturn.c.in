@@ -7,7 +7,8 @@
 #include <testfwk.h>
 
 #if !defined( __SDCC_pdk13) && !defined( __SDCC_pdk14) // Lack of memory
-#if !defined(__SDCC_ds390) && !defined(__SDCC_ds390) && !defined(__SDCC_hc08) && !defined(__SDCC_s08) && !defined(__SDCC_mos6502) && !defined(__SDCC_mos65c02) // struct return not yet supported
+#if !defined(__SDCC_ds390) && !defined(__SDCC_hc08) && !defined(__SDCC_s08) // struct return not yet supported
+#if !defined(SDCC_MOS) // struct return of size >8 not supported
 struct s
 {
 	{type} a;
@@ -60,15 +61,18 @@ int h2(void)
 }
 #endif
 #endif
+#endif
 
 void testRet (void)
 {
-#if !defined(__SDCC_ds390) && !defined(__SDCC_ds390) && !defined(__SDCC_hc08) && !defined(__SDCC_s08) && !defined(__SDCC_mos6502) && !defined(__SDCC_mos65c02) // struct return not yet supported
 #if !defined( __SDCC_pdk13) && !defined( __SDCC_pdk14) // Lack of memory
+#if !defined(__SDCC_ds390) && !defined(__SDCC_hc08) && !defined(__SDCC_s08) // struct return not yet supported
+#if !defined(SDCC_MOS) // struct return of size >8 not supported
 	ASSERT (g1() == 3);
 	ASSERT (g2() == 3);
 	ASSERT (h1() == 2);
 	ASSERT (h2() == 2);
+#endif
 #endif
 #endif
 }

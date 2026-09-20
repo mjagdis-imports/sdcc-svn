@@ -41,7 +41,7 @@ char    *dsft   = "asm";
 /*
  * Process machine ops.
  */
-VOID
+void
 machine(struct mne *mp)
 {
         a_uint op, opWithFlags;
@@ -193,7 +193,7 @@ machine(struct mne *mp)
                 struct expr e;
                 clrexpr(&e);
                 waddrmode =  1;
-                expr(&e, 0);
+                expr(&e);
                 waddrmode =  0;
                 outrwp(&e, def.op, 0x7FF, /*jump=*/1);
                 break;
@@ -254,7 +254,7 @@ machine(struct mne *mp)
  * Machine specific initialization
  */
 
-VOID
+void
 minit(void)
 {
         /*

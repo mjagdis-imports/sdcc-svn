@@ -35,6 +35,8 @@
 	.globl ___fsadd_PARM_1
 	.globl ___fssub_PARM_1
 	.globl ___fsmul_PARM_1
+	.globl ___fseq_PARM_1
+	.globl ___fsneq_PARM_1
 	.globl ___fslt_PARM_1
 	.globl _fabsf_PARM_1
 	.globl _cosf_PARM_1
@@ -44,6 +46,8 @@
 	.globl ___fsadd_PARM_2
 	.globl ___fssub_PARM_2
 	.globl ___fsmul_PARM_2
+	.globl ___fseq_PARM_2
+	.globl ___fsneq_PARM_2
 	.globl ___fslt_PARM_2
 	
 	.globl ___fs_ret_zero
@@ -63,6 +67,8 @@ _sinf_PARM_1:
 ___fsadd_PARM_1:
 ___fssub_PARM_1:
 ___fsmul_PARM_1:
+___fseq_PARM_1:
+___fsneq_PARM_1:
 ___fslt_PARM_1:
 	.ds 4
 	
@@ -70,6 +76,8 @@ _float_PARM_2:
 ___fsadd_PARM_2:
 ___fssub_PARM_2:
 ___fsmul_PARM_2:
+___fseq_PARM_2:
+___fsneq_PARM_2:
 ___fslt_PARM_2:
 	.ds 4
 

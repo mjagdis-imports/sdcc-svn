@@ -15,7 +15,6 @@ unsigned char d[32] = { 0 };
 void
 testTortureExecute (void)
 {
-#ifndef __SDCC_pdk14 // Lack of memory
   unsigned char c[32] = { 0 };
   unsigned char *p = d + i;
   int j;
@@ -41,5 +40,4 @@ testTortureExecute (void)
       || c[25] != 0xfe
       || cp != d + 30)
     ASSERT (0);
-#endif
 }

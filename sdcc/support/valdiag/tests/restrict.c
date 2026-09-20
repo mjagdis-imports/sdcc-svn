@@ -26,7 +26,7 @@ restrict struct
 #endif
 
 #ifdef TEST6_C99
-restrict int func(void) {	/* ERROR */
+restrict int func(void) {	/* WARNING */
   return 0;
 }
 #endif

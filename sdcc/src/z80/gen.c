@@ -10598,10 +10598,30 @@ genPlus (iCode * ic)
   for (size = 1; size >= 0; size--)
     if (cached[size] != -1)
       {
-        if (IC_RESULT (ic)->aop->regs[A_IDX] >= 0 && IC_RESULT (ic)->aop->regs[A_IDX] != size) // Don't overwrite still-needed a below.
-          UNIMPLEMENTED;
-        _pop (PAIR_AF);
-        cheapMove (IC_RESULT (ic)->aop, cached[size], ASMOP_A, 0, true);
+        if (ic->result->aop->regs[A_IDX] >= 0 && ic->result->aop->regs[A_IDX] != size) // Don't overwrite still-needed a.
+          {
+            if (aopInReg (ic->result->aop, cached[size], H_IDX) && isRegDead (L_IDX, ic) && ic->result->aop->regs[L_IDX] < 0)
+              {
+                _pop (PAIR_HL);
+                _push (PAIR_HL);
+              }
+            else if (IS_SM83 || IS_TLCS870 || // These don't have ex (sp), hl
+              aopInReg (ic->result->aop, cached[size], L_IDX) || aopInReg (ic->result->aop, cached[size], H_IDX))
+              UNIMPLEMENTED;
+            else
+              {
+                emit2 ("ex (sp), hl");
+                cost2 (1, 2, -1, 3, 19, 16, 15, 15, -1, 14, -1, 8, 8, 5, 5);
+                cheapMove (ic->result->aop, cached[size], ASMOP_H, 0, false);
+                emit2 ("ex (sp), hl");
+                cost2 (1, 2, -1, 3, 19, 16, 15, 15, -1, 14, -1, 8, 8, 5, 5);
+              }
+          }
+        else
+          {
+            _pop (PAIR_AF);
+            cheapMove (ic->result->aop, cached[size], ASMOP_A, 0, true);
+          }
       }
 
 release:

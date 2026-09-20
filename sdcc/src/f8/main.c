@@ -140,6 +140,15 @@ static char *f8_keywords[] = {
 };
 
 static void
+f8_genAssemblerStart (FILE *of)
+{
+  if (TARGET_IS_F8L)
+    fprintf (of, "\t.f8l\n");
+  else
+    fprintf (of, "\t.f8\n");
+}
+
+static void
 f8_genAssemblerEnd (FILE *of)
 {
   if (options.out_fmt == 'E' && options.debug)
@@ -307,7 +316,7 @@ int
 f8_genIVT(struct dbuf_s * oBuf, symbol ** intTable, int intCount)
 {
   dbuf_tprintf (oBuf, "\tjp #s_GSINIT ; reset\n");
-  dbuf_tprintf (oBuf, "\tnop\n");
+  dbuf_tprintf (oBuf, "\ttrap\n");
   if (interrupts[0])
     dbuf_printf (oBuf, "\tjp #%s ; interrupt handler\n", interrupts[0]->rname);
   else
@@ -533,7 +542,7 @@ PORT f8_port =
   0,
   NULL,
   f8_keywords,
-  NULL,
+  f8_genAssemblerStart,
   f8_genAssemblerEnd,
   f8_genIVT,
   0,                            /* no genXINIT code */
@@ -704,7 +713,7 @@ PORT f8l_port =
   0,
   NULL,
   f8_keywords,
-  NULL,
+  f8_genAssemblerStart,
   f8_genAssemblerEnd,
   f8_genIVT,
   0,                            /* no genXINIT code */

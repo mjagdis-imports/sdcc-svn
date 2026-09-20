@@ -57,7 +57,7 @@ struct expr *esp;
 
   if ((c = getnb()) == '#') 
     {
-      expr(esp, 0);
+      expr(esp);
       esp->e_mode = S_IMMED;
     } 
   else if (c == LFIND)  // (
@@ -85,7 +85,7 @@ struct expr *esp;
       else 
         {
           mode = S_INDM;
-          expr(esp, 0);
+          expr(esp);
           esp->e_mode = mode;
         }
       if (indx) 
@@ -130,7 +130,7 @@ struct expr *esp;
       else 
         {
           mode = S_USER;
-          expr(esp, 0);
+          expr(esp);
           esp->e_mode = mode;
         }
 

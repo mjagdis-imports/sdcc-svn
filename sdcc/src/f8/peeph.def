@@ -419,7 +419,7 @@ replace restart {
 } by {
 	jp	#%6
 	; peephole j0 jumped to %6 directly instead of via %5.
-} if labelIsUncondJump(), notSame(%5 %6), labelRefCountChange(%5 -1), labelRefCountChange(%6 +1)
+} if label5IsUncondJumpTo6(), notSame(%5 %6), labelRefCountChange(%5 -1), labelRefCountChange(%6 +1)
 
 replace restart {
 	jp	#%1
@@ -642,7 +642,7 @@ replace restart {
 } by {
 	%1	#%6
 	; peephole j8 jumped to %6 directly instead of via %5.
-} if same(%1 'jr' 'jrc' 'jrgt' 'jrle' 'jrn' 'jrnc' 'jrnn' 'jrno' 'jrnz' 'jro' 'jrsge' 'jrsgt' 'jrsle' 'jrslt' 'jrz'), labelIsUncondJump(), notSame(%5 %6), labelInRange(%6), labelRefCountChange(%5 -1), labelRefCountChange(%6 +1)
+} if same(%1 'jr' 'jrc' 'jrgt' 'jrle' 'jrn' 'jrnc' 'jrnn' 'jrno' 'jrnz' 'jro' 'jrsge' 'jrsgt' 'jrsle' 'jrslt' 'jrz'), label5IsUncondJumpTo6(), notSame(%5 %6), labelInRange(%6), labelRefCountChange(%5 -1), labelRefCountChange(%6 +1)
 
 // Do the jump-to-ret optimization after all jump inversion optimizations, to optimize jr z, %1; jp %retlabel; %1: into jr nz, %retlabel instead of jr z, %1; ret; %1:.
 barrier

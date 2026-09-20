@@ -1,7 +1,7 @@
 set error non-classified off
 set error unknown_code off
 set error memory off
-set error stack off
+set error stack on
 set hw simif rom 0x7f
 step 500000000 vclk
 state
