@@ -47,7 +47,7 @@
 ; assumes that banks never map to address 0x0000
 ; so it suffices to check dptr part only and ignore b
 
-___gptr_cmp::
+sdcc_gptr_cmp::
 	mov  a,sp
 	add  a,#0xfc
 	clr  c

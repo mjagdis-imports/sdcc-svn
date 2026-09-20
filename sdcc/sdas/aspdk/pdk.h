@@ -115,59 +115,32 @@ struct inst {
         a_uint mask;  /* mask of parameter for instruction */
 };
 
-#ifdef OTHERSYSTEM
-
 /* Codegen functions to emit instructions. */
-extern VOID emov(a_uint op,
+extern void emov(a_uint op,
           struct inst def,
           struct inst ioa,
           struct inst aio,
           struct inst ma,
           struct inst am);
-extern VOID eidxm(struct inst am, struct inst ma);
-extern VOID earith(struct inst def, struct inst ma, struct inst am);
-extern VOID earithc(struct inst ma, struct inst am, struct inst m, struct inst a);
-extern VOID eshift(struct inst a, struct inst m);
-extern VOID ebit(a_uint op, struct inst def, struct inst ma, struct inst am, struct inst *ioa);
-extern VOID enot(struct inst def, struct inst m);
-extern VOID ebitn(a_uint op, struct inst io, struct inst m, int offset);
-extern VOID eskip(struct inst def, struct inst m);
-extern VOID ezsn(struct inst def, struct inst m);
-extern VOID eret(struct inst def, struct inst k);
-extern VOID eone(struct inst m);
-extern VOID exch(struct inst m);
-extern VOID epupo(struct inst def);
-extern VOID eopta(struct inst def);
-extern VOID eswapc(a_uint op, struct inst iok, int offset);
-extern VOID espec(struct inst am, struct inst ma);
+extern void eidxm(struct inst am, struct inst ma);
+extern void earith(struct inst def, struct inst ma, struct inst am);
+extern void earithc(struct inst ma, struct inst am, struct inst m, struct inst a);
+extern void eshift(struct inst a, struct inst m);
+extern void ebit(a_uint op, struct inst def, struct inst ma, struct inst am, struct inst *ioa);
+extern void enot(struct inst def, struct inst m);
+extern void ebitn(a_uint op, struct inst io, struct inst m, int offset);
+extern void eskip(struct inst def, struct inst m);
+extern void ezsn(struct inst def, struct inst m);
+extern void eret(struct inst def, struct inst k);
+extern void eone(struct inst m);
+extern void exch(struct inst m);
+extern void epupo(struct inst def);
+extern void eopta(struct inst def);
+extern void eswapc(a_uint op, struct inst iok, int offset);
+extern void espec(struct inst am, struct inst ma);
 
 extern int addr(struct expr *esp, bool ioAdr);
 extern int pdkbit(struct expr *esp);
 
 /* Addressing parsing */
 
-#else
-
-/* Codegen functions to emit instructions. */
-extern VOID emov();
-extern VOID eidxm();
-extern VOID earith();
-extern VOID earithc();
-extern VOID eshift();
-extern VOID ebit();
-extern VOID enot();
-extern VOID ebitn();
-extern VOID eskip();
-extern VOID ezsn();
-extern VOID eret();
-extern VOID eone();
-extern VOID exch();
-extern VOID epupo();
-extern VOID eopta();
-extern VOID eswapc();
-extern VOID espec();
-
-extern int addr();
-extern int pdkbit();
-
-#endif

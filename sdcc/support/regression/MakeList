@@ -11,7 +11,8 @@ EXCLUDE_host += \
 	gte_20001111-1 \
 	gte_931004-12 \
 	gte_960802-1 \
-	gte_loop-2b
+	gte_loop-2b \
+	tst_bug-2305
 
 ###############################################
 
@@ -19,43 +20,63 @@ EXCLUDE_host += \
 EXCLUDE_pdk13 += \
 	tst_bug1057979 \
 	tst_bug1115321 \
-	tst_bug1520966 \
-	tst_bug1551947 \
+	tst_bug-2403 \
 	tst_bug-2840 \
 	tst_bug-3393 \
 	tst_bug-3873 \
 	tst_frexpf \
-	tst_lonesha256 \
-	tst_sha3-256 \
-	tst_wcsnlen \
-	tst_wcsto
+	tst_gcc-torture-execute-pr83383 \
+	tst_wcsnlen
 EXCLUDE_pdk14 += \
 	tst_bug1057979 \
 	tst_bug1115321 \
-	tst_bug1520966 \
-	tst_bug1551947 \
+	tst_bug-2403 \
 	tst_bug-3873 \
 	tst_frexpf \
-	tst_lonesha256 \
-	tst_sha3-256 \
-	tst_wcsnlen \
-	tst_wcsto
-EXCLUDE_pdk15 += \
-	tst_bug1520966 \
-	tst_bug1551947 \
-	tst_lonesha256 \
-	tst_sha3-256 \
-	tst_wcsto
+	tst_gcc-torture-execute-20020129-1 \
+	tst_gcc-torture-execute-cvt-1 \
+	tst_gcc-torture-execute-pr83383 \
+	tst_gcc-torture-execute-va-arg-9 \
+	tst_wcsnlen
 EXCLUDE_pdk15-stack-auto += \
-	tst_bug1057979 \
+	tst_bug1057979
+EXCLUDE_ARCH_pdk += \
 	tst_bug1520966 \
 	tst_bug1551947 \
+	tst_bug1723128 \
+	tst_bug3474855 \
+	tst_bug-2208 \
+	tst_bug-2756 \
+	tst_bug-3097 \
+	tst_bug-3129 \
+	tst_gcc-torture-execute-20000605-1 \
+	tst_gcc-torture-execute-20031012-1 \
+	tst_gcc-torture-execute-20060905-1 \
+	tst_gcc-torture-execute-20071030-1 \
+	tst_gcc-torture-execute-930603-1 \
+	tst_gcc-torture-execute-990829-1 \
+	tst_gcc-torture-execute-arith-rand \
+	tst_gcc-torture-execute-arith-rand-ll \
 	tst_lonesha256 \
+	tst_malloc \
 	tst_sha3-256 \
 	tst_wcsto
 EXCLUDE_mcs51-small += \
-	tst_bug-3873
+	tst_bug-2208 \
+	tst_bug-2756 \
+	tst_bug-3873 \
+	tst_gcc-torture-execute-arith-rand-ll
+
+EXCLUDE_mcs51-small-stack-auto += \
+	tst_bug-2208
+
 EXCLUDE_ARCH_mos6502 += \
+	tst_bug-3129
+
+EXCLUDE_ARCH_mcs51 += \
+	tst_bug-3129
+
+EXCLUDE_ds390 += \
 	tst_bug-3129
 
 ###################################################
@@ -164,27 +185,63 @@ EXCLUDE_s08-stack-auto += \
 EXCLUDE_ARCH_mos6502 += \
 	gte_pr30185 \
 	gte_pr58365 \
-	tst_gcc-torture-execute-20001026-1
+	tst_sha3-256 \
+	tst_gcc-torture-execute-20001026-1 \
+	tst_gcc-torture-execute-pr60017 \
+	tst_gcc-torture-execute-struct-ret-1
+
+# mcs51, hc08, s08 and pdk have restrictions on function pointers wrt. reentrancy
+EXCLUDE_ARCH_mos6502 += \
+	tst_bug-2663
+EXCLUDE_ARCH_hc08 += \
+	tst_bug-2663
+EXCLUDE_ARCH_pdk += \
+	tst_bug-2663 \
+	tst_bug-2767
+EXCLUDE_ds390 += \
+	tst_bug-2663
 
 # Target does not yet support struct/union return
 EXCLUDE_nostructret = \
+	tst_div \
 	gte_991019-1 \
 	gte_pr30185 \
 	gte_pr58365 \
+	tst_sha3-256 \
 	tst_gcc-torture-execute-20001026-1 \
+	tst_gcc-torture-execute-20131127-1 \
 	tst_gcc-torture-execute-931005-1 \
 	tst_gcc-torture-execute-950628-1 \
 	tst_gcc-torture-execute-950710-1 \
 	tst_gcc-torture-execute-961223-1 \
 	tst_gcc-torture-execute-980223 \
 	tst_gcc-torture-execute-990525-2 \
-	tst_gcc-torture-execute-pr39120
+	tst_gcc-torture-execute-pr39120 \
+	tst_gcc-torture-execute-pr60017 \
+	tst_gcc-torture-execute-struct-ret-1
 
-EXCLUDE_hc08 += $(EXCLUDE_nostructret)
-EXCLUDE_s08 += $(EXCLUDE_nostructret)
-EXCLUDE_s08-stack-auto += $(EXCLUDE_nostructret)
+EXCLUDE_ARCH_hc08 += $(EXCLUDE_nostructret)
 EXCLUDE_ds390 += $(EXCLUDE_nostructret)
 
+# target does not support __sfr
+EXCLUDE_nosfr = \
+	tst_bug3379723 \
+	tst_bug-2305 \
+	tst_bug-3165
+
+EXCLUDE_host += $(EXCLUDE_nosfr)
+EXCLUDE_ARCH_hc08 += $(EXCLUDE_nosfr)
+EXCLUDE_ARCH_mos6502 += $(EXCLUDE_nosfr)
+EXCLUDE_ARCH_f8 += $(EXCLUDE_nosfr)
+EXCLUDE_stm8 += $(EXCLUDE_nosfr)
+EXCLUDE_tlcs90 += $(EXCLUDE_nosfr)
+
+# target does not __critical
+EXCLUDE_nocritical = \
+	tst_critical
+
+EXCLUDE_ARCH_pdk += $(EXCLUDE_nocritical)
+ 
 # TODO: Check these
 EXCLUDE_ARCH_pdk += \
 	gte_980526-2 \
@@ -276,6 +333,8 @@ EXCLUDE_mcs51-xstack-auto += \
 	gte_loop-ivopts-2 \
 	gte_shiftdi-2
 EXCLUDE_uc6502-stack-auto += \
+	gte_loop-ivopts-2
+EXCLUDE_uc65c02-stack-auto += \
 	gte_loop-ivopts-2
 
 
@@ -429,7 +488,9 @@ EXCLUDE_pdk15-stack-auto += ${EXCLUDE_ARCH_pdk}
 ###################################################
 EXCLUDE_uc6502 += ${EXCLUDE_ARCH_mos6502}
 EXCLUDE_uc65c02 += ${EXCLUDE_ARCH_mos6502}
+EXCLUDE_uc6280 += ${EXCLUDE_ARCH_mos6502}
 EXCLUDE_uc6502-stack-auto += ${EXCLUDE_ARCH_mos6502}
+EXCLUDE_uc65c02-stack-auto += ${EXCLUDE_ARCH_mos6502}
 ###################################################
 EXCLUDE_f8 += ${EXCLUDE_ARCH_f8}
 EXCLUDE_f8l += ${EXCLUDE_ARCH_f8}

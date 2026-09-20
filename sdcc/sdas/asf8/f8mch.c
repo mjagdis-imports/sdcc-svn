@@ -1,7 +1,7 @@
-/* stm8mch.c */
+/* f8mch.c */
 
 /*
- *  Copyright (C) 2010  Alan R. Baldwin
+ *  Copyright (C) 2012-2026  Alan R. Baldwin
  *  Copyright (C) 2022-2023  Philipp K. Krause
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -21,14 +21,15 @@
  * Alan R. Baldwin
  * 721 Berkeley St.
  * Kent, Ohio  44240
- * 
  */
 
 #include "asxxxx.h"
 #include "f8.h"
 
-char	*cpu	= "f8";
+char	*cpu	= "f8 / f8l";
 char	*dsft	= "asm";
+
+int	mchtyp;
 
 #define	NB	512
 
@@ -53,10 +54,10 @@ int	bb[NB];
 #define	P4	((char) (OPCY_NONE | 0x04))
 
 /*
- * stm8 Opcode Cycle Pages
+ * F8 Opcode Cycle Pages
  */
 
-static char  stm8pg[256] = {
+static char  f8pg[256] = {
 /*--*--* 0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F */
 /*--*--* -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - */
 /*00*/   1, 1, 1, 1, 1,UN, 1, 1, 1, 1, 1,UN, 1, 1, 1, 1,
@@ -162,13 +163,13 @@ static char  pg92[256] = {  /* P4: PreByte == 92 */
 };
 
 static char *Page[5] = {
-    stm8pg, pg72, pg90, pg91, pg92
+    f8pg, pg72, pg90, pg91, pg92
 };
 
 /*
  * Process a machine op.
  */
-VOID
+void
 machine(struct mne *mp)
 {
 	struct expr e1, e2, e3;
@@ -183,6 +184,9 @@ machine(struct mne *mp)
 	rf = mp->m_type;
 
 	switch(rf) {
+	case S_CPU:
+		mchtyp = op;
+		break;
 	case S_2OP:
 	case S_2OPSUB:
 		t1 = addr(&e1);
@@ -268,8 +272,10 @@ machine(struct mne *mp)
 			outab(op + 0x00);
 			outrw(&e1, R_USGN);
 			break;
-		case S_SPREL:
 		case S_YREL:
+			if (mchtyp == X_F8L)
+				aerr();
+		case S_SPREL:
 			outab(op + (t1 == S_SPREL ? 0x01 : 0x03));
 			if(ls_mode(&e1))
 				aerr();
@@ -317,6 +323,9 @@ machine(struct mne *mp)
 			break;
 		}
 
+		if (mchtyp == X_F8L)
+			aerr();
+		
 		if(t2 == S_REG && r1 == X && r2 == Y || t1 == S_SPREL || t1 == S_DIR) { // swapped operands.
 			int tr = r1;
 			r1 = r2;
@@ -436,6 +445,8 @@ opw:
 					aerr();
 				break;
 			case S_YREL:
+				if (mchtyp == X_F8L)
+					aerr();
 				outab(op | 0x05);
 				if(ls_mode(&e2))
 					aerr();
@@ -504,6 +515,8 @@ opw:
 					aerr();
 				break;
 			case S_YREL:
+				if (mchtyp == X_F8L)
+					aerr();
 				outab(op | 0x0f);
 				if(ls_mode(&e1))
 					aerr();
@@ -520,6 +533,9 @@ opw:
 		break;
 
 	case S_LDI:
+		if (mchtyp == X_F8L)
+			aerr();
+
 		t1 = addr(&e1);
 		r1 = rcode;
 		comma(1);
@@ -611,6 +627,8 @@ opw:
 				outrw(&e2, R_USGN);
 				break;
 			case S_YREL:
+				if (mchtyp == X_F8L)
+					aerr();
 				outab(op | 0x04);
 				if(ls_mode(&e2))
 					aerr();
@@ -642,6 +660,8 @@ opw:
 			break;
 		}
 		else if(t1 == S_YREL && t2 == S_REG && (r2 == X || r2 == Z)) {
+			if (mchtyp == X_F8L)
+					aerr();
 			if (r2 == Z)
 				outab (OPCODE_ALTACC3);
 			if(!ls_mode(&e2)) {
@@ -719,6 +739,9 @@ opw:
 			aerr();
 		switch(t2) {
 		case S_SPREL:
+			if (mchtyp == X_F8L)
+				aerr();
+
 			altacc(r1);
 			outab(0x91);
 			if(ls_mode(&e1))
@@ -733,6 +756,9 @@ opw:
 			outab(0x92);
 			break;
 		case S_REG:
+			if (mchtyp == X_F8L)
+				aerr();
+
 			if (r1 == YL && r2 == YH)
 				outab(0x93);
 			else if (r1 == XL && r2 == XH) {
@@ -752,6 +778,9 @@ opw:
 		break;
 
 	case S_0OPROT:
+		if (mchtyp == X_F8L)
+			aerr();
+
 		t1 = addr(&e1);
 		r1 = rcode;
 		comma(1);
@@ -768,6 +797,9 @@ opw:
 		break;
 
 	case S_0OPMAD:
+		if (mchtyp == X_F8L)
+			aerr();
+
 		t1 = addr(&e1);
 		r1 = rcode;
 		comma(1);
@@ -823,7 +855,7 @@ opw:
 			outab(OPCODE_ALTACC5);
 			outab(0xf4);
 		}
-		else if(t2 != S_SPREL || ls_mode(&e2))
+		else if(t2 != S_SPREL || ls_mode(&e2) || mchtyp == X_F8L)
 			aerr();
 		else {
 			altaccw(r1);
@@ -880,6 +912,9 @@ opw:
 		break;
 		
 	case S_0OPWSEX:
+		if (mchtyp == X_F8L)
+			aerr();
+
 		t1 = addr(&e1);
 		r1 = rcode;
 		comma(1);
@@ -912,7 +947,7 @@ sex:
         case S_JR2:
                 outab(OPCODE_SWAPOP);
 	case S_JR:
-		expr(&e1, 0);
+		expr(&e1);
 		outab(op);
 		if(mchpcr(&e1)) {
 			int v1 = (int)(e1.e_addr - dot.s_addr + 1);
@@ -929,6 +964,9 @@ sex:
 		break;
 
 	case S_DNJNZ:
+		if (mchtyp == X_F8L)
+			aerr();
+
 		t1 = addr(&e1);
 		r1 = rcode;
 		comma(1);
@@ -940,7 +978,7 @@ sex:
 			altaccw(Z);
 		else
 			aerr();
-		expr(&e2, 0);
+		expr(&e2);
 		outab(op);
 		if(mchpcr(&e2)) {
 			int v2 = (int)(e2.e_addr - dot.s_addr + 1);
@@ -1043,7 +1081,7 @@ sex:
 	}
 
 	if (opcycles == OPCY_NONE) {
-		opcycles = stm8pg[cb[0] & 0xFF];
+		opcycles = f8pg[cb[0] & 0xFF];
 		if ((opcycles & OPCY_NONE) && (opcycles & OPCY_MASK)) {
 			opcycles = Page[opcycles & OPCY_MASK][cb[1] & 0xFF];
 		}
@@ -1053,7 +1091,7 @@ sex:
 /*
  * Disable Opcode Cycles with aerr()
  */
-VOID
+void
 opcy_aerr()
 {
 	opcycles = OPCY_SKP;
@@ -1135,7 +1173,7 @@ d_mode(struct expr *e)
  * Generate an 'a' error if the absolute
  * value is not a valid unsigned or signed value.
  */
-VOID
+void
 valu_aerr(struct expr *e, int n)
 {
 	int v;
@@ -1186,7 +1224,7 @@ mchpcr(struct expr *esp)
 /*
  * Machine specific initialization.
  */
-VOID
+void
 minit()
 {
 	/*
@@ -1204,6 +1242,9 @@ minit()
 	 */
 	bp = bb;
 	bm = 1;
+
+	if (pass == 0) // Default to full f8 instruction set.
+                mchtyp = X_F8;
 }
 
 /*

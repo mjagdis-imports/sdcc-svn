@@ -1,7 +1,7 @@
-/* stm8pst.c */
+/* f8pst.c */
 
 /*
- *  Copyright (C) 1010  Alan R. Baldwin
+ *  Copyright (C) 2012-2026  Alan R. Baldwin
  *  Copyright (C) 2022  Philipp K. Krause
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -21,7 +21,6 @@
  * Alan R. Baldwin
  * 721 Berkeley St.
  * Kent, Ohio  44240
- * 
  */
 
 #include "asxxxx.h"
@@ -74,7 +73,6 @@ char	mode1[32] = {	/* R_BITS */
 	'\030',	'\031',	'\032',	'\033',	'\034',	'\035',	'\036',	'\037'
 };
 
-
 /*
  *     *m_def is a pointer to the bit relocation definition.
  *	m_flag indicates that bit position swapping is required.
@@ -112,12 +110,12 @@ struct	mne	mne[] = {
 
 	/* machine */
 
-  //{	NULL,	"CSEG",		S_ATYP,		0,	A_CSEG|A_1BYTE	},
-  //{	NULL,	"DSEG",		S_ATYP,		0,	A_DSEG|A_1BYTE	},
+/*    {	NULL,	"CSEG",		S_ATYP,		0,	A_CSEG|A_1BYTE	},	*/
+/*    {	NULL,	"DSEG",		S_ATYP,		0,	A_DSEG|A_1BYTE	},	*/
 
 	/* system */
 
-  //{	NULL,	"BANK",		S_ATYP,		0,	A_BNK	},
+/*    {	NULL,	"BANK",		S_ATYP,		0,	A_BNK	},	*/
     {	NULL,	"CON",		S_ATYP,		0,	A_CON	},
     {	NULL,	"OVR",		S_ATYP,		0,	A_OVR	},
     {	NULL,	"REL",		S_ATYP,		0,	A_REL	},
@@ -132,6 +130,11 @@ struct	mne	mne[] = {
     {	NULL,	"MAP",		S_BTYP,		0,	B_MAP	},
 #endif
     {	NULL,	"NOLOAD",	S_ATYP,		0,	A_NOLOAD},
+
+	/* assembler */
+
+/*    {	NULL,	".enabl",	S_OPTN,		0,	O_ENBL	},	*/
+/*    {	NULL,	".dsabl",	S_OPTN,		0,	O_DSBL	},	*/
     {	NULL,	".page",	S_PAGE,		0,	0	},
     {	NULL,	".title",	S_HEADER,	0,	O_TITLE	},
     {	NULL,	".sbttl",	S_HEADER,	0,	O_SBTTL	},
@@ -139,7 +142,9 @@ struct	mne	mne[] = {
     {	NULL,	".include",	S_INCL,		0,	I_CODE	},
     {	NULL,	".incbin",	S_INCL,		0,	I_BNRY	},
     {	NULL,	".area",	S_AREA,		0,	0	},
-    //{	NULL,	".bank",	S_BANK,		0,	0	},
+    {	NULL,	".psharea",	S_AREA,		0,	O_PSH	},
+    {	NULL,	".poparea",	S_AREA,		0,	O_POP	},
+/*    {	NULL,	".bank",	S_BANK,		0,	0	},	*/
     {	NULL,	".org",		S_ORG,		0,	0	},
     {	NULL,	".radix",	S_RADIX,	0,	0	},
     {	NULL,	".globl",	S_GLOBL,	0,	0	},
@@ -180,8 +185,6 @@ struct	mne	mne[] = {
     {	NULL,	".endif",	S_CONDITIONAL,	0,	O_ENDIF	},
     {	NULL,	".list",	S_LISTING,	0,	O_LIST	},
     {	NULL,	".nlist",	S_LISTING,	0,	O_NLIST	},
-    {	NULL,	".uleb128",	S_ULEB128,	0,	0	},
-    {	NULL,	".sleb128",	S_SLEB128,	0,	0	},
     {	NULL,	".equ",		S_EQU,		0,	O_EQU	},
     {	NULL,	".gblequ",	S_EQU,		0,	O_GBLEQU},
     {	NULL,	".lclequ",	S_EQU,		0,	O_LCLEQU},
@@ -193,8 +196,10 @@ struct	mne	mne[] = {
     {	NULL,	".fdb",		S_DATA,		0,	O_2BYTE	},
     {	NULL,	".3byte",	S_DATA,		0,	O_3BYTE	},
     {	NULL,	".triple",	S_DATA,		0,	O_3BYTE	},
+/*    {	NULL,	".dl",		S_DATA,		0,	O_4BYTE	},	*/
 /*    {	NULL,	".4byte",	S_DATA,		0,	O_4BYTE	},	*/
 /*    {	NULL,	".quad",	S_DATA,		0,	O_4BYTE	},	*/
+/*    {	NULL,	".long",	S_DATA,		0,	O_4BYTE	},	*/
     {	NULL,	".blkb",	S_BLK,		0,	O_1BYTE	},
     {	NULL,	".ds",		S_BLK,		0,	O_1BYTE	},
     {	NULL,	".rmb",		S_BLK,		0,	O_1BYTE	},
@@ -202,6 +207,7 @@ struct	mne	mne[] = {
     {	NULL,	".blkw",	S_BLK,		0,	O_2BYTE	},
     {	NULL,	".blk3",	S_BLK,		0,	O_3BYTE	},
 /*    {	NULL,	".blk4",	S_BLK,		0,	O_4BYTE	},	*/
+/*    {	NULL,	".blkl",	S_BLK,		0,	O_4BYTE	},	*/
     {	NULL,	".ascii",	S_ASCIX,	0,	O_ASCII	},
     {	NULL,	".ascis",	S_ASCIX,	0,	O_ASCIS	},
     {	NULL,	".asciz",	S_ASCIX,	0,	O_ASCIZ	},
@@ -217,15 +223,22 @@ struct	mne	mne[] = {
     {	NULL,	".msg"	,	S_MSG,		0,	0	},
     {	NULL,	".assume",	S_ERROR,	0,	O_ASSUME},
     {	NULL,	".error",	S_ERROR,	0,	O_ERROR	},
-    //{	NULL,	".msb",		S_MSB,		0,	0	},
+/*    {	NULL,	".msb",		S_MSB,		0,	0	},	*/
 /*    {	NULL,	".lohi",	S_MSB,		0,	O_LOHI	},	*/
 /*    {	NULL,	".hilo",	S_MSB,		0,	O_HILO	},	*/
 /*    {	NULL,	".8bit",	S_BITS,		0,	O_1BYTE	},	*/
 /*    {	NULL,	".16bit",	S_BITS,		0,	O_2BYTE	},	*/
 /*    {	NULL,	".24bit",	S_BITS,		0,	O_3BYTE	},	*/
 /*    {	NULL,	".32bit",	S_BITS,		0,	O_4BYTE	},	*/
-    {	NULL,	".end",		S_END,		0,	0	},
+/*    {	NULL,	".trace",	S_TRACE,	0,	O_TRC	},	*/
+/*    {	NULL,	".ntrace",	S_TRACE,	0,	O_NTRC	},	*/
+/*    {	NULL,	"_______",	S_CONST,	0,	VALUE	},	*/
+/*    {	NULL,	".end",		S_END,		0,	0	},	*/
+
 /* sdas specific */
+/*    {   NULL,   ".df",          S_FLOAT,        0,      0       },	*/
+    {   NULL,   ".uleb128",     S_ULEB128,      0,      0       },
+    {   NULL,   ".sleb128",     S_SLEB128,      0,      0       },
     {   NULL,   ".optsdcc",     S_OPTSDCC,      0,      0       },
 /* end sdas specific */
 
@@ -246,6 +259,12 @@ struct	mne	mne[] = {
     {	NULL,	".nval",	S_MACRO,	0,	O_NVAL	},
 
     {	NULL,	".mdelete",	S_MACRO,	0,	O_MDEL	},
+
+
+        /* variants */
+    {	NULL,	".f8",		S_CPU,		0,	X_F8	},
+    {	NULL,	".f8l",		S_CPU,		0,	X_F8L	},
+
 
 	/* f8 instructions */
 
@@ -305,7 +324,7 @@ struct	mne	mne[] = {
     {	NULL,	"mad",		S_0OPMAD,	0,	0xbc	},
     {	NULL,	"rot",		S_0OPROT,	0,	0x95	},
     {	NULL,	"thrd",		S_0OP,		0,	0x9a	},
-	{	NULL,	"cax",		S_0OPCAX,	0,	0x9b	},
+    {	NULL,	"cax",		S_0OPCAX,	0,	0x9b	},
     //{	NULL,	"push",		S_0OP,		0,	0x90	},
     
     /* 16-bit 0-op-instrustions */
@@ -328,14 +347,10 @@ struct	mne	mne[] = {
 //    {	NULL,	"sllw",		S_0OPW,		0,	0xe5	},
 //    {	NULL,	"rlcw",		S_0OPW,		0,	0xe6	},
 //    {	NULL,	"rrcw",		S_0OPW,		0,	0xe7	},
-	{	NULL,	"cltz",		S_0OPW,		0,	0xed	},
     {	NULL,	"sex",		S_0OPWSEX,	0,	0xee	},
     {	NULL,	"zex",		S_0OPWSEX,	0,	0xef	},
 //    {	NULL,	"addw",		S_0OPW,		0,	0xec	},
-	{	NULL,	"caxw",		S_0OPWCAX,	0,	0xf9	},
-
-    /* bit instructions */
-    {	NULL,	"xchb",		S_BIT,		0,	0x68	},
+    {	NULL,	"caxw",		S_0OPWCAX,	0,	0xf9	},
 
 	/* relative jumps */
     {	NULL,	"jr",		S_JR,		0,	0xd0	},
@@ -360,9 +375,6 @@ struct	mne	mne[] = {
 	{	NULL,	"jp",		S_JP,		0,	0x64	},
 	{	NULL,	"ret",		S_RET,		0,	0xba	},
 	{	NULL,	"reti",		S_RET,		0,	0xbb	},
-
-	/* nop */
-    {	NULL,	"nop",		S_TRAP,		0,	0x08	},
     
     /* trap */
     {	NULL,	"trap",		S_TRAP,	S_EOL,	0x00	}

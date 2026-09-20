@@ -86,8 +86,8 @@ b1:
 b0:
 
 nextb:
-    dex
-    bpl bloop
+	dex
+	bpl bloop
     
 	tya
 	rts

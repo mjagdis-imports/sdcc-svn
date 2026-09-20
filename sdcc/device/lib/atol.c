@@ -13,7 +13,7 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License 
+   You should have received a copy of the GNU General Public License
    along with this library; see the file COPYING. If not, write to the
    Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA.
@@ -44,9 +44,17 @@ long int atol(const char *nptr)
   if (*nptr == '-' || *nptr == '+')
     nptr++;
 
-  while (isdigit (*nptr))
-    ret = ret * 10 + (*(nptr++) - '0');
+  while (true)
+    {
+      unsigned char d = *nptr++ - '0';
+      if (d > 9)
+        break;
+      ret = ret * 10;
+      ret = ret + d;
+    }
 
-  return (neg ? -ret : ret); // Since -LONG_MIN is LONG_MIN in sdcc, the result value always turns out ok.
+  if (neg)
+    ret = -ret; // Since -LONG_MIN is LONG_MIN in sdcc, the result value always turns out ok.
+  return ret;
 }
 

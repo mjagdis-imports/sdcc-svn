@@ -1333,8 +1333,9 @@ getBuiltinParms (iCode *fic, int *pcount, operand **parms)
   while (ic->op != CALL)
     {
       assert (ic->op == SEND && ic->builtinSEND);
-      if(!regalloc_dry_run || ic != fic)
+      if(!regalloc_dry_run && ic != fic)
         ic->generated = 1;        /* mark the icode as generated */
+
       parms[*pcount] = IC_LEFT (ic);
       ic = ic->next;
       (*pcount)++;
@@ -2491,7 +2492,16 @@ geniCodeSubtract (operand * left, operand * right, RESULT_TYPE resultType)
   /* if left is an array or pointer */
   if (IS_PTR (ltype) || IS_ARRAY (ltype))
     {
+      if (!getSize (ltype->next))
+        {
+          if (!IS_VOID (ltype->next))
+            werror (E_UNKNOWN_SIZE, IS_SYMOP (left) ? OP_SYMBOL (left)->name : "<no name>");
+          else
+            werror (W_SIZEOF_VOID);
+        }
+
       isarray = left->isaddr;
+      
       right = geniCodeMultiply (right,
                                 operandFromLit (getSize (ltype->next)),
                                 (getArraySizePtr (left) >= INTSIZE) ? RESULT_TYPE_INT : RESULT_TYPE_CHAR);
@@ -2550,8 +2560,13 @@ geniCodeAdd (operand *left, operand *right, RESULT_TYPE resultType, int lvl)
       nBytes = getSize (ltype->next);
       ptrSize = getArraySizePtr (left); // works for both arrays and pointers
 
-      if (nBytes == 0 && !IS_VOID (ltype->next))
-        werror (E_UNKNOWN_SIZE, IS_SYMOP (left) ? OP_SYMBOL (left)->name : "<no name>");
+      if (nBytes == 0)
+        {
+          if (!IS_VOID (ltype->next))
+            werror (E_UNKNOWN_SIZE, IS_SYMOP (left) ? OP_SYMBOL (left)->name : "<no name>");
+          else
+            werror (W_SIZEOF_VOID);
+        }
       // there is no need to multiply with 1
       if (nBytes != 1)
         {
@@ -2835,7 +2850,12 @@ geniCodePostInc (operand * op)
 
   size = (IS_PTR (rvtype) ? getSize (rvtype->next) : 1);
   if (size == 0)
-    werror (W_SIZEOF_VOID);
+    {
+      if (!IS_VOID (rvtype->next))
+        werror (E_UNKNOWN_SIZE, IS_SYMOP (rv) ? OP_SYMBOL (rv)->name : "<no name>");
+      else
+        werror (W_SIZEOF_VOID);
+    }
   if (IS_FLOAT (rvtype))
     ic = newiCode ('+', srcOp, operandFromValue (constFloatVal ("1.0"), false));
   else if (IS_FIXED16X16 (rvtype))
@@ -2876,7 +2896,12 @@ geniCodePreInc (operand * op, bool lvalue)
 
   size = (IS_PTR (roptype) ? getSize (roptype->next) : 1);
   if (size == 0)
-    werror (W_SIZEOF_VOID);
+    {
+      if (!IS_VOID (roptype->next))
+        werror (E_UNKNOWN_SIZE, IS_SYMOP (rop) ? OP_SYMBOL (rop)->name : "<no name>");
+      else
+        werror (W_SIZEOF_VOID);
+    }
   if (IS_FLOAT (roptype))
     ic = newiCode ('+', rop, operandFromValue (constFloatVal ("1.0"), false));
   else if (IS_FIXED16X16 (roptype))
@@ -2934,7 +2959,12 @@ geniCodePostDec (operand * op)
 
   size = (IS_PTR (rvtype) ? getSize (rvtype->next) : 1);
   if (size == 0)
-    werror (W_SIZEOF_VOID);
+    {
+      if (!IS_VOID (rvtype->next))
+        werror (E_UNKNOWN_SIZE, IS_SYMOP (rv) ? OP_SYMBOL (rv)->name : "<no name>");
+      else
+        werror (W_SIZEOF_VOID);
+    }
   if (IS_FLOAT (rvtype))
     ic = newiCode ('-', srcOp, operandFromValue (constFloatVal ("1.0"), false));
   else if (IS_FIXED16X16 (rvtype))
@@ -2975,7 +3005,12 @@ geniCodePreDec (operand * op, bool lvalue)
 
   size = (IS_PTR (roptype) ? getSize (roptype->next) : 1);
   if (size == 0)
-    werror (W_SIZEOF_VOID);
+    {
+      if (!IS_VOID (roptype->next))
+        werror (E_UNKNOWN_SIZE, IS_SYMOP (rop) ? OP_SYMBOL (rop)->name : "<no name>");
+      else
+        werror (W_SIZEOF_VOID);
+    }
   if (IS_FLOAT (roptype))
     ic = newiCode ('-', rop, operandFromValue (constFloatVal ("1.0"), false));
   else if (IS_FIXED16X16 (roptype))

@@ -22,7 +22,6 @@ bar (float *p)
   *p = 5.2;
 }
 
-#ifndef __SDCC_pdk14 // Lack of memory
 int
 foo(struct A *locp, int i, int str)
 {
@@ -44,12 +43,10 @@ foo(struct A *locp, int i, int str)
 
   return T355;
 }
-#endif
 
 void
 testTortureExecute (void)
 {
-#ifndef __SDCC_pdk14 // Lack of memory
   struct A loc;
   int str;
 
@@ -58,6 +55,5 @@ testTortureExecute (void)
   if (str!=1)
     ASSERT (0);
   return;
-#endif
 }
 

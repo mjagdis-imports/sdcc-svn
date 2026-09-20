@@ -10,7 +10,7 @@
 
 #pragma disable_warning 85
 
-#if defined(__SDCC_mcs51) || defined (__SDCC_ds390) || defined (__SDCC_mos6502) || defined (__SDCC_mos65c02) || defined (__SDCC_pic14) || defined (__SDCC_pic16)
+#if defined(__SDCC_mcs51) || defined (__SDCC_ds390) || defined (SDCC_MOS) || defined (__SDCC_pic14) || defined (__SDCC_pic16)
 # define va_char char
 #else
 # define va_char int

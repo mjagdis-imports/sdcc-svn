@@ -1,3 +1,714 @@
+2026-09-19 Gabriele Gorla <gorlik@yahoo.com>
+
+	* support/regression/MakeList,
+	  support/regression/ports/hc08/uCsim.cmd,
+	  support/regression/ports/pdk14/uCsim.cmd,
+	  support/regression/ports/s08/uCsim.cmd,
+	  support/regression/ports/s08-stack-auto/uCsim.cmd,
+	  support/regression/tests/bug-2208.c,
+	  support/regression/tests/bug-2222.c,
+	  support/regression/tests/bug-2231.c,
+	  support/regression/tests/bug-2305.c,
+	  support/regression/tests/bug-2403.c,
+	  support/regression/tests/bug-2663.c,
+	  support/regression/tests/bug-2767.c,
+	  support/regression/tests/bug-3097.c,
+	  support/regression/tests/bug-3129.c,
+	  support/regression/tests/bug-3231.c,
+	  support/regression/tests/bug-3717.c,
+	  support/regression/tests/bug1723128.c,
+	  support/regression/tests/bug2783061.c,
+	  support/regression/tests/bug3379723.c,
+	  support/regression/tests/bug3474855.c,
+	  support/regression/tests/critical.c,
+	  support/regression/tests/div.c,
+	  support/regression/tests/gcc-torture-execute-20000605-1.c,
+	  support/regression/tests/gcc-torture-execute-20001024-1.c,
+	  support/regression/tests/gcc-torture-execute-20020129-1.c,
+	  support/regression/tests/gcc-torture-execute-20030717-1.c,
+	  support/regression/tests/gcc-torture-execute-20031012-1.c,
+	  support/regression/tests/gcc-torture-execute-20050826-2.c,
+	  support/regression/tests/gcc-torture-execute-20060110-1.c,
+	  support/regression/tests/gcc-torture-execute-20060905-1.c,
+	  support/regression/tests/gcc-torture-execute-20071030-1.c,
+	  support/regression/tests/gcc-torture-execute-20120808-1.c,
+	  support/regression/tests/gcc-torture-execute-20120817-1.c,
+	  support/regression/tests/gcc-torture-execute-20131127-1.c,
+	  support/regression/tests/gcc-torture-execute-930603-1.c,
+	  support/regression/tests/gcc-torture-execute-990829-1.c,
+	  support/regression/tests/gcc-torture-execute-arith-rand-ll.c,
+	  support/regression/tests/gcc-torture-execute-arith-rand.c,
+	  support/regression/tests/gcc-torture-execute-cvt-1.c,
+	  support/regression/tests/gcc-torture-execute-pr15262.c,
+	  support/regression/tests/gcc-torture-execute-pr34456.c,
+	  support/regression/tests/gcc-torture-execute-pr39100.c,
+	  support/regression/tests/gcc-torture-execute-pr44575.c,
+	  support/regression/tests/gcc-torture-execute-pr60017.c,
+	  support/regression/tests/gcc-torture-execute-pr68390.c,
+	  support/regression/tests/gcc-torture-execute-pr83383.c,
+	  support/regression/tests/gcc-torture-execute-struct-ret-1.c,
+	  support/regression/tests/gcc-torture-execute-va-arg-1.c,
+	  support/regression/tests/gcc-torture-execute-va-arg-9.c,
+	  support/regression/tests/malloc.c:
+	  Enabled many working tests. Moved exclusions to MakeList.
+	* src/mos6502/gen.c:
+	  Merge genCall() and genPcall().
+
+2026-09-18 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/sdbinutils/bfd/configure.ac,
+	  support/sdbinutils/bfd/configure:
+	  Fix version display for sdbinutils.
+
+2026-09-17 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* src/ds390/main.c (port): unqualified pointer cannot point to __sfr
+	* src/mcs51/main.c (port): unqualified pointer cannot point to __sfr
+	* support/valdiag/tests/bug-2798.c: fail &sfr for mcs51 & ds390 too
+	* support/valdiag/valdiag.py,
+	* support/valdiag/Makefile.in: added huc6280,
+	  compact *.out into *.log,
+	  collate *.log into <port>.sum
+
+2026-09-17 Gabriele Gorla <gorlik@yahoo.com>
+
+	* device/lib/huc6280/_setjmp.s,
+	  device/lib/mos65c02/_setjmp.s,
+	  support/regression/ports/uc6280/support.c,
+	  support/regression/ports/uc6280/uCsim.cmd:
+	  Fix last HuC6280 regression failures.
+	* support/regression/MakeList,
+	  support/regression/Makefile.in,
+	  support/regression/tests/asconaead128.c.in,
+	  support/regression/tests/bigstack.c.in,
+	  support/regression/tests/bug-2756.c,
+	  support/regression/tests/bug-2855.c,
+	  support/regression/tests/bug-3165.c,
+	  support/regression/tests/coremark.c.in,
+	  support/regression/tests/critical.c,
+	  support/regression/tests/funptrsstructreturn.c.in,
+	  support/regression/tests/gcc-torture-execute-func-ptr-1.c,
+	  support/regression/tests/gcrypt-serpent.c.in,
+	  support/regression/tests/largeoddstruct.c.in,
+	  support/regression/tests/sha3-256.c,
+	  support/regression/tests/stack-restore.c.in,
+	  support/regression/tests/structreturn.c.in,
+	  support/regression/tests/tinyaes.c.in,
+	  support/regression/tests/vaargs-c23.c.in,
+	  support/regression/tests/vaargs.c.in:
+	  Move several test exclusion to MakeList.
+	* src/mos6502/peeph.def:
+	  Add branch inversion followed by bra.
+	* src/mos6502/gen.c:
+	  Add CLA, CLX, CLY code path to loadRegFromConst().
+	* device/include/stdbit.h,
+	  device/include/string.h,
+	  device/lib/huc6280/crt0.s,
+	  device/lib/huc6280/memcpy.s:
+	  Use TII in crt0 and memcpy.	  
+	* src/mos6502/gen.c:
+	  Refactor loadRegFromConst().
+	* support/regression/tests/bug-3385.c:
+	  Enable test to hc08/s08 port.
+
+2026-09-16 Gabriele Gorla <gorlik@yahoo.com>
+
+	* sim/ucsim/src/sims/mos6502.src/inst.cc,
+	  sim/ucsim/src/sims/mos6502.src/mos65c02.cc:
+	  Fix Bug #4079
+
+2026-09-15 Gabriele Gorla <gorlik@yahoo.com>
+
+	* sdas/asxxsrc/asdata.c,
+	  sdas/asxxsrc/asexpr.c,
+	  sdas/asxxsrc/asxxxx.h,
+	  sdas/asrab/rabadr.c:
+	  More asxxxx small upstream changes.
+	* sdas/asxxsrc/asdbg.c,
+	  sdas/asxxsrc/asxxxx.h:
+	  Debug printing from upstream asxxxx.
+
+2026-09-15 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* src/SDCCicode.c (geniCodePostInc, geniCodePreInc, geniCodePostDec,
+	  geniCodePreDec): throw E_UNKNOWN_SIZE for incomplete struct
+	* src/mos6502/tempops.c: fixed warning
+	* support/valdiag/valdiag.py: no need to assemble,
+	  added __has_idata, __has_pdata, __has_code for mcs51 & ds390,
+	  added __has_xdata for r2k, r4k & tlcs90,
+	  skip completely commented out lines,
+	  print bytes when normal print fails due to unsupported utf-8,
+	  record both ERROR and WARNING tests,
+	  generate separate asm files per test,
+	  test ERROR as ERROR and WARNIGN as WARNING,
+	  use some f-strings
+	* support/valdiag/tests/tentdecl.c: use __has_data,
+	  change IGNORE to ERROR for fixed bug #2735,
+	  removed #ifdef __SDCC checks and validDeclaraction
+	* support/valdiag/tests/_Optional-draft-2026-04-17.c,
+	* support/valdiag/tests/_Optional.c,
+	* support/valdiag/tests/bug-2798.c,
+	* support/valdiag/tests/bug-3012.c,
+	* support/valdiag/tests/restrict.c,
+	* support/valdiag/tests/undefinedc23.c: fixed ERROR/WARNING mix-ups
+
+2026-09-15 Gabriele Gorla <gorlik@yahoo.com>
+
+	* device/lib/huc6280/_memset.s,
+	  device/lib/huc6280/memcpy.s,
+	  device/lib/mos6502/Makefile.in,
+	  device/lib/mos65c02-stack-auto/_setjmp.s:
+	  Small cosmetic fixes to mos6502 library files.
+	* device/lib/huc6280/crt0.s:
+	  Setup the HuC6280 MMU.
+	* sim/ucsim/src/core/sim.src/uc.cc,
+	  sim/ucsim/src/core/sim.src/uccl.h,
+	  sim/ucsim/src/sims/mos6502.src/huc6280cl.h:
+	  Make HuC6280 default load rom to "rom_chip".
+	* sdas/as6500/r65pst.c,
+	  sdas/as6808/m08pst.c,
+	  sdas/as8051/i51pst.c,
+	  sdas/as8xcxxx/ds8pst.c,
+	  sdas/asf8/f8pst.c,
+	  sdas/asgb/gbpst.c,
+	  sdas/aspdk13/pdk13pst.c,
+	  sdas/aspdk14/pdk14pst.c,
+	  sdas/aspdk15/pdk15pst.c,
+	  sdas/aspdk16/pdk16pst.c,
+	  sdas/asrab/rabpst.c,
+	  sdas/asstm8/stm8pst.c,
+	  sdas/astlcs90/t90pst.c,
+	  sdas/asxxsrc/asmain.c,
+	  sdas/asxxsrc/asxxxx.h,
+	  sdas/asz80/z80pst.c:
+	  Enable .psharea and .poparea from upstream asxxxx.
+
+2026-09-13 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c,
+	  src/mos6502/gen.h,
+	  src/mos6502/m6502.h,
+	  src/mos6502/main.c,
+	  src/mos6502/tempops.c:
+	  Fix stack handling for huc6280.
+
+2026-09-12 Gabriele Gorla <gorlik@yahoo.com>
+
+	* sim/ucsim/src/sims/mos6502.src/huc6280.cc,
+	  sim/ucsim/src/sims/mos6502.src/huc6502.cc:
+	  Improve HuC6280 interrupt handling.
+	* sim/ucsim/src/sims/mos6502.src/mos6502.cc:
+	  Fix typo in disassembler.
+	* sim/ucsim/src/sims/mos6502.src/huc6280cl.h,
+      sim/ucsim/src/sims/mos6502.src/huc6280.cc:
+	  Fix build.
+
+2026-09-12 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* sdas/gpl3.txt,
+	* sdas/COPYING3: moved COPYING3 to sdas/gpl3.txt
+	* sdas/asxxsrc/asxxxx.h: small merge with asxxxx v6.10
+	  removed VOID & OTHERSYSTEM macros,
+	  removed #include <unistd.h>,
+	  removed priority parameter from expr(),
+	  added binop() & exprx(),
+	  passfuz is a_uint
+	* sdas/asxxsrc/asdata.c: passfuz
+	* sdas/asxxsrc/asexpr.c: factored out binop() & exprx()
+	* sdas/asxxsrc/aslex.c (getmap): parse '\\'
+	* sdas/asf8/f8.h,
+	* sdas/aspdk/pdk.h,
+	* sdas/aspdk/pdkmch.c,
+	* sdas/astlcs90/t90.h,
+	* sdas/linksrc/lkihx.c: replaced VOID by void
+	* sdas/asxxsrc/asmain.c,
+	* sdas/asxxsrc/asmcro.c,
+	* sdas/as6500/r65adr.c,
+	* sdas/as6500/r65mch.c,
+	* sdas/as6808/m08adr.c,
+	* sdas/as6808/m08mch.c,
+	* sdas/as8051/i51adr.c,
+	* sdas/as8051/i51mch.c,
+	* sdas/as8xcxxx/ds8adr.c,
+	* sdas/as8xcxxx/ds8mch.c,
+	* sdas/asf8/f8adr.c,
+	* sdas/asf8/f8mch.c,
+	* sdas/asgb/gbadr.c,
+	* sdas/asgb/gbmch.c,
+	* sdas/aspdk/pdkadr.c,
+	* sdas/aspdk13/pdk13mch.c,
+	* sdas/aspdk14/pdk14mch.c,
+	* sdas/aspdk15/pdk15mch.c,
+	* sdas/aspdk16/pdk16mch.c,
+	* sdas/asrab/rabadr.c,
+	* sdas/asrab/rabmch.c,
+	* sdas/asstm8/stm8adr.c,
+	* sdas/asstm8/stm8mch.c,
+	* sdas/astlcs90/t90adr.c,
+	* sdas/astlcs90/t90mch.c,
+	* sdas/asz80/z80adr.c,
+	* sdas/asz80/z80mch.c: use simplified expr()
+	* sdas/linksrc/lksdcclib.c: removed OTHERSYSTEM
+
+2026-09-12 Gabriele Gorla <gorlik@yahoo.com>
+
+	* sdas/as6500/r6500.h,
+	  sdas/as6500/r65adr.c:
+	  More changes from upstream asxxxx.
+	* sim/ucsim/src/sims/mos6502.src/dechuc.h,
+	  sim/ucsim/src/sims/mos6502.src/glob.cc,
+	  sim/ucsim/src/sims/mos6502.src/huc6280.cc,
+	  sim/ucsim/src/sims/mos6502.src/huc6280cl.h,
+	  sim/ucsim/src/sims/mos6502.src/huc6502.cc,
+	  sim/ucsim/src/sims/mos6502.src/huc6502cl.h:
+	  Fix bug #4076.
+
+2026-09-11 Gabriele Gorla <gorlik@yahoo.com>
+
+	* device/lib/mc51/Makefile.in:
+	  remove crtxpushr0 and crtxpopr0 from build dependencies.
+
+2026-09-11 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* device/include/ctype.h,
+	* device/lib/iscntrl.c,
+	* device/lib/isgraph.c,
+	* device/lib/isprint.c,
+	* device/lib/isspace.c,
+	* device/lib/isxdigit.c: also check msb, for all targets
+	* device/lib/Makefile.in,
+	* device/lib/mcs51/crtxpushr0.asm,
+	* device/lib/mcs51/crtxpopr0.asm: removed r0 specials
+	* device/lib/mcs51/crtxpop.asm,
+	* device/lib/mcs51/crtxpush.asm: use acc[4-7] also as mask,
+	  add dpl & dph support,
+	  made register bank independent
+	* device/lib/mcs51/crtcall.asm,
+	* device/lib/mcs51/gptr_cmp.asm: moved out of C namespace
+	* src/SDCCglue.c: gave the register banks a label rbank<n>
+	* src/mcs51/main.c (updateOpRW): added push/pop register bank 0 check,
+	  inspired by part of 0013 in patch #466 by Oleg Endo
+	* src/mcs51/gen.c (xstackRegisters): removed unsued parameters,
+	  reordered bitmask, added R0 support
+	  (saveRegisters, unsaveRegisters): use larger bitmask,
+	  support all register banks,
+	  call renamed sdcc_xpush_regs / sdcc_xpop_regs,
+	  no longer need ___sdcc_xpush_regs_r0 / ___sdcc_xpop_regs_r0
+	  (saveRBank, unsaveRBank): added parameters to support switching
+	  register bank and saving psw, bits, dpl, dph & b, also on xstack
+	  (genSendBits): factored out of genSend(),
+	  optimize literal assignments, already in place bits & try not to use B
+	  (genPcall): use renamed sdcc_call_dptr
+	  (genFunction): use rbank<n> labels for equ's
+	  let saveRBank() push psw, bits, dpl, dph & b, possibly on xstack
+	  (genEndFunction): let unsaveRBank() pop psw, bits, dpl, dph & b,
+	  possibly from xstack
+	  (genCmp, gencjneshort): used renamed sdcc_gptr_cmp
+
+2026-09-08 Gabriele Gorla <gorlik@yahoo.com>
+
+	* support/regression/Makefile.in,
+	  support/regression/ports/mos6502:
+	  Removed unmantained support for sim65.
+	* support/regression/ports/uc65c02/uCsim.cmd,
+	  support/regression/ports/uc65c02/spec.mk,
+	  support/regression/ports/uc6502/spec.mk,
+	  support/regression/ports/uc6502-stack-auto/spec.mk,
+	  support/regression/ports/uc6280/spec.mk:
+	  Spec files cleanup.
+	* src/mos6502/gen.c,
+	  src/mos6502/m6502.h,
+	  src/mos6502/main.c,
+	  src/mos6502/port_huc6280.c,
+	  src/mos6502/port_mos6502.c,
+	  src/mos6502/port_mos65c02.c,
+	  src/mos6502/stackops.c,
+	  src/mos6502/tempops.c:
+	  Improve handling of enhanced instructions.
+	* configure,
+	  configure.ac,
+	  device/lib/Makefile.in,
+	  device/lib/clean.mk,
+	  device/lib/mos65c02/_muluchar.s,
+	  device/lib/mos65c02/_setjmp.s,
+	  support/regression/MakeList,
+	  support/regression/ports/uc65c02/spec.mk,
+	  device/lib/mos65c02-stack-auto,
+	  device/lib/mos65c02-stack-auto/Makefile.in,
+	  device/lib/mos65c02-stack-auto/__sdcc_indirect_jsr.s,
+	  device/lib/mos65c02-stack-auto/__sdcc_regs.s,
+	  device/lib/mos65c02-stack-auto/_muluchar.s,
+	  device/lib/mos65c02-stack-auto/_setjmp.s,
+	  device/lib/mos65c02-stack-auto/atomic_flag_test_and_set.c,
+	  device/lib/mos65c02-stack-auto/crt0.s,
+	  support/regression/ports/uc65c02-stack-auto,
+	  support/regression/ports/uc65c02-stack-auto/support.c,
+	  support/regression/ports/uc65c02-stack-auto/spec.mk,
+	  support/regression/ports/uc65c02-stack-auto/uCsim.cmd:
+	  Add mos65c02-stack-auto target and regression.
+	* device/lib/mos6502-stack-auto/Makefile.in,
+	  device/lib/mos6502-stack-auto/_muluchar.s,
+	  device/lib/mos6502-stack-auto/_setjmp.s,
+	  device/lib/mos65c02/_muluchar.s,
+	  device/lib/mos65c02/_setjmp.s,
+	  src/mos6502/port_huc6280.c,
+	  src/mos6502/port_mos6502.c,
+	  src/mos6502/port_mos65c02.c:
+	  Small cleanups.
+
+2026-09-08 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* src/SDCCmem.c (printAllocInfo): print bit and pdata info
+	* src/SDCCpeeph.c (operandBaseName): not everything starting with 'a' is acc
+	  (notUsed): mark regs from ic SEND and RET as used
+	* src/mcs51/gen.c (cheapMove): optimize indirect copies to self
+	  (mcs51IsReturned, mcs51IsRegArg): bugfix also check dname
+	* src/mcs51/main.c (updateOpRW): track bits
+	* src/mcs51/peep.c (scan4op): check bits
+	  (mcs51notUsed): check all 8 regs and also the bits
+
+2026-09-06 Gabriele Gorla <gorlik@yahoo.com>
+
+	* sdas/linksrc/lklist.c:
+	  Remove double printing of header.
+
+2026-09-05 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* device/lib/_divslonglong.c: optimized
+	* device/lib/mcs51/crtxpopr0.asm,
+	* device/lib/mcs51/crtxpop.asm: made register bank independent
+	* src/mcs51/gen.c (genUminusFloat): optimized in-place uminus,
+	  (genAnd, genOr, genXor): optimized IMMEDIATE
+	* src/mcs51/main.c (mcs51opcodeDataTable): fixed jc/jnc reads psw
+	* src/mcs51/peeph.def: swapped rules 302 & 303,
+	  fixed volatile, more general dead mov removal
+	* support/regression/collate-results.py: print in fixed columns for easier
+	  comparison by a human
+
+2026-09-02 Gabriele Gorla <gorlik@yahoo.com>
+
+	* sdas/asxxsrc/aslist.c: Apply patch from bug #4049, Thanks Jan Andersen.
+	* support/regression/bug-2326.c: Add regression for bug #2326.
+
+2026-09-01 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* sdas/asxxsrc/asexpr.c (term),
+	* sdas/as8051/i51adr.c (addr): moved handling of bit-addressable [n] from
+	  term() to addr()
+	* sdas/linksrc/lklist.c: fixed warning
+	* sdas/linksrc/lkmem.c: fixed warning
+	* src/SDCCglue.c (glue): removed equates for b0-b7
+	* src/mcs51/ralloc.c,
+	* src/ds390/ralloc.c: renamed b0 - b7 to bits[0] - bits[7]
+	* src/mcs51/gen.c (genMinusBits): replaced conditional jump with addition
+	  same #bytes, allows optimization if some Rn==0
+	  (genLeftShift, genSignedRightShift, genRightShift): removed redundant code
+	* src/mcs51/main.c: made mcs51opcodeDataTable const
+	* support/util/NewAlloc.c (Safe_strndup): fixed warning
+
+2026-08-31 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* src/SDCCsymt.c (checkSClass): Put the volatile from __at on the
+	  function pointer itself, not on the function return type.
+	  Fixed bugs #4013 & #4041 by applying patch #515, Thanks Li-Hsin Chien
+	* support/regression/tests/bug-4013.c: New regression test.
+
+2026-08-31 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* sdas/as6500/r65mch.c: fixed unused variable warning
+	* sdas/linksrc/lkarea.c: fixed uninitialized variable warning
+	* src/mos6502/gen.c: fixed untested case warning
+	* src/mos6502/ralloc.c: fixed unused function warning
+	* support/regression/gte/pr17133.c,
+	* support/regression/gte/pr21173.c,
+	* support/regression/tests/bug-2710.c: suppress warning 178, W_SIZEOF_VOID
+
+2026-08-30 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* src/SDCCmain.c: cosmetics
+	* src/SDCCpeeph.c: renamed labelIsUncondJump to label5IsUncondJumpTo6,
+	  added mcs51 ajmp instruction
+	* src/f8/peeph.def,
+	* src/mcs51/peeph.def,
+	* src/mos6502/peeph.def,
+	* src/stm8/peeph.def,
+	* src/z80/peeph.def: renamed labelIsUncondJump to label5IsUncondJumpTo6
+	* src/mcs51/peeph.def: applied patch #514, Thanks Li-Hsin Chien,
+	  inserted new 257.b moving previous 257.b-i up to 257.c-j
+	* support/regression/tests/bug-4066.c: New regression test
+
+2026-08-29 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/peep.c:
+	  Fix bug #4062.
+	* src/z80/gen.c:
+	  Fix a corner case of previous fix from yesterday.
+	* src/SDCCicode.c,
+	  support/valdiag/tests/bug-4056.c:
+	  Fix bug #4056.
+	* support/regression/tests/bug-4054.c:
+	  Test for bug #4054 (disabled for now - bug is not yet fixed).
+
+2026-08-29 Gabriele Gorla <gorlik@yahoo.com>
+
+	* device/include/float.h,
+	  device/lib/huc6280/_memcmp.s,
+	  device/lib/huc6280/_memset.s,
+	  device/lib/huc6280/abs.s,
+	  device/lib/huc6280/memcpy.s,
+	  device/lib/huc6280/strlen.s,
+	  device/lib/mos6502/__stdc_bit_width.s,
+	  device/lib/mos6502/__stdc_count_ones.s,
+	  device/lib/mos6502/_floatlib.s,
+	  device/lib/mos6502/_modsint.s,
+	  device/lib/mos6502/_moduint.s,
+	  device/lib/mos6502/_modulong.s,
+	  device/lib/mos6502/abs.s,
+	  device/lib/mos6502/div.s,
+	  device/lib/mos6502/memcpy.s,
+	  device/lib/mos6502/strlen.s,
+	  device/lib/mos65c02/_memset.s,
+	  device/lib/mos65c02/memcpy.s,
+	  device/lib/mos65c02/strlen.s,
+	  device/lib/mos6502/_fseq.s,
+	  device/lib/mos6502/_fsneq.s,
+	  src/SDCCsymt.c:
+	  MOS6502 library improvements
+	* device/lib/mos6502/_fseq.s:
+	  Improve _fseq performance.
+	* sdas/linksrc/Makefile.in,
+	  sdas/linksrc/aslink.h,
+	  sdas/linksrc/lkmain.c,
+	  sdas/linksrc/lkrloc.c,
+	  sdas/linksrc/lkrloc4.c:
+	  Add version 4 relocation engine from upstream asxxxx.
+	* sdas/linksrc/lkdata.c,
+	  sdas/linksrc/lklist.c,
+	  sdas/linksrc/lkmain.c:
+	  Add time stamp to map file from upstream asxxxx.
+	* sdas/linksrc/lkdata.c,
+	  sdas/linksrc/lkmain.c,
+	  sdas/linksrc/lksym.c:
+	  Change zflag comments to match upstream asxxxx.
+	* sdas/linksrc/lkarea.c:
+	  Bank boundary support from upstream asxxxx.
+
+2026-08-28 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* sdccconf_in.h: bugfix, added OPT_DISABLE_HUC6280
+
+2026-08-28 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/gen.c,
+	  sdas/asf8/f8mch.c:
+	  Fix bug #4069.
+	* src/z80/gen.c:
+	  Implement codegen for a case that resulted in a regression test
+	  failure in pseudorandomized regression testing on powerpc64 host.
+
+2026-08-27 Gabriele Gorla <gorlik@yahoo.com>
+
+	* device/lib/huc6280/Makefile.in,
+	  device/lib/huc6280/__sdcc_indirect_jsr.s,
+	  device/lib/huc6280/__sdcc_regs.s,
+	  device/lib/huc6280/_divsint.s,
+	  device/lib/huc6280/_divslong.s,
+	  device/lib/huc6280/_divuchar.s,
+	  device/lib/huc6280/_divuint.s,
+	  device/lib/huc6280/_divulong.s,
+	  device/lib/huc6280/_memcmp.s,
+	  device/lib/huc6280/_memset.s,
+	  device/lib/huc6280/_modsint.s,
+	  device/lib/huc6280/_modslong.s,
+	  device/lib/huc6280/_moduchar.s,
+	  device/lib/huc6280/_moduint.s,
+	  device/lib/huc6280/_modulong.s,
+	  device/lib/huc6280/_mulint.s,
+	  device/lib/huc6280/_mullong.s,
+	  device/lib/huc6280/_mulschar.s,
+	  device/lib/huc6280/_muluchar.s,
+	  device/lib/huc6280/_setjmp.s,
+	  device/lib/huc6280/_strcmp.s,
+	  device/lib/huc6280/_strcpy.s,
+	  device/lib/huc6280/abs.s,
+	  device/lib/huc6280/atomic_flag_test_and_set.c,
+	  device/lib/huc6280/crt0.s,
+	  device/lib/huc6280/div.s,
+	  device/lib/huc6280/labs.s,
+	  device/lib/huc6280/ldiv.s,
+	  device/lib/huc6280/memcpy.s,
+	  device/lib/huc6280/strlen.s,
+	  support/regression/ports/uc6280/spec.mk,
+	  support/regression/ports/uc6280/support.c,
+	  support/regression/ports/uc6280/uCsim.cmd,
+	  Makefile.common.in,
+	  Makefile.in,
+	  aclocal.m4,
+	  configure,
+	  configure.ac,
+	  device/include/inttypes.h,
+	  device/include/math.h,
+	  device/include/setjmp.h,
+	  device/include/stdarg.h,
+	  device/include/stdatomic.h,
+	  device/include/stdbit.h,
+	  device/include/stdlib.h,
+	  device/include/string.h,
+	  device/lib/Makefile.in,
+	  device/lib/_strchr.c,
+	  device/lib/_strrchr.c,
+	  device/lib/bsearch.c,
+	  device/lib/clean.mk,
+	  device/lib/malloc.c,
+	  sdas/as6500/r65mch.c,
+	  src/SDCCmain.c,
+	  src/SDCCopt.c,
+	  src/mos6502/gen.c,
+	  src/mos6502/gen.h,
+	  src/mos6502/genbuiltin.c,
+	  src/mos6502/m6502.h,
+	  src/mos6502/main.c,
+	  src/mos6502/peep.c,
+	  src/mos6502/peep.h,
+	  src/mos6502/ralloc.c,
+	  src/mos6502/ralloc.h,
+	  src/mos6502/ralloc2.cc,
+	  src/port.h,
+	  support/regression/MakeList,
+	  support/regression/fwk/include/testfwk.h,
+	  support/regression/ports/uc6502/spec.mk,
+	  support/regression/ports/uc65c02/spec.mk,
+	  support/regression/tests/asconaead128.c.in,
+	  support/regression/tests/bug-2305.c,
+	  support/regression/tests/bug-2663.c,
+	  support/regression/tests/bug-2756.c,
+	  support/regression/tests/bug-3165.c,
+	  support/regression/tests/coremark.c.in,
+	  support/regression/tests/funptrsstructreturn.c.in,
+	  support/regression/tests/gcc-torture-execute-func-ptr-1.c,
+	  support/regression/tests/gcrypt-serpent.c.in,
+	  support/regression/tests/largeoddstruct.c.in,
+	  support/regression/tests/structreturn.c.in,
+	  src/mos6502/port_huc6280.c,
+	  src/mos6502/port_mos6502.c,
+	  src/mos6502/port_mos65c02.c:
+	  Add HuC6280 port
+
+2026-08-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sim/ucsim/src/sims/f8.src/decode.h,
+	  sim/ucsim/src/sims/f8.src/f8cl.h,
+	  sim/ucsim/src/sims/f8.src/glob.cc,
+	  sim/ucsim/src/sims/f8.src/imove.cc:
+	  Use generated tables instead of hand-written ones for f8 opcodes.
+	* sdas/asf8/f8.h,
+	  sdas/asf8/f8mch.c,
+	  sdas/asf8/f8pst.c,
+	  src/f8/main.c,
+	  src/f8/main.c:
+	  Basic sdas f8l support.
+
+2026-08-27 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/genlshift.c:
+	  Fix bug #4065
+	* support/regression/tests/falcon-ntt.c:
+	  Enable falcon-ntt for mos6502-stack-auto.
+
+2026-08-26 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* support/regression/tests/bug-3845.c: new, added
+	* src/mcs51/gen.c (aopOp): applied patch #513 to fix bug #3845, Thanks
+	  Li-Hsin Chien
+
+2026-08-25 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* device/lib/_muluchar.c: applied patch #448, Thanks Konstantin Kim
+	* device/lib/_mullong.c: use xstack asm code for medium as well
+	* device/lib/_mullonglong.c: replaced byte-by-byte mult with bit mult
+	  which is shorter and uses less memory for almost all targets/models
+	  exceptions: hc08, s08, s08-stack-auto
+	  also optimized byte-by-byte with zero-checking and much less shifts
+
+2026-08-24 Gabriele Gorla <gorlik@yahoo.com>
+
+	* sdas/as6500/r6500.h,
+	  sdas/as6500/r65mch.c,
+	  sdas/as6500/r65pst.c:
+	  Initial sdas support for Huc6280.
+
+2026-08-23 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/mos6502/main.c:
+	  Add warning for out of range ZP location (feature request #1021).
+
+2026-08-22 Gabriele Gorla <gorlik@yahoo.com>
+
+	* sdas/as6500/r65pst.c,
+	  sdas/as6808/m08mch.c,
+	  sdas/as6808/m08pst.c,
+	  sdas/as8051/i51mch.c,
+	  sdas/as8051/i51pst.c,
+	  sdas/as8xcxxx/ds8pst.c,
+	  sdas/asf8/f8pst.c,
+	  sdas/asgb/gbpst.c,
+	  sdas/aspdk13/pdk13pst.c,
+	  sdas/aspdk14/pdk14pst.c,
+	  sdas/aspdk15/pdk15pst.c,
+	  sdas/aspdk16/pdk16pst.c,
+	  sdas/asrab/rab.h,
+	  sdas/asrab/rabmch.c,
+	  sdas/asrab/rabpst.c,
+	  sdas/asstm8/stm8pst.c,
+	  sdas/astlcs90/t90pst.c,
+	  sdas/asz80/z80pst.c:
+	  Merge more asxxxx upstream changes.
+	* src/SDCCglue.c:
+	  Remove dead code.
+	* src/f8/gen.c:
+	  Fix gcc warning.
+	* sdas/as6808/m08adr.c,
+	  sdas/as6808/m08mch.c,
+	  sdas/as6808/m6808.h,
+	  sdas/as8051/i51mch.c,
+	  sdas/as8051/i8051.h,
+	  sdas/as8xcxxx/ds8.h,
+	  sdas/as8xcxxx/ds8mch.c,
+	  sdas/asf8/f8mch.c,
+	  sdas/asf8/f8pst.c,
+	  sdas/asgb/gb.h,
+	  sdas/asgb/gbmch.c,
+	  sdas/asrab/rabpst.c,
+	  sdas/asz80/z80.h,
+	  sdas/asz80/z80mch.c,
+	  sdas/asz80/z80pst.c:
+	  Merge more asxxxx upstream changes.
+	* src/SDCCicode.c,
+	  src/mos6502/gen.c:
+	  Correctly mark builtin as generated.
+	* src/mos6502/m6502.h,
+	  src/mos6502/main.c,
+	  src/mos6502/pragma.c:
+	  Initial pragma implementation for mos6502.
+
+2026-08-21 Gabriele Gorla <gorlik@yahoo.com>
+
+	* sdas/as6500/r6500.h,
+	  sdas/as6500/r65mch.c,
+	  sdas/as6500/r65pst.c:
+	  Merge some asxxxx upstream changes.
+
+2026-08-21 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* device/lib/atoi.c,
+	* device/lib/atol.c,
+	* device/lib/atoll.c: optimized for generated code on most targets/models
+	* src/SDCCpeeph.c (notSame, same): check for ARn == Rn
+	* src/mcs51/gen.c (genCast): use acc for clearing msb's
+	* src/mcs51/peeph.def: added rules 104.x and 116.x
+
 2026-08-18 Maarten Brock <sourceforge.brock AT dse.nl>
 
 	* debugger/mcs51/cmd.c: applied patch #452, Thanks Mark Symonds,

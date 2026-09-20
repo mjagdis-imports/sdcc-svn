@@ -1,5 +1,7 @@
 /* suppress warning W_NONPTR2_GENPTR, pointer is not dereferenced */
 #pragma disable_warning 127
+/* suppress warning W_SIZEOF_VOID, foo == 0 => 0*sizeof(void) == 0 */
+#pragma disable_warning 178
 /* suppress warning W_PTR2INT_NOREPRESENT, pointer is not dereferenced */
 #pragma disable_warning 322
 

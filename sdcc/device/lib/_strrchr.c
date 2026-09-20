@@ -31,7 +31,7 @@
 #undef strrchr /* Avoid conflict with C23 macro */
 
 #ifdef __SDCC_BROKEN_STRING_FUNCTIONS
-char * strrchr ( const char * string, char ch )
+char * strrchr ( const char * string, _NEAR char ch )
 #else
 char * strrchr ( const char * string, int ch )
 #endif

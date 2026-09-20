@@ -69,27 +69,33 @@ struct adsym
 /*
  * Machine Extensions
  */
-#define	S_SDP		80
-#define	S_CPU		82
-#define	X_R6500		31
-#define	X_R65F11	32
-#define X_R65C00	33
-#define	X_R65C02	34
+#define	S_SDP		30
+#define	S_PGD		31
+
+#define	S_CPU		90
+#define	X_R6500		33
+#define	X_R65F11	34
+#define X_R65C00	35
+#define	X_R65C02	36
+#define	X_HUC6280	37
 
 /*
  * Addressing types
  */
 #define S_IMMED	40
 #define S_ACC	41
-#define S_DIR	42
-#define S_EXT	43
-#define S_IND	44
-#define S_DINDX	45
-#define S_DINDY	46
-#define S_INDX	47
-#define S_INDY	48
-#define S_IPREX	49
-#define S_IPSTY	50
+#define S_IND	42
+#define S_IPREX	43
+#define S_IPSTY	44
+/*
+ * DONOT Change Order
+ */
+#define S_EXT	50
+#define S_DIR	51
+#define S_INDX	52
+#define S_DINDX	53
+#define S_INDY	54
+#define S_DINDY	55
 
 /*
  * 650X and 651X Instructions
@@ -125,6 +131,18 @@ struct adsym
 #define	S_TB	76
 
 /*
+ * Huc6280 Extensions
+ */
+#define S_INH4	77
+
+#define	S_MT	79
+#define	S_ST	80
+#define	S_BRA3	81
+#define	S_TST	82
+#define S_TAM	83
+#define S_TMA	84
+
+/*
  * machine dependent functions
  */
 
@@ -132,10 +150,13 @@ struct adsym
 extern	struct	adsym	axy[];
 extern	int		addr(struct expr *esp);
 extern	int		admode(struct adsym *sp);
+extern	int		espmode(struct expr *esp, int s);
 extern	int		srch(char *str);
 
 	/* r65mch.c */
 extern	struct  area	*zpg;
+extern	int		autodpcnst;
+extern	int		autodpsmbl;
 extern	void		machine(struct mne *mp);
 extern	int		mchpcr(struct expr *esp, int *v, int n);
 extern	void		mcherr(int c, char *str);

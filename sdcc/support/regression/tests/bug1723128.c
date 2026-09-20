@@ -11,7 +11,6 @@
 
 #include <stdbool.h>
 
-#if !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) // Lack of memory
 #ifdef __bool_true_false_are_defined
 
 union USUINT {
@@ -100,16 +99,13 @@ NotZero (unsigned int t)
 }
 
 #endif //__bool_true_false_are_defined
-#endif
 
 void
 testBug (void)
 {
-#if !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) // Lack of memory
 #ifdef __bool_true_false_are_defined
     rx_index = 1;
     ASSERT (VerifyCRC ());
     ASSERT (NotZero (300));
 #endif //__bool_true_false_are_defined
-#endif
 }

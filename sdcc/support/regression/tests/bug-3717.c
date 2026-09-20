@@ -10,8 +10,6 @@ int func(float a) { return a; } // Argument type must be a float/double
 void
 testBug(void)
 {
-#ifndef __SDCC_pdk14 // Lack of memory
     func(foo() + 0); // Summand literal must be 0 or a floating point (e.g. 1.0)
-#endif
 }
 

@@ -10,7 +10,7 @@ _Static_assert(1 || a); /* ERROR(SDCC) */
 
 #ifdef TEST3
 #define ASSEMBLE(uc1, uc2) uc1##uc2
-int ASSEMBLE(\u00, c4); /* ERROR */
+int ASSEMBLE(\u00, c4); /* WARNING */
 #endif
 
 #ifdef TEST4a
@@ -209,7 +209,8 @@ register void f(void); /* ERROR */
 }
 #endif
 
-// regarding struct/union with no named member: SDCC makes those without any member at all an error, but allow those with memebers, even if all are unnamed bit-fields.
+// regarding struct/union with no named member: SDCC makes those without any member at all
+// an error, but allow those with members, even if all are unnamed bit-fields.
 
 #ifdef TEST58a
 struct f { }; /* ERROR */
