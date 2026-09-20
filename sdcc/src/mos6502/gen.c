@@ -4588,16 +4588,29 @@ genCall (iCode * ic)
 {
   operand *left   = IC_LEFT (ic);
   operand *result = IC_RESULT (ic);
+
+  sym_link *dtype;
+  sym_link *etype;
   iCode *sendic;
+  operand *op = NULL;
+  bool pcall = ((ic->op)==PCALL) ;
 
-  sym_link *dtype = operandType (left);
-  sym_link *etype = getSpec (dtype);
-  //  bool restoreBank = false;
-  //  bool swapBanks = false;
+  if(pcall)
+    dtype = operandType (left)->next;
+  else
+    dtype = operandType (left);
 
-  m6502_emitComment (TRACEGEN, "%s - reent:%d",
-                     __func__, IFFUNC_ISREENT(dtype));
+  etype = getSpec (dtype);
+
+  const bool bigreturn = (getSize (ftype->next) > 4) || IS_STRUCT (ftype->next); // Return value of big type or returning struct or union.
+
+
+  m6502_emitComment (TRACEGEN, "%s - reent:%d bigret:%d pcall:%d",
+                     __func__, IFFUNC_ISREENT(dtype), bigreturn, pcall);
   m6502_printIC (ic);
+
+  m6502_aopOp (result, ic);
+  m6502_aopOp (left, ic);
 
   /* Go through the send set and mark any registers used by iTemps as */
   /* in use so we don't clobber them while setting up the return address */
@@ -4610,10 +4623,27 @@ genCall (iCode * ic)
   if (!ic->regsSaved)
     saveRegisters (ic);
 
+if(pcall)
+  if(IS_LITERAL(etype) || IS_ABSOLUTE(etype))
+    op=left;
+
+//  if(AOP_TYPE(left)==AOP_REG && AOP(left)->aopu.aop_reg[0]->aop )
+//     if(AOP(left)->aopu.aop_reg[0]->aop->type==AOP_EXT)
+//       op=AOP(left)->aopu.aop_reg[0]->aop->op;
+//    use_dptr=false;
+
+  if (pcall && !op)
+    {
+      m6502_updateCFA ();
+      /* compute the function address */
+      // put address in DPTR
+      storeOperToDPTR (left, FARPTRSIZE, ic); // -1 is baked into initialization
+    }
+
   /* if send set is not empty then assign */
   if (_S.sendSet && !regalloc_dry_run)
     {
-      if (IFFUNC_ISREENT (dtype))
+      if (IFFUNC_ISREENT (dtype) || pcall)
         {
           /* need to reverse the send set */
           genSend (reverseSet (_S.sendSet));
@@ -4626,9 +4656,25 @@ genCall (iCode * ic)
     }
 
   /* make the call */
-  if (IS_LITERAL (etype))
+  if (pcall && !op)
+    {
+      m6502_emitOp("jsr","__sdcc_indirect_jsr");
+      m6502_updateCFA ();
+    }
+  else if(IS_LITERAL(etype))
     {
       m6502_emitOp ("jsr", "0x%04X", ulFromVal (OP_VALUE (left)));
+    }
+  else if(pcall)
+    {
+      if(AOP_TYPE(op)==AOP_IMMD)
+        m6502_emitOp ("jsr", "%s", AOP(op)->aopu.aop_immd);
+
+//    if(AOP_TYPE(left)==AOP_LIT)
+//        return aopLiteral (aop->aopu.aop_lit, loffset);
+
+    if(AOP_TYPE(op)==AOP_DIR || AOP_TYPE(left)==AOP_EXT)
+      m6502_emitOp ("jsr", "%s", AOP(op)->aopu.aop_dir );
     }
   else
     {
@@ -4661,11 +4707,7 @@ genCall (iCode * ic)
       if (operandSize (result) > 1)
         m6502_useReg (m6502_reg_x);
 
-      m6502_aopOp (result, ic);
-
       assignResultValue (result);
-
-      m6502_freeAsmop (result, NULL);
     }
 
   /* adjust the stack for parameters if required */
@@ -4675,130 +4717,9 @@ genCall (iCode * ic)
   /* if we had saved some registers then unsave them */
   if (ic->regsSaved && !IFFUNC_CALLEESAVES (dtype))
     unsaveRegisters (ic);
-}
 
-/**************************************************************************
- * genPcall - generates a call by pointer statement
- *************************************************************************/
-static void
-genPcall (iCode * ic)
-{
-  operand *left   = IC_LEFT (ic);
-  operand *result = IC_RESULT (ic);
-
-  sym_link *dtype;
-  sym_link *etype;
-  iCode * sendic;
-  operand *op = NULL;
-
-  m6502_emitComment (TRACEGEN, __func__);
-  m6502_printIC(ic);
-
-  dtype = operandType (left)->next;
-  etype = getSpec (dtype);
-
-  m6502_aopOp (left, ic);
-
-  /* Go through the send set and mark any registers used by iTemps as */
-  /* in use so we don't clobber them while setting up the return address */
-  for (sendic = setFirstItem (_S.sendSet); sendic; sendic = setNextItem (_S.sendSet))
-    {
-      updateiTempRegisterUse (IC_LEFT (sendic));
-    }
-
-  /* if caller saves & we have not saved then */
-  if (!ic->regsSaved)
-    saveRegisters (ic);
-
-  // TODO: handle EXT with jmp [aaaa]
-
-  if(IS_CONSTEXPR(etype))
-      m6502_emitComment (TRACEGEN, "  %s - constexpr", __func__);
-  if(IS_ABSOLUTE(etype))
-      m6502_emitComment (TRACEGEN, "  %s - abs expr", __func__);
-  if(AOP_TYPE(left)==AOP_REG && AOP(left)->aopu.aop_reg[0]->aop )
-     m6502_emitComment (TRACEGEN, "  %s - reg expr", __func__);
-
-  if(IS_LITERAL(etype) || IS_ABSOLUTE(etype))
-    op=left;
-
-//  if(AOP_TYPE(left)==AOP_REG && AOP(left)->aopu.aop_reg[0]->aop )
-//     if(AOP(left)->aopu.aop_reg[0]->aop->type==AOP_EXT)
-//       op=AOP(left)->aopu.aop_reg[0]->aop->op;
-//    use_dptr=false;
-
-  if (!op)
-    {
-      m6502_updateCFA ();
-      /* compute the function address */
-      // put address in DPTR
-      storeOperToDPTR (left, FARPTRSIZE, ic); // -1 is baked into initialization
-    }
-
-  /* if send set is not empty then assign */
-  if (_S.sendSet && !regalloc_dry_run)
-    {
-      genSend (reverseSet (_S.sendSet));
-      _S.sendSet = NULL;
-    }
-
-  /* make the call */
-  if (!op)
-    {
-      m6502_emitOp("jsr","__sdcc_indirect_jsr");
-      m6502_updateCFA ();
-    }
-  else if(IS_LITERAL(etype))
-    {
-      m6502_emitOp ("jsr", "0x%04X", ulFromVal (OP_VALUE (left)));
-    }
-  else //if(IS_ABSOLUTE(etype))
-    {
-      if(AOP_TYPE(op)==AOP_IMMD)
-        m6502_emitOp ("jsr", "%s", AOP(op)->aopu.aop_immd);
-
-//    if(AOP_TYPE(left)==AOP_LIT)
-//        return aopLiteral (aop->aopu.aop_lit, loffset);
-
-    if(AOP_TYPE(op)==AOP_DIR || AOP_TYPE(left)==AOP_EXT)
-      m6502_emitOp ("jsr", "%s", AOP(op)->aopu.aop_dir );
-    }
-
-  m6502_dirtyAllRegs();
-  m6502_freeAllRegs();
-
-  _S.DPTRAttr[0].isLiteral=0;
-  _S.DPTRAttr[1].isLiteral=0;
-  _S.DPTRAttr[0].aop=NULL;
-  _S.DPTRAttr[1].aop=NULL;
-  _S.lastflag=-1;
-  _S.carryValid=0;
-
-  /* do we need to recompute the base ptr? */
-  if (_S.funcHasBasePtr)
-    saveBasePtr();
-
-  /* if we need assign a result value */
-  if ((IS_ITEMP (result) &&
-       (OP_SYMBOL (result)->nRegs || OP_SYMBOL (result)->spildir)) || IS_TRUE_SYMOP (result))
-    {
-      m6502_useReg (m6502_reg_a);
-      if (operandSize (result) > 1)
-        m6502_useReg (m6502_reg_x);
-      m6502_aopOp (result, ic);
-
-      assignResultValue (result);
-
-      m6502_freeAsmop (result, NULL);
-    }
-
-  /* adjust the stack for parameters if required */
-  if (ic->parmBytes)
-    pullNull (ic->parmBytes);
-
-  /* if we had saved some registers then unsave them */
-  if (ic->regsSaved && !IFFUNC_CALLEESAVES (dtype))
-    unsaveRegisters (ic);
+  m6502_freeAsmop (left, NULL);
+  m6502_freeAsmop (result, NULL);
 }
 
 /**************************************************************************
@@ -8726,11 +8647,8 @@ genm6502iCode (iCode *ic)
       break;
 
     case CALL:
-      genCall (ic);
-      break;
-
     case PCALL:
-      genPcall (ic);
+      genCall (ic);
       break;
 
     case FUNCTION:

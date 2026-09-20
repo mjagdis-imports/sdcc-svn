@@ -51,6 +51,8 @@
 	  support/regression/tests/gcc-torture-execute-va-arg-9.c,
 	  support/regression/tests/malloc.c:
 	  Enabled many working tests. Moved exclusions to MakeList.
+	* src/mos6502/gen.c:
+	  Merge genCall() and genPcall().
 
 2026-09-18 Philipp Klaus Krause <philipp@colecovision.eu>
 
