@@ -1,3 +1,18 @@
+2026-09-21 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* .version,
+	  doc/sdccman.lyx,
+	  sdas/asf8/f8.h,
+	  sdas/asf8/f8adr.c,
+	  sdas/asf8/f8mch.c,
+	  sdas/asf8/f8pst.c,
+	  sdas/asf8/st8err.asm,
+	  sdas/asf8/tst8.asm,
+	  sim/ucsim/src/sims/f8.src/decode.h,
+	  sim/ucsim/src/sims/f8.src/glob.cc,
+	  src/f8/gen.c:
+	  Switch f8(l) opcode map.
+
 2026-09-21 Maarten Brock <sourceforge.brock AT dse.nl>
 
 	* src/SDCCast.h,

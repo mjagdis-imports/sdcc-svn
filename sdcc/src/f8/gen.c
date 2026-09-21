@@ -7443,7 +7443,7 @@ genPointerSet (const iCode *ic)
           continue;
         }
       else if ((!bit_field || blen >= 8) &&
-        (aopInReg (right->aop, i, XL_IDX) || aopInReg (right->aop, i, XH_IDX) || aopInReg (right->aop, i, ZL_IDX) || aopInReg (right->aop, i, ZH_IDX)))
+        (aopInReg (right->aop, i, XL_IDX) || aopInReg (right->aop, i, XH_IDX) || aopInReg (right->aop, i, ZH_IDX)))
         {
           if (!(i - last_i))
             {

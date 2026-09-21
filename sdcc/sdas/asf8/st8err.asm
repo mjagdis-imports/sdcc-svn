@@ -1,4 +1,4 @@
-	.title	stm8  Assembly Errors Test
+	.title	stm8  Assembly Errors Test - todo: port to f8!
 
 	.area	Prog(rel,con)
 

@@ -2,7 +2,7 @@
 
 /*
  *  Copyright (C) 2012-2026  Alan R. Baldwin
- *  Copyright (C) 2022-2023  Philipp K. Krause
+ *  Copyright (C) 2022-2026  Philipp K. Krause
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -188,7 +188,12 @@ machine(struct mne *mp)
 		mchtyp = op;
 		break;
 	case S_2OP:
+	case S_2OPADC:
+	case S_2OPADD:
+	case S_2OPAND:
+	case S_2OPSBC:
 	case S_2OPSUB:
+	case S_2OPXOR:
 		t1 = addr(&e1);
 		r1 = rcode;
 		comma(1);
@@ -213,13 +218,18 @@ machine(struct mne *mp)
 
 		switch(t2) {
 		case S_IMM:
-			if(rf == S_2OPSUB) // Immediate operand invalid for sub and sbc.
+			if(rf == S_2OPSBC || rf == S_2OPSUB) // Immediate operand invalid for sub and sbc.
 				aerr();
-			outab(op | 0x00);
+			if (rf == S_2OPAND)
+				outab(0x79);
+			else if (rf == S_2OPXOR)
+				outab(0x71);
+			else
+				outab(op | 0x01);
 			outrb(&e2, R_NORM);
 			break;
 		case S_DIR:
-			outab(op | 0x01);
+			outab(op | 0x00 | (rf == S_2OPSUB));
 			outrw(&e2, R_USGN);
 			break;
 		case S_SPREL:
@@ -236,13 +246,28 @@ machine(struct mne *mp)
 		case S_REG:
 			switch(r2) {
 			case ZL:
-				outab(op | 0x04);
+				if (rf == S_2OPADD)
+					outab(0x16);
+				else
+					outab(op | 0x05);
 				break;
 			case XH:
-				outab(op | 0x05);
+				if (rf == S_2OPAND)
+					outab(0x7c);
+				else if (rf == S_2OPXOR)
+					outab(0x74);
+				else
+					outab(op | 0x04);
 				break;
 			case YL:
-				outab(op | 0x06);
+				if (rf == S_2OPADC)
+					outab(0x76);
+				else if (rf == S_2OPADD)
+					outab(0x15);
+				else if (rf == S_2OPAND)
+					outab(0x1e);
+				else
+					outab(op | 0x06);
 				break;
 			case YH:
 				outab(op | 0x07);
@@ -257,26 +282,30 @@ machine(struct mne *mp)
 		break;
 
 	case S_1OP:
+	case S_1OPINC:
 	case S_1OPPUSH:
 		t1 = addr(&e1);
 		r1 = rcode;	
 
 		if(rf == S_1OPPUSH && t1 == S_IMM) { // push #i
-			outab(0x90);
+			outab(0xfc);
 			outrb(&e1, R_NORM);
 			break;
 		}
 
 		switch(t1) {
 		case S_DIR:
-			outab(op + 0x00);
+			outab(op + 0x01);
 			outrw(&e1, R_USGN);
 			break;
 		case S_YREL:
 			if (mchtyp == X_F8L)
 				aerr();
 		case S_SPREL:
-			outab(op + (t1 == S_SPREL ? 0x01 : 0x03));
+			if (rf == S_1OPINC  && t1 == S_SPREL)
+				outab (0x39);
+			else
+				outab(op + (t1 == S_SPREL ? 0x00 : 0x03));
 			if(ls_mode(&e1))
 				aerr();
 			else
@@ -293,16 +322,22 @@ machine(struct mne *mp)
 		break;
 
 	case S_2OPW:
-	case S_2OPWSUB:
-	case S_2OPWSBC:
-	case S_2OPWADD:
 	case S_2OPWADC:
+	case S_2OPWADD:
+	case S_2OPWSBC:
+	case S_2OPWSUB:
+	case S_2OPWXOR:
 		t1 = addr(&e1);
 		r1 = rcode;
 		if(!comma(rf != S_2OPWSBC && rf != S_2OPWADC)) { // Handle 1-op variants of sbcw and adcw
-			if(rf == S_2OPWSBC)
+			if (rf == S_2OPWSBC && t2 == S_ZREL) {
+				outab(0xa6);
+				outrw(&e1, R_USGN);
+				break;
+			}
+			else if(rf == S_2OPWSBC)
 				op = 0xac;
-			else if(S_2OPWADC)
+			else if(rf == S_2OPWADC)
 				op = 0xa8;
 			else
 				aerr();
@@ -312,13 +347,13 @@ machine(struct mne *mp)
 		r2 = rcode;
 
 		if(rf == S_2OPWADD && t1 == S_REG && r1 == SP && t2 == S_IMM && !d_mode(&e2)) { // addw sp, #d
-			outab(0xea);
+			outab(0x8a);
 			outab(e2.e_addr);
 			break;
 		}
 		else if(rf == S_2OPWADD && t1 == S_REG && t2 == S_IMM && !d_mode(&e2)) { // addw y, #d
 			altaccw(r1);
-			outab(0xeb);
+			outab(0x8b);
 			outab(e2.e_addr);
 			break;
 		}
@@ -346,12 +381,18 @@ machine(struct mne *mp)
 			altaccw(r1);
 			if(rf == S_2OPWSUB || rf == S_2OPWSBC) // Immediate operand invalid for subw and sbcw.
 				aerr();
-			outab(op | 0x00);
+			if (rf == S_2OPWADD)
+				outab (0x50);
+			else
+				outab(op | 0x01);
 			outrw(&e2, R_USGN);
 			break;
 		case S_DIR:
 			altaccw(r1);
-			outab(op | 0x01);
+			if (rf == S_2OPWXOR)
+				outab (0xa1);
+			else
+				outab(op | 0x00);
 			outrw(&e2, R_USGN);
 			break;
 		case S_SPREL:
@@ -372,35 +413,45 @@ machine(struct mne *mp)
 		break;
 
 	case S_1OPW:
+	case S_1OPWINC:
 	case S_1OPWPUSH:
+	case S_1OPWTST:
 		t1 = addr(&e1);
 		r1 = rcode;	
 opw:
 		if(rf == S_1OPWPUSH && t1 == S_IMM) { // pushw #ii
-			outab(0xe8);
+			outab(0x89);
 			outrw(&e1, R_USGN);
 			break;
 		}
 
 		switch(t1) {
 		case S_DIR:
-			outab(op | 0x00);
+			outab(op | 0x01);
 			outrw(&e1, R_USGN);
 			break;
 		case S_SPREL:
-			outab(op | 0x01);
+			outab(op | 0x00);
 			if(ls_mode(&e1))
 				aerr();
 			else
 				outrb(&e1, R_USGN);
 			break;
 		case S_ZREL:
-			outab(op | 0x02);
+			if (rf == S_1OPWINC)
+				outab (0xae);
+			else if (rf == S_1OPWTST)
+				outab (0x86);
+			else
+				outab(op | 0x02);
 			outrw(&e1, R_USGN);
 			break;
 		case S_REG:
 			altaccw(r1);
-			outab(op | 0x03);
+			if (rf == S_1OPWTST)
+				outab (0x87);
+			else
+				outab(op | 0x03);
 			break;
 		default:
 			aerr();
@@ -418,27 +469,27 @@ opw:
 			altacc(r1);
 			switch(t2) {
 			case S_IMM:
-				outab(op | 0x00);
+				outab(0xe9);
 				outrb(&e2, R_NORM);
 				break;
 			case S_DIR:
-				outab(op | 0x01);
+				outab(0xc0);
 				outrw(&e2, R_USGN);
 				break;
 			case S_SPREL:
-				outab(op | 0x02);
+				outab(0xc2);
 				if(ls_mode(&e2))
 					aerr();
 				else
 					outrb(&e2, R_USGN);
 				break;
 			case S_ZREL:
-				outab(op | 0x03);
+				outab(0xc3);
 				outrw(&e2, R_USGN);
 				break;
 			case S_IX:
 				if(r2 == Y)
-					outab(op | 0x04);
+					outab(0xc5);
 				else if (r1 == ZL && r2 == X || r1 == YL && r2 == Z)
 					outab(0x84);
 				else
@@ -447,7 +498,7 @@ opw:
 			case S_YREL:
 				if (mchtyp == X_F8L)
 					aerr();
-				outab(op | 0x05);
+				outab(0xc4);
 				if(ls_mode(&e2))
 					aerr();
 				else
@@ -455,15 +506,15 @@ opw:
 				break;
 			case S_REG:
 				if(r2 == XH)
-					outab(0x86);
+					outab(0xc6);
 				else if(r2 == YL)
-					outab(0x87);
+					outab(0xc7);
 				else if(r2 == YH)
-					outab(0x88);
+					outab(0xc9);
 				else if(r2 == ZL)
-					outab(0x89);
+					outab(0xc8);
 				else if(r2 == ZH)
-					outab(0x8a);
+					outab(0xca);
 				else
 					aerr();
 				break;
@@ -475,15 +526,15 @@ opw:
 		else if(t1 == S_REG && t2 == S_REG && r2 == XL) { // Use swapop prefix
 			outab(OPCODE_SWAPOP);
 			if(r1 == XH)
-				outab(0x86);
+				outab(0xc6);
 			else if(r1 == YL)
-				outab(0x87);
+				outab(0xc7);
 			else if(r1 == YH)
-				outab(0x88);
+				outab(0xc9);
 			else if(r1 == ZL)
-				outab(0x89);
+				outab(0xc8);
 			else if(r1 == ZH)
-				outab(0x8a);
+				outab(0xca);
 			else
 				aerr();
 			break;
@@ -492,32 +543,30 @@ opw:
 			altacc(r2);
 			switch(t1) {
 			case S_DIR:
-				outab(op | 0x0b);
+				outab(0xcb);
 				outrw(&e1, R_USGN);
 				break;
 			case S_SPREL:
-				outab(op | 0x0c);
+				outab(0xcd);
 				if(ls_mode(&e1))
 					aerr();
 				else
 					outrb(&e1, R_USGN);
 				break;
 			case S_ZREL:
-				outab(op | 0x0d);
+				outab(0xcc);
 				outrw(&e1, R_USGN);
 				break;
 			case S_IX:
-				if(r1 == Y && (r2 == XL || r2 == XH || r2 == ZL || r2 == ZH))
-					outab(op | 0x0e);
-				else if (r1 == Z && r2 == YL || r1 == X && r2 == ZL)
-					outab(0x8e);
+				if(r1 == Y && (r2 == XL || r2 == XH || r2 == ZH) || r1 == Z && (r2 == YL || r2 == YH) || r1 == X && r2 == ZL)
+					outab(0xce);
 				else
 					aerr();
 				break;
 			case S_YREL:
 				if (mchtyp == X_F8L)
 					aerr();
-				outab(op | 0x0f);
+				outab(0xc1);
 				if(ls_mode(&e1))
 					aerr();
 				else
@@ -562,31 +611,31 @@ opw:
 		r2 = rcode;
 
 		if(t1 == S_REG && r1 == X && t2 == S_REG && r2 == Y) {
-			outab(op | 0x0b);
+			outab(0xbb);
 			break;
 		}
 		else if(t1 == S_REG && r1 == Z && t2 == S_REG && r2 == Y) {
-			outab(op | 0x0c);
+			outab(0x85);
 			break;
 		}
 		else if(t1 == S_REG && r1 == X && t2 == S_REG && r2 == Z) {
 			outab(OPCODE_ALTACC2);
-			outab(0xcb);
+			outab(0xbb);
 			break;
 		}
 		else if(t1 == S_REG && r1 == Z && t2 == S_REG && r2 == X) {
 			outab(OPCODE_ALTACC2);
-			outab(0xc6);
+			outab(0xb6);
 			break;
 		}
 		else if(t1 == S_REG && r1 == SP && t2 == S_REG && r2 == Y) { // ldw sp, y
 			outab(OPCODE_SWAPOP);
-			outab(0x70);
+			outab(0x31);
 			break;
 		}
 		else if (t1 == S_REG && t2 == S_REG && r2 == SP) { // ldw y, sp
 			altaccw(r1);
-			outab(0x70);
+			outab(0x31);
 			break;
 		}
 		else if(t1 == S_REG && t2 == S_IX && (r1 == X && r2 == Y || r1 == Z && r2 == Y || r1 == Z && r2 == X || r1 == Y && r2 == Z)) { // ldw x, (y)
@@ -596,7 +645,7 @@ opw:
 				outab (OPCODE_ALTACC3);
 			else if (r1 == Y && r2 == Z)
 				outab (OPCODE_ALTACC2);
-			outab (0xde);
+			outab (0x66);
 			break;
 		}
 		else if(t1 == S_REG) {
@@ -604,32 +653,32 @@ opw:
 			switch(t2) {
 			case S_IMM:
 				if (!d_mode(&e2)) { // ldw y, #d
-					outab(op | 0x07);
+					outab(0xb7);
 					outrb(&e2, R_USGN);
 					break;
 				}
-				outab(op | 0x00);
+				outab(0xb1);
 				outrw(&e2, R_USGN);
 				break;
 			case S_DIR:
-				outab(op | 0x01);
+				outab(0xb0);
 				outrw(&e2, R_USGN);
 				break;
 			case S_SPREL:
-				outab(op | 0x02);
+				outab(0xb2);
 				if(ls_mode(&e2))
 					aerr();
 				else
 					outrb(&e2, R_USGN);
 				break;
 			case S_ZREL:
-				outab(op | 0x03);
+				outab(0xb3);
 				outrw(&e2, R_USGN);
 				break;
 			case S_YREL:
 				if (mchtyp == X_F8L)
 					aerr();
-				outab(op | 0x04);
+				outab(0xb5);
 				if(ls_mode(&e2))
 					aerr();
 				else
@@ -637,15 +686,15 @@ opw:
 				break;
 			case S_IX:
 				if((r1 == Y || r1 == Z || r1 == X) && r1 == r2)
-					outab(0xc5);
+					outab(0xb4);
 				else
 					aerr();
 				break;
 			case S_REG:
 				if(r2 == X)
-					outab(op | 0x06);
+					outab(0xb6);
 				else if (r2 == Z)
-					outab(0xdc);
+					outab(0x6e);
 				else
 					aerr();
 				break;
@@ -656,7 +705,7 @@ opw:
 		}
 		else if(t1 == S_IX && t2 == S_REG && (r1 == Y && r2 == X || r1 == Z && r2 == Y || r1 == X && r2 == Z || r1 == Y && r2 == Z)) {
 			altaccw2(r1, r2);
-			outab(0xcd);
+			outab(0x84);
 			break;
 		}
 		else if(t1 == S_YREL && t2 == S_REG && (r2 == X || r2 == Z)) {
@@ -665,7 +714,7 @@ opw:
 			if (r2 == Z)
 				outab (OPCODE_ALTACC3);
 			if(!ls_mode(&e2)) {
-				outab(0xce);
+				outab(0x88);
 				outrb(&e1, R_USGN);
 			}
 			else
@@ -676,22 +725,22 @@ opw:
 			altaccw(r2);
 			switch(t1) {
 			case S_DIR:
-				outab(op | 0x08);
+				outab(0xed);
 				outrw(&e1, R_USGN);
 				break;
 			case S_SPREL:
-				outab(op | 0x09);
+				outab(0xb8);
 				if(ls_mode(&e1))
 					aerr();
 				else
 					outrb(&e1, R_USGN);
 				break;
 			case S_ZREL:
-				outab(op | 0x0a);
+				outab(0xba);
 				outrw(&e1, R_USGN);
 				break;
 			case S_ISPREL:
-				outab(0x74);
+				outab(0x35);
 				if(ls_mode(&e1))
 					aerr();
 				else
@@ -727,7 +776,7 @@ opw:
 		r2 = rcode;
 
 		if (t1 == S_REG && r1 == F && t2 == S_SPREL) { // xch f, (n, sp)
-			outab(0xec);
+			outab(0xbf);
 			if(ls_mode(&e2))
 				aerr();
 			else
@@ -743,7 +792,7 @@ opw:
 				aerr();
 
 			altacc(r1);
-			outab(0x91);
+			outab(0xa0);
 			if(ls_mode(&e1))
 				aerr();
 			else
@@ -753,21 +802,21 @@ opw:
 			altacc(r1);
 			if (!((r1 == XL || r1 == XH) && r2 == Y) && !(r1 == YL && r2 == Z) && !(r1 == ZL && r2 == X))
 				aerr();
-			outab(0x92);
+			outab(0xa2);
 			break;
 		case S_REG:
 			if (mchtyp == X_F8L)
 				aerr();
 
 			if (r1 == YL && r2 == YH)
-				outab(0x93);
+				outab(0xa3);
 			else if (r1 == XL && r2 == XH) {
 				outab(OPCODE_ALTACC3);
-				outab(0x93);
+				outab(0xa3);
 			}
 			else if (r1 == ZL && r2 == ZH) {
 				outab(OPCODE_ALTACC2);
-				outab(0x93);
+				outab(0xa3);
 			}
 			else
 				aerr();
@@ -816,23 +865,23 @@ opw:
 
 		switch(t2) {
 		case S_DIR:
-			outab(0xbc);
+			outab(0x9d);
 			outrw(&e2, R_USGN);
 			break;
 		case S_SPREL:
-			outab(0xbd);
+			outab(0xfa);
 			if(ls_mode(&e2))
 				aerr();
 			else
 				outrb(&e2, R_USGN);
 			break;
 		case S_ZREL:
-			outab(0xbe);
+			outab(0x9e);
 			outrw(&e2, R_USGN);
 			break;
 		case S_IX:
 			if(r2 == Z)
-				outab(0xbf);
+				outab(0x9f);
 			else
 				aerr();
 			break;
@@ -849,17 +898,17 @@ opw:
 		r2 = rcode;
 		if(t1 == S_REG && t2 == S_IX && (r1 == X && r2 == Y || r1 == Y && r2 == Z || r1 == Z && r2 == X)) {
 			altaccw(r2);
-			outab(0xf4);
+			outab(0xe5);
 		}
 		else if(t1 == S_REG && t2 == S_IX && (r1 == Z && r2 == Y)) {
 			outab(OPCODE_ALTACC5);
-			outab(0xf4);
+			outab(0xe5);
 		}
 		else if(t2 != S_SPREL || ls_mode(&e2) || mchtyp == X_F8L)
 			aerr();
 		else {
 			altaccw(r1);
-			outab(0xf5);
+			outab(0xe4);
 			outrb(&e2, R_USGN);
 		}
 		break;
@@ -868,6 +917,7 @@ opw:
 	case S_0OPW:
 	case S_0OPWSLL:
 	case S_0OPWRLC:
+	case S_0OPWRRC:
 	case S_0OPWDEC:
 		t1 = addr(&e1);
 		r1 = rcode;
@@ -875,7 +925,7 @@ opw:
 		if(rf == S_0OPWSLL && comma(0)) {
 			t2 = addr(&e2);
 			r2 = rcode;
-			op = 0xe5;
+			op = 0x44;
 			goto sex;
 		}
 		
@@ -883,8 +933,13 @@ opw:
 			altaccw(r1);
 			outab(op);
 		}
-		else if((rf == S_0OPWRLC || rf == S_0OPWDEC) && t1 == S_SPREL) {
-			outab(op + 0x04);
+		else if((rf == S_0OPWRLC || rf == S_0OPWRRC || rf == S_0OPWDEC) && t1 == S_SPREL) {
+			if (rf == S_0OPWRLC)
+				outab (0xe7);
+			else if (rf == S_0OPWRRC)
+				outab (0xe6);
+			else if (rf == S_0OPWDEC)
+				outab (0x47);
 			if(ls_mode(&e1))
 				aerr();
 			else
@@ -994,13 +1049,14 @@ sex:
 		}
 		break;
 
+        case S_CALL:  
 	case S_JP:
 		t1 = addr(&e1);
 		r1 = rcode;
 
 		if(t1 == S_REG) {
 			altaccw(r1);
-			outab(op | 0x01);
+			outab(rf == S_JP ? 0x4c : 0x4f);
 		}
 		else if(t1 == S_IMM) {
 			outab(op);

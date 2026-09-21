@@ -2,7 +2,7 @@
 
 /*
  *  Copyright (C) 2010  Alan R. Baldwin
- *  Copyright (C) 2022  Philipp K. Krause
+ *  Copyright (C) 2022-2026  Philipp K. Krause
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by

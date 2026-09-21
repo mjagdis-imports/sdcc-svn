@@ -3311,6 +3311,12 @@ status open
 .
 \end_layout
 
+\begin_layout Itemize
+In 4.6.3,
+ the f8(l) assembler and simulator were switched to the new f8(l) opcode map.
+ Assembled code is binary-incompatible with previous versions.
+\end_layout
+
 \begin_layout Section
 System Requirements
 \end_layout
@@ -3476,7 +3482,7 @@ status collapsed
 
 \end_inset
 
--bindir see table below
+-bindir see table belowi
 \end_layout
 
 \begin_layout Labeling
@@ -44406,7 +44412,8 @@ Usually the hardware uses some sfr (an output port or an internal sfr) to select
 \end_inset
 
 When calling a banked function SDCC will put the LSB of the functions address in register R0,
- the MSB in R1, the bank in R2 and then call the trampoline
+ the MSB in R1,
+ the bank in R2 and then call the trampoline
 \emph on
 sdcc_banked_call
 \emph default
@@ -44420,11 +44427,11 @@ sdcc_banked_ret
  which should restore the previous bank and return to the caller.
  For regular jumps across banks
 \emph on
- sdcc_banked_jump
- \emph default
- is used instead, which is not supposed to save the currently selected bank
- but rather just switch to the new bank and do the jump. Such jumps might be
- used for optimizing tail calls and no-return calls.
+ sdcc_banked_jump 
+\emph default
+ is used instead,
+ which is not supposed to save the currently selected bank but rather just switch to the new bank and do the jump.
+ Such jumps might be used for optimizing tail calls and no-return calls.
 \end_layout
 
 \begin_layout Subsubsection
