@@ -36,7 +36,7 @@ void call_once(_Bool *flag, void (*func)(void))
     if (!*flag)
     {
         func();
-        *flag = true;
+        *flag = (_Bool)1;
     }
 }
 
