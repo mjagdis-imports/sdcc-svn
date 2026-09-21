@@ -217,7 +217,6 @@ ast *forLoopOptForm (ast *);
 ast *argAst (ast *);
 ast *resolveSymbols (ast *);
 void checkCodePtrPointsToConst (sym_link *t, const char *filename, int lineno);
-void removeQualifiers (sym_link *type);
 sym_link *ptrTypeFromType (sym_link *type);
 void checkPtrCast (sym_link * newType, sym_link * orgType, bool implicit, bool orgIsNullPtrConstant);
 ast *decorateType (ast *, RESULT_TYPE, bool reduceTypeAllowed);

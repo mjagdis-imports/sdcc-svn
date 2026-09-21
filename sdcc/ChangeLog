@@ -1,5 +1,10 @@
 2026-09-21 Maarten Brock <sourceforge.brock AT dse.nl>
 
+	* src/SDCCast.h,
+	* src/SDCCast.c,
+	* src/SDCCsymt.h,
+	* src/SDCCsymt.c: moved removeQualifiers() from SDCCast to SDCCsymt as
+	  it is all about sym_link
 	* device/include/stdlib.h: bugfix once_flag, cannot use bool & false
 	  without including stdbool.h
 	* device/lib/call_once.c: remove unused include stdbool.h

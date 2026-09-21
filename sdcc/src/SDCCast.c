@@ -3274,33 +3274,6 @@ checkCodePtrPointsToConst (sym_link *t, const char *filename, int lineno)
 }
 
 /*-----------------------------------------------------------------*/
-/* removeQualifiers - removes all qualifiers from the first        */
-/*                    element of the type chain                    */
-/*-----------------------------------------------------------------*/
-void
-removeQualifiers (sym_link *type)
-{
-  if (IS_SPEC (type))
-    {
-      SPEC_CONST (type) = false;
-      SPEC_RESTRICT (type) = false;
-      SPEC_VOLATILE (type) = false;
-      SPEC_ATOMIC (type) = false;
-      SPEC_OPTIONAL (type) = false;
-      SPEC_ADDRSPACE (type) = NULL;
-    }
-  else
-    {
-      DCL_PTR_CONST (type) = false;
-      DCL_PTR_RESTRICT (type) = false;
-      DCL_PTR_VOLATILE (type) = false;
-      DCL_PTR_ATOMIC (type) = false;
-      DCL_PTR_OPTIONAL (type) = false;
-      DCL_PTR_ADDRSPACE (type) = NULL;
-    }
-}
-
-/*-----------------------------------------------------------------*/
 /* ptrTypeFromType - derive a suitable type for a pointer to a     */
 /*                   given type                                    */
 /*-----------------------------------------------------------------*/

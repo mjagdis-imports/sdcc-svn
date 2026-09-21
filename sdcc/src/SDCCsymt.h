@@ -758,6 +758,7 @@ void addSymChain (symbol **);
 sym_link *structElemType (sym_link *, value *);
 symbol *getStructElement (structdef *, symbol *);
 sym_link *computeType (sym_link *, sym_link *, RESULT_TYPE, int);
+void removeQualifiers (sym_link *type);
 void processFuncPtr (sym_link *);
 void processFunc (symbol *, sym_link *);
 bool isSymbolEqual (const symbol *, const symbol *);
