@@ -53,6 +53,10 @@ void __printf(const char *szFormat, ...);
  #define _STATMEM
 #endif
 
+#ifdef PORT_HOST
+#define __critical
+#endif
+
 #if defined(__SDCC_stm8) || defined(__SDCC_f8) || defined(__SDCC_f8l) || defined(PORT_HOST)
 #define __data
 #define __idata

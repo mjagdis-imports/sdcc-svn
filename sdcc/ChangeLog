@@ -1,3 +1,8 @@
+2026-09-21 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/fwk/include/testfwk.h:
+	  Fix for host compilers not supporting __critical.
+
 2026-09-20 Gabriele Gorla <gorlik@yahoo.com>
 
 	* support/regression/tests/bug-3381.c:
