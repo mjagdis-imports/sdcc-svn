@@ -181,22 +181,38 @@ EXCLUDE_s08-stack-auto += \
 	tst_gcc-torture-execute-ssad-run \
 	tst_gcc-torture-execute-usad-run
 
+# target does not support returning more than 8 bytes
+EXCLUDE_nolarge_return = \
+	gte_pr30185 \
+	gte_pr58365 \
+	tst_sha3-256 \
+	tst_gcc-torture-execute-20001026-1 \
+	tst_gcc-torture-execute-pr60017 \
+	tst_gcc-torture-execute-struct-ret-1
+
+# Target does not support struct/union return
+EXCLUDE_nostructret = \
+	$(EXCLUDE_nolarge_return) \
+	tst_div \
+	gte_991019-1 \
+	tst_gcc-torture-execute-20131127-1 \
+	tst_gcc-torture-execute-931005-1 \
+	tst_gcc-torture-execute-950628-1 \
+	tst_gcc-torture-execute-950710-1 \
+	tst_gcc-torture-execute-961223-1 \
+	tst_gcc-torture-execute-980223 \
+	tst_gcc-torture-execute-990525-2 \
+	tst_gcc-torture-execute-pr39120
+
 # SDCC bug #3982 -> feature request #1019 - implement structreturn of size >8
 # struct return of size>8 works only for non-reentrant functions
 EXCLUDE_ARCH_mos6502 += \
 	tst_gcc-torture-execute-struct-ret-1
-EXCLUDE_uc6502-stack-auto += \
-	gte_pr30185 \
-	gte_pr58365 \
-	tst_sha3-256 \
-	tst_gcc-torture-execute-20001026-1 \
-	tst_gcc-torture-execute-pr60017
-EXCLUDE_uc65c02-stack-auto += \
-	gte_pr30185 \
-	gte_pr58365 \
-	tst_sha3-256 \
-	tst_gcc-torture-execute-20001026-1 \
-	tst_gcc-torture-execute-pr60017
+
+EXCLUDE_uc6502-stack-auto += $(EXCLUDE_nolarge_return)
+EXCLUDE_uc65c02-stack-auto += $(EXCLUDE_nolarge_return)
+EXCLUDE_ARCH_hc08 += $(EXCLUDE_nolarge_return)
+EXCLUDE_ds390 += $(EXCLUDE_nostructret)
 
 # mcs51, hc08, s08 and pdk have restrictions on function pointers wrt. reentrancy
 EXCLUDE_ARCH_mos6502 += \
@@ -208,28 +224,6 @@ EXCLUDE_ARCH_pdk += \
 	tst_bug-2767
 EXCLUDE_ds390 += \
 	tst_bug-2663
-
-# Target does not yet support struct/union return
-EXCLUDE_nostructret = \
-	tst_div \
-	gte_991019-1 \
-	gte_pr30185 \
-	gte_pr58365 \
-	tst_sha3-256 \
-	tst_gcc-torture-execute-20001026-1 \
-	tst_gcc-torture-execute-20131127-1 \
-	tst_gcc-torture-execute-931005-1 \
-	tst_gcc-torture-execute-950628-1 \
-	tst_gcc-torture-execute-950710-1 \
-	tst_gcc-torture-execute-961223-1 \
-	tst_gcc-torture-execute-980223 \
-	tst_gcc-torture-execute-990525-2 \
-	tst_gcc-torture-execute-pr39120 \
-	tst_gcc-torture-execute-pr60017 \
-	tst_gcc-torture-execute-struct-ret-1
-
-EXCLUDE_ARCH_hc08 += $(EXCLUDE_nostructret)
-EXCLUDE_ds390 += $(EXCLUDE_nostructret)
 
 # target does not support __sfr
 EXCLUDE_nosfr = \

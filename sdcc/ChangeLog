@@ -13,6 +13,12 @@
 	  device/lib/mos65c02/Makefile.in,
 	  src/mos6502/gen.c:
 	  Enable lldiv for mos6502 non stack-auto.
+	* device/include/stdlib.h,
+	  device/lib/div.c,
+	  device/lib/ldiv.c,
+	  support/regression/MakeList,
+	  support/regression/tests/div.c:
+	  Add div and ldiv to hc08.
 
 2026-09-19 Gabriele Gorla <gorlik@yahoo.com>
 
