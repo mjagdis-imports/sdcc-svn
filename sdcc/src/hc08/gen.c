@@ -4028,7 +4028,7 @@ genCall (iCode * ic)
 
   dtype = operandType (IC_LEFT (ic));
   etype = getSpec (dtype);
-  const bool bigreturn = IS_STRUCT (dtype->next);
+  const bool bigreturn = (getSize (dtype->next) > 8 );
 
   /* if send set is not empty then assign */
   if (_G.sendSet && !regalloc_dry_run)
@@ -4454,6 +4454,8 @@ genEndFunction (iCode * ic)
 static void
 genRet (iCode * ic)
 {
+  operand *left   = IC_LEFT (ic);
+
   int size, offset = 0;
 //  int pushed = 0;
   bool delayed_x = false;
@@ -4462,14 +4464,14 @@ genRet (iCode * ic)
 
   /* if we have no return value then
      just generate the "ret" */
-  if (!IC_LEFT (ic))
+  if (!left)
     goto jumpret;
 
   /* we have something to return then
      move the return value into place */
   aopOp (IC_LEFT (ic), ic, false);
-  size = AOP_SIZE (IC_LEFT (ic));
-  const bool bigreturn = IS_STRUCT (operandType (IC_LEFT (ic)));
+  size = AOP_SIZE (left);
+  const bool bigreturn = (size>8);
 
   if (bigreturn) // todo: implement!
     {
@@ -4478,22 +4480,20 @@ genRet (iCode * ic)
       goto jumpret;
     }
 
-  if (AOP_TYPE (IC_LEFT (ic)) == AOP_LIT)
+  if (AOP_TYPE (left) == AOP_LIT)
     {
       /* If returning a literal, we can load the bytes of the return value */
       /* in any order. By loading A and X first, any other bytes that match */
       /* can use the shorter sta and stx instructions. */
-      offset = 0;
-      while (size--)
+      for(offset=0; offset<size; offset++)
         {
-          transferAopAop (AOP (IC_LEFT (ic)), offset, hc08_aop_pass[offset], 0);
-          offset++;
+          transferAopAop (AOP (left), offset, hc08_aop_pass[offset], 0);
         }
     }
   else
     {
       /* Take care when swapping a and x */
-      if (AOP_TYPE (IC_LEFT (ic)) == AOP_REG && size > 1 && AOP (IC_LEFT (ic))->aopu.aop_reg[0]->rIdx == X_IDX)
+      if (AOP_TYPE (left) == AOP_REG && size > 1 && AOP (left)->aopu.aop_reg[0]->rIdx == X_IDX)
         {
           delayed_x = true;
           pushReg (hc08_reg_x, true);
@@ -4503,7 +4503,7 @@ genRet (iCode * ic)
       while (size--)
         {
           if (!(delayed_x && !offset))
-            transferAopAop (AOP (IC_LEFT (ic)), offset, hc08_aop_pass[offset], 0);
+            transferAopAop (AOP (left), offset, hc08_aop_pass[offset], 0);
           offset--;
         }
 
@@ -4511,7 +4511,7 @@ genRet (iCode * ic)
         pullReg (hc08_reg_a);
     }
 
-  freeAsmop (IC_LEFT (ic), NULL, ic, true);
+  freeAsmop (left, NULL, ic, true);
 
 jumpret:
   /* generate a jump to the return label

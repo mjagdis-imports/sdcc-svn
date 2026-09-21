@@ -5,6 +5,8 @@
 	* src/mos6502/gen.c,
 	  support/regression/MakeList:
 	  Partial implementation of RFE #1019 (structreturn of size>8).
+	* src/hc08/gen.c:
+	  Implement struct return (size<=8) for hc08.
 
 2026-09-19 Gabriele Gorla <gorlik@yahoo.com>
 
