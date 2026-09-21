@@ -7,6 +7,12 @@
 	  Partial implementation of RFE #1019 (structreturn of size>8).
 	* src/hc08/gen.c:
 	  Implement struct return (size<=8) for hc08.
+	* device/lib/huc6280/Makefile.in,
+	  device/lib/lldiv.c,
+	  device/lib/mos6502/Makefile.in,
+	  device/lib/mos65c02/Makefile.in,
+	  src/mos6502/gen.c:
+	  Enable lldiv for mos6502 non stack-auto.
 
 2026-09-19 Gabriele Gorla <gorlik@yahoo.com>
 

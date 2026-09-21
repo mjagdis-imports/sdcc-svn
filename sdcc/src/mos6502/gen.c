@@ -5114,7 +5114,8 @@ genEndFunction (iCode * ic)
 /**************************************************************************
  * genRet - generate code for return statement
  *************************************************************************/
-static void genRet (iCode * ic)
+static void
+genRet (iCode * ic)
 {
   operand *left   = IC_LEFT (ic);
 
@@ -5134,13 +5135,12 @@ static void genRet (iCode * ic)
   /* we have something to return then
      move the return value into place */
   m6502_aopOp (left, ic);
-
   size = AOP_SIZE (left);
   const bool bigreturn = (size>8);
 
   if (bigreturn)
     {
-      // FIXME: only up to size 8 is supported
+      // FIXME: only up to size 8 is supported for reentrant functions
       if (options.stackAuto || (currFunc && IFFUNC_ISREENT (currFunc->type)))
 	{
 	  if (!regalloc_dry_run)
