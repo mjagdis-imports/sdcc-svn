@@ -4,22 +4,16 @@
 
 #include <testfwk.h>
 
-#if defined (__SDCC_mcs51) || defined (__SDCC_hc08) || defined (__SDCC_s08) || defined (__SDCC_ds390) || defined (__SDCC_ds400)
-#define XDATA __xdata
-#else
-#define XDATA
-#endif
+char __xdata c0[] = "123";
+char __xdata c1[] = "abc";
+char __xdata *gp = c0;
 
-char XDATA c0[] = "123";
-char XDATA c1[] = "abc";
-char XDATA *gp = c0;
-
-void XDATA *aligned_a (void)
+void __xdata *aligned_a (void)
 {
   return gp;
 }
 
-extern void XDATA *aligned_a (void);
+extern void __xdata *aligned_a (void);
 
 void testBug (void)
 {

@@ -1,14 +1,14 @@
 /*-------------------------------------------------------------------------
   gen.c - source file for code generation for the MOS6502
 
-  Copyright (C) 1998, Sandeep Dutta . sandeep.dutta@usa.net
-  Copyright (C) 1999, Jean-Louis VERN.jlvern@writeme.com
+  Copyright (c) 1998, Sandeep Dutta . sandeep.dutta@usa.net
+  Copyright (c) 1999, Jean-Louis VERN.jlvern@writeme.com
   Bug Fixes - Wojciech Stryjewski  wstryj1@tiger.lsu.edu (1999 v2.1.9a)
   Hacked for the HC08:
-  Copyright (C) 2003, Erik Petrich
+  Copyright (c) 2003, Erik Petrich
   Hacked for the MOS6502:
-  Copyright (C) 2020, Steven Hugg  hugg@fasterlight.com
-  Copyright (C) 2021-2026, Gabriele Gorla
+  Copyright (c) 2020, Steven Hugg  hugg@fasterlight.com
+  Copyright (c) 2021-2026, Gabriele Gorla
 
   This program is free software; you can redistribute it and/or modify it
   under the terms of the GNU General Public License as published by the
@@ -1779,7 +1779,7 @@ m6502_storeConstToAop (int c, asmop * aop, int loffset)
 /**************************************************************************
  * Store immediate value to asmop
  *
- * @param c  pointer to the immediate value
+ * @param c pointer to the immediate value
  * @param aop pointer to the asmop
  * @param loffset asmop offset
  *************************************************************************/
@@ -3334,7 +3334,8 @@ m6502_freeAsmop (operand * op, asmop * aaop)
  * aopDerefAop - treating the aop parameter as a pointer, return an asmop
  *               for the object it references
  *************************************************************************/
-static asmop * aopDerefAop (asmop * aop, int offset)
+static asmop *
+aopDerefAop (asmop * aop, int offset)
 {
   int adr;
   asmop *newaop = NULL;
@@ -4858,7 +4859,8 @@ regsCmp (void *p1, void *p2)
   return (STRCASECMP ((char *) p1, (char *) (p2)) == 0);
 }
 
-static bool inExcludeList (char *s)
+static bool
+inExcludeList (char *s)
 {
   const char *p = setFirstItem (options.excludeRegsSet);
 

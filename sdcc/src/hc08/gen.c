@@ -1,12 +1,13 @@
 /*-------------------------------------------------------------------------
   gen.c - source file for code generation for the 68HC08
 
-  Copyright (C) 1998, Sandeep Dutta . sandeep.dutta@usa.net
-  Copyright (C) 1999, Jean-Louis VERN.jlvern@writeme.com
+  Copyright (c) 1998, Sandeep Dutta . sandeep.dutta@usa.net
+  Copyright (c) 1999, Jean-Louis VERN.jlvern@writeme.com
   Bug Fixes - Wojciech Stryjewski  wstryj1@tiger.lsu.edu (1999 v2.1.9a)
   Hacked for the 68HC08:
-  Copyright (C) 2003, Erik Petrich
+  Copyright (c) 2003, Erik Petrich
   Copyright (c) 2023, Philipp Klaus Krause philipp@colecovision.eu
+  Copyright (c) 2026, Gabriele Gorla
 
   This program is free software; you can redistribute it and/or modify it
   under the terms of the GNU General Public License as published by the
@@ -1454,9 +1455,13 @@ storeConstToAop (int c, asmop * aop, int loffset)
     }
 }
 
-/*--------------------------------------------------------------------------*/
-/* storeImmToAop- Store immediate value c to logical offset loffset of asmop aop.*/
-/*--------------------------------------------------------------------------*/
+/**************************************************************************
+ * Store immediate value to asmop
+ *
+ * @param c pointer to the immediate value
+ * @param aop pointer to the asmop
+ * @param loffset asmop offset
+ *************************************************************************/
 static void
 storeImmToAop (char *c, asmop * aop, int loffset)
 {
@@ -2703,7 +2708,6 @@ aopDerefAop (asmop * aop, int offset)
   DD (emitcode ("", ";     aopDerefAop(%s)", aopName (aop)));
   if (aop->op)
     {
-
       type = operandType (aop->op);
       etype = getSpec (type);
       /* if op is of type of pointer then it is simple */
@@ -2868,6 +2872,9 @@ aopAdrStr (asmop * aop, int loffset, bool bit16)
     case AOP_DUMMY:
       return zero;
 
+    case AOP_REG:
+      return aop->aopu.aop_reg[loffset]->name;
+
     case AOP_IMMD:
       if (loffset)
         {
@@ -2878,9 +2885,16 @@ aopAdrStr (asmop * aop, int loffset, bool bit16)
         }
       else
         sprintf (s, "#%s", aop->aopu.aop_immd);
+
       rs = Safe_calloc (1, strlen (s) + 1);
       strcpy (rs, s);
       return rs;
+
+    case AOP_LIT:
+      if (bit16)
+        return aopLiteralLong (aop->aopu.aop_lit, loffset, 2);
+      else
+        return aopLiteral (aop->aopu.aop_lit, loffset);
 
     case AOP_DIR:
       if (regalloc_dry_run)
@@ -2903,15 +2917,6 @@ aopAdrStr (asmop * aop, int loffset, bool bit16)
       rs = Safe_calloc (1, strlen (s) + 1);
       strcpy (rs, s);
       return rs;
-
-    case AOP_REG:
-      return aop->aopu.aop_reg[loffset]->name;
-
-    case AOP_LIT:
-      if (bit16)
-        return aopLiteralLong (aop->aopu.aop_lit, loffset, 2);
-      else
-        return aopLiteral (aop->aopu.aop_lit, loffset);
 
     case AOP_SOF:
       if (!regalloc_dry_run && hc08_reg_hx->aop == &tsxaop)
@@ -4183,9 +4188,7 @@ genPcall (iCode * ic)
 
   /* adjust the stack for parameters if required */
   if (ic->parmBytes)
-    {
-      pullNull (ic->parmBytes);
-    }
+    pullNull (ic->parmBytes);
 
   /* if we had saved some registers then unsave them */
   if (ic->regsSaved && !IFFUNC_CALLEESAVES (dtype))
@@ -4198,12 +4201,14 @@ genPcall (iCode * ic)
 static int
 resultRemat (iCode * ic)
 {
+  operand *result = IC_RESULT (ic);
+
   if (SKIP_IC (ic) || ic->op == IFX)
     return 0;
 
-  if (IC_RESULT (ic) && IS_ITEMP (IC_RESULT (ic)))
+  if (result && IS_ITEMP (result))
     {
-      symbol *sym = OP_SYMBOL (IC_RESULT (ic));
+      symbol *sym = OP_SYMBOL (result);
       if (sym->remat && !POINTER_SET (ic))
         return 1;
     }

@@ -12,14 +12,11 @@
 
 /* PR opt/8165.  */
 
-#ifndef __SDCC_pdk14 // Lack of memory
 char buf[64];
-#endif
 
 void
 testTortureExecute (void)
 {
-#ifndef __SDCC_pdk14 // Lack of memory
   int i;
 
   strcpy (buf, "mystring");
@@ -32,7 +29,6 @@ testTortureExecute (void)
       if (strcmp (buf + i, "mystring") != 0)
 	ASSERT (0);
     }
-#endif
   return;
 }
 

@@ -19,6 +19,18 @@
 	  support/regression/MakeList,
 	  support/regression/tests/div.c:
 	  Add div and ldiv to hc08.
+	* device/include/stdlib.h,
+	  device/lib/lldiv.c,
+	  src/hc08/gen.c,
+	  src/mos6502/gen.c,
+	  support/regression/MakeList,
+	  support/regression/tests/asconhash256.c.in,
+	  support/regression/tests/bug-2419.c,
+	  support/regression/tests/div.c,
+	  support/regression/tests/gcc-torture-execute-20021011-1.c,
+	  support/regression/tests/gcc-torture-execute-20060110-2.c,
+	  support/regression/tests/structreturn.c.in:
+	  Test exclusions cleanup.
 
 2026-09-19 Gabriele Gorla <gorlik@yahoo.com>
 

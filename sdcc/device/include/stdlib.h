@@ -159,7 +159,7 @@ typedef struct
 #if !defined(__SDCC_ds390) // struct return not yet supported
 div_t div(int numer, int denom);
 ldiv_t ldiv(long int numer, long int denom);
-#if !defined(__SDCC_mos6502_stack_auto) && !defined(__SDCC_mos65c02_stack_auto) && !defined(__SDCC_hc08) && !defined(__SDCC_s08) // size of struct return is limited to <= 8
+#if !(defined(SDCC_MOS) && defined(__SDCC_STACK_AUTO)) && !defined(__SDCC_hc08) && !defined(__SDCC_s08) // size of struct return is limited to <= 8
 lldiv_t lldiv(long long int numer, long long int denom);
 #endif
 #endif
