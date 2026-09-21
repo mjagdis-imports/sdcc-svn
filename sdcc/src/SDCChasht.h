@@ -7,26 +7,27 @@
     under the terms of the GNU General Public License as published by the
     Free Software Foundation; either version 2, or (at your option) any
     later version.
-    
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-    
+
     You should have received a copy of the GNU General Public License
     along with this program; if not, write to the Free Software
     Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-    
+
     In other words, you are welcome to use, share and improve this program.
     You are forbidden to forbid anyone else to use, share and improve
-    what you give them.   Help stamp out software-hoarding!  
+    what you give them.   Help stamp out software-hoarding!
 -------------------------------------------------------------------------*/
-
 
 #ifndef SDCCHASHT_H
 #define SDCCHASHT_H
 
-
+# ifndef __cplusplus
+#  include <stdbool.h>
+# endif
 
 /* hashtable item */
 typedef struct hashtItem
@@ -88,17 +89,17 @@ void *hTabFindByKey (hTab * h, int key, const void *pkey, int (*compare) (const 
 /** Deletes an item with the exact key 'pkey'
     @see hTabFindByKey
 */
-int hTabDeleteByKey (hTab ** h, int key, const void *pkey, int (*compare) (const void *, const void *));
+bool hTabDeleteByKey (hTab ** h, int key, const void *pkey, int (*compare) (const void *, const void *));
 
 void hTabDeleteItem (hTab **, int key,
 		     const void *item, DELETE_ACTION action,
 		     int (*compareFunc) (const void *, const void *));
-int hTabIsInTable (hTab *, int, void *,
+bool hTabIsInTable (hTab *, int, void *,
 		   int (*compareFunc) (void *, void *));
 void *hTabFirstItem (hTab *, int *);
 void *hTabNextItem (hTab *, int *);
 hTab *hTabFromTable (hTab *);
-int isHtabsEqual (hTab *, hTab *, int (*compareFunc) (void *, void *));
+bool isHtabsEqual (hTab *, hTab *, int (*compareFunc) (void *, void *));
 hashtItem *hTabSearch (hTab *, int);
 
 /* return the first item with the given key */

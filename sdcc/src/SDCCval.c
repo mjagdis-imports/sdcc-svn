@@ -112,7 +112,7 @@ convertIListToConstList (initList * src, literalList ** lList, int size)
 
   if (src && src->type != INIT_DEEP)
     {
-      return FALSE;
+      return false;
     }
 
   iLoop = src ? src->init.deep : NULL;
@@ -121,17 +121,17 @@ convertIListToConstList (initList * src, literalList ** lList, int size)
     {
       if (iLoop->designation != NULL)
         {
-          return FALSE;
+          return false;
         }
 
       if (iLoop->type != INIT_NODE)
         {
-          return FALSE;
+          return false;
         }
 
       if (!IS_AST_LIT_VALUE (decorateType (resolveSymbols (iLoop->init.node), RESULT_TYPE_NONE, true)))
         {
-          return FALSE;
+          return false;
         }
       iLoop = iLoop->next;
       cnt++;
@@ -184,11 +184,11 @@ convertIListToConstList (initList * src, literalList ** lList, int size)
 
   if (!head)
     {
-      return FALSE;
+      return false;
     }
 
   *lList = head;
-  return TRUE;
+  return true;
 }
 
 literalList *
@@ -324,7 +324,7 @@ list2int (initList * val)
   if (i->type == INIT_DEEP)
     return list2int (val->init.deep);
 
-  return floatFromVal (constExprValue (val->init.node, TRUE));
+  return floatFromVal (constExprValue (val->init.node, true));
 }
 
 /*------------------------------------------------------------------*/
@@ -739,7 +739,7 @@ static initList *reorderIlistFull (sym_link * type, initList * ilist, bool skipa
 /*------------------------------------------------------------------*/
 initList *reorderIlist (sym_link * type, initList * ilist)
 {
-  return reorderIlistFull (type, ilist, FALSE);
+  return reorderIlistFull (type, ilist, false);
 }
 
 /*------------------------------------------------------------------*/
@@ -751,7 +751,7 @@ initList *reorderIlist (sym_link * type, initList * ilist)
 /*------------------------------------------------------------------*/
 initList *reorderIlistIval (sym_link * type, initList * ilist)
 {
-  return reorderIlistFull (type, ilist, TRUE);
+  return reorderIlistFull (type, ilist, true);
 }
 
 /*------------------------------------------------------------------*/
@@ -1310,7 +1310,7 @@ constVal (const char *s)
       if (i >= 0 && i < 256)
         {
           SPEC_NOUN (val->type) = V_CHAR;
-          SPEC_USIGN (val->type) = TRUE;
+          SPEC_USIGN (val->type) = true;
           SPEC_CVAL (val->type).v_uint = i;
         }
       else if (i >= -128 && i < 128)
@@ -1415,7 +1415,7 @@ constIntVal (const char *s)
             werror (W_OCTAL_DEPRECATED_C2Y);
         }
       dval = (double)(unsigned long long int) llval;
-      decimal = FALSE;
+      decimal = false;
     }
   else
     {
@@ -1443,7 +1443,7 @@ constIntVal (const char *s)
   // Check suffixes
   if ((p2 = strchr (p, 'u')) || (p2 = strchr (p, 'U')))
     {
-      u_suffix = TRUE;
+      u_suffix = true;
       p2++;
       if (strchr (p2, 'u') || strchr (p2, 'U'))
         werror (E_INTEGERSUFFIX, p);
@@ -1451,21 +1451,21 @@ constIntVal (const char *s)
 
   if ((p2 = strstr (p, "ll")) || (p2 = strstr (p, "LL")))
     {
-      ll_suffix = TRUE;
+      ll_suffix = true;
       p2 += 2;
       if (strchr (p2, 'l') || strchr (p2, 'L') || strchr (p2, 'z') || strchr (p2, 'Z') || strstr (p, "wb") || strstr (p, "WB"))
         werror (E_INTEGERSUFFIX, p);
     }
   else if ((p2 = strchr (p, 'l')) || (p2 = strchr (p, 'L')))
     {
-      l_suffix = TRUE;
+      l_suffix = true;
       p2++;
       if (strchr (p2, 'l') || strchr (p2, 'L') || strchr (p2, 'z') || strchr (p2, 'Z') || strstr (p, "wb") || strstr (p, "WB"))
         werror (E_INTEGERSUFFIX, p);
     }
   else if ((p2 = strchr (p, 'z')) || (p2 = strchr (p, 'Z')))
     {
-      z_suffix = TRUE;
+      z_suffix = true;
       p2++;
       if (strchr (p2, 'l') || strchr (p2, 'L') || strchr (p2, 'z') || strchr (p2, 'Z') || strstr (p, "wb") || strstr (p, "WB"))
         werror (E_INTEGERSUFFIX, p);
@@ -1512,7 +1512,7 @@ constIntVal (const char *s)
         SPEC_LONG (val->type) = 1;
     }
   else
-    {  
+    {
       if (z_suffix && (TARGET_IS_MCS51 || TARGET_IS_DS390)) // Special case for ptrdiff_t literals, see stddef.h
         l_suffix = true;
 

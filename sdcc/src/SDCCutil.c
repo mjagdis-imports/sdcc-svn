@@ -39,8 +39,6 @@
 
 #ifdef _WIN32
 #include <windows.h>
-#undef TRUE
-#undef FALSE
 #endif
 #include <sys/stat.h>
 #include "dbuf.h"
@@ -1063,7 +1061,7 @@ copyStr (const char *src, size_t *size)
       else if (*src == '\\')
         {
           unsigned long int c;
-          bool universal = FALSE;
+          bool universal = false;
 
           if (begin)
             {
@@ -1133,13 +1131,13 @@ copyStr (const char *src, size_t *size)
 
             case 'u':
               c = universalEscape (&src, 4);
-              universal = TRUE;
+              universal = true;
               --src;
               break;
 
             case 'U':
               c = universalEscape (&src, 8);
-              universal = TRUE;
+              universal = true;
               --src;
               break;
 

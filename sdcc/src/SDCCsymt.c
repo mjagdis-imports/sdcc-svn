@@ -890,7 +890,7 @@ mergeSpec (sym_link * dest, sym_link * src, const char *name)
   FUNC_ISDYNAMICC (dest) |= FUNC_ISDYNAMICC (src);
   FUNC_ISZ88DK_FASTCALL (dest) |= FUNC_ISZ88DK_FASTCALL (src);
   FUNC_ISZ88DK_CALLEE (dest) |= FUNC_ISZ88DK_CALLEE (src);
-  for (i = 0; i < 9; i++)
+  for (i = 0; i < N_PRESREGS; i++)
     dest->funcAttrs.preserved_regs[i] |= src->funcAttrs.preserved_regs[i];
 
   if (SPEC_ADDRSPACE (src) && SPEC_ADDRSPACE (dest))
@@ -1265,7 +1265,7 @@ getElemCount (sym_link * p)
 static int
 checkStructFlexArray (symbol * sym, sym_link * p)
 {
-  /* if nothing return FALSE */
+  /* if nothing return 0 */
   if (!p)
     return 0;
 
@@ -1747,16 +1747,16 @@ addSymChain (symbol **symHead)
 /*------------------------------------------------------------------*/
 /* funcInChain - DCL Type 'FUNCTION' found in type chain            */
 /*------------------------------------------------------------------*/
-int
+bool
 funcInChain (sym_link * lnk)
 {
   while (lnk)
     {
       if (IS_FUNC (lnk))
-        return 1;
+        return true;
       lnk = lnk->next;
     }
-  return 0;
+  return false;
 }
 
 /*------------------------------------------------------------------*/
@@ -1979,7 +1979,7 @@ compStructSize (structdef * sdef)
               if (ret == FLEXARRAY)
                 {
                   /* found a "flexible array member" */
-                  sdef->b_flexArrayMember = TRUE;
+                  sdef->b_flexArrayMember = true;
                   /* is another struct-member following? */
                   if (loop->next)
                     werror (E_FLEXARRAY_NOTATEND, loop->name);
@@ -2040,7 +2040,7 @@ promoteAnonStructs (structdef * sdef)
      through the promotion below. */
   if (sdef->type == UNION)
     {
-      bool isfirst = TRUE;
+      bool isfirst = true;
 
       for (field = sdef->fields; field; field = field->next)
         {
@@ -2051,7 +2051,7 @@ promoteAnonStructs (structdef * sdef)
              the alternative to emit. */
           if (isfirst && !field->bitUnnamed)
             {
-              isfirst = FALSE;
+              isfirst = false;
               continue;
             }
           field->anonunionalias = 1;
@@ -3138,7 +3138,7 @@ compareFuncType (sym_link *dest, sym_link *src)
       FUNC_SDCCCALL (dest) != FUNC_SDCCCALL (src))
     return 0;
 
-  for (i = 0; i < 9; i++)
+  for (i = 0; i < N_PRESREGS; i++)
     if (dest->funcAttrs.preserved_regs[i] > src->funcAttrs.preserved_regs[i])
       return 0;
 
@@ -4178,18 +4178,18 @@ processFunc (symbol *func, sym_link *funcType)
 }
 
 /*-----------------------------------------------------------------*/
-/* isSymbolEqual - compares two symbols return 1 if they match     */
+/* isSymbolEqual - compares two symbols return true if they match  */
 /*-----------------------------------------------------------------*/
-int
+bool
 isSymbolEqual (const symbol * dest, const symbol * src)
 {
   /* if pointers match then equal */
   if (dest == src)
-    return 1;
+    return true;
 
   /* if one of them is null then don't match */
   if (!dest || !src)
-    return 0;
+    return false;
 
   /* if both of them have rname match on rname */
   if (dest->rname[0] && src->rname[0])
@@ -4234,7 +4234,6 @@ dbuf_printTypeChain (sym_link * start, struct dbuf_s *dbuf)
   value *args;
   sym_link *type, *search;
   STORAGE_CLASS scls;
-  static struct dbuf_s dbuf2;
 
   if (start == NULL)
     {
@@ -4280,11 +4279,7 @@ dbuf_printTypeChain (sym_link * start, struct dbuf_s *dbuf)
               if (IFFUNC_ISREENT (type) && isTargetKeyword("__reentrant"))
                 dbuf_append_str (dbuf, " __reentrant");
               if (FUNC_REGBANK (type))
-                {
-                  dbuf_set_length (&dbuf2, 0);
-                  dbuf_printf (&dbuf2, " __using(%d)", FUNC_REGBANK (type));
-                  dbuf_append_str (dbuf, dbuf_c_str (&dbuf2));
-                }
+                dbuf_printf (dbuf, " __using(%d)", FUNC_REGBANK (type));
               if (IFFUNC_ISBANKEDCALL (type))
                 dbuf_append_str (dbuf, " __banked");
               if (IFFUNC_ISSMALLC (type))
@@ -4303,11 +4298,11 @@ dbuf_printTypeChain (sym_link * start, struct dbuf_s *dbuf)
                 dbuf_append_str (dbuf, " __z88dk_fastcall");
               if (FUNC_SDCCCALL (type) >= 0 && FUNC_SDCCCALL (type) != options.sdcccall)
                 dbuf_printf (dbuf, " __sdcccall(%d)", FUNC_SDCCCALL (type));
-              for (unsigned char i = 0; i < 9; i++)
+              for (unsigned char i = 0; i < N_PRESREGS; i++)
                   if (type->funcAttrs.preserved_regs[i])
                   {
                     dbuf_append_str (dbuf, " __preserves_regs(");
-                    for (; i < 9; i++)
+                    for (; i < N_PRESREGS; i++)
                       if (type->funcAttrs.preserved_regs[i])
                         dbuf_printf (dbuf, " %d", i);
                     dbuf_append_str (dbuf, " )");
@@ -5508,7 +5503,7 @@ bool
 isConst (sym_link *type)
 {
   if (!type)
-    return 0;
+    return false;
 
   while (IS_ARRAY (type))
     type = type->next;
@@ -5526,7 +5521,7 @@ bool
 isVolatile (sym_link *type)
 {
   if (!type)
-    return 0;
+    return false;
 
   while (IS_ARRAY (type))
     type = type->next;
@@ -5544,7 +5539,7 @@ bool
 isRestrict (sym_link *type)
 {
   if (!type)
-    return 0;
+    return false;
 
   while (IS_ARRAY (type))
     type = type->next;
@@ -5562,7 +5557,7 @@ bool
 isAtomic (sym_link *type)
 {
   if (!type)
-    return 0;
+    return false;
 
   while (IS_ARRAY (type))
     type = type->next;
@@ -5580,7 +5575,7 @@ bool
 isOptional (sym_link *type)
 {
   if (!type)
-    return 0;
+    return false;
 
   while (IS_ARRAY (type))
     type = type->next;

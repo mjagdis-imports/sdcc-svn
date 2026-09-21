@@ -313,7 +313,7 @@ DEFSETFUNC (removeFromInExprs)
 }
 
 /*-----------------------------------------------------------------*/
-/* isGlobalInNearSpace - return TRUE if variable is a globalin data */
+/* isGlobalInNearSpace - true if variable is a global in data      */
 /*-----------------------------------------------------------------*/
 static bool
 isGlobalInNearSpace (operand * op)
@@ -323,11 +323,9 @@ isGlobalInNearSpace (operand * op)
      suggested by Jean-Louis VERN, with 8051s we have no
      advantage of putting variables in near space into
      registers */
-  if (isOperandGlobal (op) && !IN_FARSPACE (SPEC_OCLS (type)) &&
-      IN_DIRSPACE (SPEC_OCLS (type)))
-    return TRUE;
-  else
-    return FALSE;
+  return (isOperandGlobal (op) &&
+          !IN_FARSPACE (SPEC_OCLS (type)) &&
+          IN_DIRSPACE (SPEC_OCLS (type)));
 }
 
 /*-----------------------------------------------------------------*/
@@ -421,7 +419,7 @@ DEFSETFUNC (findCheaperOp)
          (SPEC_LONG(operandType (cop))==SPEC_LONG(operandType (*opp)))))))
     {
       if ((isGlobalInNearSpace (cop) && !isOperandLiteral (*opp)) ||
-          isOperandVolatile (*opp, FALSE))
+          isOperandVolatile (*opp, false))
         {
           *opp = NULL;
           return 0;
@@ -489,8 +487,8 @@ DEFSETFUNC (findPointerSet)
   if (POINTER_SET (cdp->diCode) &&
       op->key &&
       IC_RESULT (cdp->diCode)->key == op->key &&
-      !isOperandVolatile (IC_RESULT (cdp->diCode), TRUE) &&
-      !isOperandVolatile (IC_RIGHT (cdp->diCode), TRUE) &&
+      !isOperandVolatile (IC_RESULT (cdp->diCode), true) &&
+      !isOperandVolatile (IC_RIGHT (cdp->diCode), true) &&
       getSize (operandType (IC_RIGHT (cdp->diCode))) ==
       getSize (operandType (rop)))
     {
@@ -1239,7 +1237,7 @@ algebraicOpts (iCode *ic, eBBlock *ebp)
                       op->type = TYPE;
                       setOperandType (op, INTTYPE);
                       newic = newiCode (CAST, op, IC_LEFT (ic));
-                      IC_RESULT (newic) = newiTempOperand (INTTYPE, TRUE);
+                      IC_RESULT (newic) = newiTempOperand (INTTYPE, true);
                       hTabAddItem (&iCodehTab, newic->key, newic);
                       addiCodeToeBBlock (ebp, newic, ic);
                       IC_LEFT (ic) = IC_RESULT (newic);
@@ -1301,7 +1299,7 @@ algebraicOpts (iCode *ic, eBBlock *ebp)
                       op->type = TYPE;
                       setOperandType (op, INTTYPE);
                       newic = newiCode (CAST, op, IC_LEFT (ic));
-                      IC_RESULT (newic) = newiTempOperand (INTTYPE, TRUE);
+                      IC_RESULT (newic) = newiTempOperand (INTTYPE, true);
                       hTabAddItem (&iCodehTab, newic->key, newic);
                       addiCodeToeBBlock (ebp, newic, ic);
                       IC_LEFT (ic) = IC_RESULT (newic);
@@ -1718,7 +1716,7 @@ setUsesDefs (operand * op, bitVect * bdefs,
 
   /* the out defs is an union */
   *oud = bitVectInplaceUnion (*oud, adefs);
-  
+
   /* If not assigning op->usesDefs, we can safely free adefs */
   freeBitVect(adefs);
 }
@@ -1782,7 +1780,7 @@ ifxOptimize (iCode * ic, set * cseSet,
               sym_link *type = operandType (IC_RESULT (ic->prev));
               if (ic->prev->op != CAST || IS_BOOL (type) || bitsForType (operandType (IC_RIGHT (ic->prev))) < bitsForType (type))
                 {
-                  if (!isOperandVolatile (ic->prev->op == '!' ? IC_LEFT (ic->prev) : IC_RIGHT (ic->prev), FALSE))
+                  if (!isOperandVolatile (ic->prev->op == '!' ? IC_LEFT (ic->prev) : IC_RIGHT (ic->prev), false))
                     {
                       if (ic->prev->op == '!') /* Invert jump logic */
                         {
@@ -2305,19 +2303,19 @@ cseBBlock (eBBlock * ebb, int computeOnly, ebbIndex * ebbi)
               /* delete global variables from the cseSet
                  since they can be modified by the function call */
               destructItemIf (&cseSet, freeLocalCseDef, ifDefGlobal);
-    
+
               /* and also iTemps derived from globals */
               destructItemIf (&cseSet, freeLocalCseDef, ifFromGlobal);
-    
+
               /* Delete iTemps derived from symbols whose address */
               /* has been taken */
               destructItemIf (&cseSet, freeLocalCseDef, ifFromAddrTaken);
-    
+
               /* delete all getpointer iCodes from cseSet, this should
                  be done only for global arrays & pointers but at this
                  point we don't know if globals, so to be safe do all */
               destructItemIf (&cseSet, freeLocalCseDef, ifAnyGetPointer);
-    
+
               /* can't cache pointer set/get operations across a call */
               deleteSet (&ptrSetSet);
             }
@@ -2404,14 +2402,14 @@ cseBBlock (eBBlock * ebb, int computeOnly, ebbIndex * ebbi)
           if (!IS_PTR (operandType (IC_LEFT (ic))))
             {
               setOperandType (IC_LEFT (ic),
-                              aggrToPtr (operandType (IC_LEFT (ic)), FALSE));
+                              aggrToPtr (operandType (IC_LEFT (ic)), false));
               IC_LEFT (ic)->aggr2ptr = 0;
               fixUpTypes (ic);
             }
           else if (IC_LEFT (ic)->aggr2ptr == 1)
             {/* band aid for kludge */
               setOperandType (IC_LEFT (ic),
-                              aggrToPtr (operandType (IC_LEFT (ic)), TRUE));
+                              aggrToPtr (operandType (IC_LEFT (ic)), true));
               IC_LEFT (ic)->aggr2ptr++;
               fixUpTypes (ic);
             }
@@ -2422,13 +2420,13 @@ cseBBlock (eBBlock * ebb, int computeOnly, ebbIndex * ebbi)
           if (!IS_PTR (operandType (IC_RESULT (ic))))
             {
               setOperandType (IC_RESULT (ic),
-                              aggrToPtr (operandType (IC_RESULT (ic)), FALSE));
+                              aggrToPtr (operandType (IC_RESULT (ic)), false));
               IC_RESULT (ic)->aggr2ptr = 0;
             }
           else if (IC_RESULT (ic)->aggr2ptr == 1)
             {/* band aid for kludge */
               setOperandType (IC_RESULT (ic),
-                              aggrToPtr (operandType (IC_RESULT (ic)), TRUE));
+                              aggrToPtr (operandType (IC_RESULT (ic)), true));
               IC_RESULT (ic)->aggr2ptr++;
             }
         }
@@ -2459,7 +2457,7 @@ cseBBlock (eBBlock * ebb, int computeOnly, ebbIndex * ebbi)
                   if (!IS_PTR (operandType (IC_RESULT (ic))))
                     {
                       setOperandType (IC_RESULT (ic),
-                                      aggrToPtr (operandType (IC_RESULT (ic)), FALSE));
+                                      aggrToPtr (operandType (IC_RESULT (ic)), false));
                     }
                 }
             }
@@ -2553,7 +2551,7 @@ cseBBlock (eBBlock * ebb, int computeOnly, ebbIndex * ebbi)
 
       /* if after all this it becomes an assignment to self
          then delete it and continue */
-      if (ASSIGNMENT_TO_SELF (ic) && !isOperandVolatile (IC_RIGHT(ic), FALSE))
+      if (ASSIGNMENT_TO_SELF (ic) && !isOperandVolatile (IC_RIGHT(ic), false))
         {
           unsetDefsAndUses (ic);
           remiCodeFromeBBlock (ebb, ic);
@@ -2569,7 +2567,7 @@ cseBBlock (eBBlock * ebb, int computeOnly, ebbIndex * ebbi)
       pdic = NULL;
       if (!(POINTER_GET (ic) &&
             (IS_BITFIELD (OP_SYMBOL (IC_RESULT (ic))->etype) ||
-             isOperandVolatile (IC_LEFT (ic), TRUE) || IS_VOLATILE (operandType (IC_LEFT (ic))->next) ||
+             isOperandVolatile (IC_LEFT (ic), true) || IS_VOLATILE (operandType (IC_LEFT (ic))->next) ||
              bitVectBitValue (ebb->ndompset, IC_LEFT (ic)->key))) &&
           !ASSIGNMENT (ic) &&
           IS_ITEMP (IC_RESULT (ic)) &&
@@ -2611,7 +2609,7 @@ cseBBlock (eBBlock * ebb, int computeOnly, ebbIndex * ebbi)
          this with a previously assigned pointer value */
       if (!computeOnly && POINTER_GET (ic) &&
           !(IS_BITFIELD (OP_SYMBOL (IC_RESULT (ic))->etype) ||
-            isOperandVolatile (IC_LEFT (ic), TRUE)))
+            isOperandVolatile (IC_LEFT (ic), true)))
         {
           pdop = NULL;
           applyToSet (ptrSetSet, findPointerSet, IC_LEFT (ic), &pdop, IC_RESULT (ic));
@@ -2826,7 +2824,7 @@ freeCSEdata (eBBlock * ebb)
           cdp->ancestors = NULL;
         }
     }
-  
+
   deleteSet (&ebb->inExprs);
   deleteSet (&ebb->outExprs);
   deleteSet (&ebb->killedExprs);

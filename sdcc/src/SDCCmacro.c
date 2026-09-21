@@ -28,7 +28,7 @@
 char *
 eval_macros (hTab * pvals, const char *pfrom)
 {
-  bool fdidsomething = FALSE;
+  bool fdidsomething = false;
   char quote = '\0';
   struct dbuf_s dbuf;
 
@@ -97,7 +97,7 @@ eval_macros (hTab * pvals, const char *pfrom)
                     dbuf_append_char (&dbuf, quote);
                   }
                 dbuf_append_str (&dbuf, pval);
-                fdidsomething = TRUE;
+                fdidsomething = true;
               }
 
             quote = '\0';

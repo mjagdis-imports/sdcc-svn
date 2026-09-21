@@ -320,7 +320,7 @@ ptrPseudoSymSafe (symbol * sym, iCode * dic)
   basesym = OP_SYMBOL (IC_LEFT (ric));
 
   //isGlobal = !basesym->islocal && !basesym->ismyparm;
-  ptrsymDclType = aggrToPtrDclType (ptrsym->type, FALSE);
+  ptrsymDclType = aggrToPtrDclType (ptrsym->type, false);
 
   ic = dic->next;
   while (ic && ic->seq <= sym->liveTo)
@@ -351,7 +351,7 @@ ptrPseudoSymSafe (symbol * sym, iCode * dic)
                 }
               else
                 {
-                  int ptrsym2DclType = aggrToPtrDclType (ptrsym2->type, FALSE);
+                  int ptrsym2DclType = aggrToPtrDclType (ptrsym2->type, false);
 
                   /* Pointer must have no memory space in common */
                   if (ptrsym2DclType == ptrsymDclType || ptrsym2DclType == GPOINTER || ptrsymDclType == GPOINTER)

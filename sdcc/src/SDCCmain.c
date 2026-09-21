@@ -75,7 +75,7 @@ set *dataDirsSet = NULL;        /* list of data search directories */
 set *includeDirsSet = NULL;     /* list of include search directories */
 set *userIncDirsSet = NULL;     /* list of user include directories */
 set *libDirsSet = NULL;         /* list of lib search directories */
-bool regalloc_dry_run = FALSE;
+bool regalloc_dry_run = false;
 
 /* language override constants and variable for handling -x during command line parsing */
 enum
@@ -998,7 +998,7 @@ scanOptionsTable (const OPTION * optionsTable, char shortOpt, const char *longOp
 
               (*(int *) optionsTable[i].pparameter)++;
 
-              return TRUE;
+              return true;
             }
         }
       else
@@ -1044,18 +1044,18 @@ scanOptionsTable (const OPTION * optionsTable, char shortOpt, const char *longOp
                               Safe_strdup (getStringArg (optionsTable[i].longOpt, argv, pi, argc)));
                       break;
                     }
-                  return TRUE;
+                  return true;
                 }
               else
                 {
                   /* Not a flag.  Handled manually later. */
-                  return FALSE;
+                  return false;
                 }
             }
         }
     }
   /* Didn't find in the table */
-  return FALSE;
+  return false;
 }
 
 static bool
@@ -1078,21 +1078,21 @@ tryHandleSimpleOpt (char **argv, int *pi, int argc)
 
       if (scanOptionsTable (optionsTable, shortOpt, longOpt, argv, pi, argc))
         {
-          return TRUE;
+          return true;
         }
       else if (port && port->poptions && scanOptionsTable (port->poptions, shortOpt, longOpt, argv, pi, argc))
         {
-          return TRUE;
+          return true;
         }
       else
         {
-          return FALSE;
+          return false;
         }
     }
   else
     {
       /* Not an option, so can't be handled. */
-      return FALSE;
+      return false;
     }
 }
 
@@ -1111,17 +1111,17 @@ parseCmdLine (int argc, char **argv)
         break;
 
       /* check port specific options before general ones */
-      if (port->parseOption (&argc, argv, &i) == TRUE)
+      if (port->parseOption (&argc, argv, &i))
         {
           continue;
         }
 
-      if (tryHandleUnsupportedOpt (argv, &i) == TRUE)
+      if (tryHandleUnsupportedOpt (argv, &i))
         {
           continue;
         }
 
-      if (tryHandleSimpleOpt (argv, &i, argc) == TRUE)
+      if (tryHandleSimpleOpt (argv, &i, argc))
         {
           continue;
         }
@@ -1143,7 +1143,7 @@ parseCmdLine (int argc, char **argv)
             }
           if (strcmp (argv[i], OPTION_HELP) == 0)
             {
-              printUsage (FALSE);
+              printUsage (false);
               exit (EXIT_SUCCESS);
             }
 
@@ -1202,7 +1202,7 @@ parseCmdLine (int argc, char **argv)
           if (optstrcmp (argv[i], OPTION_XRAM_SIZE, "=", false, &charsConsumed) == 0)
             {
               options.xram_size = getIntArgEx (OPTION_XRAM_SIZE, charsConsumed, argv, &i, argc);
-              options.xram_size_set = TRUE;
+              options.xram_size_set = true;
               continue;
             }
 
@@ -1504,7 +1504,7 @@ parseCmdLine (int argc, char **argv)
             case 'h':
               verifyShortOption (argv[i]);
 
-              printUsage (FALSE);
+              printUsage (false);
               exit (EXIT_SUCCESS);
               break;
 
@@ -2883,7 +2883,7 @@ main (int argc, char **argv, char **envp)
     {
       if (options.printSearchDirs)
         exit (EXIT_SUCCESS);
-      printUsage (TRUE);
+      printUsage (true);
       exit (EXIT_FAILURE);
     }
 
@@ -2992,7 +2992,7 @@ main (int argc, char **argv, char **envp)
       else
         {
           /* this shouldn't happen */
-          assert (FALSE);
+          assert (false);
           /* in case of NDEBUG */
           glue ();
         }

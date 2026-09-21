@@ -47,7 +47,7 @@ static void bindVar (int key, char **s, hTab ** vtab);
 
 static bool matchLine (char *, const char *, hTab **);
 
-#define FBYNAME(x) static int x (hTab *vars, lineNode *currPl, lineNode *endPl, \
+#define FBYNAME(x) static bool x (hTab *vars, lineNode *currPl, lineNode *endPl, \
         lineNode *head, char *cmdLine)
 
 #if !OPT_DISABLE_PIC14
@@ -422,36 +422,36 @@ FBYNAME (labelInRange)
     }
 
   if (!lbl)
-    return FALSE;
+    return false;
 
   do
     {
       /* Don't optimize jumps in a jump table; a more generic test */
       if (currPl->ic && currPl->ic->op == JUMPTABLE)
-        return FALSE;
+        return false;
 
       /* if the previous two instructions are "ljmp"s then don't
          do it since it can be part of a jump table */
       if (currPl->prev && currPl->prev->prev &&
           strstr (currPl->prev->line, "ljmp") &&
           strstr (currPl->prev->prev->line, "ljmp"))
-        return FALSE;
+        return false;
 
       /* Calculate the label distance. For mcs51 the jump can be
          -127 to + 127 bytes, for Z80 -126 to +129 bytes.*/
-      dist = (pcDistance (currPl, lbl, TRUE) +
-              pcDistance (currPl, lbl, FALSE));
+      dist = (pcDistance (currPl, lbl, true) +
+              pcDistance (currPl, lbl, false));
 
       /* Use 125 for now. Could be made more exact using port and
          exact jump location instead of currPl. */
       if (!dist || dist > 127)
-        return FALSE;
+        return false;
 
       lbl = getPatternVar (vars, &cmdLine);
     }
   while (lbl);
 
-  return TRUE;
+  return true;
 }
 
 /*-----------------------------------------------------------------*/
@@ -467,7 +467,7 @@ FBYNAME (labelJTInRange)
 
   /* Only optimize within a jump table */
   if (currPl->ic && currPl->ic->op != JUMPTABLE)
-    return FALSE;
+    return false;
 
   count = elementsInSet( IC_JTLABELS (currPl->ic) );
 
@@ -477,10 +477,10 @@ FBYNAME (labelJTInRange)
       /* assumes that the %5 pattern variable has the first ljmp label */
       lbl = hTabItemWithKey (vars, 5+i);
       if (!lbl)
-        return FALSE;
+        return false;
 
-      dist = (pcDistance (currPl, lbl, TRUE) +
-              pcDistance (currPl, lbl, FALSE));
+      dist = (pcDistance (currPl, lbl, true) +
+              pcDistance (currPl, lbl, false));
 
       /* three terms used to calculate allowable distance */
       /* Could be made more exact and port-specific. */
@@ -490,9 +490,9 @@ FBYNAME (labelJTInRange)
                                    should use pcDistance instead? */
                  (count-i-1)    /* if peephole applies distance is shortened */
          )
-        return FALSE;
+        return false;
     }
-  return TRUE;
+  return true;
 }
 
 /*-----------------------------------------------------------------*/
@@ -529,7 +529,7 @@ FBYNAME (labelIsReturnOnly)
     }
 
   if (!label)
-    return FALSE;
+    return false;
   len = strlen(label);
 
   for(pl = currPl; pl; pl = pl->next)
@@ -543,17 +543,17 @@ FBYNAME (labelIsReturnOnly)
               !ISCHARDIGIT(*(pl->line+3)) || !ISCHARDIGIT(*(pl->line+4)) ||
               *(pl->line+5) != '$')
             {
-              return FALSE; /* non-local label encountered */
+              return false; /* non-local label encountered */
             }
         }
     }
   if (!pl)
-    return FALSE; /* did not find the label */
+    return false; /* did not find the label */
   pl = pl->next;
   while (pl && (pl->isDebug || pl->isComment || pl->isLabel))
     pl = pl->next;
   if (!pl || !pl->line || pl->isDebug)
-    return FALSE; /* next line not valid */
+    return false; /* next line not valid */
   for (p = pl->line; *p && ISCHARSPACE(*p); p++)
     ;
 
@@ -584,7 +584,7 @@ FBYNAME (label5IsUncondJumpTo6)
   const char *label;
   char *p, *q;
   const lineNode *pl;
-  bool found = FALSE;
+  bool found = false;
   int len;
   const char *jpInst1 = NULL;
   const char *jpInst2 = NULL;
@@ -592,7 +592,7 @@ FBYNAME (label5IsUncondJumpTo6)
 
   label = hTabItemWithKey (vars, 5);
   if (!label)
-    return FALSE;
+    return false;
   len = strlen(label);
 
   for (pl = currPl; pl; pl = pl->prev)
@@ -630,19 +630,19 @@ FBYNAME (label5IsUncondJumpTo6)
                   !ISCHARDIGIT(*(pl->line+3)) || !ISCHARDIGIT(*(pl->line+4)) ||
                   *(pl->line+5) != '$')
                 {
-                  return FALSE; /* non-local label encountered */
+                  return false; /* non-local label encountered */
                 }
             }
         }
     }
 
   if (!pl || !found)
-    return FALSE; /* did not find the label */
+    return false; /* did not find the label */
   pl = pl->next;
   while (pl && (pl->isDebug || pl->isComment))
     pl = pl->next;
   if (!pl || !pl->line)
-    return FALSE; /* next line not valid */
+    return false; /* next line not valid */
   p = pl->line;
   while (*p && ISCHARSPACE(*p))
     p++;
@@ -680,7 +680,7 @@ FBYNAME (label5IsUncondJumpTo6)
         {
           len = jpInst3 ? strlen(jpInst3) : 0;
           if (!jpInst3 || strncmp(p, jpInst3, len))
-            return FALSE; /* next line is no jump */
+            return false; /* next line is no jump */
         }
     }
 
@@ -726,27 +726,30 @@ FBYNAME (okToRemoveSLOC)
 
   /* assumes that %1 as the SLOC name */
   sloc = hTabItemWithKey (vars, 1);
-  if (sloc == NULL) return FALSE;
+  if (sloc == NULL)
+    return false;
   p = strstr(sloc, "sloc");
-  if (p == NULL) return FALSE;
+  if (p == NULL)
+    return false;
   p += 4;
-  if (sscanf(p, "%d_%d_%d", &dummy1, &dummy2, &dummy3) != 3) return FALSE;
+  if (sscanf(p, "%d_%d_%d", &dummy1, &dummy2, &dummy3) != 3)
+    return false;
   /*TODO: ultra-paranoid: get function name from "head" and check that */
   /* the sloc name begins with that.  Probably not really necessary */
 
   /* Look for any occurrence of this SLOC before the peephole match */
-  for (pl = currPl->prev; pl; pl = pl->prev) {
-        if (pl->line && !pl->isDebug && !pl->isComment
-          && *pl->line != ';' && strstr(pl->line, sloc))
-                return FALSE;
-  }
+  for (pl = currPl->prev; pl; pl = pl->prev)
+    {
+      if (pl->line && !pl->isDebug && !pl->isComment && *pl->line != ';' && strstr(pl->line, sloc))
+        return false;
+    }
   /* Look for any occurrence of this SLOC after the peephole match */
-  for (pl = endPl->next; pl; pl = pl->next) {
-        if (pl->line && !pl->isDebug && !pl->isComment
-          && *pl->line != ';' && strstr(pl->line, sloc))
-                return FALSE;
-  }
-  return TRUE; /* safe for a peephole to remove it :) */
+  for (pl = endPl->next; pl; pl = pl->next)
+    {
+      if (pl->line && !pl->isDebug && !pl->isComment && *pl->line != ';' && strstr(pl->line, sloc))
+        return false;
+    }
+  return true; /* safe for a peephole to remove it :) */
 }
 
 /*-----------------------------------------------------------------*/
@@ -760,7 +763,7 @@ FBYNAME (deadMove)
     return port->peep.deadMove (reg, currPl, head);
 
   fprintf (stderr, "Function deadMove not initialized in port structure\n");
-  return FALSE;
+  return false;
 }
 
 /*-----------------------------------------------------------------*/
@@ -797,13 +800,13 @@ getLabelRef (const char *label, lineNode *head)
  * takes two parameters: a variable (bound to a label name)
  * and an expected reference count.
  *
- * Returns TRUE if that label is defined and referenced exactly
+ * Returns true if that label is defined and referenced exactly
  * the given number of times.
  */
 FBYNAME (labelRefCount)
 {
   int varNumber, expectedRefCount;
-  bool rc = FALSE;
+  bool rc = false;
 
   if (sscanf (cmdLine, "%*[ \t%]%d %d", &varNumber, &expectedRefCount) == 2)
     {
@@ -826,7 +829,7 @@ FBYNAME (labelRefCount)
           else
             {
               // Not a local label. We do not know how often it might be referenced.
-              rc = FALSE;
+              rc = false;
             }
         }
       else
@@ -853,12 +856,12 @@ FBYNAME (labelRefCount)
  * changes the label. It should be passed as the 'last' function
  * so it only is applied if all other conditions have been met.
  *
- * should always return TRUE
+ * should always return true
  */
 FBYNAME (labelRefCountChange)
 {
   int varNumber, RefCountDelta;
-  bool rc = FALSE;
+  bool rc = false;
 
   /* If we don't have the label hash table yet, build it. */
   if (!labelHash)
@@ -889,7 +892,7 @@ FBYNAME (labelRefCountChange)
               if (0 <= entry->refCount + RefCountDelta)
                 {
                   entry->refCount += RefCountDelta;
-                  rc = TRUE;
+                  rc = true;
                 }
               else
                 {
@@ -901,7 +904,7 @@ FBYNAME (labelRefCountChange)
             else
             {
               // Not a local label. We do not know how often it might be referenced.
-              return TRUE;
+              return true;
             }
         }
       else
@@ -922,7 +925,7 @@ FBYNAME (labelRefCountChange)
 
 /* newLabel creates new dollar-label and returns it in the specified container.
  * Optional second operand may specify initial reference count, by default 1.
- * return TRUE if no errors detected
+ * return true if no errors detected
  */
 FBYNAME (newLabel)
 {
@@ -939,7 +942,7 @@ FBYNAME (newLabel)
       fprintf (stderr,
                "*** internal error: newLabel peephole restriction"
                " malformed: %s\n", cmdLine);
-      return FALSE;
+      return false;
     }
 
   if (varNumber <= 0)
@@ -947,7 +950,7 @@ FBYNAME (newLabel)
       fprintf (stderr, "*** internal error: invalid container %%%d"
                " in peephole %s rule.\n",
                varNumber, __func__);
-      return FALSE;
+      return false;
     }
 
   if (labelHash == NULL)
@@ -981,14 +984,14 @@ FBYNAME (newLabel)
   char *value = traceAlloc (&_G.values, Safe_strdup(entry->name));
   hTabAddItem (&vars, varNumber, value);
 
-  return TRUE;
+  return true;
 }
 
 /* Within the context of the lines currPl through endPl, determine
 ** if the variable var contains a symbol that is volatile. Returns
-** TRUE only if it is certain that this was not volatile (the symbol
+** true only if it is certain that this was not volatile (the symbol
 ** was found and not volatile, or var was a constant or CPU register).
-** Returns FALSE if the symbol was found and volatile, the symbol was
+** Returns false if the symbol was found and volatile, the symbol was
 ** not found, or var was a indirect/pointer addressing mode.
 */
 static bool
@@ -1184,25 +1187,25 @@ FBYNAME (notVolatile)
               case IFX:
                 op = IC_COND (cl->ic);
                 if (IS_SYMOP (op) && op->isvolatile)
-                  return FALSE;
+                  return false;
               case JUMPTABLE:
                 op = IC_JTCOND (cl->ic);
                 if (IS_SYMOP (op) && op->isvolatile)
-                  return FALSE;
+                  return false;
               default:
                 op = IC_LEFT (cl->ic);
                 if (IS_SYMOP (op) && op->isvolatile)
-                  return FALSE;
+                  return false;
                 op = IC_RIGHT (cl->ic);
                 if (IS_SYMOP (op) && op->isvolatile)
-                  return FALSE;
+                  return false;
                 op = IC_RESULT (cl->ic);
                 if (IS_SYMOP (op) && op->isvolatile)
-                  return FALSE;
+                  return false;
               }
           }
       }
-      return TRUE;
+      return true;
     }
 
   /* There were parameters; check the volatility of each */
@@ -1232,17 +1235,17 @@ FBYNAME (notVolatile)
           fprintf (stderr, "*** internal error: var %d not bound"
                    " in peephole notVolatile rule.\n",
                    varNumber);
-          return FALSE;
+          return false;
         }
     }
 
-  return TRUE;
+  return true;
 
 error:
   fprintf (stderr,
            "*** internal error: notVolatile peephole restriction"
            " malformed: %s\n", cmdLine);
-  return FALSE;
+  return false;
 }
 
 /*------------------------------------------------------------------*/
@@ -1360,7 +1363,6 @@ FBYNAME (optimizeFor)
 {
   const char *cond;
   int speed = 0, size = 0; // 0: nothing requested, >0 optimization requested, <0 negated optimization requested
-  
   bool ret = false, error = false;
 
   set *operands = setFromConditionArgs (cmdLine, vars);
@@ -1380,7 +1382,7 @@ FBYNAME (optimizeFor)
       const char *condTextSize  = strstr (cond, "code-size");
       const char *condNegated = strstr (cond, "!");
       const char *condText = condTextSpeed ? condTextSpeed : condTextSize;
-      
+
       // Check for invalid conditions or invalid combinations in the same string
       if (!condText || condTextSpeed && condTextSize || condNegated && (condNegated + 1 != condText))
         {
@@ -1415,11 +1417,11 @@ FBYNAME (optimizeFor)
       ret = true;
       if (speed != 0)
         ret &= (speed < 0) ^ (optimize.codeSpeed > 0);
-        
+
       if (size != 0)
         ret &= (size < 0) ^ (optimize.codeSize > 0);
     }
-    
+
   deleteSet(&operands);
   return (ret);
 }
@@ -1435,11 +1437,11 @@ FBYNAME (notUsed)
   if (!port->peep.notUsed)
     {
       fprintf (stderr, "Function notUsed not initialized in port structure\n");
-      return FALSE;
+      return false;
     }
 
   if (currPl && currPl->ic && (currPl->ic->op == SEND || currPl->ic->op == RETURN))
-    return FALSE;
+    return false;
 
   set *operands = setFromConditionArgs (cmdLine, vars);
 
@@ -1448,11 +1450,11 @@ FBYNAME (notUsed)
       fprintf (stderr,
              "*** internal error: notUsed peephole restriction"
              " requires operand(s): %s\n", cmdLine);
-      return FALSE;
+      return false;
     }
 
   what = setFirstItem (operands);
-  for (ret = TRUE; ret && what != NULL; what = setNextItem (operands))
+  for (ret = true; ret && what != NULL; what = setNextItem (operands))
     ret = port->peep.notUsed (what, endPl, head);
 
   deleteSet(&operands);
@@ -1469,13 +1471,13 @@ FBYNAME (notUsedFrom)
 {
   const char *what, *label;
   bool ret;
-  
+
   if (!port->peep.notUsedFrom)
     {
       fprintf (stderr, "Function notUsedFrom not initialized in port structure\n");
       return false;
     }
-  
+
   set *operands = setFromConditionArgs (cmdLine, vars);
 
   if (!operands)
@@ -1501,7 +1503,7 @@ FBYNAME (notUsedFrom)
 
   for (ret = true; ret && what; what = setNextItem (operands))
       ret = port->peep.notUsedFrom (what, label, head);
-  
+
   deleteSet(&operands);
 
   return (ret);
@@ -1521,7 +1523,7 @@ FBYNAME (unusedReg)
       fprintf (stderr,
                "*** internal error: unusedReg peephole restriction"
                " malformed: %s\n", cmdLine);
-      return FALSE;
+      return false;
     }
 
   set *operands = setFromConditionArgs (&cmdLine[n], vars);
@@ -1530,7 +1532,7 @@ FBYNAME (unusedReg)
       fprintf (stderr,
                "*** internal error: unusedReg peephole restriction"
                " malformed: %s\n", cmdLine);
-      return FALSE;
+      return false;
     }
 
   char *what = setFirstItem (operands);
@@ -1565,7 +1567,7 @@ FBYNAME (canAssign)
       fprintf (stderr,
                "*** internal error: canAssign peephole restriction"
                " malformed: %s\n", cmdLine);
-      return FALSE;
+      return false;
     }
 
   if(elementsInSet(operands) == 3)
@@ -1591,7 +1593,7 @@ FBYNAME (canAssign)
   deleteSet (&operands);
 
   fprintf (stderr, "Function canAssign not initialized in port structure\n");
-  return FALSE;
+  return false;
 }
 
 /*-----------------------------------------------------------------*/
@@ -1609,7 +1611,7 @@ FBYNAME (canJoinRegs)
   if (!port->peep.canJoinRegs)
     {
       fprintf (stderr, "Function canJoinRegs not supported by the port\n");
-      return FALSE;
+      return false;
     }
 
   int dstKey;
@@ -1623,7 +1625,7 @@ FBYNAME (canJoinRegs)
       fprintf (stderr,
            "*** internal error: canJoinRegs peephole restriction"
            " has bad result container: %s\n", &cmdLine[i+1]);
-      return FALSE;
+      return false;
     }
   //parse cmd line without last operand
   cmdLine[i] = '\0';
@@ -1635,7 +1637,7 @@ FBYNAME (canJoinRegs)
       fprintf (stderr,
                "*** internal error: canJoinRegs peephole restriction"
                " malformed: %s\n", cmdLine);
-      return FALSE;
+      return false;
     }
 
   bool unordered = false;
@@ -1652,7 +1654,7 @@ FBYNAME (canJoinRegs)
       fprintf (stderr,
                "*** internal error: canJoinRegs peephole restriction"
                " requires at least 3 operands: %s\n", cmdLine);
-      return FALSE;
+      return false;
     }
 
   const char **regs = (const char**) Safe_alloc ( (size + 1) * sizeof (*regs));
@@ -1725,7 +1727,7 @@ FBYNAME (canSplitReg)
   if (!port->peep.canSplitReg)
     {
       fprintf (stderr, "Function canSplitReg not supported by the port\n");
-      return FALSE;
+      return false;
     }
 
   int i;
@@ -1737,7 +1739,7 @@ FBYNAME (canSplitReg)
       fprintf (stderr,
                "*** internal error: canSplitReg peephole restriction"
                " malformed: %s\n", cmdLine);
-      return FALSE;
+      return false;
     }
 
   //find end of first operand
@@ -1754,7 +1756,7 @@ FBYNAME (canSplitReg)
       fprintf (stderr,
                "*** internal error: canSplitReg peephole restriction"
                " malformed: %s\n", cmdLine);
-      return FALSE;
+      return false;
     }
 
   //scan remaining operands
@@ -1776,7 +1778,7 @@ FBYNAME (canSplitReg)
           fprintf (stderr,
                    "*** internal error: canSplitReg peephole restriction"
                    " has invalid destination container: %s\n", cmdLine);
-          return FALSE;
+          return false;
         }
       cl += len;
     }
@@ -1814,7 +1816,7 @@ FBYNAME (operandsNotRelated)
       fprintf (stderr,
                "*** internal error: operandsNotRelated peephole restriction"
                " malformed: %s\n", cmdLine);
-      return FALSE;
+      return false;
     }
 
   bool ret = true;
@@ -1873,7 +1875,7 @@ FBYNAME (notSimilar)
       fprintf (stderr,
                "*** internal error: notSimilar peephole restriction"
                " malformed: %s\n", cmdLine);
-      return FALSE;
+      return false;
     }
 
   while ((op1 = setFirstItem (operands)))
@@ -1885,13 +1887,13 @@ FBYNAME (notSimilar)
           if (strstr (op1, op2) || strstr (op2, op1))
             {
               deleteSet (&operands);
-              return FALSE;
+              return false;
             }
         }
     }
 
   deleteSet (&operands);
-  return TRUE;
+  return true;
 }
 
 /*-----------------------------------------------------------------*/
@@ -1907,7 +1909,7 @@ FBYNAME (symmParmStack)
     fprintf (stderr,
              "*** internal error: symmParmStack peephole restriction"
              " requires operand: %s\n", cmdLine);
-    return FALSE;
+    return false;
   }
 
   const char *name = setFirstItem (operands);
@@ -1936,7 +1938,7 @@ FBYNAME (notSame)
       fprintf (stderr,
                "*** internal error: notSame peephole restriction"
                " malformed: %s\n", cmdLine);
-      return FALSE;
+      return false;
     }
 
   while ((op1 = setFirstItem (operands)))
@@ -1952,13 +1954,13 @@ FBYNAME (notSame)
           if (strcmp (op1, op2) == 0)
             {
               deleteSet (&operands);
-              return FALSE;
+              return false;
             }
         }
     }
 
   deleteSet (&operands);
-  return TRUE;
+  return true;
 }
 
 /*-----------------------------------------------------------------*/
@@ -1976,7 +1978,7 @@ FBYNAME (same)
         fprintf(stderr,
             "*** internal error: same peephole restriction"
             " malformed: %s\n", cmdLine);
-        return FALSE;
+        return false;
       }
 
     operands = reverseSet(operands);
@@ -1991,12 +1993,12 @@ FBYNAME (same)
         if (strcmp(match, op) == 0)
           {
             deleteSet(&operands);
-            return TRUE;
+            return true;
           }
       }
 
     deleteSet(&operands);
-    return FALSE;
+    return false;
 }
 
 /*-----------------------------------------------------------------*/
@@ -2017,10 +2019,10 @@ strIsSymbol(const char *str)
 static bool
 strIsLiteral(const char *str)
 {
-  const char digits[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'}; 
+  const char digits[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
   unsigned char base = 10;
   unsigned char validDigits = 0;
-  
+
   // has to start with a number or a sign
   if(!isdigit( (unsigned char)(*str) ) && (*str) != '-' && (*str) != '+')
     return false;
@@ -2055,10 +2057,10 @@ strIsLiteral(const char *str)
         }
       else
         validDigits = 1; // the first '0' is a valid digit
-      
+
       ++str;
     }
-  
+
   while((unsigned char)(*str) != '\0'){
     unsigned char i;
     for(i = 0; i < base; ++i){
@@ -2088,7 +2090,7 @@ FBYNAME (operandsLiteral)
       fprintf (stderr,
                "*** internal error: operandsLiteral peephole restriction"
                " malformed: %s\n", cmdLine);
-      return FALSE;
+      return false;
     }
 
   for (op = setFirstItem (operands); op; op = setNextItem (operands))
@@ -2160,7 +2162,7 @@ FBYNAME (removeParentheses)
 {
   int dstKey;
   int i;
-  
+
   // Find space previous to last operand
   for (i = strlen (cmdLine)-1; i >= 0 && ISCHARSPACE (cmdLine[i]); --i)
     ;
@@ -2177,7 +2179,7 @@ FBYNAME (removeParentheses)
   cmdLine[i] = '\0';
   set *operands = setFromConditionArgs (cmdLine, vars);
   cmdLine[i] = ' '; // Restore space
-    
+
   if (!operands || elementsInSet(operands) > 1)
     {
       fprintf (stderr,
@@ -2185,11 +2187,11 @@ FBYNAME (removeParentheses)
                " malformed: %s\n", cmdLine);
       return false;
     }
-  
+
   // Parse the operand and remove the parenthesis
-  char r[128];  
+  char r[128];
   const char *op = setFirstItem (operands);
-  
+
   if (*op == '(')
   {
     if(op[strlen(op)-1] == ')')
@@ -2206,7 +2208,7 @@ FBYNAME (removeParentheses)
       deleteSet (&operands);
       return false;
     }
-  
+
   // Do the copy and skip ending parenthesis
   i = 0;
   while (*op)
@@ -2222,15 +2224,15 @@ FBYNAME (removeParentheses)
       }
   }
   r[i] = '\0';
-  
+
   // Abort if remaining chars in source or no chars copied into result string
   if ((*op) || (i == 0))
     {
       deleteSet (&operands);
       return false;
     }
-     
-  char *p[] = {r, NULL};  
+
+  char *p[] = {r, NULL};
   bindVar (dstKey, p, &vars);
 
   deleteSet (&operands);
@@ -2276,7 +2278,7 @@ immdError (const char *info, const char *param, const char *cmd)
 {
   fprintf (stderr, "*** internal error: immdInRange gets "
            "%s: \"%s\" in \"%s\"\n", info, param, cmd);
-  return FALSE;
+  return false;
 }
 
 /*-----------------------------------------------------------------*/
@@ -2284,9 +2286,9 @@ immdError (const char *info, const char *param, const char *cmd)
 /*-----------------------------------------------------------------*/
 static bool
 isPowerOfTwo(unsigned long n)
-{  
+{
   return (n != 0) && ((n & (n - 1)) == 0);
-}  
+}
 
 /*-----------------------------------------------------------------*/
 /* findBitPosition - Returns the bit position set or cleared in n  */
@@ -2308,26 +2310,26 @@ findBitPosition(unsigned long n, unsigned long bits, bool complement)
 {
   unsigned long mask;
   int bitPos;
-  
+
   if ((bits < 1) || (bits > 32)) //bits out of range?
     return -2;
   mask = (1ULL << bits) -1;
   if (n != (n & mask)) // bits outside mask?
     return -1;
-  
+
   if (complement)
     n = (~n) & mask;
   if (!isPowerOfTwo (n)) // Not valid if more than one bit is set
     return -1;
-  
+
   bitPos = -1;
-  // One by one move the only set bit to right till it reaches end  
+  // One by one move the only set bit to right till it reaches end
   while (n)
-    {  
+    {
       n >>= 1;
       bitPos++; //count number of shifts
     }
-  
+
   return bitPos;
 }
 
@@ -2345,22 +2347,22 @@ swapOperation (unsigned long n, unsigned long bits, unsigned long * result)
 {
   unsigned long mask = (1ULL << bits) -1;
   unsigned int shift = bits / 2;
-  
+
   if ((bits < 1) || (bits > 32) || (bits & 0x01)) // bits out of range or odd
     return -2;
   if (n != (n & mask)) // bits outside mask?
     return -1;
-  
+
   *result = (((n << shift) | (n >> shift)) & mask);
   return 0; // no error.
 }
 
-/*-----------------------------------------------------------------*/ 
+/*-----------------------------------------------------------------*/
 /* stringMatchesOperator - returns true if 'str' matches 'op'      */
 /* 'str' matches 'op' if they contain the same string              */
 /* 'str' also matches if surrounded by quotes or double quotes     */
 /*-----------------------------------------------------------------*/
-static bool 
+static bool
 stringMatchesOperator (const char * str, const char *op)
 {
   if (str && op)
@@ -2379,7 +2381,7 @@ stringMatchesOperator (const char * str, const char *op)
     }
   return false;
 }
-/*-----------------------------------------------------------------*/ 
+/*-----------------------------------------------------------------*/
 /* immdInRange - returns true if the result of a given operation   */
 /* of two immediates is in a give range.                           */
 /*-----------------------------------------------------------------*/
@@ -2428,7 +2430,7 @@ FBYNAME (immdInRange)
                 if (!immdGet (r + 1, &k) || !(op = hTabItemWithKey (vars, (int) k)))
                   return immdError ("bad left operand", r, cmdLine);
                 else if (!immdGet (op, &left_l))
-                  return FALSE;
+                  return false;
               }
             else
               return immdError ("bad left operand", r, cmdLine);
@@ -2496,7 +2498,8 @@ FBYNAME (immdInRange)
     {
       i = left_l | right_l;
     }
-  else if (stringMatchesOperator (operator, "singleSetBit") || stringMatchesOperator (operator, "singleResetBit")) // singleSetBit - singleResetBit
+  else if (stringMatchesOperator (operator, "singleSetBit") || // singleSetBit
+           stringMatchesOperator (operator, "singleResetBit")) // singleResetBit
     {
       i = findBitPosition(left_l, right_l, stringMatchesOperator (operator, "singleResetBit"));
       if(i < -1 )
@@ -2526,11 +2529,11 @@ FBYNAME (immdInRange)
       else
         sprintf (r, "0x%lx", i);
       bindVar ((int) h, p, &vars);
-      return TRUE;
+      return true;
     }
   else
     {
-      return FALSE;
+      return false;
     }
 }
 
@@ -2548,7 +2551,7 @@ FBYNAME (inSequence)
       fprintf (stderr,
                "*** internal error: inSequence peephole restriction"
                " malformed: %s\n", cmdLine);
-      return FALSE;
+      return false;
     }
 
   operands = reverseSet(operands);
@@ -2559,7 +2562,7 @@ FBYNAME (inSequence)
       fprintf (stderr,
                "*** internal error: inSequence peephole restriction"
                " malformed: %s\n", cmdLine);
-      return FALSE;
+      return false;
     }
 
   for (seq = LONG_MIN; op; op = setNextItem(operands))
@@ -2567,13 +2570,13 @@ FBYNAME (inSequence)
       if ((immdGet(op, &val) == NULL) || ((seq != LONG_MIN) && (val != seq+stride)))
         {
           deleteSet(&operands);
-          return FALSE;
+          return false;
         }
       seq = val;
     }
 
   deleteSet(&operands);
-  return TRUE;
+  return true;
 }
 
 /*-----------------------------------------------------------------*/
@@ -2621,7 +2624,7 @@ FBYNAME (notInJumpTable)
 static const struct ftab
 {
   const char *fname;
-  int (*func) (hTab *, lineNode *, lineNode *, lineNode *, char *);
+  bool (*func) (hTab *, lineNode *, lineNode *, lineNode *, char *);
 }
 ftab[] =                                            // sorted on the number of times used
 {                                                   // in the peephole rules on 2010-06-12
@@ -2770,7 +2773,7 @@ callFuncByName (char *fname,
         {
 
           int num_parenthesis = 0;
-          cmdTerm = funcArgs;          
+          cmdTerm = funcArgs;
 
           while ((c = *cmdTerm) && (c != ')' || num_parenthesis))
             {
@@ -2816,7 +2819,7 @@ callFuncByName (char *fname,
                    funcName);
           // If the function couldn't be found, let's assume it's
           // a bad rule and refuse it.
-          rc = FALSE;
+          rc = false;
           break;
         }
     }
@@ -2927,10 +2930,8 @@ getPeepLine (lineNode ** head, const char **bpp)
           else
             currL = connectLine (currL, newLineNode (lines));
           currL->isComment = isComment;
-          currL->isLabel = isLabelDefinition (currL->line, &dummy1, &dummy2,
-                                              TRUE);
+          currL->isLabel = isLabelDefinition (currL->line, &dummy1, &dummy2, true);
         }
-
     }
 
   *bpp = bp;
@@ -3151,7 +3152,7 @@ static bool
 matchLine (char *s, const char *d, hTab ** vars)
 {
   if (!s || !(*s))
-    return FALSE;
+    return false;
 
   /* skip leading white spaces */
   while (ISCHARSPACE (*s))
@@ -3165,7 +3166,7 @@ matchLine (char *s, const char *d, hTab ** vars)
       while (ISCHARSPACE(*s))
           s++;
       if(*s==';') break;
-      
+
       while (ISCHARSPACE(*d))
           d++;
 
@@ -3179,7 +3180,7 @@ matchLine (char *s, const char *d, hTab ** vars)
             {
               while (*v)
                 if (*v++ != *s++)
-                  return FALSE;
+                  return false;
             }
           else
             /* variable not bound we need to bind it */
@@ -3197,7 +3198,7 @@ matchLine (char *s, const char *d, hTab ** vars)
       else if (*s && *d) /* they should be an exact match otherwise */
         {
           if (*s++ != *d++)
-            return FALSE;
+            return false;
         }
     }
 
@@ -3218,9 +3219,9 @@ matchLine (char *s, const char *d, hTab ** vars)
   /* after all this if only one of them
      has something left over then no match */
   if (*s || *d)
-    return FALSE;
+    return false;
 
-  return TRUE;
+  return true;
 }
 
 /*-----------------------------------------------------------------*/
@@ -3255,7 +3256,7 @@ matchRule (lineNode * pl,
         }
 
       if (!matchLine (spl->line, rpl->line, &pr->vars))
-        return FALSE;
+        return false;
 
       rpl = rpl->next;
       if (rpl)
@@ -3276,19 +3277,19 @@ matchRule (lineNode * pl,
           if (callFuncByName (pr->cond, pr->vars, pl, spl, head))
             {
               *mtail = spl;
-              return TRUE;
+              return true;
             }
           else
-            return FALSE;
+            return false;
         }
       else
         {
           *mtail = spl;
-          return TRUE;
+          return true;
         }
     }
   else
-    return FALSE;
+    return false;
 }
 
 static void
@@ -3393,7 +3394,7 @@ reassociate_ic (lineNode *shead, lineNode *stail,
             return;
           }
 
-        single_iCode = FALSE;
+        single_iCode = false;
         break;
       }
 
@@ -3523,13 +3524,15 @@ replaceRule (lineNode **shead, lineNode *stail, const peepRule *pr)
                   l++;
                   continue;
                 }
-              while (*v) {
-                *lbp++ = *v++;
-              }
+              while (*v)
+                {
+                  *lbp++ = *v++;
+                }
               l++;
-              while (ISCHARDIGIT (*l)) {
-                l++;
-              }
+              while (ISCHARDIGIT (*l))
+                {
+                  l++;
+                }
               continue;
             }
           *lbp++ = *l++;
@@ -3591,7 +3594,7 @@ replaceRule (lineNode **shead, lineNode *stail, const peepRule *pr)
     }
 }
 
-/* Returns TRUE if this line is a label definition.
+/* Returns true if this line is a label definition.
 
  * If so, start will point to the start of the label name,
  * and len will be it's length.
@@ -3613,7 +3616,7 @@ isLabelDefinition (const char *line, const char **start, int *len, bool isPeepRu
 
   if (!*cp)
     {
-      return FALSE;
+      return false;
     }
 
   *start = cp;
@@ -3626,35 +3629,35 @@ isLabelDefinition (const char *line, const char **start, int *len, bool isPeepRu
 
   if ((cp == *start) || (*cp != ':'))
     {
-      return FALSE;
+      return false;
     }
 
   *len = (cp - (*start));
-  return TRUE;
+  return true;
 }
 
-/* Not perfect, will not find all references yet. 
+/* Not perfect, will not find all references yet.
    Will however find references in call on Z80, which is sufficient to fix #2970351. */
 bool
 isLabelReference (const char *line, const char **start, int *len)
 {
   const char *s, *e;
   if (!TARGET_Z80_LIKE && !TARGET_IS_STM8 && !TARGET_PDK_LIKE)
-    return FALSE;
+    return false;
 
   s = line;
   while (ISCHARSPACE (*s))
     ++s;
 
   if(strncmp(s, "call", 4))
-    return FALSE;
+    return false;
   s += 4;
 
   while (ISCHARSPACE (*s))
     ++s;
 
   /* Skip condition in conditional call */
-  if (strchr(s, ',')) 
+  if (strchr(s, ','))
     s = strchr(s, ',') + 1;
 
   e = s, *len = 0;
@@ -3663,7 +3666,7 @@ isLabelReference (const char *line, const char **start, int *len)
 
   *start = s;
 
-  return TRUE;
+  return true;
 }
 
 /* Quick & dirty string hash function. */
@@ -3703,13 +3706,13 @@ buildLabelRefCountHash (lineNode *head)
   /* First pass: locate all the labels. */
   for (line = head; line; line = line->next)
     {
-      bool ref = FALSE;
+      bool ref = false;
       /* run isLabelDefinition to:
          - look for labels in inline assembler
          - calculate labelLen
-      */ 
-      if ((line->isLabel || line->isInline) && isLabelDefinition (line->line, &label, &labelLen, FALSE) ||
-        (ref = TRUE) && isLabelReference (line->line, &label, &labelLen))
+      */
+      if ((line->isLabel || line->isInline) && isLabelDefinition (line->line, &label, &labelLen, false) ||
+        (ref = true) && isLabelReference (line->line, &label, &labelLen))
         {
           labelHashEntry *entry, *e;
 
@@ -3850,7 +3853,7 @@ peepHole (lineNode ** pls)
 
   do
     {
-      restart = FALSE;
+      restart = false;
 
       /* for all rules */
       for (pr = rootRules; pr; pr = pr->next)
@@ -3860,7 +3863,7 @@ peepHole (lineNode ** pls)
 
           for (spl = *pls; spl; spl = replaced ? spl : spl->next)
             {
-              replaced = FALSE;
+              replaced = false;
 
               // Break out of an infinite loop of rule applications.
               if (rule_application_counter > 200000ul)
@@ -3888,7 +3891,7 @@ peepHole (lineNode ** pls)
                   rule_application_counter++;
 
                   /* restart at the replaced line */
-                  replaced = TRUE;
+                  replaced = true;
 
                   /* then replace */
                   if (spl == *pls)
@@ -3903,7 +3906,7 @@ peepHole (lineNode ** pls)
                      start at the top again */
                   if (pr->restart)
                     {
-                      restart = TRUE;
+                      restart = true;
                     }
                 }
 
@@ -3917,7 +3920,7 @@ peepHole (lineNode ** pls)
               freeTrace (&_G.values);
             }
         }
-    } while (restart == TRUE);
+    } while (restart);
 
 end:
   if (labelHash)

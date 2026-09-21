@@ -1,3 +1,41 @@
+2026-09-21 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* device/include/stdlib.h: bugfix once_flag, cannot use bool & false
+	  without including stdbool.h
+	* device/lib/call_once.c: remove unused include stdbool.h
+	* src/SDCCsystem.c,
+	* src/SDCCutil.c: removed undef TRUE/FALSE
+	* src/SDCCsymt.h: added N_PRESREGS for number of preserved registers
+	* src/SDCCsymt.c: use N_PRESREGS,
+	  no need for dbuf2, dbuf_printf() already prints at the end
+	* src/mcs51/gen.c (genNot): always use the nosidechannels variant
+	* src/SDCCast.c,
+	* src/SDCCcflow.c,
+	* src/SDCCcse.c,
+	* src/SDCCdflow.c,
+	* src/SDCCdwarf2.c,
+	* src/SDCCgen.c,
+	* src/SDCCglue.c,
+	* src/SDCChasht.c,
+	* src/SDCChasht.h,
+	* src/SDCCicode.c,
+	* src/SDCCicode.h,
+	* src/SDCCloop.c,
+	* src/SDCClospre.hpp,
+	* src/SDCClrange.c,
+	* src/SDCCmacro.c,
+	* src/SDCCmain.c,
+	* src/SDCCmem.c,
+	* src/SDCCopt.c,
+	* src/SDCCpeeph.c,
+	* src/SDCCptropt.c,
+	* src/SDCCsymt.c,
+	* src/SDCCsymt.h,
+	* src/SDCCutil.c,
+	* src/SDCCval.c,
+	* src/cdbFile.c: made boolean functions return bool,
+	  replace all TRUE/FALSE or 1/0 by true/false
+
 2026-09-21 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* support/regression/fwk/include/testfwk.h:

@@ -120,7 +120,7 @@ initMem (void)
      BIT-ACCESS     -   NO
      CODE-ACCESS    -   NO
      DEBUG-NAME     -   'A'
-     POINTER-TYPE   -   FPOINTER
+     POINTER-TYPE   -   PPOINTER
    */
   xstack = allocMap (0, 1, 1, 0, 0, 0, options.xstack_loc, XSTACK_NAME, 'A', PPOINTER);
 
@@ -224,13 +224,13 @@ initMem (void)
   if (OVERLAY_NAME)
       overlay = allocMap (0, 0, 0, 1, 0, 0, options.data_loc, DATA_NAME, 'E', POINTER);
 
-  /* Xternal paged segment ;   
+  /* Xternal paged segment ;
      SFRSPACE       -   NO
      FAR-SPACE      -   NO
      PAGED          -   YES
      DIRECT-ACCESS  -   NO
      BIT-ACCESS     -   NO
-     CODE-ACCESS    -   NO 
+     CODE-ACCESS    -   NO
      DEBUG-NAME     -   'P'
      POINTER-TYPE   -   PPOINTER
    */
@@ -427,7 +427,7 @@ defaultOClass (symbol *sym)
       break;
     case S_CODE:
       if (sym->_isparm)
-        return FALSE;
+        return false;
       /* if code change to constant */
       if (sym->ival && SPEC_ABSA (sym->etype))
         {
@@ -510,9 +510,9 @@ defaultOClass (symbol *sym)
       SPEC_OCLS (sym->etype) = eeprom;
       break;
     default:
-      return FALSE;
+      return false;
     }
-  return TRUE;
+  return true;
 }
 
 /*-----------------------------------------------------------------*/
@@ -524,9 +524,9 @@ allocDefault (struct symbol *sym)
   if (defaultOClass (sym))
     {
       allocIntoSeg (sym);
-      return TRUE;
+      return true;
     }
-  return FALSE;
+  return false;
 }
 
 /*-----------------------------------------------------------------*/
@@ -700,7 +700,6 @@ allocParms (value *val, struct sym_link *ftype)
             }
           else                      /* use internal stack */
             {
-              
               SPEC_OCLS (lval->etype) = SPEC_OCLS (lval->sym->etype) = istack;
               if ((port->stack.direction > 0) != smallc)
                 {
@@ -790,7 +789,7 @@ allocParms (value *val, struct sym_link *ftype)
       sym->_isparm = 1;
       sym->ismyparm = 1;
       addSymChain (&sym);
-      
+
       if (options.useXstack)
         {
           SPEC_OCLS (sym->etype) = xstack;
@@ -1136,7 +1135,7 @@ clearStackOffsets (void)
        sym = setNextItem (istack->syms))
     {
       const int size = getSize (sym->type);
-      
+
       /* nothing to do with parameters so continue */
       if ((sym->_isparm && !IS_REGPARM (sym->etype)))
         continue;
@@ -1181,7 +1180,7 @@ redoStackOffsets (void)
           /* Remove them all, and let btree_alloc() below put them back in more efficiently. */
           currFunc->stack -= size;
           SPEC_STAK (currFunc->etype) -= size;
-      
+
           if(IS_AGGREGATE (sym->type) || sym->allocreq)
             btree_add_symbol (sym);
         }
@@ -1260,7 +1259,7 @@ static int
 printAllocInfoSeg (memmap *map, symbol *func, struct dbuf_s *oBuf)
 {
   symbol *sym;
-  int flg = FALSE;
+  int flg = false;
 
   if (!map || !map->syms)
     return 0;
@@ -1273,7 +1272,7 @@ printAllocInfoSeg (memmap *map, symbol *func, struct dbuf_s *oBuf)
         continue;
 
       dbuf_printf (oBuf, ";%-13s Allocated ", sym->name);
-      flg = TRUE;
+      flg = true;
 
       /* if assigned to registers */
       if (!sym->allocreq && sym->reqv)

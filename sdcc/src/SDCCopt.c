@@ -1396,7 +1396,7 @@ convertToFcall (eBBlock ** ebbs, int count)
           if (ic->op == '%' && isOperandLiteral (IC_RIGHT(ic)))
             {
               bool us = IS_UNSIGNED (operandType (IC_LEFT(ic)));
-              bool upcast = FALSE;
+              bool upcast = false;
               iCode *dic = NULL;
 
               // Chek if left really is just an upcasted unsigned value.
@@ -1960,7 +1960,7 @@ replaceRegEqv (ebbIndex *ebbi)
   /* a defining iCode or not. Only replace a local variable     */
   /* with its register equivalent if there is a defining iCode; */
   /* otherwise, the port's register allocater may choke.        */
-  cseAllBlocks (ebbi, TRUE);
+  cseAllBlocks (ebbi, true);
 
   for (i = 0; i < count; i++)
     {
@@ -2029,8 +2029,8 @@ findReqv (symbol * prereqv, eBBlock ** ebbs, int count)
 static int
 killiCode (eBBlock **ebbs, int i, int count, iCode *ic)
 {
-  bool volLeft = IS_SYMOP (IC_LEFT (ic)) && isOperandVolatile (IC_LEFT (ic), FALSE);
-  bool volRight = IS_SYMOP (IC_RIGHT (ic))  && isOperandVolatile (IC_RIGHT (ic), FALSE);
+  bool volLeft = IS_SYMOP (IC_LEFT (ic)) && isOperandVolatile (IC_LEFT (ic), false);
+  bool volRight = IS_SYMOP (IC_RIGHT (ic))  && isOperandVolatile (IC_RIGHT (ic), false);
 
   // A dead address-of operation should die, even if taking the address of a volatile object.
   if (ic->op == ADDRESS_OF)
@@ -2172,7 +2172,7 @@ killDeadCode (ebbIndex *ebbi, bool cleanblocks)
               /* valid. */
 
               /* if the result is volatile then continue */
-              if (IC_RESULT (ic) && isOperandVolatile (IC_RESULT (ic), FALSE))
+              if (IC_RESULT (ic) && isOperandVolatile (IC_RESULT (ic), false))
                 continue;
 
               /* if the result is a temp & isaddr then skip */
@@ -3537,11 +3537,11 @@ void guessCounts (iCode *start_ic, ebbIndex *ebbi)
   for (ic = start_ic; ic; ic = ic->next)
     ic->count = 0;
   start_ic->pcount = 1.0f;
-  needprop = TRUE;
+  needprop = true;
 
   for(i = 0; needprop && i < 24; i++) // 24 is an arbitrary limit to reduce runtime at the cost of accuracy.
     {
-      needprop = FALSE;
+      needprop = false;
       for (ic = start_ic; ic; ic = ic->next)
         {
           if(ic->pcount <= 0.01) // 0.01 is an arbitrary limit to reduce runtime at the cost of accuracy.
@@ -3553,7 +3553,7 @@ void guessCounts (iCode *start_ic, ebbIndex *ebbi)
             {
               iCode *target = hTabItemWithKey (labelDef, IC_LABEL (ic)->key);
               target->pcount += ic->pcount;
-              needprop = TRUE;
+              needprop = true;
             }
           else if(ic->op == IFX) // Use a classic, simple branch prediction. Works well for typical loops.
             {
@@ -3570,7 +3570,7 @@ void guessCounts (iCode *start_ic, ebbIndex *ebbi)
                   if(ic->next)
                     ic->next->pcount += ic->pcount / 4;
                 }
-              needprop = TRUE;
+              needprop = true;
             }
           else if(ic->op == JUMPTABLE)
             {
@@ -3582,7 +3582,7 @@ void guessCounts (iCode *start_ic, ebbIndex *ebbi)
                   iCode *target = hTabItemWithKey (labelDef, label->key);
                   target->pcount += ic->pcount / n;
                 }
-              needprop = TRUE;
+              needprop = true;
             }
             else if(ic->op == CALL && IS_SYMOP (IC_LEFT (ic)) && IFFUNC_ISNORETURN (OP_SYMBOL (IC_LEFT (ic))->type))
               ;
@@ -3861,7 +3861,7 @@ eBBlockFromiCode (iCode *ic)
   killDeadCode (ebbi, false);
 
   /* do common subexpression elimination for each block */
-  change = cseAllBlocks (ebbi, FALSE);
+  change = cseAllBlocks (ebbi, false);
 
   /* dumpraw if asked for */
   if (options.dump_i_code)
@@ -3879,14 +3879,14 @@ eBBlockFromiCode (iCode *ic)
   /* global common subexpression elimination  */
   if (optimize.global_cse)
     {
-      change += cseAllBlocks (ebbi, FALSE);
+      change += cseAllBlocks (ebbi, false);
       if (options.dump_i_code)
         dumpEbbsToFileExt (DUMP_GCSE, ebbi);
     }
   else
     {
       // compute the dataflow only
-      assert(cseAllBlocks (ebbi, TRUE)==0);
+      assert(cseAllBlocks (ebbi, true)==0);
     }
 
   /* kill dead code */
@@ -3931,7 +3931,7 @@ eBBlockFromiCode (iCode *ic)
   if (lchange || kchange)
     {
       computeDataFlow (ebbi);
-      change += cseAllBlocks (ebbi, FALSE);
+      change += cseAllBlocks (ebbi, false);
       if (options.dump_i_code)
         dumpEbbsToFileExt (DUMP_LOOPG, ebbi);
 

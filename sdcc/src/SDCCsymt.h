@@ -45,6 +45,8 @@
 
 #define HASHTAB_SIZE 256
 
+#define N_PRESREGS 11
+
 /* hash table bucket */
 typedef struct bucket
 {
@@ -294,7 +296,7 @@ typedef struct sym_link
     unsigned javaNative;                // is a JavaNative Function (TININative ONLY)
     unsigned overlay;                   // force parameters & locals into overlay segment
     unsigned hasStackParms;             // function has parameters on stack
-    bool preserved_regs[11];            // Registers preserved by the function - may be an underestimate
+    bool preserved_regs[N_PRESREGS];    // Registers preserved by the function - may be an underestimate
     unsigned char z88dk_shortcall_rst;  // Rst for a short call
     unsigned short z88dk_shortcall_val; // Value for a short call
     unsigned short z88dk_params_offset; // Additional offset from for arguments
@@ -751,14 +753,14 @@ int checkFunction (symbol *, symbol *);
 void cleanUpLevel (bucket **, long);
 void cleanUpBlock (bucket **, int);
 symbol *getAddrspace (sym_link *type);
-int funcInChain (sym_link *);
+bool funcInChain (sym_link *);
 void addSymChain (symbol **);
 sym_link *structElemType (sym_link *, value *);
 symbol *getStructElement (structdef *, symbol *);
 sym_link *computeType (sym_link *, sym_link *, RESULT_TYPE, int);
 void processFuncPtr (sym_link *);
 void processFunc (symbol *, sym_link *);
-int isSymbolEqual (const symbol *, const symbol *);
+bool isSymbolEqual (const symbol *, const symbol *);
 int powof2 (TYPE_TARGET_ULONGLONG);
 void dbuf_printTypeChain (sym_link *, struct dbuf_s *);
 void printTypeChain (sym_link *, FILE *);

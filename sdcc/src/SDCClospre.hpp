@@ -677,7 +677,7 @@ static int implement_lospre_assignment(assignment_lospre a, T_t &T, G_t &G, cons
   std::cout << "Optimizing at " << ic->key << "\n"; std::cout.flush();
 #endif
 
-  tmpop = newiTempOperand (operandType (IC_RESULT (ic)), TRUE);
+  tmpop = newiTempOperand (operandType (IC_RESULT (ic)), true);
   tmpop->isvolatile = false;
 #ifdef DEBUG_LOSPRE
   std::cout << "New tmpop: " << OP_SYMBOL_CONST(tmpop)->name << " "; printTypeChain(operandType (IC_RESULT(ic)), stdout); std::cout << "\n";

@@ -366,7 +366,7 @@ findPrevUseSym  (eBBlock *ebp, iCode *ic, symbol * sym)
     {
      /* already visited: this branch must have been successful, */
      /* because otherwise the search would have been aborted. */
-      return TRUE;
+      return true;
     }
   ebp->visited = 1;
 
@@ -378,7 +378,7 @@ findPrevUseSym  (eBBlock *ebp, iCode *ic, symbol * sym)
           if (IC_RESULT (uic)->key == sym->key)
             {
               /* Ok, found a definition */
-              return TRUE;
+              return true;
             }
         }
       /* address taken from symbol? */
@@ -387,7 +387,7 @@ findPrevUseSym  (eBBlock *ebp, iCode *ic, symbol * sym)
           if (IC_LEFT (uic)->key == sym->key)
             {
               /* Ok, found a definition */
-              return TRUE;
+              return true;
             }
         }
     }
@@ -398,7 +398,7 @@ findPrevUseSym  (eBBlock *ebp, iCode *ic, symbol * sym)
   if (!pred)
     {
       /* no more predecessors and nothing found yet :-( */
-      return FALSE;
+      return false;
     }
   for (; pred; pred = setNextItem (ebp->predList))
     {
@@ -406,13 +406,13 @@ findPrevUseSym  (eBBlock *ebp, iCode *ic, symbol * sym)
       if (!findPrevUseSym (pred, pred->ech, sym))
         {
           /* found nothing: abort */
-          return FALSE;
+          return false;
         }
     }
 
   /* Success! Went through all branches with no abort: */
   /* all branches end with a definition */
-  return TRUE;
+  return true;
 }
 
 /*------------------------------------------------------------------*/
@@ -810,7 +810,7 @@ allDefsOutOfRange (bitVect * defs, int fseq, int toseq)
   int i;
 
   if (!defs)
-    return TRUE;
+    return true;
 
   for (i = 0; i < defs->size; i++)
     {
@@ -819,11 +819,11 @@ allDefsOutOfRange (bitVect * defs, int fseq, int toseq)
       if (bitVectBitValue (defs, i) &&
 	  (ic = hTabItemWithKey (iCodehTab, i)) &&
 	  (ic->seq >= fseq && ic->seq <= toseq))
-	return FALSE;
+	return false;
 
     }
 
-  return TRUE;
+  return true;
 }
 
 /*-----------------------------------------------------------------*/
@@ -895,7 +895,7 @@ computeLiveRanges (eBBlock **ebbs, int count, bool emitWarnings)
       /* mark the ranges live for each point */
       setToNull ((void *) &liveRanges);
       change = rlivePoint (ebbs, count, emitWarnings);
-      emitWarnings = FALSE;
+      emitWarnings = false;
     }
   while (change);
 
@@ -1122,7 +1122,7 @@ separateLiveRanges (iCode *sic, ebbIndex *ebbi)
 
           if (newdefs && defs)
             {
-              operand *tmpop = newiTempOperand (operandType (IC_RESULT ((iCode *)(setFirstItem (newdefs)))), TRUE);
+              operand *tmpop = newiTempOperand (operandType (IC_RESULT ((iCode *)(setFirstItem (newdefs)))), true);
 #if 0
               printf("Splitting %s from %s, using def at %d, op %d\n", OP_SYMBOL_CONST(tmpop)->name, sym->name, ((iCode *)(setFirstItem (newdefs)))->key, ((iCode *)(setFirstItem (newdefs)))->op);
 #endif
@@ -1145,7 +1145,7 @@ separateLiveRanges (iCode *sic, ebbIndex *ebbi)
                       bool pset = POINTER_SET(ic);
                       IC_RESULT (ic) = operandFromOperand (tmpop);
                       if (pset)
-                        IC_RESULT(ic)->isaddr = TRUE;
+                        IC_RESULT(ic)->isaddr = true;
                       else
                         bitVectUnSetBit (sym->defs, ic->key);
                     }
@@ -1156,7 +1156,7 @@ separateLiveRanges (iCode *sic, ebbIndex *ebbi)
                 }
             }
           else if (!skip_uses)
-            {      
+            {
               set *undefined_uses = 0;
               undefined_uses = subtractFromSet (uses, visited, THROW_NONE);
 
@@ -1257,7 +1257,7 @@ shortenLiveRanges (iCode *sic, ebbIndex *ebbi)
         attachiCodeOperand (pic->right, &nic->right, nic);
 
       // Assignment to self will get optimized out later
-      IC_LEFT (pic) = IC_RESULT (pic); 
+      IC_LEFT (pic) = IC_RESULT (pic);
       bitVectSetBit (OP_USES (IC_RESULT (pic)), pic->key);
 
       pic->next = nic;

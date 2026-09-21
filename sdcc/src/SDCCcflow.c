@@ -8,19 +8,19 @@
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; either version 2, or (at your option) any
    later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
-   
+
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-   
+
    In other words, you are welcome to use, share and improve this program.
    You are forbidden to forbid anyone else to use, share and improve
-   what you give them.   Help stamp out software-hoarding!  
+   what you give them.   Help stamp out software-hoarding!
 -------------------------------------------------------------------------*/
 
 #include "common.h"
@@ -45,12 +45,11 @@ domSetFromVect (ebbIndex *ebbi, bitVect * domVect)
   return domSet;
 }
 
-
 /*-----------------------------------------------------------------*/
 /* addSuccessor - will add bb to succ also add it to the pred of   */
 /*                the next one :                                   */
 /*-----------------------------------------------------------------*/
-static void 
+static void
 addSuccessor (eBBlock * thisBlock, eBBlock * succ)
 {
   /* check for boundary conditions */
@@ -64,13 +63,12 @@ addSuccessor (eBBlock * thisBlock, eBBlock * succ)
     bitVectSetBit (thisBlock->succVect, succ->bbnum);
   /* add this edge to the list of edges */
   addSet (&graphEdges, newEdge (thisBlock, succ));
-
 }
 
 /*-----------------------------------------------------------------*/
 /* eBBPredecessors - find the predecessors for each block          */
 /*-----------------------------------------------------------------*/
-static void 
+static void
 eBBPredecessors (ebbIndex * ebbi)
 {
   eBBlock ** ebbs = ebbi->bbOrder;
@@ -100,7 +98,7 @@ eBBPredecessors (ebbIndex * ebbi)
 /*-----------------------------------------------------------------*/
 /* eBBSuccessors- find out the successors of all the nodes         */
 /*-----------------------------------------------------------------*/
-static void 
+static void
 eBBSuccessors (ebbIndex * ebbi)
 {
   eBBlock ** ebbs = ebbi->bbOrder;
@@ -126,14 +124,14 @@ eBBSuccessors (ebbIndex * ebbi)
 
 	  if (ebbs[i]->ech)
 	    {
-              bool foundNoReturn = FALSE;
+              bool foundNoReturn = false;
               if (ebbs[i]->ech->op == CALL || ebbs[i]->ech->op == PCALL)
                 {
                   sym_link *type = operandType (IC_LEFT (ebbs[i]->ech));
                   if (IS_FUNCPTR (type))
                     type = type->next;
                   if (type && FUNC_ISNORETURN (type))
-                    foundNoReturn = TRUE;
+                    foundNoReturn = true;
                 }
 	      if (!foundNoReturn &&
                  ebbs[i]->ech->op != GOTO &&
@@ -222,7 +220,7 @@ eBBSuccessors (ebbIndex * ebbi)
 /* computeDominance - computes the dominance graph                 */
 /* for algorithm look at Dragon book section 10.10, algo 10.16     */
 /*-----------------------------------------------------------------*/
-static void 
+static void
 computeDominance (ebbIndex * ebbi)
 {
   eBBlock ** ebbs = ebbi->bbOrder;
@@ -289,7 +287,6 @@ computeDominance (ebbIndex * ebbi)
       if (!change)
 	break;
     }
-  
 }
 
 /*-----------------------------------------------------------------*/
@@ -337,7 +334,7 @@ DEFSETFUNC (DFOrdering)
 /* computeDFOrdering - computes the depth first ordering of the    */
 /*                     flowgraph                                   */
 /*-----------------------------------------------------------------*/
-static void 
+static void
 computeDFOrdering (eBBlock * ebbp, int *count)
 {
 
@@ -353,7 +350,7 @@ computeDFOrdering (eBBlock * ebbp, int *count)
 /*-----------------------------------------------------------------*/
 /* disconBBlock - removes all control flow links for a block       */
 /*-----------------------------------------------------------------*/
-void 
+void
 disconBBlock (eBBlock * ebp, ebbIndex * ebbi)
 {
   /* mark this block as noPath & recompute control flow */
@@ -364,7 +361,7 @@ disconBBlock (eBBlock * ebp, ebbIndex * ebbi)
 /*-----------------------------------------------------------------*/
 /* markNoPath - marks those blocks which cannot be reached from top */
 /*-----------------------------------------------------------------*/
-static void 
+static void
 markNoPath (ebbIndex * ebbi)
 {
   eBBlock ** ebbs = ebbi->bbOrder;
@@ -382,7 +379,7 @@ markNoPath (ebbIndex * ebbi)
 /*-----------------------------------------------------------------*/
 /* dfNumCompare - used by qsort to sort by dfNumber                */
 /*-----------------------------------------------------------------*/
-int 
+int
 dfNumCompare (const void *a, const void *b)
 {
   const eBBlock *const *i = a;
@@ -400,7 +397,7 @@ dfNumCompare (const void *a, const void *b)
 /*-----------------------------------------------------------------*/
 /* computeControlFlow - does the control flow computation          */
 /*-----------------------------------------------------------------*/
-void 
+void
 computeControlFlow (ebbIndex * ebbi)
 {
   eBBlock ** ebbs = ebbi->bbOrder;
@@ -444,7 +441,7 @@ computeControlFlow (ebbIndex * ebbi)
     {
       ebbi->dfOrder[i] = ebbi->bbOrder[i];
     }
-      
+
   qsort (ebbi->dfOrder, ebbi->count, sizeof (eBBlock *), dfNumCompare);
 
 }
@@ -456,7 +453,7 @@ computeControlFlow (ebbIndex * ebbi)
 int returnAtEnd (eBBlock *ebp)
 {
     /* case 1.
-       This basic block ends in a return statement 
+       This basic block ends in a return statement
     */
     if (ebp->ech && ebp->ech->op == RETURN) return 1;
 

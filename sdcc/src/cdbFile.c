@@ -24,7 +24,7 @@ int cdbWriteBasicSymbol (symbol *sym, int isStructSym, int isFunc);
 void cdbTypeInfo (sym_link * type);
 
 
-DEBUGFILE cdbDebugFile = 
+DEBUGFILE cdbDebugFile =
   {
     &cdbOpenFile,
     &cdbCloseFile,
@@ -83,7 +83,7 @@ cdbOpenFile (const char *file)
   if (getenv ("SDCC_DEBUG_FUNCTION_POINTERS"))
     fprintf (stderr, "cdbFile.c:cdbOpenFile (%s)\n", file);
 
-  return (cdbFilePtr = fopen(file, "w")) ? 1 : 0; 
+  return (cdbFilePtr = fopen(file, "w")) ? 1 : 0;
 }
 
 /******************************************************************
@@ -99,7 +99,7 @@ cdbCloseFile (void)
     fprintf (stderr, "cdbFile.c:cdbCloseFile()\n");
 
   if(!cdbFilePtr) return 0;
- 
+
   fclose(cdbFilePtr);
   cdbFilePtr = NULL;
   cdbModuleName = NULL;
@@ -118,7 +118,7 @@ int
 cdbWriteFunction (symbol *pSym, iCode *ic)
 {
   char debugSym[INITIAL_INLINEASM];
-  
+
   if (getenv ("SDCC_DEBUG_FUNCTION_POINTERS"))
     fprintf (stderr, "cdbFile.c:cdbWriteFunction()\n");
 
@@ -130,7 +130,7 @@ cdbWriteFunction (symbol *pSym, iCode *ic)
     sprintf (debugSym, "G$%s$0$0", pSym->name);
   emitDebuggerSymbol (debugSym);
 
-  return cdbWriteBasicSymbol (pSym, FALSE, TRUE);
+  return cdbWriteBasicSymbol (pSym, false, true);
 }
 
 /******************************************************************
@@ -144,7 +144,7 @@ int
 cdbWriteEndFunction (symbol *pSym, iCode *ic, int offset)
 {
   char debugSym[INITIAL_INLINEASM];
-  
+
   if (getenv ("SDCC_DEBUG_FUNCTION_POINTERS"))
     fprintf (stderr, "cdbFile.c:cdbWriteEndFunction()\n");
 
@@ -164,7 +164,7 @@ cdbWriteEndFunction (symbol *pSym, iCode *ic, int offset)
   else
     sprintf (debugSym, "XG$%s$0$0", pSym->name);
   emitDebuggerSymbol (debugSym);
-    
+
   return 1;
 }
 
@@ -219,7 +219,7 @@ cdbWriteSymbol(symbol *pSym)
 
   if (!cdbFilePtr) return 0;
 
-  return cdbWriteBasicSymbol(pSym, FALSE, FALSE);
+  return cdbWriteBasicSymbol(pSym, false, false);
 }
 
 /******************************************************************
@@ -249,7 +249,7 @@ cdbWriteType (structdef *sdef, int block, int inStruct, const char *tag)
   for (sym = sdef->fields; sym; sym = sym->next)
     {
       fprintf (cdbFilePtr, "({%d}", sym->offset);
-      cdbWriteBasicSymbol (sym, TRUE, FALSE);
+      cdbWriteBasicSymbol (sym, true, false);
       fprintf (cdbFilePtr, ")");
     }
 
@@ -292,9 +292,9 @@ int
 cdbWriteCLine (iCode *ic)
 {
   char debugSym[INITIAL_INLINEASM];
-  
+
   if (!cdbFilePtr) return 0;
-  
+
   if (ic->inlined)
     return 0;
 
@@ -362,7 +362,7 @@ cdbWriteBasicSymbol (symbol *sym, int isStructSym, int isFunc)
 
   /* WRITE HEADER, Function or Symbol */
   if (isFunc)
-    fprintf (cdbFilePtr, "F:");   
+    fprintf (cdbFilePtr, "F:");
   else
     fprintf (cdbFilePtr, "S:");
 
@@ -395,7 +395,7 @@ cdbWriteBasicSymbol (symbol *sym, int isStructSym, int isFunc)
 
   fprintf (cdbFilePtr, "),");
 
-  /* CHECK FOR REGISTER SYMBOL... */ 
+  /* CHECK FOR REGISTER SYMBOL... */
   if (!sym->allocreq && sym->reqv)
     {
       int a;
@@ -443,7 +443,7 @@ cdbWriteBasicSymbol (symbol *sym, int isStructSym, int isFunc)
   if (isFunc)
     fprintf (cdbFilePtr, ",%d,%d,%d", FUNC_ISISR (sym->type),
              FUNC_INTNO (sym->type), FUNC_REGBANK (sym->type));
-  
+
 /* alternate location to find this symbol @ : eg registers
      or spillocation */
 
@@ -501,15 +501,14 @@ cdbTypeInfo (sym_link * type)
             case V_VOID: fprintf (cdbFilePtr, "SV"); break;
             case V_FLOAT: fprintf (cdbFilePtr, "SF"); break;
             case V_FIXED16X16: fprintf(cdbFilePtr, "SQ"); break;
-            case V_STRUCT: 
-              fprintf (cdbFilePtr, "ST%s", SPEC_STRUCT (type)->tag); 
+            case V_STRUCT:
+              fprintf (cdbFilePtr, "ST%s", SPEC_STRUCT (type)->tag);
               break;
 
             case V_SBIT: fprintf (cdbFilePtr, "SX"); break;
-            case V_BIT: 
-            case V_BITFIELD: 
-              fprintf (cdbFilePtr, "SB%d$%d", SPEC_BSTR (type), 
-                       SPEC_BLEN (type));
+            case V_BIT:
+            case V_BITFIELD:
+              fprintf (cdbFilePtr, "SB%d$%d", SPEC_BSTR (type), SPEC_BLEN (type));
               break;
 
             default:

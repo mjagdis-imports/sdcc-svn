@@ -197,9 +197,9 @@ void
 genInline (iCode * ic)
 {
   char *buf, *bp, *begin;
-  bool inComment = FALSE;
-  bool inLiteral = FALSE;
-  bool inLiteralString = FALSE;
+  bool inComment = false;
+  bool inLiteral = false;
+  bool inLiteralString = false;
 
   D (emitcode (";", "genInline"));
 
@@ -225,7 +225,7 @@ genInline (iCode * ic)
         case ';':
           if (!inLiteral && !inLiteralString)
             {
-              inComment = TRUE;
+              inComment = true;
             }
           ++bp;
           break;
@@ -252,9 +252,9 @@ genInline (iCode * ic)
 
         case '\x87':
         case '\n':
-          inLiteral = FALSE;
-          inLiteralString = FALSE;
-          inComment = FALSE;
+          inLiteral = false;
+          inLiteralString = false;
+          inComment = false;
           *bp++ = '\0';
 
           /* Don't emit leading whitespaces */

@@ -69,8 +69,7 @@ newHashTable (int size)
   return htab;
 }
 
-
-void 
+void
 hTabAddItemLong (hTab ** htab, int key, void *pkey, void *item)
 {
   hashtItem *htip;
@@ -115,7 +114,7 @@ hTabAddItemLong (hTab ** htab, int key, void *pkey, void *item)
 /*-----------------------------------------------------------------*/
 /* hTabAddItem - adds an item to the hash table                    */
 /*-----------------------------------------------------------------*/
-void 
+void
 hTabAddItem (hTab ** htab, int key, void *item)
 {
   hTabAddItemLong (htab, key, NULL, item);
@@ -124,7 +123,7 @@ hTabAddItem (hTab ** htab, int key, void *item)
 /*-----------------------------------------------------------------*/
 /* hTabDeleteItem - either delete an item                          */
 /*-----------------------------------------------------------------*/
-void 
+void
 hTabDeleteItem (hTab ** htab, int key,
 		const void *item, DELETE_ACTION action,
 		int (*compareFunc) (const void *, const void *))
@@ -178,7 +177,7 @@ hTabDeleteItem (hTab ** htab, int key,
 /*                 leaks written by                                */
 /*                "BESSIERE Jerome" <BESSIERE_Jerome@stna.dgac.fr> */
 /*-----------------------------------------------------------------*/
-void 
+void
 hTabDeleteAll (hTab * p)
 {
   if (p && p->table)
@@ -204,12 +203,11 @@ hTabDeleteAll (hTab * p)
 }
 
 /*-----------------------------------------------------------------*/
-/* hTabClearAll - clear all entries in the table (does not free)    */
+/* hTabClearAll - clear all entries in the table (does not free)   */
 /*-----------------------------------------------------------------*/
-void 
+void
 hTabClearAll (hTab * htab)
 {
-
   if (!htab || !htab->table)
     {
       printf ("null table\n");
@@ -275,18 +273,18 @@ hTabFindByKey (hTab * h, int key, const void *pkey, int (*compare) (const void *
   return NULL;
 }
 
-int 
+bool
 hTabDeleteByKey (hTab ** h, int key, const void *pkey, int (*compare) (const void *, const void *))
 {
   hashtItem *htip, **htipp;
-  bool found = FALSE;
+  bool found = false;
 
   if (!(*h))
-    return 0;
+    return false;
 
   /* first check if anything exists in the slot */
   if (!(*h)->table[key])
-    return 0;
+    return false;
 
   /* delete specific item */
   /* if a compare function is given then use the compare */
@@ -301,35 +299,33 @@ hTabDeleteByKey (hTab ** h, int key, const void *pkey, int (*compare) (const voi
 	   pkey == htip->pkey)
 	{
 	  *htipp = htip->next;
-          found = TRUE;
+          found = true;
 	  break;
 	}
       htipp = &(htip->next);
     }
 
-  if (found == TRUE)
+  if (found)
     {
       (*h)->nItems--;
-      
+
       if (!(*h)->nItems)
         {
           *h = NULL;
         }
     }
 
-  return 1;
+  return true;
 }
 
 /*-----------------------------------------------------------------*/
 /* hTabIsInTable - will determine if an Item is in the hasht       */
 /*-----------------------------------------------------------------*/
-int 
+bool
 hTabIsInTable (hTab * htab, int key,
 	       void *item, int (*compareFunc) (void *, void *))
 {
-  if (_findItem (htab, key, item, compareFunc))
-    return 1;
-  return 0;
+  return _findItem (htab, key, item, compareFunc);
 }
 
 /*-----------------------------------------------------------------*/
@@ -394,7 +390,6 @@ hTabNextItem (hTab * htab, int *k)
 void *
 hTabFirstItemWK (hTab * htab, int wk)
 {
-
   if (!htab)
     return NULL;
 
@@ -413,7 +408,6 @@ hTabFirstItemWK (hTab * htab, int wk)
 void *
 hTabNextItemWK (hTab * htab)
 {
-
   if (!htab)
     return NULL;
 
@@ -452,9 +446,9 @@ hTabFromTable (hTab * htab)
 }
 
 /*-----------------------------------------------------------------*/
-/* isHtabsEqual - returns 1 if all items in htab1 is found in htab2 */
+/* isHtabsEqual - true if all items in htab1 are found in htab2    */
 /*-----------------------------------------------------------------*/
-int 
+bool
 isHtabsEqual (hTab * htab1, hTab * htab2,
 	      int (*compareFunc) (void *, void *))
 {
@@ -462,22 +456,22 @@ isHtabsEqual (hTab * htab1, hTab * htab2,
   int key;
 
   if (htab1 == htab2)
-    return 1;
+    return true;
 
   if (htab1 == NULL || htab2 == NULL)
-    return 0;
+    return false;
 
   /* if they are different sizes then */
   if (htab1->nItems != htab2->nItems)
-    return 0;
+    return false;
 
   /* now do an item by item check */
   for (item = hTabFirstItem (htab1, &key); item;
        item = hTabNextItem (htab1, &key))
     if (!hTabIsInTable (htab2, key, item, compareFunc))
-      return 0;
+      return false;
 
-  return 1;
+  return true;
 }
 
 
@@ -518,13 +512,13 @@ hTabItemWithKey (hTab * htab, int key)
 /*-----------------------------------------------------------------*/
 int hTabMaxKey (hTab *htab)
 {
-    return (htab ? htab->maxKey : 0);
-}	
+  return (htab ? htab->maxKey : 0);
+}
 
 /*-----------------------------------------------------------------*/
 /*hTabAddItemIfNotP - adds an item with nothing found with key     */
 /*-----------------------------------------------------------------*/
-void 
+void
 hTabAddItemIfNotP (hTab ** htab, int key, void *item)
 {
   if (!*htab)
@@ -545,20 +539,20 @@ hTabAddItemIfNotP (hTab ** htab, int key, void *item)
     This is used for the assembler token table.  The replace existing
     condition is used to implement inheritance.
 */
-static int 
+static int
 _compare (const void *s1, const void *s2)
 {
   return !strcmp (s1, s2);
 }
 
-static int 
+static int
 _hash (const char *sz)
 {
   /* Dumb for now */
   return *sz;
 }
 
-void 
+void
 shash_add (hTab ** h, const char *szKey, const char *szValue)
 {
   char *val;

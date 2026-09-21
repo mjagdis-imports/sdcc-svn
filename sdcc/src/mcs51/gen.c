@@ -2700,8 +2700,6 @@ genMove (asmop *result, asmop *source, bool a_dead)
 static void
 genNot (iCode * ic)
 {
-  symbol *tlbl;
-
   D (emitcode (";", "genNot"));
 
   /* assign asmOps to operand & result */
@@ -2728,17 +2726,8 @@ genNot (iCode * ic)
   toBoolean (IC_LEFT (ic));
 
   /* set C, if a == 0 */
-  if (optimize.nosidechannels)
-    {
-      emitcode ("add", "a, #0xff");
-      emitcode ("cpl", "c");
-    }
-  else
-    {
-      tlbl = newiTempLabel (NULL);
-      emitcode ("cjne", "a,#0x01,!tlabel", labelKey2num (tlbl->key));
-      emitLabel (tlbl);
-    }
+  emitcode ("add", "a, #0xff");
+  emitcode ("cpl", "c");
   outBitC (ic->result);
 
 release:

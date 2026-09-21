@@ -26,8 +26,6 @@
 /* avoid DATADIR definition clash :-( */
 #undef DATADIR
 #include <windows.h>
-#undef TRUE
-#undef FALSE
 #include <stdio.h>
 #include <io.h>
 #include <fcntl.h>

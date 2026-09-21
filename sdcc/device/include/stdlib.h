@@ -53,8 +53,8 @@
 #define MB_CUR_MAX 4
 
 #if __STDC_VERSION__ >= 202311L
-typedef bool once_flag;
-#define ONCE_FLAG_INIT false
+typedef _Bool once_flag;
+#define ONCE_FLAG_INIT ((_Bool)0)
 void call_once(once_flag flag[static 1], void (*func)(void));
 #endif
 

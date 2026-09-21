@@ -28,8 +28,6 @@
 
 #include <stdlib.h>
 
-#include <stdbool.h>
-
 // This is a minimal implementation, which works since SDCC doesn't support threads.
 // It will have to be replaced when there is multithreading support.
 

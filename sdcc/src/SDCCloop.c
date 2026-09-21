@@ -495,12 +495,12 @@ loopInvariants (region *theLoop, ebbIndex *ebbi)
             continue;
 
           /* if result is volatile then skip */
-          if (IC_RESULT (ic) && (isOperandVolatile (IC_RESULT (ic), TRUE) || IS_OP_PARM (IC_RESULT (ic))))
+          if (IC_RESULT (ic) && (isOperandVolatile (IC_RESULT (ic), true) || IS_OP_PARM (IC_RESULT (ic))))
             continue;
 
           /* if result depends on a volatile then skip */
-          if ((IC_LEFT (ic) && isOperandVolatile (IC_LEFT (ic), TRUE)) ||
-              (IC_RIGHT (ic) && isOperandVolatile (IC_RIGHT (ic), TRUE)))
+          if ((IC_LEFT (ic) && isOperandVolatile (IC_LEFT (ic), true)) ||
+              (IC_RIGHT (ic) && isOperandVolatile (IC_RIGHT (ic), true)))
             continue;
 
           if (POINTER_GET (ic) && IS_VOLATILE (operandType (IC_LEFT (ic))->next))
@@ -1075,7 +1075,7 @@ basicInduction (region * loopReg, ebbIndex * ebbi)
 
           /* if the definition is volatile then it cannot be
              an induction object */
-          if (isOperandVolatile (IC_RIGHT (ic), FALSE) || isOperandVolatile (IC_RESULT (ic), FALSE))
+          if (isOperandVolatile (IC_RIGHT (ic), false) || isOperandVolatile (IC_RESULT (ic), false))
             continue;
 
           /* whew !! that was a lot of work to find the definition */

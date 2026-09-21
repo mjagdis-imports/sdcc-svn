@@ -238,7 +238,7 @@ emitRegularMap (memmap *map, bool addPublics, bool arFlag)
                   // No point trying to initialize by something that doesn't even make sense.
                   if (astErrors (ival))
                     continue;
-                  
+
                   // set ival's lineno to where the symbol was defined
                   setAstFileLine (ival, filename = tsym->fileDef, lineno = tsym->lineDef);
                   // check if this is not a constant expression
@@ -286,7 +286,7 @@ emitRegularMap (memmap *map, bool addPublics, bool arFlag)
                   ++noAlloc;
                   resolveIvalSym (sym->ival, sym->type);
                   ++noInit;
-                  printIval (sym, sym->type, sym->ival, &tmpBuf, TRUE);
+                  printIval (sym, sym->type, sym->ival, &tmpBuf, true);
                   --noInit;
                   --noAlloc;
 
@@ -560,7 +560,7 @@ initPointer (initList *ilist, sym_link *toType, int showError)
     }
 
   /* try it the old way first */
-  if ((val = constExprValue (expr, FALSE)))
+  if ((val = constExprValue (expr, false)))
     return val;
 
   /* ( ptr + constant ) */
@@ -852,7 +852,7 @@ printIvalType (symbol * sym, sym_link * type, initList * ilist, struct dbuf_s *o
   if (ilist && (ilist->type == INIT_DEEP))
     ilist = ilist->init.deep;
 
-  if (!(val = list2val (ilist, FALSE)))
+  if (!(val = list2val (ilist, false)))
     {
       if (!!(val = initPointer (ilist, type, 0)))
         {
@@ -893,7 +893,7 @@ printIvalType (symbol * sym, sym_link * type, initList * ilist, struct dbuf_s *o
     }
 
   /* check if the literal value is within bounds */
-  if (checkConstantRange (type, val->etype, '=', FALSE) == CCR_OVL)
+  if (checkConstantRange (type, val->etype, '=', false) == CCR_OVL)
     {
       werror (W_LIT_OVERFLOW);
     }
@@ -996,7 +996,7 @@ printIvalBitFields (symbol ** sym, initList ** ilist, struct dbuf_s *oBuf)
       else if (!SPEC_BUNNAMED (lsym->etype))
         {
           /* not an unnamed bit-field structure member */
-          value *val = list2val (lilist, TRUE);
+          value *val = list2val (lilist, true);
 
           if (val && val->etype && SPEC_SCLS (val->etype) != S_LITERAL)
             {
@@ -1012,7 +1012,7 @@ printIvalBitFields (symbol ** sym, initList ** ilist, struct dbuf_s *oBuf)
             size = (bit_length + 7) / 8;
 
           /* check if the literal value is within bounds */
-          if (val && checkConstantRange (lsym->etype, val->etype, '=', FALSE) == CCR_OVL)
+          if (val && checkConstantRange (lsym->etype, val->etype, '=', false) == CCR_OVL)
             {
               werror (W_LIT_OVERFLOW);
             }
@@ -1256,7 +1256,7 @@ printIvalChar (symbol * sym, sym_link * type, initList * ilist, struct dbuf_s *o
 
   if (!s)
     {
-      val = list2val (ilist, TRUE);
+      val = list2val (ilist, true);
       /* if the value is a character string  */
       if (IS_ARRAY (val->type) && IS_CHAR (val->etype))
         {
@@ -1319,7 +1319,7 @@ printIvalChar16 (symbol * sym, sym_link * type, initList * ilist, struct dbuf_s 
 
   if (!s)
     {
-      val = list2val (ilist, TRUE);
+      val = list2val (ilist, true);
       /* if the value is a character string  */
       if (IS_ARRAY (val->type) && IS_INT (val->etype) && IS_UNSIGNED (val->etype) && !IS_LONG (val->etype))
         {
@@ -1381,7 +1381,7 @@ printIvalChar32 (symbol * sym, sym_link * type, initList * ilist, struct dbuf_s 
 
   if (!s)
     {
-      val = list2val (ilist, TRUE);
+      val = list2val (ilist, true);
       /* if the value is a character string  */
       if (IS_ARRAY (val->type) && IS_INT (val->etype) && IS_UNSIGNED (val->etype) && IS_LONG (val->etype))
         {
@@ -1440,7 +1440,7 @@ printIvalArray (symbol * sym, sym_link * type, initList * ilist, struct dbuf_s *
       /* char *p = "abc";                 */
       if ((IS_CHAR (type->next) || IS_INT (type->next)) && ilist->type == INIT_NODE)
         {
-          val = list2val (ilist, TRUE);
+          val = list2val (ilist, true);
           if (!val)
             {
               werrorfl (ilist->filename, ilist->lineno, E_INIT_STRUCT, sym->name);
@@ -1464,7 +1464,7 @@ printIvalArray (symbol * sym, sym_link * type, initList * ilist, struct dbuf_s *
       /* char *p = {"abc"}; */
       if ((IS_CHAR (type->next) || IS_INT (type->next)) && ilist->type == INIT_DEEP && ilist->init.deep && ilist->init.deep->type == INIT_NODE)
         {
-          val = list2val (ilist->init.deep, TRUE);
+          val = list2val (ilist->init.deep, true);
           if (!val)
             {
               werrorfl (ilist->init.deep->filename, ilist->init.deep->lineno, E_INIT_STRUCT, sym->name);
@@ -1500,7 +1500,7 @@ printIvalArray (symbol * sym, sym_link * type, initList * ilist, struct dbuf_s *
               werrorfl (sym->fileDef, sym->lineDef, W_EXCESS_INITIALIZERS, "array", sym->name);
               break;
             }
-          printIval (sym, type->next, iloop, oBuf, TRUE);
+          printIval (sym, type->next, iloop, oBuf, true);
         }
     }
 
@@ -1543,7 +1543,7 @@ printIvalFuncPtr (sym_link * type, initList * ilist, struct dbuf_s *oBuf)
   int size;
 
   if (ilist)
-    val = list2val (ilist, TRUE);
+    val = list2val (ilist, true);
   else
     val = valCastLiteral (type, 0.0, 0);
 
@@ -2033,9 +2033,9 @@ emitStaticSeg (memmap *map, struct dbuf_s *oBuf)
               /* if sym is a simple string and sym->ival is a string,
                  WE don't need it anymore */
               if (IS_ARRAY (sym->type) && IS_CHAR (sym->type->next) &&
-                  IS_AST_SYM_VALUE (list2expr (sym->ival)) && list2val (sym->ival, TRUE)->sym->isstrlit)
+                  IS_AST_SYM_VALUE (list2expr (sym->ival)) && list2val (sym->ival, true)->sym->isstrlit)
                 {
-                  freeStringSymbol (list2val (sym->ival, TRUE)->sym);
+                  freeStringSymbol (list2val (sym->ival, true)->sym);
                 }
               if (!SPEC_ABSA (sym->etype) && options.const_seg && map != xinit && map != initializer)
                 dbuf_tprintf(oBuf, "\t!areacode\n", options.code_seg);
@@ -2102,8 +2102,8 @@ emitMaps (void)
   inInitMode++;
   /* no special considerations for the following
      data, idata & bit & xdata */
-  emitRegularMap (data, TRUE, TRUE);
-  emitRegularMap (initialized, TRUE, TRUE);
+  emitRegularMap (data, true, true);
+  emitRegularMap (initialized, true, true);
   for (nm = namedspacemaps; nm; nm = nm->next)
     if (nm->is_const)
       {
@@ -2111,27 +2111,27 @@ emitMaps (void)
         emitStaticSeg (nm->map, &nm->map->oBuf);
       }
     else
-      emitRegularMap (nm->map, TRUE, TRUE);
-  emitRegularMap (idata, TRUE, TRUE);
-  emitRegularMap (d_abs, TRUE, TRUE);
-  emitRegularMap (i_abs, TRUE, TRUE);
-  emitRegularMap (bit, TRUE, TRUE);
-  emitRegularMap (pdata, TRUE, TRUE);
-  emitRegularMap (xdata, TRUE, TRUE);
-  emitRegularMap (x_abs, TRUE, TRUE);
+      emitRegularMap (nm->map, true, true);
+  emitRegularMap (idata, true, true);
+  emitRegularMap (d_abs, true, true);
+  emitRegularMap (i_abs, true, true);
+  emitRegularMap (bit, true, true);
+  emitRegularMap (pdata, true, true);
+  emitRegularMap (xdata, true, true);
+  emitRegularMap (x_abs, true, true);
   if (port->genXINIT)
     {
-      emitRegularMap (xidata, TRUE, TRUE);
+      emitRegularMap (xidata, true, true);
     }
   if (xconst)
     {
       dbuf_tprintf (&xconst->oBuf, "\t!areacode\n", xconst->sname);
       emitStaticSeg (xconst, &xconst->oBuf);
     }
-  emitRegularMap (sfr, publicsfr, FALSE);
-  emitRegularMap (sfrbit, publicsfr, FALSE);
-  emitRegularMap (home, TRUE, FALSE);
-  emitRegularMap (code, TRUE, FALSE);
+  emitRegularMap (sfr, publicsfr, false);
+  emitRegularMap (sfrbit, publicsfr, false);
+  emitRegularMap (home, true, false);
+  emitRegularMap (code, true, false);
 
   if (options.const_seg)
     dbuf_tprintf (&code->oBuf, "\t!area\n", options.const_seg);
