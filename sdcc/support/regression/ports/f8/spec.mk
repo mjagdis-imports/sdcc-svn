@@ -1,6 +1,6 @@
 # Regression test specification for the f8 target running with uCsim
 
-EMU_PORT_FLAG =
+EMU_PORT_FLAG = -tf8
 
 # path to uCsim
 ifdef SDCC_BIN_PATH
