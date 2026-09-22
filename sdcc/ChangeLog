@@ -13,6 +13,8 @@
 	  support/regression/ports/f8/spec.mk,
 	  support/regression/ports/f8l/spec.mk:
 	  Support f8l variant of f8 in uCsim.
+	* support/regression/MakeList:
+	  Fix exclusion of __sfr tests for stm8-large target.
 
 2026-09-21 Philipp Klaus Krause <philipp@colecovision.eu>
 

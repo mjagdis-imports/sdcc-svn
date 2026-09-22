@@ -491,6 +491,7 @@ EXCLUDE_ARCH_hc08 += ${EXCLUDE_nosfr}
 EXCLUDE_ARCH_mos6502 += ${EXCLUDE_nosfr}
 EXCLUDE_ARCH_f8 += ${EXCLUDE_nosfr}
 EXCLUDE_stm8 += ${EXCLUDE_nosfr}
+EXCLUDE_stm8-large += ${EXCLUDE_nosfr}
 EXCLUDE_tlcs90 += ${EXCLUDE_nosfr}
 
 # target does not support __critical
