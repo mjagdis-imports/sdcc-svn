@@ -1,6 +1,11 @@
 2026-09-21 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* opcodemaptest/opcodemaptool.cc:
+	  Generate table for f8l instruction support for uCsim.
+
+2026-09-21 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* opcodemaptest/opcodemaptool.cc:
 	  Fix clr mnemonic in TeX output.
 
 2026-09-11 Philipp Klaus Krause <philipp@colecovision.eu>
