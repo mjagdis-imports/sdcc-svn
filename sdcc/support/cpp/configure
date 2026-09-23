@@ -739,7 +739,6 @@ CPPFLAGS
 LDFLAGS
 CFLAGS
 CC
-extra_liboffloadmic_configure_flags
 AWK
 SED
 LN_S
