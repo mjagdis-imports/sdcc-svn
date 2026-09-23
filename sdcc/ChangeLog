@@ -1,3 +1,10 @@
+2026-09-23 Felix Salfelder <felix AT salfelder.org>
+
+	* configure:
+	  Adjust sdcpp --version output
+	* support/cpp/gcc/BASE-VER:
+	  Fix gcc version
+
 2026-09-22 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* sim/ucsim/src/core/utils.src/globals.cc,

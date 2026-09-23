@@ -10135,6 +10135,12 @@ if test "$no_recursion" != yes; then
     # parts of a large source tree are present.
     test -d "$srcdir/$ac_dir" || continue
 
+    # set extra flag for sdcpp
+    extra_ac_sub_configure_args=
+    if test "$ac_dir" = "support/cpp"; then
+      extra_ac_sub_configure_args="--with-pkgversion=SDCC"
+    fi
+
     ac_msg="=== configuring in $ac_dir (`pwd`/$ac_dir)"
     printf "%s\n" "$as_me:${as_lineno-$LINENO}: $ac_msg" >&5
     printf "%s\n" "$ac_msg" >&6
@@ -10197,10 +10203,10 @@ printf "%s\n" "$as_me: WARNING: no configuration information is in $ac_dir" >&2;
 	ac_sub_cache_file=$ac_top_build_prefix$cache_file ;;
       esac
 
-      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: running $SHELL $ac_sub_configure $ac_sub_configure_args --cache-file=$ac_sub_cache_file --srcdir=$ac_srcdir" >&5
-printf "%s\n" "$as_me: running $SHELL $ac_sub_configure $ac_sub_configure_args --cache-file=$ac_sub_cache_file --srcdir=$ac_srcdir" >&6;}
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: running $SHELL $ac_sub_configure $ac_sub_configure_args $extra_ac_sub_configure_args --cache-file=$ac_sub_cache_file --srcdir=$ac_srcdir" >&5
+printf "%s\n" "$as_me: running $SHELL $ac_sub_configure $ac_sub_configure_args $extra_ac_sub_configure_args --cache-file=$ac_sub_cache_file --srcdir=$ac_srcdir" >&6;}
       # The eval makes quoting arguments work.
-      eval "\$SHELL \"\$ac_sub_configure\" $ac_sub_configure_args \
+      eval "\$SHELL \"\$ac_sub_configure\" $ac_sub_configure_args $extra_ac_sub_configure_args \
 	   --cache-file=\"\$ac_sub_cache_file\" --srcdir=\"\$ac_srcdir\"" ||
 	as_fn_error $? "$ac_sub_configure failed for $ac_dir" "$LINENO" 5
     fi
