@@ -191,6 +191,7 @@ machine(struct mne *mp)
 	case S_2OPADC:
 	case S_2OPADD:
 	case S_2OPAND:
+	case S_2OPCP:
 	case S_2OPSBC:
 	case S_2OPSUB:
 	case S_2OPXOR:
@@ -201,6 +202,8 @@ machine(struct mne *mp)
 		r2 = rcode;
 
 		if(t2 == S_REG && r2 == XL) { // swapped operand.
+			if(mchtyp == X_F8L && (rf == S_2OPCP || rf == S_2OPSBC || rf == S_2OPSUB))
+				aerr();
 			int tr = r1;
 			r1 = r2;
 			r2 = tr;
@@ -330,7 +333,9 @@ machine(struct mne *mp)
 		t1 = addr(&e1);
 		r1 = rcode;
 		if(!comma(rf != S_2OPWSBC && rf != S_2OPWADC)) { // Handle 1-op variants of sbcw and adcw
-			if (rf == S_2OPWSBC && t2 == S_ZREL) {
+			if (mchtyp == X_F8L)
+				aerr();
+			else if (rf == S_2OPWSBC && t2 == S_ZREL) {
 				outab(0xa6);
 				outrw(&e1, R_USGN);
 				break;
@@ -740,6 +745,8 @@ opw:
 				outrw(&e1, R_USGN);
 				break;
 			case S_ISPREL:
+				if (mchtyp == X_F8L)
+					aerr();
 				outab(0x35);
 				if(ls_mode(&e1))
 					aerr();
@@ -915,12 +922,16 @@ opw:
 
 
 	case S_0OPW:
+	case S_0OPWDEC:
+	case S_0OPWPOP:
 	case S_0OPWSLL:
 	case S_0OPWRLC:
 	case S_0OPWRRC:
-	case S_0OPWDEC:
 		t1 = addr(&e1);
 		r1 = rcode;
+
+		if (mchtyp == X_F8L && rf != S_0OPWPOP)
+			aerr();
 
 		if(rf == S_0OPWSLL && comma(0)) {
 			t2 = addr(&e2);
@@ -957,7 +968,9 @@ opw:
 		t2 = addr(&e2);
 		r2 = rcode;
 
-		if(t1 == S_REG && t2 == S_IMM) {
+		if (mchtyp == X_F8L)
+				aerr();
+		else if(t1 == S_REG && t2 == S_IMM) {
 			altaccw(r1);
 			outab(op);
 			outrw(&e2, R_USGN);

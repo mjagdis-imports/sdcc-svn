@@ -2,18 +2,16 @@
 
 	.area	Prog(rel,con)
 
-
 	abyt	=	0x0010		; Absolute 1-Byte Value
 	awrd	=	0x5432		; Absolute 2-Byte Value
-	aexa	=	0xBA9876	; Absolute 3-Byte Value
 
 	rbyt	=	. + 0x0010	; Relocatable 1-Byte Value
 	rwrd	=	. + 0x5432	; Relocatable 2-Byte Value
-	rexa	=	. + 0xBA9876	; Relocatable 3-Byte Value
-
 
 	.page
-	.sbttl	Base STM8 Instructions in Numerical Order (Absolute)
+;	.sbttl	Base STM8 Instructions in Numerical Order (Absolute)
+
+	.f8
 
 a8bit2op:
 
