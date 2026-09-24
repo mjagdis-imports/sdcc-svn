@@ -4878,7 +4878,7 @@ genCmp (const iCode *ic, iCode *ifx)
   else if (!IS_F8L && !sign && size == 2 && (right->aop->type == AOP_LIT || right->aop->type == AOP_IMMD) && aopIsAcc16 (left->aop, 0))
     emit3 (A_CPW, left->aop, right->aop);
   else if (ifx && // Use inverse jump condition.
-    (size == 1 && aopAre8_2 (right->aop, 0, left->aop, 0) && (!IS_F8L || aopIsAcc8 (right->aop, 0)) || !IS_F8L && size == 2 && aopIsAcc16 (right->aop, 0) && (left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD)))
+    (size == 1 && aopAre8_2 (right->aop, 0, left->aop, 0) && (!IS_F8L || !aopInReg (right->aop, 0, XL_IDX)) || !IS_F8L && size == 2 && aopIsAcc16 (right->aop, 0) && (left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD)))
     {
       emit3 ((size == 1) ? A_CP : A_CPW, right->aop, left->aop);
       symbol *tlbl = 0;

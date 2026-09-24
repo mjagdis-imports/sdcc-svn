@@ -1,9 +1,14 @@
+2026-09-25 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/gen.c:
+	  Fix an issue in f8l generation affecting a regression test on big-endian power9 host.
+
 2026-09-23 Felix Salfelder <felix AT salfelder.org>
 
 	* support/cpp:
 	  Upgrade gcc 13.4.1 -> 13.5.0
 
-2026-09-22 Philipp Klaus Krause <philipp@colecovision.eu>
+2026-09-23 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* sdas/asf8/f8.h,
 	  sdas/asf8/f8mch.c,
