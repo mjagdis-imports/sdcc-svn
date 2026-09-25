@@ -111,7 +111,7 @@ build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
 bin_PROGRAMS = $(am__EXEEXT_5) $(am__EXEEXT_6) $(am__EXEEXT_7)
-noinst_PROGRAMS = $(am__EXEEXT_10) $(am__EXEEXT_13) @BUILD_MISC@
+noinst_PROGRAMS = $(am__EXEEXT_9) $(am__EXEEXT_12) @BUILD_MISC@
 EXTRA_PROGRAMS = srconv$(EXEEXT) sysdump$(EXEEXT) coffdump$(EXEEXT) \
 	$(am__EXEEXT_1) $(am__EXEEXT_2) $(am__EXEEXT_3) \
 	$(am__EXEEXT_4)
@@ -166,11 +166,10 @@ am__EXEEXT_6 = sdranlib$(EXEEXT)
 am__EXEEXT_7 = sdobjcopy$(EXEEXT)
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(bindir)"
 am__EXEEXT_8 = sdnm$(EXEEXT)
-am__EXEEXT_9 = cxxfilt$(EXEEXT)
-am__EXEEXT_10 = $(am__EXEEXT_8) $(am__EXEEXT_9)
-am__EXEEXT_11 = bfdtest1$(EXEEXT)
-am__EXEEXT_12 = bfdtest2$(EXEEXT)
-am__EXEEXT_13 = $(am__EXEEXT_11) $(am__EXEEXT_12)
+am__EXEEXT_9 = $(am__EXEEXT_8)
+am__EXEEXT_10 = bfdtest1$(EXEEXT)
+am__EXEEXT_11 = bfdtest2$(EXEEXT)
+am__EXEEXT_12 = $(am__EXEEXT_10) $(am__EXEEXT_11)
 PROGRAMS = $(bin_PROGRAMS) $(noinst_PROGRAMS)
 bfdtest1_SOURCES = bfdtest1.c
 bfdtest1_OBJECTS = bfdtest1.$(OBJEXT)
@@ -188,9 +187,6 @@ am_coffdump_OBJECTS = coffdump.$(OBJEXT) coffgrok.$(OBJEXT) \
 	$(am__objects_1)
 coffdump_OBJECTS = $(am_coffdump_OBJECTS)
 coffdump_LDADD = $(LDADD)
-am_cxxfilt_OBJECTS = cxxfilt.$(OBJEXT) $(am__objects_1)
-cxxfilt_OBJECTS = $(am_cxxfilt_OBJECTS)
-cxxfilt_LDADD = $(LDADD)
 am_dlltool_OBJECTS = dlltool.$(OBJEXT) defparse.$(OBJEXT) \
 	deflex.$(OBJEXT) $(am__objects_1)
 dlltool_OBJECTS = $(am_dlltool_OBJECTS)
@@ -341,11 +337,11 @@ AM_V_YACC = $(am__v_YACC_@AM_V@)
 am__v_YACC_ = $(am__v_YACC_@AM_DEFAULT_V@)
 am__v_YACC_0 = @echo "  YACC    " $@;
 am__v_YACC_1 = 
-SOURCES = bfdtest1.c bfdtest2.c $(coffdump_SOURCES) $(cxxfilt_SOURCES) \
-	$(dlltool_SOURCES) $(dllwrap_SOURCES) $(sdar_SOURCES) \
-	$(EXTRA_sdar_SOURCES) $(sdnm_SOURCES) $(sdobjcopy_SOURCES) \
-	$(sdranlib_SOURCES) $(srconv_SOURCES) $(sysdump_SOURCES) \
-	$(windmc_SOURCES) $(windres_SOURCES)
+SOURCES = bfdtest1.c bfdtest2.c $(coffdump_SOURCES) $(dlltool_SOURCES) \
+	$(dllwrap_SOURCES) $(sdar_SOURCES) $(EXTRA_sdar_SOURCES) \
+	$(sdnm_SOURCES) $(sdobjcopy_SOURCES) $(sdranlib_SOURCES) \
+	$(srconv_SOURCES) $(sysdump_SOURCES) $(windmc_SOURCES) \
+	$(windres_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive cscopelist-recursive \
 	ctags-recursive dvi-recursive html-recursive info-recursive \
 	install-data-recursive install-dvi-recursive \
@@ -619,7 +615,7 @@ BFDTEST1_PROG = bfdtest1
 BFDTEST2_PROG = bfdtest2
 #GENTESTDLLS_PROG = testsuite/gentestdlls
 TEST_PROGS = $(BFDTEST1_PROG) $(BFDTEST2_PROG) $(GENTESTDLLS_PROG)
-RENAMED_PROGS = $(NM_PROG) $(DEMANGLER_PROG) # $(STRIP_PROG)
+RENAMED_PROGS = $(NM_PROG) # $(DEMANGLER_PROG) $(STRIP_PROG)
 
 # Stuff that goes in tooldir/ if appropriate.
 TOOL_PROGS = sdnm sdar sdranlib sdobjcopy
@@ -886,10 +882,6 @@ bfdtest2$(EXEEXT): $(bfdtest2_OBJECTS) $(bfdtest2_DEPENDENCIES) $(EXTRA_bfdtest2
 coffdump$(EXEEXT): $(coffdump_OBJECTS) $(coffdump_DEPENDENCIES) $(EXTRA_coffdump_DEPENDENCIES) 
 	@rm -f coffdump$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(coffdump_OBJECTS) $(coffdump_LDADD) $(LIBS)
-
-cxxfilt$(EXEEXT): $(cxxfilt_OBJECTS) $(cxxfilt_DEPENDENCIES) $(EXTRA_cxxfilt_DEPENDENCIES) 
-	@rm -f cxxfilt$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(cxxfilt_OBJECTS) $(cxxfilt_LDADD) $(LIBS)
 defparse.h: defparse.c
 	@if test ! -f $@; then rm -f defparse.c; else :; fi
 	@if test ! -f $@; then $(MAKE) $(AM_MAKEFLAGS) defparse.c; else :; fi

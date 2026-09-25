@@ -104,7 +104,7 @@ TEST_PROGS = $(BFDTEST1_PROG) $(BFDTEST2_PROG) $(GENTESTDLLS_PROG)
 
 ## We need a special rule to install the programs which are built with
 ## -new, and to rename cxxfilt to c++filt.
-RENAMED_PROGS = $(NM_PROG) $(DEMANGLER_PROG) # $(STRIP_PROG)
+RENAMED_PROGS = $(NM_PROG) # $(DEMANGLER_PROG) $(STRIP_PROG)
 noinst_PROGRAMS = $(RENAMED_PROGS) $(TEST_PROGS) @BUILD_MISC@
 
 EXTRA_PROGRAMS = srconv sysdump coffdump $(DLLTOOL_PROG) $(WINDRES_PROG) $(WINDMC_PROG) $(DLLWRAP_PROG)

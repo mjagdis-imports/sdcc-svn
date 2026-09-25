@@ -2,7 +2,7 @@
 
 	* support/sdbinutils/binutils/Makefile.am,
 	  support/sdbinutils/binutils/Makefile.in:
-	  Disable build of some unneeded binutils binaries on Windows.
+	  Disable build of some unneeded (sd)binutils binaries.
 
 2026-09-25 Gabriele Gorla <gorlik@yahoo.com>
 
