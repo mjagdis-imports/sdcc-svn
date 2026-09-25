@@ -1,7 +1,7 @@
 /* asout.c */
 
 /*
- *  Copyright (C) 1989-2025  Alan R. Baldwin
+ *  Copyright (C) 1989-2026  Alan R. Baldwin
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -262,7 +262,7 @@ outa4b(a_uint v)
 /*)Function	void	outaxb(i, v)
  *
  *		int	i		output byte count
- *		a_uint	v		assembler data
+ *		int	v		assembler data
  *
  *	The function outaxb() processes 1 to 4 bytes of
  *	assembled data in absolute format.
@@ -355,7 +355,7 @@ write_rmode(int r, int n)
 /*)Function	void	outatxb(i, v)
  *
  *		int	i		number of bytes to process
- *              a_uint     v               assembler data
+ *		int	v		assembler data
  *
  *	The function outatxb() outputs i bytes
  *
@@ -886,6 +886,7 @@ outdp(struct area *carea, struct expr *esp, int r)
 				n = area[1].a_ref;
 				r |= R_AREA;
 				fprintf(stderr, "?ASxxxx-OUTDP-NULL-POINTER error.\n\n");
+				aserr++;
 			} else
 			if (esp->e_flag) {
 				n = esp->e_base.e_sp->s_ref;
@@ -941,9 +942,9 @@ outall(void)
  *		int	oflag		-o, generate relocatable output flag
  *		int	pass		assembler pass number
  *		char	rel[]		relocation data for code/data array
- *              char *  relp            Pointer to R Line Values
+ *		char *	relp		pointer to rel array
  *		char	txt[]		assembled code/data array
- *              char *  txtp            Pointer to T Line Values
+ *		char *	txtp		pointer to txt array
  *
  *	functions called:
  *		int	fprintf()	c_library
@@ -985,9 +986,9 @@ outdot(void)
  *		int	a_bytes		T Line byte count
  *		sym	dot		defined as sym[0]
  *		char	rel[]		relocation data for code/data array
- *              char *  relp            Pointer to R Line Values
+ *		char *	relp		pointer to rel array
  *		char	txt[]		assembled code/data array
- *              char *  txtp            Pointer to T Line Values
+ *		char *	txtp		pointer to txt array
  *
  *	functions called:
  *		void	outbuf()	asout.c
@@ -1030,9 +1031,9 @@ outchk(int nt, int nr)
  *		int	a_bytes		T Line byte count
  *		FILE *	ofp		relocation output file handle
  *		char	rel[]		relocation data for code/data array
- *              char *  relp            Pointer to R Line Values
+ *		char *	relp		pointer to rel array
  *		char	txt[]		assembled code/data array
- *              char *  txtp            Pointer to T Line Values
+ *		char *	txtp		pointer to txt array
  *
  *	functions called:
  *		int	fprintf()	c_library
@@ -1096,14 +1097,12 @@ outradix()
  *		sym *	sp		pointer to a sym structure
  *		int	i		loop counter
  *		int	j		loop counter
- *              int     c               string character value
- *              int     narea           number of code areas
+ *              int     narea           number of areas
  *		int	nglob		number of global symbols
  *		char *	ptr		string pointer
  *		int	rn		symbol reference number
  *
  *	global variables:
- *		int	a_bytes		T Line byte count
  *		area *	areap		pointer to an area structure
  *		int	hilo		byte order
  *		char	module[]	module name string
@@ -1343,7 +1342,9 @@ outbank(struct bank *bp)
 void
 outarea(struct area *ap)
 {
+	int a_flag;
 	char * frmt;
+	a_flag = ap->a_flag;
 
 	fprintf(ofp, "A ");
 	fprintf(ofp, "%s", &ap->a_id[0]);
@@ -1355,7 +1356,8 @@ outarea(struct area *ap)
 	case 2: frmt = " size %u flags %u";	break;
 	}
 
-        fprintf(ofp, frmt, ap->a_size, ap->a_flag);
+	fprintf(ofp, frmt, ap->a_size & a_mask, a_flag);
+
         if (is_sdas()) {
                 /* sdas specific */
 		if (xflag == 0) {
@@ -1387,6 +1389,7 @@ outarea(struct area *ap)
  *
  *	global variables:
  *		int	a_bytes		argument size in bytes
+ *		int	as_msb		current MSB selection
  *		FILE *	ofp		relocation output file handle
  *		int	xflag		-x, listing radix flag
  *
@@ -1548,7 +1551,7 @@ out_lb(a_uint v, int t)
  *)Function	void	out_l3b(v, t)
  *)Function	void	out_l4b(v, t)
  *
- *		a_uint	v		assembled data
+ *		int	v		assembled data
  *		int	t		relocation type
  *
  *	Dispatch functions for processing listing data.
@@ -1662,6 +1665,7 @@ out_rw(a_uint v)
  *      data word as i bytes ordered according to hilo.
  *
  *	local variables:
+ *		none
  *
  *	global variables:
  *		int	hilo		byte order

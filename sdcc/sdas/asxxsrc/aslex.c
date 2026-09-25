@@ -514,6 +514,36 @@ comma(int flag)
 	return(1);
 }
 
+/*)Function	int	skpcomma(void)
+ *
+ *	The function skpcomma() checks for and then skips an
+ *	immediate COMMA.  The function returns '1' if a COMMA
+ *	was found else a '0' is returned.
+ *
+ *	local variables:
+ *		int	c		last character read from
+ *					assembler-source text line
+ *
+ *	global variables:
+ *
+ *	functions called:
+ *		int	get()		aslex.c
+ *		void	unget()		aslex.c
+ *
+ *	side effects:
+ *		assembler-source text line pointer may be updated
+ */
+int skpcomma(void)
+{
+	int c;
+
+	if ((c = get()) != ','){
+		unget(c);
+		return(0);
+	}
+	return(1);
+}
+
 /*)Function	int	nxtline(void)
  *
  *	The function nxtline() reads a line of assembler-source text

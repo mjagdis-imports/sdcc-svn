@@ -1,7 +1,7 @@
 /* lkarea.c */
 
 /*
- *  Copyright (C) 1989-2025  Alan R. Baldwin
+ *  Copyright (C) 1989-2026  Alan R. Baldwin
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -115,9 +115,12 @@ newarea(void)
 {
 	a_uint i;
 	int k, narea;
+	int aflags, iflags;
 	struct areax *taxp = NULL;
 	struct areax **halp;
+	struct bank **hblp;
 	char id[NCPS];
+	char opt[NCPS];
 
 	if (headp == NULL) {
 		fprintf(stderr, "?ASlink-Error-No header defined\n");
@@ -136,26 +139,29 @@ newarea(void)
 		 * Version 4 area directive uses named parameters:
 		 *   A name size=nnn flags=mm bank=n bndry=mmmm
 		 */
-		char opt[NCPS];
-		int aflags;
-		struct bank **hblp;
-
 		while (more()) {
 			getid(opt, -1);
 			i = eval();
-
+		/*
+		 * Evaluate size
+		 */
 			if (symeq("size", opt, 1)) {
 				axp->a_size = i;
 			} else
+		/*
+		 * Evaluate flags
+		 */
 			if (symeq("flags", opt, 1)) {
 				if (ASxxxx_VERSION == 3) {
+				/*
+				 * Create version 4 area flags.
+				 */
 					i &= (A3_OVR | A3_ABS | A3_PAG);
 					i = ((i << 8) | i);
 				}
 				taxp = ap->a_axp;
 				if (taxp->a_axp) {
 					aflags = ap->a_flag;
-					int iflags;
 					iflags = (int)(i & A4_OVR);
 					if (iflags) {
 						if (aflags & A4_OVR) {
@@ -200,11 +206,17 @@ newarea(void)
 							ap->a_flag |= iflags;
 						}
 					}
+				/*
+				 * Merge Output Code Flag
+				 */
 					ap->a_flag |= (int)(i & A4_OUT);
 				} else {
 					ap->a_flag = (int)i;
 				}
 			} else
+		/*
+		 * Evaluate bank
+		 */
 			if (symeq("bank", opt, 1)) {
 				hblp = hp->b_list;
 				if (hblp == NULL) {
@@ -229,6 +241,9 @@ newarea(void)
 					ap->a_bp = hblp[(int)i];
 				}
 			} else
+		/*
+		 * Evaluate Area Boundary
+		 */
 			if (symeq("bndry", opt, 1)) {
 				axp->a_bndry = i;
 			}
@@ -835,10 +850,10 @@ lnksect(struct area *tap)
  *				 	area structure
  *		area	*areap		The pointer to the first
  *				 	area structure of a linked list
- *		base	*basep		The pointer to the first
- *				 	base structure
- *		base	*bsp		Pointer to the current
- *				 	base structure
+ *		base	*a_basep	The pointer to the first
+ *				 	area base structure
+ *		base	*a_bsp		Pointer to the current
+ *				 	area base structure
  *		char	*ip		pointer into the REL file
  *				 	text line in ib[]
  *		int	lkerr		error flag
@@ -860,9 +875,9 @@ setarea(void)
 	a_uint v;
 	char id[NCPS];
 
-	bsp = basep;
-	while (bsp) {
-		ip = bsp->b_strp;
+	a_bsp = a_basep;
+	while (a_bsp) {
+		ip = a_bsp->strp;
 		getid(id, -1);
 		if (getnb() == '=') {
 			v = expr(0);
@@ -871,18 +886,17 @@ setarea(void)
 					break;
 			}
 			if (ap == NULL) {
-				fprintf(stderr,
-                                "ASlink-Error-No definition of area %s\n", id);
+				fprintf(stderr,	"?ASlink-Error-No definition of area %s\n", id);
 				lkerr++;
 			} else {
 				ap->a_addr = v;
 				ap->a_bset = 1;
 			}
 		} else {
-                        fprintf(stderr, "ASlink-Error-No '=' in base expression");
+			fprintf(stderr, "?ASlink-Error-No '=' in base expression\n");
 			lkerr++;
 		}
-		bsp = bsp->b_base;
+		a_bsp = a_bsp->link;
 	}
 }
 

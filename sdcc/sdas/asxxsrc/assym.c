@@ -1,7 +1,7 @@
 /* assym.c */
 
 /*
- *  Copyright (C) 1989-2025  Alan R. Baldwin
+ *  Copyright (C) 1989-2026  Alan R. Baldwin
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -43,7 +43,7 @@
  *		int	hash()
  *		sym *	lookup()
  *		mne *	mlookup()
- *              char *  new()
+ *		char *	new()
  *		sym *	slookup()
  *		char *	strsto()
  *		int	symeq()
@@ -191,7 +191,7 @@ alookup(char *id)
  *	side effects:
  *		none
  */
-#ifdef ONLY_ASXXXX
+
 struct bank *
 blookup(char *id)
 {
@@ -208,7 +208,6 @@ blookup(char *id)
 	}
 	return(NULL);
 }
-#endif
 
 /*)Function	def *	dlookup(id)
  *
@@ -584,7 +583,7 @@ hash(const char *p, int flag)
  *		int	bndry		structure alignment
  *
  *	functions called:
- *              char *  new()           assym.c
+ *		char *	new()		assym.c
  *              char *  strncpy()       c_library
  *		int *	strlen()	c_library
  *

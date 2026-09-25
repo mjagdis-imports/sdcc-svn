@@ -148,7 +148,49 @@ static const char  z80pg4[256] = {  /* P4 == ED */
 /*F0*/  UN,UN,UN,UN,UN,UN,UN,UN,UN,UN,UN,UN,UN,UN,UN,UN
 };
 
-static const char  z80pg6[256] = {  /* P6 == FD CB &&  P6 == DD CB */
+static const char  z80pg5[256] = {  /* P5 == FD */
+/*--*--* 0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F */
+/*--*--* -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - */
+/*00*/  UN,UN,UN,UN,UN,UN,UN,UN,UN,15,UN,UN,UN,UN,UN,UN,
+/*10*/  UN,UN,UN,UN,UN,UN,UN,UN,UN,15,UN,UN,UN,UN,UN,UN,
+/*20*/  UN,14,20,10, 8, 8,11,UN,UN,15,20,10, 8,8 ,11,UN,
+/*30*/  UN,UN,UN,UN,23,23,19,UN,UN,15,UN,UN,UN,UN,UN,UN,
+/*40*/  UN,UN,UN,UN, 8, 8,19,UN,UN,UN,UN,UN, 8, 8,19,UN,
+/*50*/  UN,UN,UN,UN, 8, 8,19,UN,UN,UN,UN,UN, 8, 8,19,UN,
+/*60*/   8, 8, 8, 8, 8, 8,19, 8, 8, 8, 8, 8, 8, 8,19, 8,
+/*70*/  19,19,19,19,19,19,UN,19,UN,UN,UN,UN, 8, 8,19,UN,
+/*80*/  UN,UN,UN,UN, 8, 8,19,UN,UN,UN,UN,UN, 8, 8,19,UN,
+/*90*/  UN,UN,UN,UN, 8, 8,19,UN,UN,UN,UN,UN, 8, 8,19,UN,
+/*A0*/  UN,UN,UN,UN, 8, 8,19,UN,UN,UN,UN,UN, 8, 8,19,UN,
+/*B0*/  UN,UN,UN,UN, 8, 8,19,UN,UN,UN,UN,UN, 8, 8,19,UN,
+/*C0*/  UN,UN,UN,UN,UN,UN,UN,UN,UN,UN,UN,P6,UN,UN,UN,UN,
+/*D0*/  UN,UN,UN,UN,UN,UN,UN,UN,UN,UN,UN,UN,UN,UN,UN,UN,
+/*E0*/  UN,14,UN,23,UN,15,UN,UN,UN, 8,UN,UN,UN,UN,UN,UN,
+/*F0*/  UN,UN,UN,UN,UN,UN,UN,UN,UN,10,UN,UN,UN,UN,UN,UN
+};
+
+static const char  z80pg6[256] = {  /* P6 == DD CB */
+/*--*--* 0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F */
+/*--*--* -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - */
+/*00*/  UN,UN,UN,UN,UN,UN,23,UN,UN,UN,UN,UN,UN,UN,23,UN,
+/*10*/  UN,UN,UN,UN,UN,UN,23,UN,UN,UN,UN,UN,UN,UN,23,UN,
+/*20*/  UN,UN,UN,UN,UN,UN,23,UN,UN,UN,UN,UN,UN,UN,23,UN,
+/*30*/  UN,UN,UN,UN,UN,UN,UN,UN,UN,UN,UN,UN,UN,UN,23,UN,
+/*40*/  UN,UN,UN,UN,UN,UN,20,UN,UN,UN,UN,UN,UN,UN,20,UN,
+/*50*/  UN,UN,UN,UN,UN,UN,20,UN,UN,UN,UN,UN,UN,UN,20,UN,
+/*60*/  UN,UN,UN,UN,UN,UN,20,UN,UN,UN,UN,UN,UN,UN,20,UN,
+/*70*/  UN,UN,UN,UN,UN,UN,20,UN,UN,UN,UN,UN,UN,UN,20,UN,
+/*80*/  UN,UN,UN,UN,UN,UN,23,UN,UN,UN,UN,UN,UN,UN,23,UN,
+/*90*/  UN,UN,UN,UN,UN,UN,23,UN,UN,UN,UN,UN,UN,UN,23,UN,
+/*A0*/  UN,UN,UN,UN,UN,UN,23,UN,UN,UN,UN,UN,UN,UN,23,UN,
+/*B0*/  UN,UN,UN,UN,UN,UN,23,UN,UN,UN,UN,UN,UN,UN,23,UN,
+/*C0*/  UN,UN,UN,UN,UN,UN,23,UN,UN,UN,UN,UN,UN,UN,23,UN,
+/*D0*/  UN,UN,UN,UN,UN,UN,23,UN,UN,UN,UN,UN,UN,UN,23,UN,
+/*E0*/  UN,UN,UN,UN,UN,UN,23,UN,UN,UN,UN,UN,UN,UN,23,UN,
+/*F0*/  UN,UN,UN,UN,UN,UN,23,UN,UN,UN,UN,UN,UN,UN,23,UN
+};
+
+static const char  z80pg7[256] = {  /* P7 == FD CB */
 /*--*--* 0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F */
 /*--*--* -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - */
 /*00*/  UN,UN,UN,UN,UN,UN,23,UN,UN,UN,UN,UN,UN,UN,23,UN,
@@ -171,7 +213,7 @@ static const char  z80pg6[256] = {  /* P6 == FD CB &&  P6 == DD CB */
 
 static const char *z80Page[7] = {
     z80pg1, z80pg2, z80pg3, z80pg4,
-    z80pg3, z80pg6, z80pg6
+    z80pg5, z80pg6, z80pg7
 };
 
 /*
@@ -660,7 +702,7 @@ machine(struct mne *mp)
 			break;
 		}
 		if (mchtyp == X_ZXN && op == 0xC5 && (t1 = addr(&e1)) == S_IMMED) {
-			// ZXN push is big-endian
+			/* ZXN push is big-endian */
 			outab(0xED);
 			outab(0x8A);
 			// ASXXXX do not check for R_MSB/R_LSB for constants!!!
@@ -1674,23 +1716,25 @@ machine(struct mne *mp)
 
 	case X_ZXN_INH2:
 		switch (op) {
-		case 0x23: //swap
-			if (more()) { // Optional argument a on swap
+		case 0x23: /* swap */
+			if (more()) { /* Optional argument a on swap */
 				t1 = addr(&e1);
-				if (t1 != S_R8 || e1.e_addr != A)
+				if (t1 != S_R8 || e1.e_addr != A) {
 					aerr();
+			 	}
 			 }
 			 break;
-		case 0x28: // BSLA DE,B
-		case 0x29: // BSRA DE,B
-		case 0x2a: // BSRL DE,B
-		case 0x2b: // BSRF DE,B
-		case 0x2c: // BRLC DE,B
+		case 0x28: /* BSLA DE,B */
+		case 0x29: /* BSRA DE,B */
+		case 0x2a: /* BSRL DE,B */
+		case 0x2b: /* BSRF DE,B */
+		case 0x2c: /* BRLC DE,B */
 			 t1 = addr(&e1);
 			 comma(1);
 			 t2 = addr(&e2);
-			 if (t1 != S_R16 || e1.e_addr != DE || t2 != S_R8 || e2.e_addr != B)
+			 if (t1 != S_R16 || e1.e_addr != DE || t2 != S_R8 || e2.e_addr != B) {
 				aerr();
+			}
 			 break;
 		}
 		outab(0xED);
@@ -1700,8 +1744,7 @@ machine(struct mne *mp)
 	case X_ZXN_MUL:
 		if ((t1 = addr(&e1)) == S_R8 && e1.e_addr == D &&
 			more() && comma(1) &&
-			(t2 = addr(&e2)) == S_R8 && e2.e_addr == E
-			) {
+			(t2 = addr(&e2)) == S_R8 && e2.e_addr == E) {
 			outab(0xED);
 			outab(op);
 			break;

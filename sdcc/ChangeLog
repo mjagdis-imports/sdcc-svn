@@ -1,3 +1,21 @@
+2026-09-24 Gabriele Gorla <gorlik@yahoo.com>
+
+	* sdas/asgb/gb.h,
+	  sdas/asgb/gbadr.c,
+	  sdas/asgb/gbmch.c,
+	  sdas/asgb/gbpst.c,
+	  sdas/asxxsrc/aslex.c,
+	  sdas/asxxsrc/asout.c,
+	  sdas/asxxsrc/assym.c,
+	  sdas/asxxsrc/asxxxx.h,
+	  sdas/asz80/z80mch.c,
+	  sdas/linksrc/aslink.h,
+	  sdas/linksrc/lkarea.c,
+	  sdas/linksrc/lkbank.c,
+	  sdas/linksrc/lkmain.c,
+	  sdas/linksrc/lkrel.c:
+	  Many trivial changes from upstream asxxxx.
+
 2026-09-25 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/f8/gen.c:

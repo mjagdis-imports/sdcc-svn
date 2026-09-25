@@ -60,7 +60,7 @@
  * Local Definitions
  */
 
-#define	VERSION	"V05.50.4+NoICE+SDCCmods-WIP-R14"
+#define	VERSION	"V05.50.4+NoICE+SDCCmods-WIP-R15"
 #define	COPYRIGHT "2026"
 
 /*
@@ -470,6 +470,7 @@ struct	sym
 	struct	area *s_area;	/* Area line, 0 if absolute */
 	int	s_ref;		/* Ref. number */
 	a_uint	s_addr;		/* Address */
+	char	*s_expr;	/* Expression to evaluate */
 /* sdas specific */
 	a_uint	s_org;		/* Start Address if absolute */
 /* end sdas specific */
@@ -490,6 +491,8 @@ struct	sym
 #define	S_GBL		002	/* Global Variable */
 #define	S_ASG		004	/* Assigned Value */
 #define	S_MDF		010	/* Multiple Definition */
+#define	S_SWX		020	/* Symbol With Expression */
+#define	S_HID		040	/* Symbol Hidden */
 
 /*
  * Assembler Directive Codes

@@ -1,7 +1,7 @@
 /* aslink.h */
 
 /*
- *  Copyright (C) 1989-2025  Alan R. Baldwin
+ *  Copyright (C) 1989-2026  Alan R. Baldwin
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -729,7 +729,7 @@ struct	sym
 	char	s_flag;		/* Flag byte */
 	a_uint	s_addr;		/* Address */
 	char	*s_id;		/* Name (JLH) */
-	char	*m_id;		/* Module symbol define in */
+	char	*m_id;		/* Module symbol defined in */
 };
 
 /*
@@ -755,8 +755,8 @@ struct	lfile
  */
 struct	base
 {
-	struct	base  *b_base;	/* Base link */
-	char	      *b_strp;	/* String pointer */
+	struct	base  *link;	/* Base Link */
+	char	      *strp;	/* Base String pointer */
 };
 
 /*
@@ -983,11 +983,11 @@ extern	struct	areax	*axp;	/*	Pointer to the current
 extern	struct	sym *symhash[NHASH]; /*	array of pointers to NHASH
 				      *	linked symbol lists
 				      */
-extern	struct	base	*basep;	/*	The pointer to the first
-				 *	base structure
+extern	struct	base  *a_basep;	/*	The pointer to the first
+				 *	area base structure
 				 */
-extern	struct	base	*bsp;	/*	Pointer to the current
-				 *	base structure
+extern	struct	base  *a_bsp;	/*	Pointer to the current
+				 *	area base structure
 				 */
 extern	struct	globl	*globlp;/*	The pointer to the first
 				 *	globl structure
@@ -1065,7 +1065,7 @@ extern	int	uflag;		/*	Listing relocation flag
 				 */
 extern	int	wflag;		/*	Enable wide format listing
 				 */
-extern  int     zflag;          /*      Disable symbol case sensitivity
+extern	int	zflag;		/*	Enable symbol case sensitivity
 				 */
 extern	int	radix;		/*	current number conversion radix:
 				 *	2 (binary), 8 (octal), 10 (decimal),
@@ -1203,16 +1203,16 @@ extern	void		exit(int n);
 
 /* lkmain.c */
 extern	FILE *		afile(char *fn, char *ft, int wf);
-extern	void		bassav(void);
+extern	void		areasav(void);
 extern	int		fndidx(char *str);
 extern	int		fndext(char *str);
-extern	void		gblsav(void);
+extern	void		glblsav(void);
 extern	int		intsiz(void);
 extern  void            iramsav(void);
 extern  void            xramsav(void);
 extern  void            codesav(void);
 extern  void            iramcheck(void);
-extern  void            link_main(void);
+extern  void            link(void);
 extern	void		lkexit(int i);
 extern	int		main(int argc, char *argv[]);
 extern	void		map(void);

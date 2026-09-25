@@ -1,7 +1,7 @@
 /* lkbank.c */
 
 /*
- *  Copyright (C) 2001-2025  Alan R. Baldwin
+ *  Copyright (C) 2001-2026  Alan R. Baldwin
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -560,13 +560,13 @@ lkfopen(void)
                                         fpt = strsto(bp->b_fspec);
                                         strcat(fpt, ".");
                                         strcat(fpt, frmt);
-                                        fp = afile(fpt, frmt, 2);
+                                        fp = afile(fpt, frmt, 3);
 				} else
                                 /* sdld specific */
                                 if (oflag == 4) {
                                         fpt = strsto(bp->b_fspec);
                                         strcat(fpt, ".elf");
-                                        fp = afile(fpt, "elf", 2);
+                                        fp = afile(fpt, "elf", 3);
 				}
                                 /* end sdld specific */
 				if (fp != stderr) {

@@ -34,10 +34,10 @@
  *
  *	lkmain.c contains the following functions:
  *		FILE *	afile()
- *		void	bassav()
- *		void	gblsav()
+ *		void	areasav()
+ *		void	glblsav()
  *		int	intsiz()
- *              void    link_main()
+ *		void	link()
  *		void	lkexit()
  *		int	fndext()
  *		int	fndidx()
@@ -80,7 +80,7 @@ void Areas51 (void)
 
         for (j = 0; rel[j][0] != 0; j++) {
                 ip = rel[j];
-                link_main();
+                link();
 	}
 
         /*Set the start address of the default areas:*/
@@ -159,7 +159,7 @@ void Areas51 (void)
  *		int	fclose()	c_library
  *		int	fprintf()	c_library
  *		void	library()	lklibr.c
- *		void	link_main()	lkmain.c
+ *		void	link()		lkmain.c
  *		void	lkexit()	lkmain.c
  *		void	lkfopen()	lkbank.c
  *		void	lnkarea()	lkarea.c
@@ -284,8 +284,10 @@ main(int argc, char *argv[])
 	}
 
 	if (linkp == NULL) {
-                usage(ER_FATAL);
+		fprintf(stderr, "?ASlink-Error-Missing input file(s)\n");
+		lkexit(ER_FATAL);
 	}
+
 	/*
 	 * If no input file is specified
 	 * then assume a single file with
@@ -324,7 +326,7 @@ main(int argc, char *argv[])
 
 		while (nxtline()) {
 			ip = ib;
-                        link_main();
+			link();
 		}
 		if (pass == 0) {
 			/*
@@ -497,7 +499,7 @@ intsiz(void)
  *	global variables:
  *		FILE *	jfp		file handle for .noi
  *		FILE *	mfp		file handle for .map
- *		FILE *	rfp		file hanlde for .rst
+ *		FILE *	rfp		file handle for .rst
  *              FILE *  sfp             file handle for .rel
  *		FILE *	tfp		file handle for .lst
  *		FILE *	yfp		file handle for .cdb
@@ -528,9 +530,9 @@ lkexit(int i)
 	exit(i);
 }
 
-/*)Function     link_main(void)   beware sdld changed name
+/*)Function	link(void)
  *
- *      The function link_main() evaluates the directives for each line of
+ *	The function link() evaluates the directives for each line of
  *	text read from the .rel file(s).  The valid directives processed
  *	are:
  *              X, D, Q, H, G, B, M, A, S, T, R, and P.
@@ -563,7 +565,7 @@ lkexit(int i)
  */
 
 void
-link_main(void)  /* beware sdld changed name */
+link(void)
 {
         char c;
 
@@ -762,10 +764,10 @@ link_main(void)  /* beware sdld changed name */
  *				 	area structure
  *		area	*areap		The pointer to the first
  *				 	area structure of a linked list
- *		base	*basep		The pointer to the first
- *				 	base structure
- *		base	*bsp		Pointer to the current
- *				 	base structure
+ *		base	*a_basep	The pointer to the first
+ *				 	area base structure
+ *		base	*a_bsp		Pointer to the current
+ *				 	area base structure
  *		lfile	*filep	 	The pointer *filep points to the
  *				 	beginning of a linked list of
  *				 	lfile structures.
@@ -812,6 +814,7 @@ map(void)
 	 */
 	mfp = afile(linkp->f_idp, "map", 1);
 	if (mfp == NULL) {
+		fprintf(stderr, "?ASlink-Error-Failed to create map file\n");
 		lkexit(ER_FATAL);
 	}
 
@@ -854,7 +857,7 @@ map(void)
 	/*
 	 * List Linked Libraries
 	 */
-	if (lbfhead != NULL) {
+	if (lbfhead) {
                 fprintf(mfp, "\nLibraries Linked                          [ object file ]\n\n");
 		for (lbfh=lbfhead; lbfh; lbfh=lbfh->next) {
                         if (strlen (lbfh->libspc) > 40)
@@ -867,15 +870,15 @@ map(void)
 		fprintf(mfp, "\n");
 	}
 	/*
-	 * List Base Address Definitions
+	 * List Area Base Address Definitions
 	 */
-	if (basep) {
+	if (a_basep) {
 		newpag(mfp);
-		fprintf(mfp, "\nUser Base Address Definitions\n\n");
-		bsp = basep;
-		while (bsp) {
-			fprintf(mfp, "%s\n", bsp->b_strp);
-			bsp = bsp->b_base;
+		fprintf(mfp, "\nUser Area Base Address Definitions\n\n");
+		a_bsp = a_basep;
+		while (a_bsp) {
+			fprintf(mfp, "%s\n", a_bsp->strp);
+			a_bsp = a_bsp->link;
 		}
 	}
 	/*
@@ -926,10 +929,10 @@ map(void)
  *	Functions called:
  *		void	addlib()	lklibr.c
  *		void	addpath()	lklibr.c
- *		void	bassav()	lkmain.c
+ *		void	areasav()	lkmain.c
  *		void	doparse()	lkmain.c
  *		int	fprintf()	c_library
- *		void	gblsav()	lkmain.c
+ *		void	glblsav()	lkmain.c
  *		void	getfid()	lklex.c
  *		int	get()		lklex.c
  *		int	getnb()		lklex.c
@@ -959,6 +962,12 @@ parse()
 			while (ctype[c=get()] & LETTER) {
 				switch(c) {
 
+				case 'b':
+				case 'B':
+				/* this should move to case 'a' 'A' */
+					areasav();
+					return(0);
+
 				case 'C':
                                         if (is_sdld() && !(TARGET_IS_Z80 || TARGET_IS_GB)) {
                                                 codesav();
@@ -971,6 +980,20 @@ parse()
 					startp->f_type = F_STD;
 					doparse();
 					return(0);
+
+				case 'd':
+				case 'D':
+					xflag = 2;
+					break;
+
+				case 'E':
+                                        if (TARGET_IS_6808 || TARGET_IS_STM8) {
+                                                oflag = 4;
+						break;
+					}
+                                        // else fall through
+				case 'e':
+					return(1);
 
 				case 'f':
 				case 'F':
@@ -994,6 +1017,11 @@ parse()
 					}
 					return(0);
 
+				case 'g':
+				case 'G':
+					glblsav();
+					return(0);
+
 				case 'I':
                                         if (is_sdld() && !(TARGET_IS_Z80 || TARGET_IS_GB)) {
                                                 iramsav();
@@ -1002,6 +1030,62 @@ parse()
                                         // else fall through
 				case 'i':
 					oflag = 1;
+					break;
+
+#if NOICE
+				case 'j':
+				case 'J':
+					jflag = 1;
+					break;
+#endif
+
+				case 'k':
+				case 'K':
+					addpath();
+					return(0);
+
+				case 'l':
+				case 'L':
+					addlib();
+					return(0);
+
+				case 'M':
+                                        /*JCF: memory usage summary output*/
+                                        if (is_sdld()) {
+                                                sflag = 1;
+						break;
+					}
+                                        // else fall through
+				case 'm':
+					mflag = 1;
+					break;
+
+				case 'n':
+				case 'N':
+					pflag = 0;
+					break;
+
+				case 'o':
+				case 'O':
+					objflg = 0;
+					break;
+
+				case 'p':
+				case 'P':
+					pflag = 1;
+					break;
+
+				case 'q':
+				case 'Q':
+					xflag = 1;
+					break;
+
+                                case 'r':
+                                case 'R':
+                                        if (is_sdld() && !(TARGET_IS_Z80 || TARGET_IS_GB))
+                                                rflag = 1;
+                                        else
+                                                goto err;
 					break;
 
 				case 'S':
@@ -1025,9 +1109,9 @@ parse()
 					oflag = 3;
 					break;
 
-				case 'o':
-				case 'O':
-					objflg = 0;
+				case 'u':
+				case 'U':
+					uflag = 1;
 					break;
 
 				case 'v':
@@ -1035,35 +1119,9 @@ parse()
 					objflg = 1;
 					break;
 
-				case 'M':
-                                        /*JCF: memory usage summary output*/
-                                        if (is_sdld()) {
-                                                sflag = 1;
-						break;
-					}
-                                        // else fall through
-				case 'm':
-					mflag = 1;
-					break;
-
-#if NOICE
-				case 'j':
-				case 'J':
-					jflag = 1;
-					break;
-#endif
-
-                                case 'r':
-                                case 'R':
-                                        if (is_sdld() && !(TARGET_IS_Z80 || TARGET_IS_GB))
-                                                rflag = 1;
-                                        else
-                                                goto err;
-					break;
-
-				case 'u':
-				case 'U':
-					uflag = 1;
+				case 'w':
+				case 'W':
+					wflag = 1;
 					break;
 
 				case 'X':
@@ -1074,60 +1132,6 @@ parse()
                                         // else fall through
 				case 'x':
 					xflag = 0;
-					break;
-
-				case 'q':
-				case 'Q':
-					xflag = 1;
-					break;
-
-				case 'd':
-				case 'D':
-					xflag = 2;
-					break;
-
-				case 'E':
-                                        if (TARGET_IS_6808 || TARGET_IS_STM8) {
-                                                oflag = 4;
-						break;
-					}
-                                        // else fall through
-				case 'e':
-					return(1);
-
-				case 'n':
-				case 'N':
-					pflag = 0;
-					break;
-
-				case 'p':
-				case 'P':
-					pflag = 1;
-					break;
-
-				case 'b':
-				case 'B':
-					bassav();
-					return(0);
-
-				case 'g':
-				case 'G':
-					gblsav();
-					return(0);
-
-				case 'k':
-				case 'K':
-					addpath();
-					return(0);
-
-				case 'l':
-				case 'L':
-					addlib();
-					return(0);
-
-				case 'w':
-				case 'W':
-					wflag = 1;
 					break;
 
 #if SDCDB
@@ -1240,19 +1244,19 @@ doparse(void)
 	startp->f_type = 0;
 }
 
-/*)Function	void	bassav(void)  beware sdld changed name
+/*)Function	void	areasav(void)
  *
- *	The function bassav() creates a linked structure containing
- *	the base address strings input to the linker.
+ *	The function areasav() creates a linked structure containing
+ *	the area base address strings input to the linker.
  *
  *	local variables:
  *		none
  *
  *	global variables:
- *		base	*basep		The pointer to the first
- *				 	base structure
- *		base	*bsp		Pointer to the current
- *				 	base structure
+ *		base	*a_basep	The pointer to the first
+ *				 	area base structure
+ *		base	*a_bsp		Pointer to the current
+ *				 	area base structure
  *		char	*ip		pointer into the REL file
  *				 	text line in ib[]
  *
@@ -1264,30 +1268,30 @@ doparse(void)
  *		void	unget()		lklex.c
  *
  *	side effects:
- *		The basep structure is created.
+ *		The a_base structure is created.
  */
 
 void
-bassav(void) /* beware sdld changed name */
+areasav(void)
 {
-	if (basep == NULL) {
-		basep = (struct base *)
+	if (a_basep == NULL) {
+		a_basep = (struct base *)
 			new (sizeof (struct base));
-		bsp = basep;
+		a_bsp = a_basep;
 	} else {
-		bsp->b_base = (struct base *)
+		a_bsp->link = (struct base *)
 				new (sizeof (struct base));
-		bsp = bsp->b_base;
+		a_bsp = a_bsp->link;
 	}
 	unget(getnb());
-	bsp->b_strp = (char *) new (strlen(ip)+1);
-	strcpy(bsp->b_strp, ip);
+	a_bsp->strp = (char *) new (strlen(ip)+1);
+	strcpy(a_bsp->strp, ip);
 }
 
 
-/*)Function	void	gblsav()   beware sdld changed name
+/*)Function	void	glblsav(void)
  *
- *	The function gblsav() creates a linked structure containing
+ *	The function glblsav() creates a linked structure containing
  *	the global variable strings input to the linker.
  *
  *	local variable:
@@ -1313,7 +1317,7 @@ bassav(void) /* beware sdld changed name */
  */
 
 void
-gblsav(void)  /* beware sdld changed name */
+glblsav(void)
 {
 	if (globlp == NULL) {
 		globlp = (struct globl *)
@@ -1365,7 +1369,7 @@ gblsav(void)  /* beware sdld changed name */
 void
 setgbl(void)
 {
-	int v;
+	a_uint v;
 	struct sym *sp;
 	char id[NCPS];
 
@@ -1374,7 +1378,7 @@ setgbl(void)
 		ip = gsp->g_strp;
 		getid(id, -1);
 		if (getnb() == '=') {
-			v = (int) expr(0);
+			v = expr(0);
 			sp = lkpsym(id, 0);
 			if (sp == NULL) {
 				fprintf(stderr,
@@ -1391,7 +1395,7 @@ setgbl(void)
 				sp->s_type |= S_DEF;
 			}
 		} else {
-			fprintf(stderr, "?ASlink-Error-No '=' in global expression");
+			fprintf(stderr, "?ASlink-Error-No '=' in global expression\n");
 			lkerr++;
 		}
 		gsp = gsp->g_globl;
@@ -1404,7 +1408,8 @@ setgbl(void)
  *		char *	ft		file type string
  *		int	wf		0 ==>> read
  *					1 ==>> write
- *                                      2 ==>> binary write
+ *					2 ==>> binary read
+ *					3 ==>> binary write
  *
  *	The function afile() opens a file for reading or writing.
  *		(1)	If the file type specification string ft
@@ -1423,9 +1428,9 @@ setgbl(void)
  *	local variables:
  *		int	c		character value
  *		FILE *	fp		filehandle for opened file
+ *		char *	frmt		file access format string
  *		char *	p1		pointer to filespec string fn
  *		char *	p2		pointer to filespec string fb
- *              char *  p3              pointer to filetype string ft
  *
  *	global variables:
  *		char	afspec[]	constructed file specification string
@@ -1487,17 +1492,14 @@ afile(char *fn, char *ft, int wf)
 	*p1++ = 0;
 
 	/*
-         * Select Read/Write/Binary Write
+	 * Select (Binary) Read/Write
 	 */
         switch(wf & 3) {
 	default:
 	case 0:	frmt = "r";	break;
 	case 1:	frmt = "w";	break;
-#ifdef	DECUS
-        case 2: frmt = "wn";    break;
-#else
-        case 2: frmt = "wb";    break;
-#endif
+	case 2:	frmt = "rb";	break;
+	case 3:	frmt = "wb";	break;
 	}
         if ((fp = fopen(afspec, frmt)) == NULL && strcmp(ft,"adb") != 0) { /* Do not complain for optional adb files */
                 fprintf(stderr, "?ASlink-Error-<cannot %s> : \"%s\"\n", (frmt[0] == 'w')?"create":"open", afspec);
@@ -1704,8 +1706,8 @@ char *usetxt[] = {
 	"  -k   Library path specification, one per -k",
 	"  -l   Library file specification, one per -l",
 	"Relocation:",
-        "  -b   area base address = expression",
-        "  -g   global symbol = expression",
+        "  -b   Area base address=expression",
+        "  -g   Global symbol=expression",
 	"Map format:",
 	"  -m   Map output generated as (out)file[.map]",
 	"  -w   Wide listing format for map file",
@@ -1716,14 +1718,14 @@ char *usetxt[] = {
         "  -i   Intel Hex as (out)file[.ihx]",
         "  -s   Motorola S Record as (out)file[.s19]",
 //      "  -t   Tandy CoCo Disk BASIC binary as (out)file[.bi-]",
+//      "  -o   Linked file/library object output enable (default)",
+//      "  -v   Linked file/library object output disable",
 #if NOICE
 	"  -j   NoICE Debug output as (out)file[.noi]",
 #endif
 #if SDCDB
 	"  -y   SDCDB Debug output as (out)file[.cdb]",
 #endif
-//      "  -o   Linked file/library object output enable (default)",
-//      "  -v   Linked file/library object output disable",
 	"List:",
 	"  -u   Update listing file(s) with link data as file(s)[.rst]",
 	"Case Sensitivity:",

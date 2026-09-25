@@ -99,7 +99,7 @@ load_rel (FILE * libfp, long size)
             return 1;
 
           ip = str;
-          link_main ();
+          link ();
         }
 
       return 1;

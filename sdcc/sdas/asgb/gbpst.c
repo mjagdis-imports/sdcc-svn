@@ -24,8 +24,6 @@
 
 /* Gameboy mods by Roger Ivie (ivie at cc dot usu dot edu) see gb.h for more info */
 
-/* Extensions: P. Felber */
-
 #include "asxxxx.h"
 #include "gb.h"
 

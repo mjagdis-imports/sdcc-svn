@@ -23,14 +23,6 @@
  */
 
 /*
- * Extensions: P. Felber
- *
- * they seem to be:
- * ldhl
- * lda
- */
-
-/*
  * Gameboy mods by Roger Ivie (ivie at cc dot usu dot edu); see gb.h for more info
  * Gameboy testing and updates by Sebastian 'basxto' Riedel (sdcc at basxto dot de>
  */
@@ -38,7 +30,7 @@
 #include "asxxxx.h"
 #include "gb.h"
 
-char    *cpu    = "GameBoy";
+char	*cpu	= "Gameboy";
 char	*dsft	= "asm";
 
 char	imtab[3] = { 0x46, 0x56, 0x5E };
