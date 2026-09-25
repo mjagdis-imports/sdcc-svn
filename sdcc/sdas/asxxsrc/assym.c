@@ -192,6 +192,7 @@ alookup(char *id)
  *		none
  */
 
+#ifdef ONLY_ASXXXX
 struct bank *
 blookup(char *id)
 {
@@ -208,6 +209,7 @@ blookup(char *id)
 	}
 	return(NULL);
 }
+#endif
 
 /*)Function	def *	dlookup(id)
  *
