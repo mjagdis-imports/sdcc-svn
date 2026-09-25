@@ -1,4 +1,4 @@
-2026-09-24 Gabriele Gorla <gorlik@yahoo.com>
+2026-09-25 Gabriele Gorla <gorlik@yahoo.com>
 
 	* sdas/asgb/gb.h,
 	  sdas/asgb/gbadr.c,
@@ -15,6 +15,17 @@
 	  sdas/linksrc/lkmain.c,
 	  sdas/linksrc/lkrel.c:
 	  Many trivial changes from upstream asxxxx.
+	* sdas/asxxsrc/asmain.c,
+ 	  sdas/asxxsrc/asxxxx.h,
+	  sdas/asz80/z80mch.c,
+	  sdas/linksrc/aslink.h,
+	  sdas/linksrc/lkbank.c,
+	  sdas/linksrc/lkhead.c,
+	  sdas/linksrc/lknoice.c,
+	  sdas/linksrc/lkrloc.c,
+	  sdas/linksrc/lkrloc3.c,
+	  sdas/linksrc/lksym.c:
+	  More small changes from upstream asxxxx.
 
 2026-09-25 Philipp Klaus Krause <philipp@colecovision.eu>
 

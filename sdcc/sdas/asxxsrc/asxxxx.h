@@ -176,6 +176,7 @@
 #define	MAXINC	6		/* Maximum nesting of include files */
 #define	MAXMCR	20		/* Maximum nesting of macro expansions */
 #define	MAXIF	10		/* Maximum nesting of if/else/endif */
+#define	MAXNST	40		/* Maximum nesting of an expression */
 #define	FILSPC	PATH_MAX	/* Chars. in filespec */
 
 #define NLIST	0		/* No listing */
@@ -228,6 +229,11 @@
  */
 #define OPCY_NONE       ((char) 0x80)   /* Opcode Cycle Count Not Set */
 #define OPCY_MASK       ((char) 0x7F)   /* Opcode Cycle Count MASK */
+
+/*
+ * Default Page Length Mask
+ */
+#define	DEFAULT_PMASK	0xFF	/* 256 Element Boundary / Length */ 
 
 /*
  * NTXT must be defined to have the same value in
@@ -957,7 +963,6 @@ struct	memlnk {
 
 extern	int	aserr;		/*	ASxxxx error counter
 				 */
-/* sdas specific */
 extern	int	rlerr;		/*	Relocation error counter
 				 */
 extern	int	rprterr;	/*	report expr() errors
@@ -966,7 +971,6 @@ extern	int	ignrerr;	/*	ignore expr() errors
 				 */
 extern	int	rlsym;		/*	Relocation symbol counter
 				 */
-/* end sdas specific */
 extern	int	trcflags;	/*	ASxxxx tracing flags
 				 */
 extern	jmp_buf	jump_env;	/*	compiler dependent structure
@@ -1278,7 +1282,7 @@ extern	char *		strrchr();
 
 /* asmain.c */
 extern	FILE *		afile(char *fn, char *ft, int wf);
-extern	void		afilex(char *fn, char *ft);
+extern	void		afilex(char *fn, char *ft, int wf);
 extern	void		asexit(int i);
 extern	void		asmbl(void);
 extern	void		boundary(a_uint n);

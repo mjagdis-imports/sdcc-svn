@@ -125,7 +125,7 @@ newbank(void)
 		 * Evaluate base address
 		 */
 		if (symeq("base", id, 1)) {
-			v = eval();
+			v = eval() & a_mask;
 			if (bp->b_base == 0) {
 				bp->b_base = v;
 			} else {
@@ -139,7 +139,7 @@ newbank(void)
 		 * Evaluate bank size
 		 */
 		if (symeq("size", id, 1)) {
-			v = eval();
+			v = eval() & a_mask;
 			if (bp->b_size == 0) {
 				bp->b_size = v;
 			} else {
@@ -153,7 +153,7 @@ newbank(void)
 		 * Evaluate bank mapping
 		 */
 		if (symeq("map", id, 1)) {
-			v = eval();
+			v = eval() & a_mask;
 			if (bp->b_map == 0) {
 				bp->b_map = v;
 			} else {
@@ -167,7 +167,7 @@ newbank(void)
 		 * Evaluate flags
 		 */
 		if (symeq("flags", id, 1)) {
-			i = (int) eval();
+			i = (int) (eval() & a_mask);
 			if (bp->b_flag == 0) {
 				bp->b_flag = i;
 			} else {

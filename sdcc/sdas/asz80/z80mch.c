@@ -399,7 +399,7 @@ static const char  zxnpg4[256] = {  /* P4 == ED */
 
 static const char *zxnPage[7] = {
     z80pg1, z80pg2, z80pg3, zxnpg4,
-    z80pg3, z80pg6, z80pg6
+    z80pg5, z80pg6, z80pg7
 };
 
 /*

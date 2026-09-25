@@ -197,6 +197,8 @@
  */
 #define	S_REF	1		/* referenced */
 #define	S_DEF	2		/* defined */
+#define	S_SWX	4		/* symbol with expression */
+#define	S_HID	8		/* symbol hidden */
 
 /*
  * File types
@@ -230,7 +232,6 @@
 #define		DBXMAXBYTES	64	/* NMAX > (  DBXMAXBYTES  ) */
 #define FILSPC  PATH_MAX        /* File spec length */
 
-#define NDATA   16              /* actual data */
 /*
  * NTXT must be defined to have the same value in
  * the ASxxxx assemblers and ASLink.
@@ -730,6 +731,7 @@ struct	sym
 	a_uint	s_addr;		/* Address */
 	char	*s_id;		/* Name (JLH) */
 	char	*m_id;		/* Module symbol defined in */
+	char	*s_expr;	/* Expression for symbol */
 };
 
 /*

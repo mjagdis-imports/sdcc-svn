@@ -1,7 +1,7 @@
 /* lksym.c */
 
 /*
- *  Copyright (C) 1989-2025  Alan R. Baldwin
+ *  Copyright (C) 1989-2026  Alan R. Baldwin
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -198,6 +198,48 @@ newsym(void)
 	fprintf(stderr, "?ASlink-Error-Header symbol list overflow\n");
 	lkexit(ER_FATAL);
 	return(NULL);
+}
+
+/*)Function	void	prcsym(void)
+ *
+ *	The function prcsym() searches the symbol hash tables for
+ *	symbols with a type flag of S_SWX (Symbol With Expression).
+ *	If S_SWX is found then the symbols value is calculated
+ *	from the expression.
+ *
+ *	local variables:
+ *		int	i		loop index
+ *		struct sym *	sp	pointer to a sym structure
+ *
+ *	global varaibles:
+ *		sym * symhash[]		array of pointers to NHASH
+ *					linked symbol lists
+ *		char *	ip		expression string pointer
+ *
+ *	functions called:
+ *		a_uint	expr()		lkeval.c
+ *
+ *	side effects:
+ *		All symbols with expressions are calculated.
+ */
+
+void
+prcsym(void)
+{
+	struct sym *sp;
+	int i;
+
+	for (i=0; i<NHASH; ++i) {
+		sp = symhash[i];
+		while (sp) {
+			if (sp->s_type & S_SWX) {
+				ip = sp->s_expr;
+				sp->s_addr = expr(0);
+			}
+			sp = sp->s_sp;
+		}
+	}
+	return;
 }
 
 /*)Function	sym *	lkpsym(id, f)

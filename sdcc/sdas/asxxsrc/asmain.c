@@ -701,7 +701,7 @@ main(int argc, char *argv[])
  *		CONSTANT	NHASH	number of symbol hash buckets
  *		int		pass	current assembler pass
  *		int		passcnt	number of passes completeed
- *		a_uint		passfuz addressing fuzz at end of pass
+ *		int		passfuz addressing fuzz at end of pass
  *		int		passJLH	flag indicating pass to dump NOICE comments
  *		int		passlmt	pass limit value [0 or defined in minit()]
  *		int		tflag	-t option flag
@@ -2705,11 +2705,17 @@ equate(char *id, struct expr *e1, a_uint equtype)
 	lmode = ELIST;
 }
 
-/*)Function	FILE *	afile(fn, ft, wf)
+/*)Function	FILE *	afile(fs, ft, wf)
  *
- *		char *	fn		file specification string
+ *		char *	fs		file specification string
  *		char *	ft		file type string
- *              int     wf              read(0)/write(1) flag
+ *		int	wf		0 ==>> read
+ *					1 ==>> write
+ *					2 ==>> binary read
+ *					3 ==>> binary write
+ *
+ *					add 8 to the wf code to allow
+ *					any extension on a file
  *
  *	The function afile() opens a file for reading or writing.
  *
@@ -2737,29 +2743,22 @@ equate(char *id, struct expr *e1, a_uint equtype)
  */
 
 FILE *
-afile(char *fn, char *ft, int wf)
+afile(char *fs, char *ft, int wf)
 {
 	FILE *fp;
 	char *frmt;
 
-        afilex(fn, ft);
+	afilex(fs, ft, wf);
 
 	/*
 	 * Select (Binary) Read/Write
 	 */
-        switch(wf) {
+	switch(wf & 3) {
 	default:
 	case 0:	frmt = "r";	break;
-        /* open file -- use "b" flag to write LF line endings on all host platforms */
-        /* this is currently set to match old sdas behavior */
-        case 1: frmt = "wb";    break;
-#ifdef  DECUS
-        case 2: frmt = "rn";    break;
-        case 3: frmt = "wn";    break;
-#else
+	case 1:	frmt = "w";	break;
 	case 2:	frmt = "rb";	break;
 	case 3:	frmt = "wb";	break;
-#endif
 	}
 
 	if ((fp = fopen(afntmp, frmt)) == NULL) {
@@ -2773,10 +2772,17 @@ afile(char *fn, char *ft, int wf)
 	return (fp);
 }
 
-/*)Function     void    afilex(fn, ft)
+/*)Function	void	afilex(fs, ft, wf)
  *
- *		char *	fn		file specification string
+ *		char *	fs		file specification string
  *		char *	ft		file type string
+ *		int	wf		0 ==>> read
+ *					1 ==>> write
+ *					2 ==>> binary read
+ *					3 ==>> binary write
+ *
+ *					add 8 to the wf code to allow
+ *					any extension on a file
  *
  *	The function afilex() processes the file specification string:
  *		(1)	If the file type specification string ft
@@ -2813,20 +2819,20 @@ afile(char *fn, char *ft, int wf)
  */
 
 void
-afilex(char *fn, char *ft)
+afilex(char *fs, char *ft, int wf)
 {
 	char *p1, *p2;
 	int c;
 
-	if (strlen(fn) > (FILSPC-7)) {
-		fprintf(stderr, "?ASxxxx-Error-<filspc to long> : \"%s\"\n", fn);
+	if (strlen(fs) > (FILSPC-7)) {
+		fprintf(stderr, "?ASxxxx-Error-<filspc to long> : \"%s\"\n", fs);
 		asexit(ER_FATAL);
 	}
 
 	/*
 	 * Save the File Name Index
 	 */
-	strcpy(afntmp, fn);
+	strcpy(afntmp, fs);
 	afptmp = fndidx(afntmp);
 
 	/*
@@ -2846,7 +2852,7 @@ afilex(char *fn, char *ft)
                         // no extension in fn: use default extension
                         p2 = dsft;
 		} else {
-                        p2 = strrchr(&fn[afptmp], FSEPX) + 1;
+                        p2 = strrchr(&fs[afptmp], FSEPX) + 1;
 		}
 	}
         if (p1 == NULL) {
