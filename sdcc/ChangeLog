@@ -1,3 +1,8 @@
+2026-09-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/MakeList:
+	  Disable two tests for targets where they fail due to lack of memory.
+
 2026-09-26 Gabriele Gorla <gorlik@yahoo.com>
 
 	* sdas/as6500/r65mch.c,
