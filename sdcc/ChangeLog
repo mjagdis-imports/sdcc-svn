@@ -19,6 +19,17 @@
 	  sdas/asxxsrc/asxxxx.h,
 	  sdas/asz80/z80mch.c:
 	  Initial OPCY_* changes from upstream asxxxx.
+	* sdas/as6500/r65mch.c,
+	  sdas/as6808/m08mch.c,
+	  sdas/as8xcxxx/ds8mch.c,
+	  sdas/asf8/f8mch.c,
+	  sdas/asgb/gbmch.c,
+	  sdas/asrab/rabmch.c,
+	  sdas/asstm8/stm8mch.c,
+	  sdas/astlcs90/t90mch.c,
+	  sdas/asxxsrc/asxxxx.h,
+	  sdas/asz80/z80mch.c:
+	  Final OPCY_* changes from upstream asxxxx.
 
 2026-09-25 Philipp Klaus Krause <philipp@colecovision.eu>
 

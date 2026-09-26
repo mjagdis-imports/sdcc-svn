@@ -314,7 +314,7 @@ struct	area
 #define A_CON   0000            /* Concatenating */
 #define A_OVR   0004            /* Overlaying */
 #define A_REL   0000            /* Relocatable */
-#define A_ABS   0010            /* absolute */
+#define A_ABS   0010            /* Absolute */
 #define A_NOPAG 0000            /* Non-Paged */
 #define A_PAG   0020            /* Paged */
 
@@ -361,7 +361,6 @@ struct	area
 #define R_BIT   0x400           /* Linker will convert from byte-addressable
                                  * space to bit-addressable space.
 				 */
-
 
 #define R_AREA  0x00            /* Base type */
 #define R_SYM   0x02

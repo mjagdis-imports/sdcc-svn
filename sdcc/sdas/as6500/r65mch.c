@@ -190,6 +190,12 @@ machine(struct mne *mp)
 	char id[NCPS];
 	int c, v1, v2;
 
+	/*
+	 * Using Internal Format
+	 * For Cycle Counting
+	 */
+	opcycles = OPCY_NONE;
+
 	clrexpr(&e1);
 	clrexpr(&e2);
 	op = (int) mp->m_valu;
@@ -782,6 +788,11 @@ machine(struct mne *mp)
 			opcycles = r65pg1[cb[0] & 0xFF];
 		}
 	}
+ 	/*
+	 * Translate To External Format
+	 */
+	if (opcycles == OPCY_NONE) { opcycles  =  CYCL_NONE; } else
+	if (opcycles  & OPCY_NONE) { opcycles |= (CYCL_NONE | 0x3F00); }
 }
 
 /*

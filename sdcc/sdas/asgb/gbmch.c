@@ -108,6 +108,12 @@ machine(struct mne *mp)
 	int rf, v1, v2;
 	int d,c,i,th,tl,oops; /* for dealing with .tile */
 
+	/*
+	 * Using Internal Format
+	 * For Cycle Counting
+	 */
+	opcycles = OPCY_NONE;
+
 	clrexpr(&e1);
 	clrexpr(&e2);
 	op = (int) mp->m_valu;
@@ -655,6 +661,11 @@ machine(struct mne *mp)
 			opcycles = gbPage[opcycles & OPCY_MASK][cb[1] & 0xFF];
 		}
 	}
+	/*
+	 * Translate To External Format
+	 */
+	if (opcycles == OPCY_NONE) { opcycles  =  CYCL_NONE; } else
+	if (opcycles  & OPCY_NONE) { opcycles |= (CYCL_NONE | 0x3F00); }
 }
 
 /*

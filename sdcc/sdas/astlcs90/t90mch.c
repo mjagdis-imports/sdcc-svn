@@ -41,7 +41,7 @@ char *cpu = "Toshiba TLCS90 Series";
 char *dsft = "asm";
 
 /*
- * Opcode Cycle Definitions (not yet)
+ * Opcode Cycle Definitions
  */
 #define OPCY_SDP        ((char) (0xFF))
 #define OPCY_ERR        ((char) (0xFE))
@@ -449,6 +449,12 @@ machine(struct mne *mp)
   int op, t1, t2, t3;
   struct expr e1, e2;
   int rf, v1, v2, v3;
+
+	/*
+	 * Using Internal Format
+	 * For Cycle Counting
+	 */
+	opcycles = OPCY_NONE;
 
   clrexpr(&e1);
   clrexpr(&e2);
@@ -1998,6 +2004,11 @@ machine(struct mne *mp)
           }
         }
     }
+	/*
+	 * Translate To External Format
+	 */
+	if (opcycles == OPCY_NONE) { opcycles  =  CYCL_NONE; } else
+	if (opcycles  & OPCY_NONE) { opcycles |= (CYCL_NONE | 0x3F00); }
 }
 
 /*
@@ -2006,13 +2017,11 @@ machine(struct mne *mp)
 int
 mchpcr(struct expr *esp)
 {
-  if (esp->e_base.e_ap == dot.s_area)
-    {
+  if (esp->e_base.e_ap == dot.s_area) {
       return(1);
     }
 
-  if (esp->e_flag==0 && esp->e_base.e_ap==NULL)
-    {
+  if (esp->e_flag==0 && esp->e_base.e_ap==NULL) {
       /*
        * Absolute Destination
        *

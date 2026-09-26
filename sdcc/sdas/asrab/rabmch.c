@@ -83,6 +83,12 @@ machine(struct mne *mp)
 	int rf, v1, v2;
         struct expr *ep;
 
+	/*
+	 * Using Internal Format
+	 * For Cycle Counting
+	 */
+	opcycles = OPCY_NONE;
+
 	clrexpr(&e1);
 	clrexpr(&e2);
 	op = (int) mp->m_valu;
@@ -1663,6 +1669,11 @@ machine(struct mne *mp)
 		xerr('o', "Internal Opcode Error.");
 		break;
 	}
+	/*
+	 * Translate To External Format
+	 */
+	if (opcycles == OPCY_NONE) { opcycles  =  CYCL_NONE; } else
+	if (opcycles  & OPCY_NONE) { opcycles |= (CYCL_NONE | 0x3F00); }
 }
 
 /*
