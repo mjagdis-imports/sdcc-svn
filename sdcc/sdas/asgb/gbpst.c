@@ -44,6 +44,7 @@ struct	area	area[2] = {
     {	NULL,		&bank[0],	"_CODE",	0,	0,	0,	A_1BYTE|A_BNK|A_CSEG	},
     {	&area[0],	&bank[1],	"_DATA",	1,	0,	0,	A_1BYTE|A_BNK|A_DSEG	}
 };
+#endif
 
 /*
  * Basic Relocation Mode Definition
@@ -90,7 +91,6 @@ struct	mode	*modep[16] = {
 	NULL,		NULL,		NULL,		NULL,
 	NULL,		NULL,		NULL,		NULL
 };
-#endif
 
 /*
  * Mnemonic Structure

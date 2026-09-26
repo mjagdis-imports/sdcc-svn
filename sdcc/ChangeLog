@@ -30,6 +30,18 @@
 	  sdas/asxxsrc/asxxxx.h,
 	  sdas/asz80/z80mch.c:
 	  Final OPCY_* changes from upstream asxxxx.
+	* sdas/as6500/r65pst.c,
+	  sdas/as6808/m08pst.c,
+	  sdas/as8051/i51pst.c,
+	  sdas/asgb/gbpst.c,
+	  sdas/aspdk13/pdk13pst.c,
+	  sdas/aspdk14/pdk14pst.c,
+	  sdas/aspdk15/pdk15pst.c,
+	  sdas/aspdk16/pdk16pst.c,
+	  sdas/asrab/rabpst.c,
+	  sdas/astlcs90/t90pst.c,
+	  sdas/asz80/z80pst.c:
+	  Initial relocation mode changes from upstream asxxxx.
 
 2026-09-25 Philipp Klaus Krause <philipp@colecovision.eu>
 

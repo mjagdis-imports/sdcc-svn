@@ -46,6 +46,7 @@ struct	area	area[2] = {
     {	NULL,		&bank[0],	"_CODE",	0,	0,	0,	A_1BYTE|A_BNK|A_CSEG	},
     {	&area[0],	&bank[1],	"_DATA",	1,	0,	0,	A_1BYTE|A_BNK|A_DSEG	}
 };
+#endif
 
 /*
  * Basic Relocation Mode Definition
@@ -58,7 +59,40 @@ char	mode0[32] = {	/* R_NORM */
 	'\220',	'\221',	'\222',	'\223',	'\224',	'\225',	'\226',	'\227',
 	'\230',	'\231',	'\232',	'\233',	'\234',	'\235',	'\236',	'\237'
 };
-#endif
+
+/*
+ * Additional Relocation Mode Definitions
+ */
+
+/* None Required */
+
+/*
+ *     *m_def is a pointer to the bit relocation definition.
+ *	m_flag indicates that bit position swapping is required.
+ *	m_dbits contains the active bit positions for the output.
+ *	m_sbits contains the active bit positions for the input.
+ *
+ *	struct	mode
+ *	{
+ *		char *	m_def;		Bit Relocation Definition
+ *		a_uint	m_flag;		Bit Swapping Flag
+ *		a_uint	m_dbits;	Destination Bit Mask
+ *		a_uint	m_sbits;	Source Bit Mask
+ *	};
+ */
+struct	mode	mode[1] = {
+    {	&mode0[0],	0,	0x0000FFFF,	0x0000FFFF	}
+};
+
+/*
+ * Array of Pointers to mode Structures
+ */
+struct	mode	*modep[16] = {
+	&mode[0],	NULL,		NULL,		NULL,
+	NULL,		NULL,		NULL,		NULL,
+	NULL,		NULL,		NULL,		NULL,
+	NULL,		NULL,		NULL,		NULL
+};
 
 /*
  * Mnemonic Structure

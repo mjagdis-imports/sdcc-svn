@@ -32,6 +32,59 @@
 #include "i8051.h"
 
 /*
+ * Basic Relocation Mode Definitions
+ *
+ *	#define		R_NORM	0000		No Bit Positioning
+ */
+char	mode0[32] = {	/* R_NORM */
+	'\200',	'\201',	'\202',	'\203',	'\204',	'\205',	'\206',	'\207',
+	'\210',	'\211',	'\212',	'\213',	'\214',	'\215',	'\216',	'\217',
+	'\220',	'\221',	'\222',	'\223',	'\224',	'\225',	'\226',	'\227',
+	'\230',	'\231',	'\232',	'\233',	'\234',	'\235',	'\236',	'\237'
+};
+
+/*
+ * Additional Relocation Mode Definitions
+ *
+ * Specification for the 11-bit 8051 addressing mode:
+ */
+char mode1[32] = {	/* R_J11 */
+	'\200',	'\201',	'\202',	'\203',	'\204',	'\205',	'\206',	'\207',
+	'\215',	'\216',	'\217',	'\013',	'\014',	'\015',	'\016',	'\017',
+	'\020',	'\021',	'\022',	'\023',	'\024',	'\025',	'\026',	'\027',
+	'\030',	'\031',	'\032',	'\033',	'\034',	'\035',	'\036',	'\037'
+};
+
+/*
+ *     *m_def is a pointer to the bit relocation definition.
+ *	m_flag indicates that bit position swapping is required.
+ *	m_dbits contains the active bit positions for the output.
+ *	m_sbits contains the active bit positions for the input.
+ *
+ *	struct	mode
+ *	{
+ *		char *	m_def;		Bit Relocation Definition
+ *		a_uint	m_flag;		Bit Swapping Flag
+ *		a_uint	m_dbits;	Destination Bit Mask
+ *		a_uint	m_sbits;	Source Bit Mask
+ *	};
+ */
+struct	mode	mode[2] = {
+    {	&mode0[0],	0,	0x0000FFFF,	0x0000FFFF	},
+    {	&mode1[0],	1,	0x0000E0FF,	0x000007FF	}
+};
+
+/*
+ * Array of Pointers to mode Structures
+ */
+struct	mode	*modep[16] = {
+	&mode[0],	&mode[1],	NULL,		NULL,
+	NULL,		NULL,		NULL,		NULL,
+	NULL,		NULL,		NULL,		NULL,
+	NULL,		NULL,		NULL,		NULL
+};
+
+/*
  * Mnemonic Structure
  */
 struct	mne	mne[] = {
