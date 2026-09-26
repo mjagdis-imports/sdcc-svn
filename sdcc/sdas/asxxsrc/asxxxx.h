@@ -225,10 +225,10 @@
 #define	CYCNT_END	']'	/* Cycle count end   delimiter */
 
 /*
- * OPCY_NONE bit set signifies no opcode cycles set.
+ * CYCL_NONE bit set signifies no opcode cycles set.
  */
-#define OPCY_NONE       ((char) 0x80)   /* Opcode Cycle Count Not Set */
-#define OPCY_MASK       ((char) 0x7F)   /* Opcode Cycle Count MASK */
+#define	CYCL_NONE	0x4000	/* Opcode Cycle Count Not Set */
+#define	CYCL_MASK	0x3FFF	/* Opcode Cycle Count MASK */
 
 /*
  * Default Page Length Mask

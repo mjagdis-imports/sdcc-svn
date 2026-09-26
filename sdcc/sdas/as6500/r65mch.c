@@ -56,8 +56,8 @@ int huc6280;
 #define	OPCY_65C00	((char) (0xFB))
 #define	OPCY_65C02	((char) (0xFA))
 
-/*	OPCY_NONE	((char) (0x80))	*/
-/*	OPCY_MASK	((char) (0x7F))	*/
+#define	OPCY_NONE	((char) (0x80))
+#define	OPCY_MASK	((char) (0x7F))
 
 #define	UN	((char) (OPCY_NONE | 0x00))
 

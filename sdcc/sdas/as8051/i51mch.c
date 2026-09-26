@@ -43,8 +43,8 @@ char	*dsft	= "asm";
 #define	OPCY_SDP	((char) (0xFF))
 #define	OPCY_ERR	((char) (0xFE))
 
-/*	OPCY_NONE	((char) (0x80)) */
-/*	OPCY_MASK	((char) (0x7F)) */
+#define	OPCY_NONE	((char) (0x80))
+#define	OPCY_MASK	((char) (0x7F))
 
 #define	UN	((char) (OPCY_NONE | 0x00))
 
@@ -80,9 +80,14 @@ static char i51pg1[256] = {
 void
 machine(struct mne *mp)
 {
-	a_uint op;
-	int t, t1, v1;
+	int op, t, t1, v1;
 	struct expr e, e1;
+
+	/*
+	 * Using Internal Format
+	 * For Cycle Counting
+	 */
+	opcycles = OPCY_NONE;
 
 	clrexpr(&e);
 	clrexpr(&e1);
@@ -100,7 +105,7 @@ machine(struct mne *mp)
 		 * Top 3 bits become the MSBs of the op-code.
 		 */
 		expr(&e);
-		outrwm(&e, R_J11, op);
+		outrwm(&e, R_J11, op << 8);
 		break;
 
 	case S_JMP16:
@@ -734,6 +739,11 @@ machine(struct mne *mp)
 	if (opcycles == OPCY_NONE) {
 		opcycles = i51pg1[cb[0] & 0xFF];
 	}
+ 	/*
+	 * Translate To External Format
+	 */
+	if (opcycles == OPCY_NONE) { opcycles  =  CYCL_NONE; } else
+	if (opcycles  & OPCY_NONE) { opcycles |= (CYCL_NONE | 0x3F00); }
 }
 
 /*

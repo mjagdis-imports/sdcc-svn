@@ -596,7 +596,7 @@ list(void)
 	/*
          * If we list cycles, decrease max. bytes on first line.
 	 */
-        nl = (!cflag && !(opcycles & OPCY_NONE) && (listing & LIST_CYC)) ? (n-1) : n;
+        nl = (!cflag && !(opcycles & CYCL_NONE) && (listing & LIST_CYC)) ? (n-1) : n;
 
 	/*
          * First line of output for this source line with data.
@@ -708,7 +708,7 @@ list1(char *wp, int *wpt, int nb, int n, int f, int g)
 	/*
          * If we list cycles, put them out, first line only
 	 */
-        if (f && (g & LIST_CYC) && !cflag && !(opcycles & OPCY_NONE)) {
+        if (f && (g & LIST_CYC) && !cflag && !(opcycles & CYCL_NONE)) {
                 fprintf(lfp, "%s%c%2d%c",
                         (xflag != 0) ? " " : "", CYCNT_BGN, opcycles, CYCNT_END);
 	} else

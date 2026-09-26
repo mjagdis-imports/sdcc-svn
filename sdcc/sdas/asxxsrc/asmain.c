@@ -1,7 +1,7 @@
 /* asmain.c */
 
 /*
- *  Copyright (C) 1989-2025  Alan R. Baldwin
+ *  Copyright (C) 1989-2026  Alan R. Baldwin
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -638,7 +638,7 @@ main(int argc, char *argv[])
 				fprintf(ofp, "%s\n", ip );
 			}
 
-                        opcycles = OPCY_NONE;
+                        opcycles = CYCL_NONE;
 			if (setjmp(jump_env) == 0)
 				asmbl();
 			if (pass == 2) {
