@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # dcf.sh - Distributed Compile Farm Mediator
 #
@@ -23,7 +23,7 @@
 #  3. This notice may not be removed or altered from any source distribution.
 
 LOG_LINES=1000  # max number of lines in the log file
-BWLIMIT=21      # bandwith limit in KiB for rsync
+#BWLIMIT=21      # bandwith limit in KiB for rsync
 
 ETC_DIR=$HOME/etc
 LOG_DIR=$HOME/log
@@ -45,6 +45,7 @@ FRSHOST=frs.sourceforge.net
 FRSUSER=$WEBUSER
 FRSDIR=/home/frs/project/sdcc/snapshot_builds
 
+DEBUG=defined
 
 # debugging: print
 debug_print ()
@@ -93,6 +94,7 @@ tree ()
 {
   local old_ifs files line file type subdir
 
+  sleep 30
   files=$(echo "ls -lt" | sftp -b- "$1@$2:$3/$4" | sed -e '/^sftp> /d')
   old_ifs=$IFS
   IFS='
@@ -129,6 +131,7 @@ rm_list ()
 {
   local file
 
+  pwd
   for file in $*
   do
     if test -d $file
@@ -178,10 +181,13 @@ rm_old_versions ()
 
   for i in ${FRSDIR}
   do    
+    sleep 30
     for j in $(echo "ls -1t $i" | sftp -b- ${FRSUSER}@${FRSHOST} | sed -e '/^sftp> /d')
     do    
+      sleep 30
       for k in $(echo "ls -1t $j" | sftp -b- ${FRSUSER}@${FRSHOST} | sed -e '/^sftp> /d' | sed -e '1,7d')
       do
+        sleep 30
         if [ -n "$k" ]; then echo "removing $k"; echo "rm $k" | sftp -b- ${FRSUSER}@${FRSHOST}; fi
       done
     done
@@ -189,17 +195,22 @@ rm_old_versions ()
 
   for i in ${WEBHTDOCSDIR}/regression_test_results
   do    
+    sleep 30
     for j in $(echo "ls -1t $i" | sftp -b- ${WEBUSER}@${WEBHOST} | sed -e '/^sftp> /d')
     do    
+      sleep 30
       for k in $(echo "ls -1t $j" | sftp -b- ${WEBUSER}@${WEBHOST} | sed -e '/^sftp> /d' | sed -e '1,14d')
       do
+        sleep 30
         if [ -n "$k" ]; then echo "removing $k"; echo "rm $k" | sftp -b- ${WEBUSER}@${WEBHOST}; fi
       done
     done
   done
 
+  sleep 30
   for k in $(echo "ls -1t ${WEBHTDOCSDIR}/changelog_heads" | sftp -b- ${WEBUSER}@${WEBHOST} | sed -e '/^sftp> /d' | sed -e '1,7d')
   do
+    sleep 30
     if [ -n "$k" ]; then echo "removing $k"; echo "rm $k" | sftp -b- ${WEBUSER}@${WEBHOST}; fi
   done
 }
@@ -211,11 +222,33 @@ cleanup ()
   rm -f $DCF_LOCK
 }
 
+# check if a transfer might be pending completion
+notpending_dir ()
+# $1: source directory to sync
+{
+  local ret=1 excl file_list
+
+  if test -d $1 && pushd $1 > /dev/null
+  then
+    file_list=$(find * -mmin -10 -print 2>/dev/null)
+    if test -n "${file_list}"
+    then
+      ret=1
+    else
+      ret=0
+    fi
+    popd > /dev/null
+  fi
+
+  return $ret
+}
+
+
 
 # synchronise directory
 sync_dir ()
 # $1: source directory to sync
-# $2: traget machine/directory to sync
+# $2: target machine/directory to sync
 # $3: exclude source directories from sync
 {
   local ret=1 excl file_list
@@ -246,8 +279,12 @@ sync_dir ()
       debug_print "current directory: $(pwd)"
       debug_exec rsync $RSYNC_OPTS --relative --recursive --include='*.exe' ${excl} -e ssh --size-only * $2 2>&1 | grep -v -e "skipping directory"
 
-      echo "=== removing..."
-      rm_list ${file_list}
+      if [ "${PIPESTATUS[0]}" != "0" ]; then
+        echo "=== rsync failed, so preserve files for later"
+      else
+        echo "=== removing..."
+        rm_list ${file_list}
+      fi
 
       echo "=== removing old versions..."
       rm_old_versions
@@ -268,7 +305,7 @@ sync_dir ()
 
   if test -e ${DCF_BUILDER_LIST_FILE}
   then
-    lockfile -r 0 ${DCF_LOCK} || exit 1
+    lockfile -r 0 -l 86400 ${DCF_LOCK} || exit 1
 
     test "${BWLIMIT}" != "" && RSYNC_OPTS="${RSYNC_OPTS} --bwlimit=${BWLIMIT}"
 
@@ -280,16 +317,22 @@ sync_dir ()
         export builder
         export TREE_FILE
         (
+          #echo Processing ${builder}
           builder=$(echo ${builder} | sed -e "s/^\(.*\)#.*$/\1/" -e "s/[ \t]*$//")
           if test ! -z "${builder}"
           then
-            if sync_dir "/home/${builder}/htdocs/snapshots" ${FRSUSER}@${FRSHOST}:${FRSDIR}/
+            if notpending_dir "/home/${builder}/htdocs"
             then
-              if test ! -e ${TREE_FILE}
+              if sync_dir "/home/${builder}/htdocs/snapshots" ${FRSUSER}@${FRSHOST}:${FRSDIR}/
               then
-                tree ${FRSUSER} ${FRSHOST} ${FRSDIR} > ${TREE_FILE}
+                if test ! -e ${TREE_FILE}
+                then
+                  tree ${FRSUSER} ${FRSHOST} ${FRSDIR} > ${TREE_FILE}
+                fi
+                sync_dir "/home/${builder}/htdocs" ${WEBUSER}@${WEBHOST}:${WEBHTDOCSDIR}/ "snapshots"
               fi
-              sync_dir "/home/${builder}/htdocs" ${WEBUSER}@${WEBHOST}:${WEBHTDOCSDIR}/ "snapshots"
+            else
+              echo "${builder} pending, not syncing now"
             fi
           fi
         )
@@ -299,6 +342,7 @@ sync_dir ()
     if test -e ${TREE_FILE}
     then
       # upload the new version of ${TREE_FILE}, needed by snap.php to create sdcc snapshots web page
+      sleep 30
       echo "put ${TREE_FILE} ${WEBHTDOCSDIR}/$(basename ${TREE_FILE})" | sftp -b- ${WEBUSER}@${WEBHOST}
     fi
   fi
