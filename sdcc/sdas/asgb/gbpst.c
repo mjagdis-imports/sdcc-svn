@@ -123,8 +123,8 @@ struct	mne	mne[] = {
     {	NULL,	".include",	S_INCL,		0,	I_CODE	},
     {	NULL,	".incbin",	S_INCL,		0,	I_BNRY	},
     {	NULL,	".area",	S_AREA,		0,	0	},
-    {	NULL,	".psharea",	S_AREA,		0,	O_PSH	},	
-    {	NULL,	".poparea",	S_AREA,		0,	O_POP	},	
+    {	NULL,	".psharea",	S_AREA,		0,	O_PSH	},
+    {	NULL,	".poparea",	S_AREA,		0,	O_POP	},
 /*    {	NULL,	".bank",	S_BANK,		0,	0	},	*/
     {	NULL,	".org",		S_ORG,		0,	0	},
     {	NULL,	".radix",	S_RADIX,	0,	0	},
@@ -242,6 +242,8 @@ struct	mne	mne[] = {
     {	NULL,	".mdelete",	S_MACRO,	0,	O_MDEL	},
 
 	/* Gameboy, a modified Z80 */
+
+    {	NULL,	".setpg",	S_SPG,		0,	0	},
     {	NULL,	".tile",	S_TILE,		0,	0	},
 
     {	NULL,	"ld",		S_LD,		0,	0x40	},
@@ -259,17 +261,16 @@ struct	mne	mne[] = {
     {	NULL,	"dec",		S_DEC,		0,	0x05	},
 
     {	NULL,	"add",		S_ADD,		0,	0x80	},
-    {   NULL,   "adc",          S_ADC,          0,      0x88    },
-    {   NULL,   "sub",          S_SUB,          0,      0x90    },
-    {   NULL,   "sbc",          S_SBC,          0,      0x98    },
+    {	NULL,	"adc",		S_ACC,		0,	0x88	},
+    {	NULL,	"sub",		S_ACC,		0,	0x90	},
+    {	NULL,	"sbc",		S_ACC,		0,	0x98	},
+    {	NULL,	"and",		S_ACC,		0,	0xA0	},
+    {	NULL,	"xor",		S_ACC,		0,	0xA8	},
+    {	NULL,	"or",		S_ACC,		0,	0xB0	},
+    {	NULL,	"cp",		S_ACC,		0,	0xB8	},
 
-    {   NULL,   "and",          S_AND,          0,      0xA0    },
-    {   NULL,   "cp",           S_AND,          0,      0xB8    },
-    {   NULL,   "or",           S_AND,          0,      0xB0    },
-    {   NULL,   "xor",          S_AND,          0,      0xA8    },
-
-    {   NULL,   "push",         S_PUSH,         0,      0xC5    },
-    {   NULL,   "pop",          S_PUSH,         0,      0xC1    },
+    {	NULL,	"push",		S_PTYP,		0,	0xC5	},
+    {	NULL,	"pop",		S_PTYP,		0,	0xC1	},
 
     {	NULL,	"rl",		S_RL,		0,	0x10	},
     {	NULL,	"rlc",		S_RL,		0,	0x00	},
@@ -285,19 +286,19 @@ struct	mne	mne[] = {
 
     {   NULL,   "ldh",          S_LDH,          0,      0xE0    },
 
-    {   NULL,   "ccf",          S_INH1,         0,      0x3F    },
-    {   NULL,   "cpl",          S_INH1,         0,      0x2F    },
-    {   NULL,   "daa",          S_INH1,         0,      0x27    },
-    {   NULL,   "di",           S_INH1,         0,      0xF3    },
-    {   NULL,   "ei",           S_INH1,         0,      0xFB    },
-    {   NULL,   "nop",          S_INH1,         0,      0x00    },
-    {   NULL,   "halt",         S_INH1,         0,      0x76    },
-    {   NULL,   "rla",          S_INH1,         0,      0x17    },
-    {   NULL,   "rlca",         S_INH1,         0,      0x07    },
-    {   NULL,   "rra",          S_INH1,         0,      0x1F    },
-    {   NULL,   "rrca",         S_INH1,         0,      0x0F    },
-    {   NULL,   "scf",          S_INH1,         0,      0x37    },
-    {   NULL,   "reti",         S_INH1,         0,      0xD9    },
+    {   NULL,   "ccf",          S_INH,         0,      0x3F    },
+    {   NULL,   "cpl",          S_INH,         0,      0x2F    },
+    {   NULL,   "daa",          S_INH,         0,      0x27    },
+    {   NULL,   "di",           S_INH,         0,      0xF3    },
+    {   NULL,   "ei",           S_INH,         0,      0xFB    },
+    {   NULL,   "nop",          S_INH,         0,      0x00    },
+    {   NULL,   "halt",         S_INH,         0,      0x76    },
+    {   NULL,   "rla",          S_INH,         0,      0x17    },
+    {   NULL,   "rlca",         S_INH,         0,      0x07    },
+    {   NULL,   "rra",          S_INH,         0,      0x1F    },
+    {   NULL,   "rrca",         S_INH,         0,      0x0F    },
+    {   NULL,   "scf",          S_INH,         0,      0x37    },
+    {   NULL,   "reti",         S_INH,         0,      0xD9    },
     {   NULL,   "lda",          S_LDA,          0,      0xE8    },
     {   NULL,   "ldhl",         S_LDHL,         0,      0x0F    },
     {   NULL,   "stop",         S_STOP,         S_EOL,  0x10    }

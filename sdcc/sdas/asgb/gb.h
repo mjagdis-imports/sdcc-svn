@@ -139,10 +139,11 @@
 #define	S_FLAG	36	/* Not Used By Game Boy */
 
 /*
- * Indexing modes
+ * Indirect Addressing Modes
  */
 #define	S_INDB	40	/* 8-Bit Base Index */
 #define	S_IDC	41	/* (C) */
+
 #define	S_INDR	50	/* 16-Bit Base Index */
 #define	S_IDBC	50	/* (BC) */
 #define	S_IDDE	51	/* (DE) */
@@ -167,20 +168,21 @@
 #define	S_INC	66
 #define	S_DEC	67
 #define	S_ADD	68
-#define	S_ADC	69
-#define	S_AND	70
-#define	S_PUSH	72
-#define	S_RL	75
-#define	S_RST	76
-#define	S_IM	77
-#define	S_INH1	78
-#define	S_SUB	81
-#define	S_SBC	82
-#define	S_STOP	83
-#define	S_LDH	84
-#define	S_LDA	92
+#define	S_ACC	69
+#define	S_PTYP	70
+#define	S_RL	71
+#define	S_RST	72
+#define	S_INH	73
+#define	S_STOP	74	/* Requires 2 bytes due to bug */
+/*
+ * Defined Instructions
+ */
+#define	S_IN	80	/* Loads from zero page */
+#define	S_OUT	81	/* Stores to zero page */
+#define	S_LDH	82	/* Load/Store to zero page */
+#define S_LDX	83	/* Loads which increment/decrement HL */
+#define	S_LDA	84	/* LDA arg  <<==  LD A,arg */
 #define S_LDHL	85	/* LDHL SP,offset  <<==  LD HL, SP+offset */
-
 /*
  * Machine Specific
  */

@@ -42,6 +42,11 @@
 	  sdas/astlcs90/t90pst.c,
 	  sdas/asz80/z80pst.c:
 	  Initial relocation mode changes from upstream asxxxx.
+	* sdas/asgb/gb.h,
+	  sdas/asgb/gbmch.c,
+	  sdas/asgb/gbpst.c:
+	  Update asgb opcode handling from upstream asxxxx.
+
 
 2026-09-25 Philipp Klaus Krause <philipp@colecovision.eu>
 

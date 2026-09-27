@@ -120,7 +120,7 @@ machine(struct mne *mp)
 	rf = mp->m_type;
 	switch (rf) {
 
-	case S_INH1:
+	case S_INH:
 		outab(op);
 		break;
 
@@ -136,7 +136,7 @@ machine(struct mne *mp)
 		}
 		break;
 
-        case S_PUSH:
+	case S_PTYP:
 		if (admode(R16X)) {
 			outab(op+0x30);
 			break;
@@ -155,17 +155,6 @@ machine(struct mne *mp)
 			v1 = 0;
 		}
 		outab(op|v1);
-		break;
-
-        case S_IM:
-		expr(&e1);
-		abscheck(&e1);
-		if (e1.e_addr > 2) {
-			xerr('a', "Valid values are 0 -> 2.");
-			e1.e_addr = 0;
-		}
-		outab(op);
-		outab(imtab[(int) e1.e_addr]);
 		break;
 
 	case S_BIT:
@@ -200,8 +189,7 @@ machine(struct mne *mp)
 
 	/* TODO: where is S_SWAP? */
 
-	case S_AND:
-	case S_SUB:
+	case S_ACC:
 		t1 = 0;
 		t2 = addr(&e2);
 		if (more()) {
@@ -213,27 +201,6 @@ machine(struct mne *mp)
 		}
 		if (genop(0, op, &e2, 1) || t1)
 			xerr('a', "Invalid Addressing Mode.");
-		break;
-
-	case S_ADC:
-	case S_SBC:
-		t1 = addr(&e1);
-		t2 = 0;
-		if (more()) {
-			comma(1);
-			t2 = addr(&e2);
-		}
-		if (t2 == 0) {
-			if (genop(0, op, &e1, 1))
-				xerr('a', "Invalid Addressing Mode.");
-			break;
-		}
-		if ((t1 == S_R8) && (e1.e_addr == A)) {
-			if (genop(0, op, &e2, 1))
-				xerr('a', "Invalid Addressing Mode.");
-			break;
-		}
-		xerr('a', "Invalid Addressing Mode.");
 		break;
 
 	case S_ADD:
