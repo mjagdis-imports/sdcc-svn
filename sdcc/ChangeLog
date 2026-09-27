@@ -1,3 +1,8 @@
+2026-09-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdas/asf8/f8mch.c:
+	  Fix assembly of sbcw (nn, z), bug #4082.
+
 2026-09-26 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* support/regression/MakeList:

@@ -341,7 +341,7 @@ machine(struct mne *mp)
 		if(!comma(rf != S_2OPWSBC && rf != S_2OPWADC)) { // Handle 1-op variants of sbcw and adcw
 			if (mchtyp == X_F8L)
 				aerr();
-			else if (rf == S_2OPWSBC && t2 == S_ZREL) {
+			else if (rf == S_2OPWSBC && t1 == S_ZREL) {
 				outab(0xa6);
 				outrw(&e1, R_USGN);
 				break;
