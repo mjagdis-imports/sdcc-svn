@@ -990,6 +990,8 @@ static void print_table_verilog(FILE *f, const uint8_t *table)
 
 static void print_table_tex(FILE *f, const uint8_t *table)
 {
+	const char *colors[] = {"Bisque1", "DarkSeaGreen1", "LemonChiffon1"};
+	fprintf(f, "%% Needs \\usepackage[x11names,table]{xcolor}\n");
 	fprintf(f, "\\begin{tabular}{l||c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c}\n");
 	fprintf(f, " &");
 	for(unsigned int i = 0; i < 16; i++)
@@ -998,9 +1000,10 @@ static void print_table_tex(FILE *f, const uint8_t *table)
 	{
 		if (!(i % 16))
 			fprintf(f, "%xx & ", i / 16);
-		fprintf(f, "%s %s", opcodenames_tex[table[i]], (i % 16 != 15) ? "& " : (i != 255) ? "\\\\\n\\hline\n" : "\n");
+		fprintf(f, "\\cellcolor{%s} %s %s", strlen( opcodenames_tex[table[i]]) ? colors[opcodenames_ucsim[table[i]].f8l] : "white", opcodenames_tex[table[i]], (i % 16 != 15) ? "& " : (i != 255) ? "\\\\\n\\hline\n" : "\n");
 	}
-	fprintf(f, "\\end{tabular}\n");
+	fprintf(f, "\\end{tabular}\n\n");
+	fprintf(f, "Green: f8 and f8l. Orange: f8 only. Yellow: f8 and f8l, but swap prefix f8 only.\n");
 }
 
 

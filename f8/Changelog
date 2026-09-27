@@ -1,3 +1,8 @@
+2026-09-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* opcodemaptest/opcodemaptool.cc:
+	  Improve LaTeX opcode table output (using color to indicate f8 vs. f8l support).
+
 2026-09-21 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* opcodemaptest/opcodemaptool.cc:
