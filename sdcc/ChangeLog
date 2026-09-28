@@ -13,6 +13,10 @@
 	* sdas/asxxsrc/asxxxx.h,
 	  sdas/linksrc/aslink.h:
 	  Change sdas specific area constants to avoid conflict with upstream asxxxx. 
+	* sdas/asxxsrc/asexpr.c,
+	  sdas/asxxsrc/asmain.c,
+	  sdas/asxxsrc/asxxxx.h:
+	  Update asexpr with changes from upstream asxxxx.
 
 2026-09-27 Philipp Klaus Krause <philipp@colecovision.eu>
 

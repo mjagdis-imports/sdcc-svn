@@ -218,6 +218,15 @@
 #define	T_INCL		2	/* Assembler Include File */
 #define	T_MACRO		3	/* Assembler Macro */
 
+#define TRC_ASM		0x02	/* Assembler Files */
+#define TRC_INC		0x04	/* Include Files */
+#define TRC_MCR		0x10	/* Macros */
+#define TRC_RPT		0x20	/* Macro Repeats */
+
+#define TRC_NONE	0x00	/* Debug None */
+#define TRC_ALL		0x37	/* Debug All */
+#define TRC_NOT		0x0100	/* Clear Flags To Complement */
+
 /*
  * Opcode Cycle definitions (Must Be The Same In ASxxxx / ASLink)
  */
@@ -887,9 +896,14 @@ struct	macrofp {
  *	narg	is the number of macro definition arguments
  *	bgnarg	is a pointer to the first definition argument string
  *	endarg	is a pointer to the last  definition argument string
+ *	darg    is the number of macro definition default values
+ *	bgndrg	is a pointer to the first definition default value string
+ *	enddrg	is a pointer to the last  definition default value string
  *	xarg	is the number of expansion arguments at macro invocation
  *	bgnxrg	is a pointer to the first expansion argument string
  *	endxrg	is a pointer to the last  expansion argument string
+ *	fname	is a pointer to the source file name
+ *	fline	is the source file line number of the macro
  */
 struct	mcrdef {
 	struct mcrdef *	next;		/* link to next macro definition */
@@ -902,9 +916,14 @@ struct	mcrdef {
 	int		narg;		/* number of macro definition arguments */
 	struct strlst * bgnarg;		/* link to first macro definition argument */
 	struct strlst * endarg;		/* link to last macro definition argument */
+	int		darg;		/* number of macro definition default values */
+	struct strlst * bgndrg;		/* link to first macro definition default value */
+	struct strlst * enddrg;		/* link to last macro definition default value */
 	int		xarg;		/* number of macro expansion arguments */
 	struct strlst * bgnxrg;		/* link to first macro expansion argument */
 	struct strlst * endxrg;		/* link to last macro expansion argument */
+	char *		fname;		/* pointer to the source file name */
+	int		fline;	        /* source file line number of macro */
 };
 
 /*
@@ -1388,8 +1407,11 @@ extern	int		digit(int c, int r);
 extern	void		expr(struct expr *esp);
 extern	void		exprx(struct expr *esp, int n);
 extern	void		exprmasks(int n);
+extern	void		exprscan(struct expr *esp, char *end, char *bgn);
+extern	void		exprsym(struct expr *esp, char *str);
 extern	int		is_abs(struct expr *esp);
 extern	int		is_digit(int c, int r);
+extern	struct sym *	newsym(char *str, char *id, struct area *ap, a_uint addr);
 extern	int		oprio(int c);
 extern	a_uint		rngchk(a_uint n);
 extern	void		term(struct expr *esp);
