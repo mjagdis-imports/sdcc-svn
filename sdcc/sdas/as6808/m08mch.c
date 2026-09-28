@@ -207,7 +207,6 @@ machine(struct mne *mp)
 {
 	int op, t1, t2, type;
 	struct expr e1, e2, e3;
-        a_uint espv;
 	struct sym *sp;
 	char id[NCPS];
 	int c, v1, v2, v3;
@@ -399,20 +398,18 @@ machine(struct mne *mp)
 
 	case S_TYP3:
 		t1 = addr(&e1);
-		espv = e1.e_addr;
 		if (t1 != S_IMMED)
 			xerr('a', "Require Immediate(#) For First Argument.");
 		comma(1);
 		t2 = addr(&e2);
 		if (t2 != S_DIR)
 			xerr('a', "Require Direct Mode For Second Argument.");
-		outab(op + 2*(espv&0x07));
+		outab(op + 2*(e1.e_addr&0x07));
 		outrb(&e2, R_PAG0);
 		break;
 
 	case S_TYP4:
 		t1 = addr(&e1);
-		espv = e1.e_addr;
 		if (t1 != S_IMMED)
 			xerr('a', "Require Immediate(#) For First Argument.");
 		comma(1);
@@ -421,7 +418,7 @@ machine(struct mne *mp)
 			xerr('a', "Require Direct Mode For Second Argument.");
 		comma(1);
 		expr(&e3);
-		outab(op + 2*(espv&0x07));
+		outab(op + 2*(e1.e_addr&0x07));
 		outrb(&e2, R_PAG0);
 		if (mchpcr(&e3, &v3, 1)) {
 			if ((v3 < -128) || (v3 > 127))

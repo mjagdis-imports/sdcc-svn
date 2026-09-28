@@ -307,26 +307,35 @@ struct	area
  *
  *	   7     6     5     4     3     2     1     0
  *	+-----+-----+-----+-----+-----+-----+-----+-----+
- *	| BIT |XDATA|DATA | PAG | ABS | OVR |     |     |
+ *	| BIT |XDATA|DATA | PAG | ABS | OVR | WL1 | WL0 |
  *	+-----+-----+-----+-----+-----+-----+-----+-----+
  */
 
-#define A_CON   0000            /* Concatenating */
-#define A_OVR   0004            /* Overlaying */
-#define A_REL   0000            /* Relocatable */
-#define A_ABS   0010            /* Absolute */
-#define A_NOPAG 0000            /* Non-Paged */
-#define A_PAG   0020            /* Paged */
+#define	A_BYTE	0x0000		/*  8 bit */
+#define	A_WORD	0x0001		/* 16 bit */
+
+#define A_1BYTE 0x0000		/* 1 Byte Word Length */
+#define A_2BYTE 0x0001		/* 2 Byte Word Length */
+#define A_3BYTE 0x0002		/* 3 Byte Word Length */
+#define A_4BYTE 0x0003		/* 4 Byte Word Length */
+#define	A_BYTES	0x0003		/* Word Length Mask */
+
+#define A_CON   0x0000          /* Concatenating */
+#define A_OVR   0x0004          /* Overlaying */
+#define A_REL   0x0000          /* Relocatable */
+#define A_ABS   0x0008          /* Absolute */
+#define A_NOPAG 0x0000          /* Non-Paged */
+#define A_PAG   0x0010          /* Paged */
 
 /* sdas specific */
 /* Additional flags for 8051 address spaces */
-#define A_DATA  0000            /* data space (default)*/
-#define A_CODE  0040            /* code space */
-#define A_XDATA 0100            /* external data space */
-#define A_BIT   0200            /* bit addressable space */
+#define A_DATA  0x0000          /* data space (default)*/
+#define A_CODE  0x0020          /* code space */
+#define A_XDATA 0x0040          /* external data space */
+#define A_BIT   0x0080          /* bit addressable space */
 
-#define A_NOLOAD  0400          /* nonloadable */
-#define A_LOAD  0000            /* loadable (default) */
+#define A_NOLOAD  0x0100        /* nonloadable */
+#define A_LOAD    0x0000        /* loadable (default) */
 /* end sdas specific */
 
 /*

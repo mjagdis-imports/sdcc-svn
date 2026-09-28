@@ -126,6 +126,12 @@ struct PreDef
 };
 extern struct PreDef preDef[];
 
+/*
+ * Extended Addressing Modes
+ */
+//#define	R_J11	0x0100		/* 11-Bit Addressing Mode */
+
+
 	/* machine dependent functions */
 
 	/* i51adr.c */

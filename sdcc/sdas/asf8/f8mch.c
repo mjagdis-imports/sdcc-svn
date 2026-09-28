@@ -172,10 +172,10 @@ static char *Page[5] = {
 void
 machine(struct mne *mp)
 {
+	int op, rf;
 	struct expr e1, e2, e3;
 	int t1, t2, t3;
 	int r1, r2, r3;
-	int op, rf;
 
 	/*
 	 * Using Internal Format
@@ -1302,7 +1302,7 @@ mchpcr(struct expr *esp)
 }
 
 /*
- * Machine specific initialization.
+ * Machine dependent initialization
  */
 void
 minit()

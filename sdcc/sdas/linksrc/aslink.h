@@ -270,7 +270,7 @@ extern	int	ASxxxx_VERSION;
  *
  *	   7     6     5     4     3     2     1     0
  *	+-----+-----+-----+-----+-----+-----+-----+-----+
- *	|     |     |     | PAG | ABS | OVR |     |     |
+ *	| BIT |XDATA|DATA | PAG | ABS | OVR |     |     |
  *	+-----+-----+-----+-----+-----+-----+-----+-----+
  */
 
@@ -283,14 +283,14 @@ extern	int	ASxxxx_VERSION;
 
 /* sdld specific */
 /* Additional flags for 8051 address spaces */
-#define A_DATA    0000          /* data space (default)*/
-#define A_CODE    0040          /* code space */
-#define A_XDATA   0100          /* external data space */
-#define A_BIT     0200          /* bit addressable space */
+#define A_DATA  0x0000          /* data space (default)*/
+#define A_CODE  0x0020          /* code space */
+#define A_XDATA 0x0040          /* external data space */
+#define A_BIT   0x0080          /* bit addressable space */
 
 /* Additional flags for hc08 */
-#define A_NOLOAD  0400          /* nonloadable */
-#define A_LOAD    0000          /* loadable (default) */
+#define A_NOLOAD  0x0100        /* nonloadable */
+#define A_LOAD    0x0000        /* loadable (default) */
 /* end sdld specific */
 
 /*

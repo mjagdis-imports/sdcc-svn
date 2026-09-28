@@ -1,3 +1,14 @@
+2026-09-27 Gabriele Gorla <gorlik@yahoo.com>
+
+	* sdas/as6808/m08mch.c,
+	  sdas/as8051/i8051.h,
+	  sdas/as8xcxxx/ds8.h,
+	  sdas/asf8/f8adr.c,
+	  sdas/asf8/f8mch.c,
+	  sdas/asxxsrc/asxxxx.h,
+	  sdas/linksrc/aslink.h:
+	  More relocation mode changes from upstream asxxxx.
+
 2026-09-27 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* sdas/asf8/f8mch.c:

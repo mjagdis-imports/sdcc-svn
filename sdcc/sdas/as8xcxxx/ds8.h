@@ -153,6 +153,8 @@ extern struct PreDef preDef[];
 /*
  * Extended Addressing Modes
  */
+//#define	R_J11	0x0100		/* 11-Bit Addressing Mode */
+//#define	R_J19	0x0200		/* 19-Bit Addressing Mode */
 
 /*
  * Assembler Types
