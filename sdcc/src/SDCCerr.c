@@ -789,6 +789,8 @@ struct
      "qualifier on return type has no effect", 0},
   {W_DATA_LOC_RANGE, ERROR_LEVEL_WARNING,
      "--data-loc (ZP location) should be between 1 and 240", 0},
+  {E_NEGATIVE_BITFLD_SIZE, ERROR_LEVEL_ERROR,
+     "negative bit-field size", 0 },
 };
 
 /* -------------------------------------------------------------------------------

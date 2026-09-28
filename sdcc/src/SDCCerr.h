@@ -390,10 +390,12 @@ enum {
   W_NONCONST_STRINGLIT          = 360, // string literal assigned to pointer to non-const
   W_QUALIFIED_RETURN            = 361, // qualifier on return type has no effect
   W_DATA_LOC_RANGE              = 362, // data location is likely out of range
+  E_NEGATIVE_BITFLD_SIZE        = 363, // negative bit-field size
+
   // If you get a merge conflict here, some #pragma disable_warning in support/valdiag and support/regression will likely need to be adapted to the resolution. Check there!
 
-  /* don't touch this! */
-  NUMBER_OF_ERROR_MESSAGES             /* Number of error messages */
+  // don't touch this!
+  NUMBER_OF_ERROR_MESSAGES             // Number of error messages
 };
 
 /** sdcc style assertion */

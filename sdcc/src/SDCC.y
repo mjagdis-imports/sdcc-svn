@@ -1066,7 +1066,9 @@ member_declarator
           unsigned int bitsize;
           $$ = newSymbol (genSymName(NestLevel), NestLevel);
           bitsize = (unsigned int) ulFromVal(constExprValue($2, true));
-          if (!bitsize)
+          if (floatFromVal (constExprValue($2, true)) < 0)
+              werror (E_NEGATIVE_BITFLD_SIZE);
+          else if (!bitsize)
               bitsize = BITVAR_PAD;
           $$->bitVar = bitsize;
           $$->bitUnnamed = 1;
@@ -1075,8 +1077,9 @@ member_declarator
         {
           unsigned int bitsize;
           bitsize = (unsigned int) ulFromVal(constExprValue($3, true));
-
-          if (!bitsize)
+          if (floatFromVal (constExprValue($3, true)) < 0)
+              werror (E_NEGATIVE_BITFLD_SIZE);
+          else if (!bitsize)
             {
               $$ = newSymbol (genSymName(NestLevel), NestLevel);
               $$->bitVar = BITVAR_PAD;
