@@ -791,6 +791,8 @@ struct
      "--data-loc (ZP location) should be between 1 and 240", 0},
   {E_NEGATIVE_BITFLD_SIZE, ERROR_LEVEL_ERROR,
      "negative bit-field size", 0 },
+  {E_SIZEOF_BITFLD, ERROR_LEVEL_ERROR,
+     "sizeof applied to bit-field", 0 },
 };
 
 /* -------------------------------------------------------------------------------

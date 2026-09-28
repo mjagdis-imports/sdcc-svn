@@ -5807,6 +5807,8 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
         dbuf_printf (&dbuf, "%d", size);
         if (!size && !IS_VOID (tree->right->ftype))
           werrorfl (tree->filename, tree->lineno, E_SIZEOF_INCOMPLETE_TYPE);
+        if (IS_BITFIELD (tree->right->ftype))
+          werror (E_SIZEOF_BITFLD);
         tree->type = EX_VALUE;
         tree->opval.val = constVal (dbuf_c_str (&dbuf));
         dbuf_destroy (&dbuf);
@@ -6456,6 +6458,8 @@ sizeofOp (sym_link *type)
   dbuf_printf (&dbuf, "%d", size = getSize (type));
   if (!size && !IS_VOID (type))
     werror (E_SIZEOF_INCOMPLETE_TYPE);
+  if (IS_BITFIELD (type))
+    werror (E_SIZEOF_BITFLD);
 
   /* now convert into value  */
   val = constVal (dbuf_c_str (&dbuf));

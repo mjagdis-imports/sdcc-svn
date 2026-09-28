@@ -2,6 +2,14 @@
 
 	* src/SDCCerr.h,
 	  src/SDCCerr.c,
+	  src/SDCCast.c,
+	  support/valdiag/tests/bug-4091.c:
+	  Fix bug #4091.
+
+2026-09-28 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCerr.h,
+	  src/SDCCerr.c,
 	  src/SDCC.y,
 	  support/valdiag/tests/bug-4095.c:
 	  Fix bug #4095.
