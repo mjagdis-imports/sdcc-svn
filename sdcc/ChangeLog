@@ -8,6 +8,8 @@
 	  sdas/asxxsrc/asxxxx.h,
 	  sdas/linksrc/aslink.h:
 	  More relocation mode changes from upstream asxxxx.
+	* sdas/as8xcxxx/ds8adr.c:
+	  Add fix order of '<', '>', and '#' from upstream asxxxx.
 
 2026-09-27 Philipp Klaus Krause <philipp@colecovision.eu>
 
