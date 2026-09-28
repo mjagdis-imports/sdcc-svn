@@ -236,6 +236,14 @@ list(void)
 	}
 
 	/*
+	 * Extra Cycle Digits
+	 */
+	if (cycldgts <= 2) { cycldgts = 2; } else
+	if (cycldgts >= 4) { cycldgts = 4; } else {
+		cycldgts = 3;
+	}
+
+	/*
 	 * Paging Control
 	 */
 	paging = !pflag && ((lnlist & LIST_PAG) || (uflag == 1)) ? 1 : 0;

@@ -1059,26 +1059,6 @@ outbuf(char *s)
 	relp = rel;
 }
 
-void
-outradix()
-{
-	if (pass < 2)
-		return;
-
-	/*
-	 * Output Radix
-	 */
-	if (xflag == 0) {
-		fprintf(ofp, "X%c%d\n", (int) hilo ? 'H' : 'L', a_bytes);
-	} else
-	if (xflag == 1) {
-		fprintf(ofp, "Q%c%d\n", (int) hilo ? 'H' : 'L', a_bytes);
-	} else
-	if (xflag == 2) {
-		fprintf(ofp, "D%c%d\n", (int) hilo ? 'H' : 'L', a_bytes);
-	}
-}
-
 /*)Function	void	outgsd(void)
  *
  *	The function outgsd() performs the following:
@@ -1147,18 +1127,19 @@ outgsd(void)
 		}
 	}
 
-        outradix();
-
 	/*
-         * Output number of areas and symbols
+	 * Output Radix and number of  areas and symbols
 	 */
 	if (xflag == 0) {
+		fprintf(ofp, "X%c%d\n", (int) hilo ? 'H' : 'L', a_bytes);
                 fprintf(ofp, "H %X areas %X global symbols\n", narea, nglob);
 	} else
 	if (xflag == 1) {
+		fprintf(ofp, "Q%c%d\n", (int) hilo ? 'H' : 'L', a_bytes);
                 fprintf(ofp, "H %o areas %o global symbols\n", narea, nglob);
 	} else
 	if (xflag == 2) {
+		fprintf(ofp, "D%c%d\n", (int) hilo ? 'H' : 'L', a_bytes);
                 fprintf(ofp, "H %u areas %u global symbols\n", narea, nglob);
 	}		
 
