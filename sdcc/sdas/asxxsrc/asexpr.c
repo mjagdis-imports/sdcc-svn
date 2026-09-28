@@ -582,8 +582,8 @@ binop(int c, struct expr *esp, struct expr *re)
 	/*
 	 * N-Bit Unsigned Arithmetic
 	 */
-	ae = esp->e_addr & a_mask;
-	ar = re->e_addr & a_mask;
+	ae = esp->e_addr;
+	ar = re->e_addr;
 
 	if (c == '+') {
 		/*

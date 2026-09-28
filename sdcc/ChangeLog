@@ -17,6 +17,8 @@
 	  sdas/asxxsrc/asmain.c,
 	  sdas/asxxsrc/asxxxx.h:
 	  Update asexpr with changes from upstream asxxxx.
+	* sdas/asxxsrc/asexpr.c:
+	  Revert change that makes __sfr16.c fail on mcs51.
 
 2026-09-27 Philipp Klaus Krause <philipp@colecovision.eu>
 
