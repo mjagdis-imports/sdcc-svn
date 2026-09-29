@@ -1088,6 +1088,16 @@ allocVariables (symbol *symChain)
       /* check the declaration */
       checkDecl (csym, 0);
 
+      /* An initializer requires a complete object type.  Reject an
+         incomplete structure or union before assigning it to a target
+         memory segment, where initializer emission cannot handle it. */
+      if (sym->ival && IS_STRUCT (csym->type) && !SPEC_STRUCT (csym->type)->fields)
+        {
+          werrorfl (sym->fileDef, sym->lineDef, E_UNKNOWN_SIZE, sym->name);
+          sym->ival = csym->ival = NULL;
+          continue;
+        }
+
       /* if this is a function or a pointer to a */
       /* function then do args processing        */
       if (funcInChain (csym->type))

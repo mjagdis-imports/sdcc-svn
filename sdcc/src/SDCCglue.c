@@ -1136,6 +1136,10 @@ printIvalStruct (symbol *sym, sym_link *type, initList *ilist, struct dbuf_s *oB
       iloop = ilist->init.deep;
     }
 
+  // An incomplete structure or union has no members to initialize. WE dont make this an assertion, since we might still reach here for such a struct / union after emitting the error message.
+  if (!sflds)
+    return;
+
   if (SPEC_STRUCT (type)->type == UNION)
     {
       int size;

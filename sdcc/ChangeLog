@@ -5,6 +5,10 @@
 	  src/SDCCsymt.c,
 	  support/valdiag/tests/bug-4098.c:
 	  Fix bug #4098, patch by Christopher Bazley.
+	* src/SDCCglue.c,
+	  src/SDCCmem.c,
+	  support/valdiag/tests/bug-4096.c:
+	  Fix bug #4096, patch by Christopher Bazley.
 
 2026-09-28 Gabriele Gorla <gorlik@yahoo.com>
 
