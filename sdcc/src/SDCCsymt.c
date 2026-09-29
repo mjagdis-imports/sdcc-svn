@@ -3779,6 +3779,13 @@ checkFunction (symbol * sym, symbol * csym)
   if (!sym->type->next)
     sym->type->next = sym->etype = newIntLink ();
 
+  /* a function with a non-void return type needs a complete return type */
+  if (IS_STRUCT (sym->type->next) && !SPEC_STRUCT (sym->type->next)->fields)
+    {
+      werrorfl (sym->fileDef, sym->lineDef, E_INCOMPLETE_RETURN, sym->name);
+      return 0;
+    }
+
   /* function cannot return aggregate */
   if ((TARGET_IS_DS390)  && IS_AGGREGATE (sym->type->next))
     {

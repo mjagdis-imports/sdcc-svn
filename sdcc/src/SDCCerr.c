@@ -793,6 +793,8 @@ struct
      "negative bit-field size", 0 },
   {E_SIZEOF_BITFLD, ERROR_LEVEL_ERROR,
      "sizeof applied to bit-field", 0 },
+  {E_INCOMPLETE_RETURN, ERROR_LEVEL_ERROR,
+     "function '%s' has incomplete return type", 0},
 };
 
 /* -------------------------------------------------------------------------------
