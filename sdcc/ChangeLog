@@ -12,6 +12,9 @@
 	* src/SDCCast.c,
 	  support/valdiag/tests/bug-4092.c:
 	  Fix bug #4092, inspired by patch by Christopher Bazley.
+	* src/SDCCopt.c,
+	  support/valdiag/tests/bug-4073.c:
+	  Fix bug #4073, patch by Christopher Bazley.
 
 2026-09-28 Gabriele Gorla <gorlik@yahoo.com>
 

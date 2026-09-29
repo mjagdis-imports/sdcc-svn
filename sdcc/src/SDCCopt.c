@@ -2411,6 +2411,13 @@ checkStaticArrayParams (ebbIndex *ebbi)
                   werrorfl (ic->filename, ic->lineno, W_ARRAY_PARAM_LENGTH);
               }
           }
+        else if (ic->op == PCALL)
+          {
+            const struct valinfo v = getOperandValinfo (ic, ic->left, false);
+            sym_link *type = operandType (ic->left);
+            if ((v.anything || !v.nonnull) && IS_PTR (type) && isOptional (type->next) && !ic->left->isOptionalEliminated)
+              werrorfl (ic->filename, ic->lineno, W_OPTIONAL_PTR_DEREF);
+          }
         else if (ic->op == GET_VALUE_AT_ADDRESS)
           {
             const struct valinfo v = getOperandValinfo (ic, ic->left, false);
