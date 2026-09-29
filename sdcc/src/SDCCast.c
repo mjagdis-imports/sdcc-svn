@@ -4071,13 +4071,15 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
 
       propagateConstExpr (&tree->right, resultType, reduceTypeAllowed);
 
+      // Check index against bounds, if we can.
       if (IS_LITERAL (RTYPE (tree)))
         {
           int arrayIndex = (int) ulFromVal (valFromType (RETYPE (tree)));
           int arraySize = DCL_ELEM (LTYPE (tree));
           int arrayLimit = findingAddressOf ? arraySize+1 : arraySize;
 
-          if (arraySize && arrayIndex >= arrayLimit)
+          if (arraySize && arrayIndex >= arrayLimit ||
+            IS_ARRAY (LTYPE (tree)) && floatFromVal (valFromType (RETYPE (tree))) < 0.0)
             {
               werrorfl (tree->filename, tree->lineno, W_IDX_OUT_OF_BOUNDS, arrayIndex, arraySize);
             }
