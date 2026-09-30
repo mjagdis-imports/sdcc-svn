@@ -3020,6 +3020,7 @@ type_name
               p->next = $1;
             }
           $$ = $2;
+          processFuncPtr ($$);
           ignoreTypedefType = 0;
         }
    ;

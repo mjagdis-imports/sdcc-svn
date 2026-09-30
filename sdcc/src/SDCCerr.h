@@ -393,6 +393,7 @@ enum {
   E_NEGATIVE_BITFLD_SIZE        = 363, // negative bit-field size
   E_SIZEOF_BITFLD               = 364, // sizeof applied to bit-field
   E_INCOMPLETE_RETURN           = 365, // function has incomplete return type
+  E_FUNC_RETURN                 = 366, // function '%s' has function return type
 
   // If you get a merge conflict here, some #pragma disable_warning in support/valdiag and support/regression will likely need to be adapted to the resolution. Check there!
 

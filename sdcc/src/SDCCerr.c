@@ -795,6 +795,8 @@ struct
      "sizeof applied to bit-field", 0 },
   {E_INCOMPLETE_RETURN, ERROR_LEVEL_ERROR,
      "function '%s' has incomplete return type", 0},
+  {E_FUNC_RETURN, ERROR_LEVEL_ERROR,
+     "function '%s' has function return type", 0},
 };
 
 /* -------------------------------------------------------------------------------

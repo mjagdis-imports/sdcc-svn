@@ -1,3 +1,12 @@
+2026-09-30 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCC.y,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCsymt.c,
+	  support/valdiag/tests/bug-4097.c:
+	  Fix bug #4097, patch by Christopher Bazley.
+
 2026-09-29 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCerr.c,

@@ -4075,6 +4075,15 @@ processFunc (symbol *func, sym_link *funcType)
   if (!funcType)
     return;
 
+  if (funcType->next && IS_FUNC (funcType->next))
+    {
+      if (func)
+        werrorfl (func->fileDef, func->lineDef, E_FUNC_RETURN, funcName);
+      else
+        werror (E_FUNC_RETURN, funcName);
+      funcType->next = newIntLink ();
+    }
+
   // Also do return type.
   if (funcType->next)
     {
