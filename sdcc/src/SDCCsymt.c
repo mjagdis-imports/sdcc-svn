@@ -4084,6 +4084,15 @@ processFunc (symbol *func, sym_link *funcType)
       funcType->next = newIntLink ();
     }
 
+  if (funcType->next && IS_ARRAY (funcType->next))
+    {
+      if (func)
+        werrorfl (func->fileDef, func->lineDef, E_FUNC_AGGR, funcName);
+      else
+        werror (E_FUNC_AGGR, funcName);
+      funcType->next = newIntLink ();
+    }
+
   // Also do return type.
   if (funcType->next)
     {
