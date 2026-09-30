@@ -275,6 +275,7 @@ z80MightReadFlag(const lineNode *pl, const char *what)
      (lineIsInst (pl, "bool") ||
      lineIsInst (pl, "ldf") ||
      lineIsInst (pl, "ldp") ||
+     lineIsInst (pl, "lret") ||
      lineIsInst (pl, "mul")))
     return false;
 
@@ -891,6 +892,7 @@ z80SurelyWritesFlag(const lineNode *pl, const char *what)
 
   // according to calling convention caller has to save flags
   if(lineIsInst (pl, "ret") ||
+     IS_RAB && lineIsInst (pl, "lret") ||
      lineIsInst (pl, "call"))
     return true;
 

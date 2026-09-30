@@ -7,6 +7,9 @@
 	  support/valdiag/tests/bug-4097.c,
 	  support/valdiag/tests/bug-4099.c:
 	  Fix bugs #4097 and #4099, patches by Christopher Bazley.
+	* src/z80/peep.c,
+	  support/regression/ports/ucr3ka-medium:
+	  Preparations for medium memory model for Rabbit ports.
 
 2026-09-29 Philipp Klaus Krause <philipp@colecovision.eu>
 
