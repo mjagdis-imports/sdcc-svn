@@ -56,7 +56,7 @@
  *		int	is_digit()
  *	struct	sym *	newsym()
  *		int	oprio()
- *		a_uint	rngchk()
+ *		int	rngchk()
  *		void	term()
  *
  *	asexpr.c contains no local/static variables
@@ -79,6 +79,8 @@
  *		char *	kp		temporary pointer
  *
  *	global variables:
+ *		char	ctype[]		array of character types, one per
+ *					ASCII character
  *		int	expr_radix	expr() radix value
  *		int	ignrerr		ignore errors flag
  *		char *	ip		pointer to next source character
@@ -86,7 +88,16 @@
  *		int	rprterr		report errors flag
  *
  *	functions called:
- *		void	exprx()		asexpr.c
+ *		void	binop()		asexpr.c
+ *		void	clrexpr()	asexpr.c
+ *		void	expr()		asexpr.c
+ *		void	exprscan()	asexpr.c
+ *		int	get()		aslex.c
+ *		int	getnb()		aslex.c
+ *		int	oprio()		asexpr.c
+ *		void	xerr()		assubr.c
+ *		void	term()		asexpr.c
+ *		void	unget()		aslex.c
  *
  *
  *	side effects:
@@ -793,6 +804,8 @@ absexpr(void)
  *		char *	jp		pointer to assembler-source text
  *		a_uint	n		constant evaluation running sum
  *		int	r		current evaluation radix
+ *		int	t		temporary radix flag & value
+ *		mne	mp		pointer to a mne structure
  *		sym *	sp		pointer to a sym structure
  *		tsym *	tp		pointer to a tsym structure
  *		int	v		current digit evaluation
@@ -807,7 +820,7 @@ absexpr(void)
  *		void	abscheck()	asexpr.c
  *		int	digit()		asexpr.c
  *		void	err()		assubr.c
- *		void	exprx()		asexpr.c
+ *		void	expr()		asexpr.c
  *		int	is_abs()	asexpr.c
  *		int	get()		aslex.c
  *		void	getid()		aslex.c
@@ -829,9 +842,10 @@ term(struct expr *esp)
 	int c, d;
 	const char *jp;
 	char id[NCPS];
+	struct mne  *mp;
 	struct sym  *sp;
 	struct tsym *tp;
-	int r;
+	int r, t;
 	a_uint n;
 
 	r = expr_radix;
@@ -853,6 +867,23 @@ term(struct expr *esp)
 			qerr();
 		return;
 	}
+	unget(c);
+
+	/*
+	 * If mchterm_ptr != NULL then a call to
+	 * the machine specific 'mchterm()' function
+	 * is made.  If the argument is processed
+	 * the return value is non zero and the
+	 * argument's value is returned in esp.
+  	 * If the argument is not used then a zero
+	 * is returned and the normal 'term()'
+	 * processing continues.
+	 */
+	if (*mchterm_ptr && ((*mchterm_ptr)(esp))) {
+		return;
+	}
+
+	c = getnb();
 	if (c == '-') {
 		exprx(esp, 100);
 		abscheck(esp);
@@ -1047,9 +1078,6 @@ term(struct expr *esp)
 				esp->e_base.e_sp = sp;
 				return;
 			}
-			/*
-			 * Otherwise it's an undefined symbol
-			 */
 			err('u');
 		} else {
 			esp->e_mode = sp->s_type;

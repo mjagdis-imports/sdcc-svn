@@ -53,6 +53,8 @@
  *
  *		H	Header 
  *		M	Module
+ *		G	Merge Mode
+ *		B	Bank
  *		A	Area
  *		S	Symbol
  *		T	Object code
@@ -86,7 +88,50 @@
  *	if the .module directive was not used in the source program.  
  *
  *
- *      (4)     Symbol Line
+ *	(4)	Merge Mode Line
+ *
+ *		G nn ii 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F
+ *
+ *	The mode structure contains the specification (or partial
+ *	specification) of one of the assemblers' merge modes.
+ *	Sixteen bits may be specified on a single line.
+ *	Each assembler must specify at least one merge mode.
+ *	The merging specification allows arbitrarily defined active
+ *	bits and bit positions.  The 32 element arrays are indexed
+ *	from 0 to 31.  Index 0 corresponds to bit 0, ..., and
+ *	31 corresponds to bit 31 of a normal integer value.
+ *
+ *	1.  nn is merge mode number
+ *
+ *	2.  ii is the beginning bit position of the following data
+ *
+ *	3.  00 ... merge mode bit elements
+ *
+ *		The value of the element specifies if the normal integer bit
+ *		is active (bit <7> is set, 0x80) and what destination bit
+ *		(bits <4:0>, 0 - 31) should be loaded with this normal
+ *		integer bit.
+ *
+ *
+ *	(5)	Bank Line
+ *
+ *		B string base nn size nn flags nn fsfx string
+ *
+ *	The B line defines a bank name as 'string'.  A bank is
+ *	a structure containing a collection of areas.
+ *	The bank is treated as a unique linking
+ *	structure seperate from other banks.  Each bank
+ *	can have a unique base address (starting address).  The
+ *	size specification may be used to signal the overflow of
+ *	the banks' allocated space.  The Linker combines all areas
+ *	included within a bank as seperate from other areas.  The
+ *	code from a bank may be output to a unique file by
+ *	specifying the File Suffix parameter (fsfx).  This allows
+ *	the seperation of multiple data and code segments into
+ *	isolated output files.
+ *	
+ *	
+ *	(6)	Symbol Line 
  *
  *		S string Defnnnn 
  *
@@ -101,21 +146,47 @@
  *	definition.  References to external symbols will have a value of
  *	zero.  
  *
+ *		S string =Rn^Z(expression)
  *
- *      (5)     Area Line
+ *	The symbol reference (=R) is a hidden symbol with a value
+ *	defined by an expression.  The n following the '=R' specifies
+ *	the current MSB selection of the assembler.  The value can be
+ *	1 for 16-bit arguments (upper byte),  1 or 2 for 24-bit
+ *	arguments (1 -> bits [15:8], 2 -> bits [23:16]) and
+ *	1, 2 or 3 for 32-bit arguments ( 1 -> bits [15:8],
+ *	2 -> bits [23:16], or 3 -> bits [31:24]).  The '^Z' is
+ *	the assemblers current radix and can be ^B (binary),
+ *	^O (octal), ^D (decimal), or ^X (hexadecimal).
+ *	The linker evaluates the complete argument ^Z(expression) to
+ *	determine the value for the symbol defined by 'string'.
+ *
+ *		S string =D nnnnn
+ *
+ *	The symbol defines (=D) a hidden symbol with a value of nnnnn
+ *	relative to the current area base address.  This construct is
+ *	used to pass local assembler symbol values to the linker for
+ *	evaluation in an expression.
+ *
+ *	Note:
+ *		The '=R' and '=D' symbols are hidden symbols and
+ *		are not global, they are present only to allow the
+ *		linker to process complex arguments.  These symbols
+ *		will not be listed in the assembler .sym file or in the
+ *		linker .map file.
+ *
+ *
+ *	(7)	Area Line 
  *
  *		A label size ss flags ff 
  *
  * 	The  area  line  defines the area label, the size (ss) of the
- *      area in bytes, and the area flags (ff).  The area flags
+ *	area in PC increments, and the area flags (ff).  The area flags
  *	specify the area properties:
  *
- *              OVR/CON (0x04/0x00 i.e.  bit position 2)
- *              ABS/REL (0x08/0x00 i.e.  bit position 3)
- *              PAG (0x10 i.e.  bit position 4)
+ *		OVR/CON (0x04/0x00 i.e.  bit position 2)
  *
  *
- *      (6)     T Line
+ *	(8)	T Line 
  *
  *		T xx xx nn nn nn nn nn ...  
  *
@@ -183,9 +254,7 @@
  *
  *
  *	asout.c contains the following functions:
- *              int     lobyte()
- *              int     hibyte()
- *              int     thrdbyte()
+ *		int	lobyte()
  *              int     frthbyte()
  *              void    out()
  *              void    outall()
@@ -196,8 +265,7 @@
  *              void    outdot()
  *              void    outgsd()
  *              void    outsym()
- *              void    outab()
- *              void    outaw()
+ *		void	outab()
  *              void    outa3b()
  *              void    outa4b()
  *              void    outaxb()
@@ -209,8 +277,7 @@
  *              void    out_lw()
  *              void    out_l3b()
  *              void    out_l4b()
- *              void    out_lxb()
- *              void    out_txb()
+ *		void	out_lxb()
  */
 
 /*)Function	void	outab(v)
@@ -229,7 +296,7 @@
  *		none
  *
  *	functions called:
- *              void    outaxb()        asout.c
+ *		void	outatxb()	asout.c
  *
  *	side effects:
  *		Absolute data is processed.
@@ -268,7 +335,7 @@ outa4b(a_uint v)
  *	assembled data in absolute format.
  *
  *	local variables:
- *              int p_bytes
+ *		int p_bytes
  *
  *	global variables:
  *		sym	dot		defined as sym[0]
@@ -364,7 +431,7 @@ write_rmode(int r, int n)
  *
  *	global variables:
  *		int	hilo		byte order
- *              char *  txtp            Pointer to T Line Values
+ *		char	*txtp		T line output pointer
  *
  *	functions called:
  *		int	lobyte()	asout.c
@@ -440,8 +507,8 @@ outrb(struct expr *esp, int r)
  *		sym	dot		defined as sym[0]
  *		int	oflag		-o, generate relocatable output flag
  *		int	pass		assembler pass number
- *              char *  relp            Pointer to R Line Values
- *              char *  txtp            Pointer to T Line Values
+ *		char *	relp		pointer to rel array
+ *		char *	txtp		pointer to txt array
  *		
  *	functions called:
  *		void	outchk()	asout.c
@@ -858,8 +925,8 @@ a_uint outmerge(a_uint esp, int r, a_uint base)
  *		int	a_bytes		T Line byte count
  *		int	oflag		-o, generate relocatable output flag
  *		int	pass		assembler pass number
- *              char *  relp            Pointer to R Line Values
- *              char *  txtp            Pointer to T Line Values
+ *		char *	relp		pointer to rel array
+ *		char *	txtp		pointer to txt array
  *
  *	functions called:
  *		void	outbuf()	asout.c
@@ -878,7 +945,7 @@ outdp(struct area *carea, struct expr *esp, int r)
 	a_uint n;
 
 	if (oflag && pass==2) {
-                outchk(HUGE, HUGE);
+		outchk(HUGE,HUGE);
 		out_txb(a_bytes,carea->a_ref);
 		out_txb(a_bytes,esp->e_addr);
 		if (esp->e_flag || esp->e_base.e_ap!=NULL) {
@@ -1066,9 +1133,9 @@ outbuf(char *s)
  *	(2)	outputs the header specifying the number
  *		of areas and global symbols
  *	(3)	outputs the module name
- *      (4)     set the reference number and output a symbol line
+ *	(6)	set the reference number and output a symbol line
  *		for all external global variables and absolutes
- *      (5)     output an area name, set reference number and output
+ *	(7)	output an area name, set reference number and output
  *		a symbol line for all global relocatables in the area.
  *		Repeat this proceedure for all areas.
  *
@@ -1593,13 +1660,11 @@ void
 out_lxb(int i, a_uint v, int t)
 {
 	if ((int) hilo) {
-                if (i >= 3) out_lb(thrdbyte(v),t ? t|R_HIGH : 0);
-                if (i >= 2) out_lb(hibyte(v),t);
+		if (i >= 3) out_lb(thrdbyte(v),t ? t|R_HIGH : 0);
 		if (i >= 1) out_lb(lobyte(v),t);
 	} else {
 		if (i >= 1) out_lb(lobyte(v),t);
-                if (i >= 2) out_lb(hibyte(v),t);
-                if (i >= 3) out_lb(thrdbyte(v),t ? t|R_HIGH : 0);
+		if (i >= 2) out_lb(hibyte(v),t);
 	}
 }
 
