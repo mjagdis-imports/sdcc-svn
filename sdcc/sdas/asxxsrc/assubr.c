@@ -1,7 +1,7 @@
 /* assubr.c */
 
 /*
- *  Copyright (C) 1989-2025  Alan R. Baldwin
+ *  Copyright (C) 1989-2026  Alan R. Baldwin
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -49,7 +49,7 @@
  *	The legacy function err() reports errors using
  *	the default error descriptions by calling xerr()
  *	with a NULL string.
-  *
+ *
  *	functions called:
  *		void	xerr()		assubr.c
  *
@@ -97,7 +97,14 @@ xerr(int c, char *str)
 {
 	char *p;
 
+	switch(c) {
+	case 'r':	rlerr++;
+	case 'z':       if (rlerr && ignrerr) return;
+	default:	break;
+	}
+
 	aserr++;
+
 	p = eb;
 	while (p < ep)
 		if (*p++ == c)
@@ -154,8 +161,8 @@ diag(void)
 			fprintf(fp, "%d", getlnm());
 			fprintf(fp, " of %s\n", afn);
 		}
-                p = eb;
-                while (p < ep) {
+		p = eb;
+		while (p < ep) {
                         if ((ex[(int) (p-eb)] != NULL) && (*ex[(int) (p-eb)] != 0)) {
                                 if (!is_sdas()) {
 					fprintf(fp, "              <%c> %s\n", *p, ex[(int) (p-eb)]);
@@ -214,7 +221,7 @@ warnBanner(void)
         fprintf(stderr, "%d", getlnm());
         fprintf(stderr, " of %s\n", afn);
         fprintf(stderr, "               ");
-}       
+}
 /* end sdas specific */
 
 /*)Functions:	void	aerr(void)

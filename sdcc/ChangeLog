@@ -6,6 +6,7 @@
 	  sdas/asxxsrc/aslist.c,
 	  sdas/asxxsrc/asmain.c,
 	  sdas/asxxsrc/asout.c,
+	  sdas/asxxsrc/assubr.c,
 	  sdas/asxxsrc/asxxxx.h,
 	  sdas/asxxsrc/asexpr.c:
 	  Merge some changes from upstream asxxxx into sdas.
