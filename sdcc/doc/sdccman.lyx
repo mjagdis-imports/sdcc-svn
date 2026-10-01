@@ -3317,6 +3317,11 @@ In 4.6.3,
  Assembled code is binary-incompatible with previous versions.
 \end_layout
 
+\begin_layout Itemize
+In 4.6.4,
+ the linker uses -a (instead of previously-used -b) to specify an area base address.
+\end_layout
+
 \begin_layout Section
 System Requirements
 \end_layout

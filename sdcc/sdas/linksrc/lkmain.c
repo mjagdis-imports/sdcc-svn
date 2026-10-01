@@ -110,7 +110,7 @@ void Areas51 (void)
  *
  *	The function main() evaluates the command line arguments to
  *	determine if the linker parameters are to input through 'stdin'
- *	or read from a command file.  The functiond nxtline() and parse()
+ *	or read from a command file.  The functions nxtline() and parse()
  *	are to input and evaluate the linker parameters.  The linking process
  *	proceeds by making the first pass through each .rel file in the order
  *      presented to the linker.  At the end of the first pass the setarea(),
@@ -187,7 +187,14 @@ void Areas51 (void)
 int
 main(int argc, char *argv[])
 {
-	int c, i, j, k;
+	char *p;
+	int c, i;
+	int j, k;
+
+	if (argc == 1) {
+		usage();
+		exit(ER_NONE);
+	}
 
 	if (intsiz() < 4) {
 		fprintf(stderr, "?ASlink-Error-Size of INT32 is not 32 bits or larger.\n\n");
@@ -226,6 +233,9 @@ main(int argc, char *argv[])
 				/*
 				 * Options with arguments
 				 */
+				case 'a':
+				case 'A':
+
 				case 'b':
 				case 'B':
 
@@ -254,6 +264,12 @@ main(int argc, char *argv[])
 				/*
 				 * Preprocess these commands
 				 */
+				case 'h':
+				case 'H':
+					usage();
+					lkexit(ER_NONE);
+					break;
+
 				case 'n':
 				case 'N':
 					pflag = 0;
@@ -317,6 +333,7 @@ main(int argc, char *argv[])
 		sfp = NULL;
 		filep = linkp->f_flp;
 		hp = NULL;
+		p_mask = DEFAULT_PMASK;
 		radix = 10;
 
                 /* sdld specific */
@@ -500,8 +517,9 @@ intsiz(void)
  *		FILE *	jfp		file handle for .noi
  *		FILE *	mfp		file handle for .map
  *		FILE *	rfp		file handle for .rst
- *              FILE *  sfp             file handle for .rel
+ *		FILE *	sfp		file handle for stdin
  *		FILE *	tfp		file handle for .lst
+ *		FILE *	hfp		file handle for .hlr
  *		FILE *	yfp		file handle for .cdb
  *
  *	functions called:
@@ -524,6 +542,7 @@ lkexit(int i)
 	if (rfp != NULL) fclose(rfp);
 	if (sfp != NULL) { if (sfp != stdin) fclose(sfp); }
 	if (tfp != NULL) fclose(tfp);
+	if (hfp != NULL) fclose(hfp);
 #if SDCDB
 	if (yfp != NULL) fclose(yfp);
 #endif
@@ -535,18 +554,19 @@ lkexit(int i)
  *	The function link() evaluates the directives for each line of
  *	text read from the .rel file(s).  The valid directives processed
  *	are:
- *              X, D, Q, H, G, B, M, A, S, T, R, and P.
+ *		X, D, Q, H, G, B, M, A, S, T, R, and P.
  *
  *	local variables:
  *		int	c		first non blank character of a line
  *
  *	global variables:
+ *		int	a_bytes		T Line address bytes
+ *		a_uint	a_mask		address mask
  *		head	*headp		The pointer to the first
  *				 	head structure of a linked list
+ *		int	hilo		Byte ordering
  *		head	*hp		Pointer to the current
  *				 	head structure
- *		int	a_bytes		T Line address bytes
- *		int	hilo		Byte ordering
  *		int	pass		linker pass number
  *		int	radix		current number conversion radix
  *
@@ -834,7 +854,8 @@ map(void)
 	 * List Linked Files
 	 */
 	newpag(mfp);
-        fprintf(mfp, "\nFiles Linked                              [ module(s) ]\n\n");
+	fprintf(mfp,
+"\nFiles Linked                              [ module(s) ]\n\n");
 	hdp = headp;
 	filep = linkp->f_flp;
 	while (filep) {
@@ -858,7 +879,8 @@ map(void)
 	 * List Linked Libraries
 	 */
 	if (lbfhead) {
-                fprintf(mfp, "\nLibraries Linked                          [ object file ]\n\n");
+		fprintf(mfp,
+"\nLibraries Linked                          [ object file ]\n\n");
 		for (lbfh=lbfhead; lbfh; lbfh=lbfh->next) {
                         if (strlen (lbfh->libspc) > 40)
                                 fprintf(mfp, "%s\n%40s  [ %-.32s ]\n",
@@ -892,6 +914,7 @@ map(void)
 			fprintf(mfp, "%s\n", gsp->g_strp);
 			gsp = gsp->g_globl;
 		}
+		fprintf(mfp, "\n");
 	}
 	fprintf(mfp, "\n\f");
 	chkbank(mfp);
@@ -922,9 +945,10 @@ map(void)
  *		int	pflag		print linker command file flag
  *		FILE *	stderr		c_library
  *		int	uflag		Relocated listing flag
- *		int	xflag		Map file radix type flag
  *		int	wflag		Wide listing format
- *              int     zflag           Enable symbol case sensitivity
+ *		int	xflag		Map file radix type flag
+ *		int	yflag		SDCC Debug output flag
+ *		int	zflag		Enable symbol case sensitivity
  *
  *	Functions called:
  *		void	addlib()	lklibr.c
@@ -962,11 +986,16 @@ parse()
 			while (ctype[c=get()] & LETTER) {
 				switch(c) {
 
-				case 'b':
-				case 'B':
-				/* this should move to case 'a' 'A' */
+				case 'a':
+				case 'A':
 					areasav();
 					return(0);
+#if 0 // Historically sdas -b was asxxx -a. Disable it for now (2026-10-01), so users get an error, and realize they need to update their scripts.
+				case 'b':
+				case 'B':
+					banksav();
+					return(0);
+#endif
 
 				case 'C':
                                         if (is_sdld() && !(TARGET_IS_Z80 || TARGET_IS_GB)) {
@@ -1002,8 +1031,10 @@ parse()
 						return(0);
 					}
 					unget(getnb());
-                                        if (*ip == 0)
-                                                usage(ER_FATAL);
+                                        if (*ip == 0) {
+                                                usage();
+                                                exit(ER_FATAL);
+                                        }
 					sv_type = startp->f_type;
 					startp->f_idp = strsto(ip);
 					startp->f_idx = fndidx(ip);
@@ -1021,6 +1052,10 @@ parse()
 				case 'G':
 					glblsav();
 					return(0);
+
+				case 'h':
+				case 'H':
+					break;
 
 				case 'I':
                                         if (is_sdld() && !(TARGET_IS_Z80 || TARGET_IS_GB)) {
@@ -1136,12 +1171,6 @@ parse()
 
 #if SDCDB
 				case 'Y':
-                                        if (TARGET_IS_8051) {
-                                                fprintf(stderr,
-                                                    "Warning: Treating -Y as -y\n");
-					}
-                                        // else fall through
-				case 'y':
 					yflag = 1;
 					break;
 #endif
@@ -1165,7 +1194,7 @@ parse()
                 if (!(ctype[c] & ILL)) {
 			if (linkp == NULL) {
 				linkp = (struct lfile *)
-                                        new (sizeof (struct lfile));
+						new (sizeof (struct lfile));
 				lfp = linkp;
 				lfp->f_type = F_OUT;
 			} else {
@@ -1244,6 +1273,75 @@ doparse(void)
 	startp->f_type = 0;
 }
 
+/*)Function	char *	filespec(p)
+ *
+ *		char *		p	pointer to option string
+ *
+ *	local variables:
+ *		int		opt	option character
+ *		int		pFile	index to beginning of p filename
+ *		char *		q	pointer into p string
+ *
+ *	global variables:
+ *		char *		outnam	Output Name String
+ *		char *		outext	Output Extension String
+ *
+ *	functions called:
+ *		lkexit()		lkmain.c
+ *		fndidx()		lkmain.c
+ *		fprintf()		c_library
+ *		strchr()		c_library
+ *		strlen()		c_library
+ *		strsto()		lksym.c
+ *
+ *	side effects:
+ *		evaluates an option for a file name and/or extension
+ *		and saves outnam/outext respectively
+ */
+char *filespec(char *p)
+{
+	int opt;
+	int pFile;
+	char *q;
+
+	if (*p == '+') {
+		opt = *(p-1);
+		/* Skip '+' */
+		++p;
+		/* Skip White Space */
+		while ((*p == ' ') || (*p == '\t')) p++;
+		/* Forms: -*+name. / -*+.ext / -*+name.ext */
+		pFile = fndidx(p);
+		if ((q = strchr(p + pFile, FSEPX)) != NULL) {
+			if ((p == q) && (*p == FSEPX)) {
+				if (*(++p)) {
+					outext = strsto(p);
+					p += strlen(p);
+				}
+			} else {
+				*q = '\0';
+				if (*p) {
+					outnam = strsto(p);
+					p += strlen(p);
+				}
+				if (*(++q)) {
+					outext = strsto(q);
+					p = q + strlen(q);
+				}
+			}
+		} else
+		/* Form -*+name */
+		if (*p != '\0') {
+			outnam = strsto(p);
+			p += strlen(p);
+		} else {
+			fprintf(stderr, "?ASlink-Error-Missing [name][.ext] After -%c+", opt);
+			lkexit(ER_FATAL);
+		}
+	}
+	return(p);
+}
+
 /*)Function	void	areasav(void)
  *
  *	The function areasav() creates a linked structure containing
@@ -1280,12 +1378,57 @@ areasav(void)
 		a_bsp = a_basep;
 	} else {
 		a_bsp->link = (struct base *)
-				new (sizeof (struct base));
+			new (sizeof (struct base));
 		a_bsp = a_bsp->link;
 	}
 	unget(getnb());
 	a_bsp->strp = (char *) new (strlen(ip)+1);
 	strcpy(a_bsp->strp, ip);
+}
+
+
+/*)Function	void	banksav(void)
+ *
+ *	The function banksav() creates a linked structure containing
+ *	the bank base address strings input to the linker.
+ *
+ *	local variables:
+ *		none
+ *
+ *	global variables:
+ *		base	*b_basep	The pointer to the first
+ *				 	area base structure
+ *		base	*b_bsp		Pointer to the current
+ *				 	area base structure
+ *		char	*ip		pointer into the REL file
+ *				 	text line in ib[]
+ *
+ *	 functions called:
+ *		int	getnb()		lklex.c
+ *		void *	new()		lksym.c
+ *		int	strlen()	c_library
+ *		char *	strcpy()	c_library
+ *		void	unget()		lklex.c
+ *
+ *	side effects:
+ *		The b_base structure is created.
+ */
+
+void
+banksav(void)
+{
+	if (b_basep == NULL) {
+		b_basep = (struct base *)
+			new (sizeof (struct base));
+		b_bsp = b_basep;
+	} else {
+		b_bsp->link = (struct base *)
+			new (sizeof (struct base));
+		b_bsp = b_bsp->link;
+	}
+	unget(getnb());
+	b_bsp->strp = (char *) new (strlen(ip)+1);
+	strcpy(b_bsp->strp, ip);
 }
 
 
@@ -1369,7 +1512,7 @@ glblsav(void)
 void
 setgbl(void)
 {
-	a_uint v;
+	int v;
 	struct sym *sp;
 	char id[NCPS];
 
@@ -1378,7 +1521,7 @@ setgbl(void)
 		ip = gsp->g_strp;
 		getid(id, -1);
 		if (getnb() == '=') {
-			v = expr(0);
+			v = (int) expr(0);
 			sp = lkpsym(id, 0);
 			if (sp == NULL) {
 				fprintf(stderr,
@@ -1395,7 +1538,7 @@ setgbl(void)
 				sp->s_type |= S_DEF;
 			}
 		} else {
-			fprintf(stderr, "?ASlink-Error-No '=' in global expression\n");
+			fprintf(stderr, "?ASlink-Error-No '=' in global expression");
 			lkerr++;
 		}
 		gsp = gsp->g_globl;
@@ -1454,7 +1597,7 @@ afile(char *fn, char *ft, int wf)
 	FILE *fp;
 
 	if (strlen(fn) > (FILSPC-7)) {
-                fprintf(stderr, "?ASlink-Error-<filspc too long> : \"%s\"\n", fn);
+		fprintf(stderr, "?ASlink-Error-<filspc to long> : \"%s\"\n", fn);
 		lkerr++;
 		return(NULL);
 	}
@@ -1494,7 +1637,7 @@ afile(char *fn, char *ft, int wf)
 	/*
 	 * Select (Binary) Read/Write
 	 */
-        switch(wf & 3) {
+	switch(wf & 3) {
 	default:
 	case 0:	frmt = "r";	break;
 	case 1:	frmt = "w";	break;
@@ -1694,34 +1837,35 @@ iramcheck()
 /* end sdld specific */
 
 char *usetxt[] = {
-	"Usage: [-Options] [-Option with arg] file",
-	"Usage: [-Options] [-Option with arg] outfile file1 [file2 ...]",
-        "Startup:",
+	"Usage: [-Options] [-Option with arg] file1 [file2 ...]",
+	"  -h   or NO ARGUMENTS  Show this help list",
 	"  -p   Echo commands to stdout (default)",
 	"  -n   No echo of commands to stdout",
 	"Alternates to Command Line Input:",
 	"  -c                   ASlink >> prompt input",
-        "  -f   file[.lk]       Command File input",
-        "Libraries:",
+	"  -f   file[.lnk]      Command File input",
+	"Librarys:",
 	"  -k   Library path specification, one per -k",
 	"  -l   Library file specification, one per -l",
 	"Relocation:",
-        "  -b   Area base address=expression",
-        "  -g   Global symbol=expression",
+	"  -a   Area base address=expression",
+	"  -b   Bank base address=expression (not yet available in sdas)",
+	"  -g   Global symbol=expression",
 	"Map format:",
-	"  -m   Map output generated as (out)file[.map]",
+	"  -m   Map output generated as file1[.map]",
+	"  -m1    Linker generated symbols included in file1[.map]",
 	"  -w   Wide listing format for map file",
 	"  -x   Hexadecimal (default)",
 	"  -d   Decimal",
 	"  -q   Octal",
 	"Output:",
-        "  -i   Intel Hex as (out)file[.ihx]",
-        "  -s   Motorola S Record as (out)file[.s19]",
+	"  -i   Intel Hex as (out)file[.ihx]",
+	"  -s   Motorola S Record as (out)file[.s19]",
 //      "  -t   Tandy CoCo Disk BASIC binary as (out)file[.bi-]",
 //      "  -o   Linked file/library object output enable (default)",
 //      "  -v   Linked file/library object output disable",
 #if NOICE
-	"  -j   NoICE Debug output as (out)file[.noi]",
+	"  -j   NoICE Debug output as file1[.noi]",
 #endif
 #if SDCDB
 	"  -y   SDCDB Debug output as (out)file[.cdb]",
@@ -1891,7 +2035,7 @@ char *usetxt_z80_gb[] = {
  */
 
 void
-usage(int n)
+usage(void)
 {
 	char	**dp;
 
@@ -1900,7 +2044,6 @@ usage(int n)
         for (dp = TARGET_IS_8051 ? usetxt_8051 : (TARGET_IS_6808 ? usetxt_6808 : ((TARGET_IS_Z80 || TARGET_IS_GB) ? usetxt_z80_gb : usetxt)); *dp; dp++)
 		fprintf(stderr, "%s\n", *dp);
         /* end sdld specific */
-        lkexit(n);
 }
 
 /*)Function     void    copyfile()

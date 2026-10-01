@@ -82,6 +82,9 @@ int	yflag;		/*	SDCDB output flag
 
 int	mflag;		/*	Map output flag
 			 */
+int	m1flag;		/*	Include linker generated
+			 *	symbols in map file
+			 */
 int	xflag;		/*	Map file radix type flag
 			 */
 int	pflag;		/*	print linker command file flag
@@ -90,7 +93,7 @@ int	uflag;		/*	Listing relocation flag
 			 */
 int	wflag;		/*	Enable wide format listing
 			 */
-int     zflag;          /*      Enable symbol case sensitivity
+int	zflag;		/*	Enable symbol case sensitivity
 			 */
 int	radix;		/*	current number conversion radix:
 			 *	2 (binary), 8 (octal), 10 (decimal),
@@ -437,13 +440,10 @@ struct	sym *symhash[NHASH]; /*	array of pointers to NHASH
  *
  *	struct	base
  *	{
- *		struct	base  *link;		Base link ? TODO F
- *		char	      *strp;		String pointer ? TODO F
+ *		struct	base  *link;		Base link
+ *		char	      *strp;		String pointer
  *	};
  */
-struct	base	*basep;	/*	The pointer to the first
-			 *	base structure
-			 */
 struct	base	*bsp;	/*	Pointer to the current
 			 *	base structure
 			 */
@@ -456,6 +456,9 @@ struct	base *a_bsp;	/*	Pointer to the current
 
 struct	base *b_basep;	/*	Pointer to the first
 		 	*	bank base structure
+		 	*/
+struct	base *b_bsp;	/*	Pointer to the current
+			 *	bank base structure
 			 */
 
 /*
