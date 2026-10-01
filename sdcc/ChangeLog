@@ -9,7 +9,9 @@
 	  sdas/asxxsrc/assubr.c,
 	  sdas/asxxsrc/asxxxx.h,
 	  sdas/asxxsrc/asexpr.c:
-	  Merge some changes from upstream asxxxx into sdas.
+	  Merge some changes from upstream asxxxx into sdas (medium memory model for Rabbit depends on them).
+	* src/z80/gen.c:
+	  Preparations for medium memory model for Rabbit ports.
 
 2026-09-30 Philipp Klaus Krause <philipp@colecovision.eu>
 

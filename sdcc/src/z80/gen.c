@@ -855,14 +855,14 @@ emitJP (const symbol *target, const char *condition, float probability, bool tar
       if (condition)
         {
           if (IS_RAB && options.model != MODEL_SMALL) // We need to handle the shifting XPC window.
-            emit2 ("jp %s, (((!tlabel & 0xf000) ^ !tlabel) | 0xe000)", condition, currFunc->name, labelKey2num (target->key));
+            emit2 ("jp %s, (((%s & 0xf000) ^ !tlabel) | 0xe000)", condition, currFunc->name, labelKey2num (target->key));
           else
             emit2 ("jp %s, !tlabel", condition, labelKey2num (target->key));
         }
       else
         {
           if (IS_RAB && options.model != MODEL_SMALL) // We need to handle the shifting XPC window.
-            emit2 ("jp (((!tlabel & 0xf000) ^ !tlabel) | 0xe000)", currFunc->name, labelKey2num (target->key));
+            emit2 ("jp (((%s & 0xf000) ^ !tlabel) | 0xe000)", currFunc->name, labelKey2num (target->key));
           else
             emit2 ("jp !tlabel", labelKey2num (target->key));
         }
@@ -11264,7 +11264,7 @@ genEor (const iCode *ic, iCode *ifx, asmop *result_aop, asmop *left_aop, asmop *
               if (!regalloc_dry_run)
                 {
                   if (IS_RAB && options.model != MODEL_SMALL) // We need to handle the shifting XPC window.
-                    emit2 ("jp nz, (((!tlabel & 0xf000) ^ !tlabel) | 0xe000)", currFunc->name, labelKey2num (tlbl->key));
+                    emit2 ("jp nz, (((%s & 0xf000) ^ !tlabel) | 0xe000)", currFunc->name, labelKey2num (tlbl->key));
                   else
                     emit2 ("jp nz, !tlabel", labelKey2num (tlbl->key));
                  }
@@ -13798,7 +13798,7 @@ genAnd (const iCode *ic, iCode *ifx)
               if (!regalloc_dry_run)
                 {
                   if (IS_RAB && options.model != MODEL_SMALL) // We need to handle the shifting XPC window.
-                    emit2 ("jp %s, (((!tlabel & 0xf000) ^ !tlabel) | 0xe000)", jumpcond, currFunc->name, labelKey2num (tlbl->key));
+                    emit2 ("jp %s, (((%s & 0xf000) ^ !tlabel) | 0xe000)", jumpcond, currFunc->name, labelKey2num (tlbl->key));
                   else
                     emit2 ("jp %s, !tlabel", jumpcond, labelKey2num (tlbl->key));
                 }
@@ -14178,7 +14178,7 @@ genOr (const iCode * ic, iCode * ifx)
               if (!regalloc_dry_run)
                 {
                   if (IS_RAB && options.model != MODEL_SMALL) // We need to handle the shifting XPC window.
-                    emit2 ("jp nz, (((!tlabel & 0xf000) ^ !tlabel) | 0xe000)", currFunc->name, labelKey2num (tlbl->key));
+                    emit2 ("jp nz, (((%s & 0xf000) ^ !tlabel) | 0xe000)", currFunc->name, labelKey2num (tlbl->key));
                  else
                    emit2 ("jp nz, !tlabel", labelKey2num (tlbl->key));
                 }
@@ -19365,7 +19365,7 @@ genCritical (const iCode * ic)
             }
           //parity odd <==> P/O=0 <==> interrupt enable flag IFF2=0
           if (IS_RAB && options.model != MODEL_SMALL) // We need to handle the shifting XPC window.
-            emit2 ("jp po, (((!tlabel & 0xf000) ^ !tlabel) | 0xe000)", currFunc->name, labelKey2num (tlbl->key));
+            emit2 ("jp po, (((%s & 0xf000) ^ !tlabel) | 0xe000)", currFunc->name, labelKey2num (tlbl->key));
           else
             emit2 ("jp po, !tlabel", labelKey2num (tlbl->key));
         }
@@ -20319,7 +20319,7 @@ genBuiltInStrncpy (const iCode *ic, int nparams, operand **pparams)
       emit2 ("cp a, !*hl");
       emit2 ("ldi");
       if (IS_RAB && options.model != MODEL_SMALL) // We need to handle the shifting XPC window.
-        emit2 ("jp lz, (((!tlabel & 0xf000) ^ !tlabel) | 0xe000)", currFunc->name, labelKey2num (tlbl1->key));
+        emit2 ("jp lz, (((%s & 0xf000) ^ !tlabel) | 0xe000)", currFunc->name, labelKey2num (tlbl1->key));
       else
         emit2 (IS_RAB ? "jp lz, !tlabel" : "jp po, !tlabel", labelKey2num (tlbl1->key));
       emit2 ("jr nz, !tlabel", labelKey2num (tlbl2->key));
@@ -20327,7 +20327,7 @@ genBuiltInStrncpy (const iCode *ic, int nparams, operand **pparams)
       emit2 ("dec hl");
       emit2 ("ldi");
       if (IS_RAB && options.model != MODEL_SMALL) // We need to handle the shifting XPC window.
-        emit2 ("jp (((!tlabel & 0xf000) ^ !tlabel) | 0xe000)", currFunc->name, labelKey2num (tlbl3->key));
+        emit2 ("jp (((%s & 0xf000) ^ !tlabel) | 0xe000)", currFunc->name, labelKey2num (tlbl3->key));
       else
         emit2 (IS_RAB ? "jp LO, !tlabel" : "jp PE, !tlabel", labelKey2num (tlbl3->key));
       emitLabel (tlbl1);
