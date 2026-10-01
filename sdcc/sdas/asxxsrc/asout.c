@@ -878,7 +878,7 @@ outdp(struct area *carea, struct expr *esp, int r)
 	a_uint n;
 
 	if (oflag && pass==2) {
-                outchk(ASXHUGE, ASXHUGE);
+                outchk(HUGE, HUGE);
 		out_txb(a_bytes,carea->a_ref);
 		out_txb(a_bytes,esp->e_addr);
 		if (esp->e_flag || esp->e_base.e_ap!=NULL) {

@@ -1,3 +1,13 @@
+2026-10-01 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdas/as6808/m08adr.c,
+	  sdas/asxxsrc/asdata.c,
+	  sdas/asxxsrc/aslist.c,
+	  sdas/asxxsrc/asmain.c,
+	  sdas/asxxsrc/asout.c,
+	  sdas/asxxsrc/asxxxx.h:
+	  Merge some changes from upstream asxxxx into sdas.
+
 2026-09-30 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCC.y,

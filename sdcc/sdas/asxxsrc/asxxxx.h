@@ -42,10 +42,8 @@
  *      - add DS80C390 flat mode support.
  * 10-Nov-07 borutr:
  *      - change a_id from [NCPS] to pointer
- * 02-Feb-22 basxto/bbbbbr:
- *      - raise NCPS to 256 like in upstream
  */
- 
+
 /*
  * System Include Files
  */
@@ -60,7 +58,7 @@
  * Local Definitions
  */
 
-#define	VERSION	"V05.50.4+NoICE+SDCCmods-WIP-R15"
+#define	VERSION	"V05.50.4+NoICE+SDCCmods+(bits of V06.10)-WIP-R15"
 #define	COPYRIGHT "2026"
 
 /*
@@ -163,9 +161,9 @@
 #define	RTTERM	')'		/* Right expression delimeter */
 
 #define NCPS	256		/* Characters per symbol */
-#define ASXHUGE	1000	/* A huge number */
+#define HUGE	1000		/* A huge number */
 #define NERR	3		/* Errors per line */
-#define NINPUT	1024	/* Input buffer size */
+#define NINPUT	1024		/* Input buffer size */
 #define NCODE	380		/* Listing code buffer size */
 #define NTITL	80		/* Title buffer size */
 #define	NSBTL	80		/* SubTitle buffer size */
@@ -214,10 +212,12 @@
 
 #define	LIST_TORF	0x8000	/* IF-ENDIF Conditional Overide Flag */
 
+#define	T_INSERT	0	/* Command Line Insert */
 #define	T_ASM		1	/* Assembler Source File */
 #define	T_INCL		2	/* Assembler Include File */
 #define	T_MACRO		3	/* Assembler Macro */
 
+#define TRC_INS		0x01	/* Inserted Lines */
 #define TRC_ASM		0x02	/* Assembler Files */
 #define TRC_INC		0x04	/* Include Files */
 #define TRC_MCR		0x10	/* Macros */
@@ -329,12 +329,12 @@ struct	area
 #define A_4BYTE 0x0003		/* 4 Byte Word Length */
 #define	A_BYTES	0x0003		/* Word Length Mask */
 
-#define A_CON   0x0000          /* Concatenating */
-#define A_OVR   0x0004          /* Overlaying */
-#define A_REL   0x0000          /* Relocatable */
-#define A_ABS   0x0008          /* Absolute */
-#define A_NOPAG 0x0000          /* Non-Paged */
-#define A_PAG   0x0010          /* Paged */
+#define A_CON	0x0000          /* Concatenating */
+#define A_OVR	0x0004          /* Overlaying */
+#define A_REL	0x0000          /* Relocatable */
+#define A_ABS	0x0008          /* Absolute */
+#define A_NOPAG	0x0000          /* Non-Paged */
+#define A_PAG	0x0010          /* Paged */
 
 /* sdas specific */
 /* Additional flags for 8051 address spaces */
@@ -360,8 +360,8 @@ struct	area
  *	+-----+-----+-----+-----+-----+-----+-----+-----+
  */
 
-#define R_BYTE  0x01            /*  8 bit */
-#define R_WORD  0x00            /* 16 bit */
+#define R_BYTE	0x01            /*  8 bit */
+#define R_WORD	0x00            /* 16 bit */
 
 #define R_BYT1  0x00            /* Byte count for R_BYTE = 1 */
 #define R_BYTX  0x08            /* Byte count for R_BYTE = 2 */
@@ -480,8 +480,11 @@ struct	mne
  *	flag (global, assigned, and multiply defined), a pointer
  *	to the area structure defining where the symbol is
  *	located, a reference number assigned by outgsd() in
- *	asout.c, and the symbols address relative to the base
- *	address of the area where the symbol is located.
+ *	asout.c, the symbols address relative to the base
+ *	address of the area where the symbol is located, the
+ *	symbols base address from the previous assembler pass,
+ *	and a pointer to an expression that the linker should
+ *	evaluate (if required).
  */
 struct	sym
 {
@@ -493,6 +496,7 @@ struct	sym
 	struct	area *s_area;	/* Area line, 0 if absolute */
 	int	s_ref;		/* Ref. number */
 	a_uint	s_addr;		/* Address */
+	a_uint	p_addr;		/* Previous Pass Address */
 	char	*s_expr;	/* Expression to evaluate */
 /* sdas specific */
 	a_uint	s_org;		/* Start Address if absolute */
@@ -1100,6 +1104,8 @@ extern	int	lop;		/*	current line number on page
 				 */
 extern	time_t	curtim;		/*	pointer to the current time string
 				 */
+extern	int	pstate;		/*	assembler pass state
+				 */
 extern	int	pass;		/*	assembler pass number
 				 */
 extern	int	aflag;		/*	-a, make all symbols global flag
@@ -1267,7 +1273,7 @@ extern	FILE	*ofp;		/*	relocation output file handle
 extern	FILE	*tfp;		/*	symbol table output file handle
 				 */
 extern	unsigned char	ctype[256];	/*	array of character types, one per
-				 *      ASCII/OEM character
+				 *	ASCII/OEM character
 				 */
 extern	char	ccase[256];	/*	an array of characters which
 				 *	perform the case translation function
@@ -1294,18 +1300,20 @@ extern	int		printf();
 extern	char		putc();
 extern	int		rewind();
 extern	int		setjmp();
+extern	int		sprintf()
 extern	int		strchr();
 extern	int		strcmp();
 extern	char *		strcpy();
 extern	int		strlen();
 extern	char *		strncpy();
+extern	char *		strncat();
 extern	char *		strrchr();
 */
 
 /* Machine independent functions */
 
 /* C Library functions */
-/* extern	void		exit(int n); */
+extern	void		exit(int n);
 
 /* asmain.c */
 extern	FILE *		afile(char *fn, char *ft, int wf);

@@ -103,7 +103,7 @@ addr(struct expr *esp)
 					if (esp->e_flag) {
 						if (esp->e_base.e_sp->s_area == zpg) {
 							esp->e_mode = S_DIR;	/* ___  (*)arg */
-			}
+						}
 					} else {
 						if (esp->e_base.e_ap == zpg) {
 							esp->e_mode = S_DIR;	/* ___  (*)arg */

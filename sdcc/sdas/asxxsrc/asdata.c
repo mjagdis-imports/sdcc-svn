@@ -273,7 +273,9 @@ char	afn[FILSPC];	/*	current input file specification
 			 */
 int	afp;		/*	current input file path length
 			 */
-char	afntmp[FILSPC];	/*	temporary input file specification
+char	afstmp[FILSPC];	/*	temporary input file specification
+			 */
+char	afntmp[FILSPC];	/*	temporary input file name
 			 */
 int	afptmp;		/*	temporary input file path length
 			 */
@@ -291,6 +293,10 @@ int	radix;		/*	current number conversion radix:
 			 */
 int	expr_radix;	/*	expression process radix
 			 */
+int	rdxidx;		/*	index into exression radix stack
+			 */
+int	rdxval[MAXNST];	/*	expression radix stack
+			 */
 int	line;		/*	current assembler source
 			 *	line number
 			 */
@@ -299,6 +305,8 @@ int	page;		/*	current page number
 int	lop;		/*	current line number on page
 			 */
 time_t	curtim;		/*	pointer to the current time string
+			 */
+int	pstate;		/*	assembler pass state
 			 */
 int	pass;		/*	assembler pass number
 			 */
@@ -463,8 +471,11 @@ struct	mne	*mnehash[NHASH];
  *	flag(global, assigned, and multiply defined), a pointer
  *	to the area structure defining where the symbol is
  *	located, a reference number assigned by outgsd() in
- *	asout.c, and the symbols address relative to the base
- *	address of the area where the symbol is located.
+ *	asout.c, the symbols address relative to the base
+ *	address of the area where the symbol is located, the
+ *	symbols base address from the previous assembler pass,
+ *	and a pointer to an expression that the linker should
+ *	evaluate (if required).
  *
  *	struct	sym
  *	{
@@ -476,17 +487,19 @@ struct	mne	*mnehash[NHASH];
  *		struct	area *s_area;	Area line, 0 if absolute
  *		int	s_ref;		Ref. number
  *		a_uint	s_addr;		Address
+ *		a_uint	p_addr;		Previous Pass Address
+ *		char	*s_expr;	Expression to evaluate
  * sdas specific
  *		a_uint	s_org;		Start Address if absolute
  * end sdas specific
  *	};
  */
 struct	sym	sym[] = {
-    {	NULL,	NULL,	".",	    S_USER, 0,			NULL,0,0, 0 },
-    {	NULL,	NULL,	".__.ABS.", S_USER, S_ASG|S_GBL,	NULL,0,0, 0 },
-    {	NULL,	NULL,	".__.CPU.", S_USER, S_ASG|S_LCL,	NULL,0,0, 0 },
-    {	NULL,	NULL,	".__.H$L.", S_USER, S_ASG|S_LCL,	NULL,0,0, 0 },
-    {	NULL,	NULL,	".__.$$$.", S_USER, S_ASG|S_LCL|S_EOL,	NULL,0,0, 0 }
+    {	NULL,	NULL,	".",	    S_USER, 0,			NULL,0,0,0,NULL,0 },
+    {	NULL,	NULL,	".__.ABS.", S_USER, S_ASG|S_GBL,	NULL,0,0,0,NULL,0 },
+    {	NULL,	NULL,	".__.CPU.", S_USER, S_ASG|S_LCL,	NULL,0,0,0,NULL,0 },
+    {	NULL,	NULL,	".__.H$L.", S_USER, S_ASG|S_LCL,	NULL,0,0,0,NULL,0 },
+    {	NULL,	NULL,	".__.$$$.", S_USER, S_ASG|S_LCL|S_EOL,	NULL,0,0,0,NULL,0 }
 };
 
 struct	sym	*symp;		/*	pointer to a symbol structure
@@ -518,6 +531,9 @@ struct	sym *symhash[NHASH];	/*	array of pointers to NHASH
  *		a_uint	a_fuzz;		Area fuzz
  *		int	a_flag;		Area flags
  *	};
+ *
+ *
+ * Pointer to an area structure
  */
 struct  area    area[] = {
     {NULL,      "_CODE",        0,      0,      0,      A_CON|A_REL}

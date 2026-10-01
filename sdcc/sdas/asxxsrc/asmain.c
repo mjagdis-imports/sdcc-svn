@@ -662,7 +662,7 @@ main(int argc, char *argv[])
 		fprintf(stderr, "              %s\n", geterr('i'));
 	}
 	if (oflag)
-                outchk(ASXHUGE, ASXHUGE);       /* Flush */
+                outchk(HUGE, HUGE);       /* Flush */
 	if (sflag) {
 		lstsym(tfp);
 	} else
@@ -2264,7 +2264,7 @@ loop:
 	case S_BLK:
 		clrexpr(&e1);
 		expr(&e1);
-		outchk(ASXHUGE,ASXHUGE);
+		outchk(HUGE,HUGE);
 		dot.s_addr += e1.e_addr*mp->m_valu;
 		lmode = BLIST;
 		break;

@@ -252,7 +252,7 @@ list(void)
 	 * ALIST/BLIST Output Processing
 	 */
 	if (lmode == ALIST) {
-                outchk(ASXHUGE,ASXHUGE);
+                outchk(HUGE,HUGE);
 	}
 	if (lmode == ALIST || lmode == BLIST) {
 		outdot();
@@ -276,7 +276,7 @@ list(void)
 	 * ALIST/BLIST Output Processing
 	 */
 	if (lmode == ALIST) {
-                outchk(ASXHUGE,ASXHUGE);
+                outchk(HUGE,HUGE);
 	}
 
 
