@@ -184,6 +184,8 @@
  *	specify the area properties:
  *
  *		OVR/CON (0x04/0x00 i.e.  bit position 2)
+ *		ABS/REL (0x08/0x00 i.e.  bit position 3)
+ *		PAG (0x10 i.e.  bit position 4)
  *
  *
  *	(8)	T Line 
@@ -254,30 +256,37 @@
  *
  *
  *	asout.c contains the following functions:
- *		int	lobyte()
- *              int     frthbyte()
- *              void    out()
- *              void    outall()
- *              void    outarea()
- *              void    outbuf()
- *              void    outchk()
- *              void    outdp()
- *              void    outdot()
- *              void    outgsd()
- *              void    outsym()
- *		void	outab()
- *              void    outa3b()
- *              void    outa4b()
- *              void    outaxb()
- *              void    outatxb()
- *              void    outrb()
- *              void    outrw()
- *              void    outr11()
- *              void    out_lb()
- *              void    out_lw()
- *              void    out_l3b()
- *              void    out_l4b()
- *		void	out_lxb()
+ *		int	lobyte();
+ *		int	hibyte();
+ *		int	thrdbyte();
+ *		int	frthbyte();
+ *		void	out();
+ *		void	outall();
+ *		void	outarea();
+ *		void	outbuf();
+ *		void	outchk();
+ *		void	outdp();
+ *		void	outdot();
+ *		void	outgsd();
+ *		void	outmerge();
+ *		void	outmode();
+ *		void	outsym();
+ *		void	outab();
+ *		void	outaw();
+ *		void	outa3b();
+ *		void	outa4b();
+ *		void	outaxb();
+ *		void	outatxb();
+ *		void	outrb();
+ *		void	outrw();
+ *		void	outr11();
+ *		void	out_lb();
+ *		void	out_lw();
+ *		void	out_l3b();
+ *		void	out_l4b();
+ *		void	out_lxb();
+ *		void	out_rw();
+ *		void	out_txb();
  */
 
 /*)Function	void	outab(v)
