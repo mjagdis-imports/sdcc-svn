@@ -2,6 +2,9 @@
 
 	* src/SDCCsymt.c:
 	  Debug dump fix for unions.
+	* src/z80/peeph.def,
+	  support/regression/tests/bug-4103.c:
+	  Fix bug #4103, based on patch by Ramin Moussavi.
 
 2026-10-02 Philipp Klaus Krause <philipp@colecovision.eu>
 

@@ -510,7 +510,7 @@ replace restart {
 	push	hl
 	push	%1
 	ld	(hl), #%3
-} if notUsed('hl' %2)
+} if notUsed('hl' %2 'a')
 
 replace restart {
 	push	af
@@ -720,7 +720,7 @@ replace restart {
 	%4	hl
 	ld	%2, (hl)
 	push	%3
-} if same(%4 'inc' 'dec'), unusedReg(%3 'de' 'bc'), canSplitReg(%3 %2 %1), notUsed('hl')
+} if same(%4 'inc' 'dec'), unusedReg(%3 'de' 'bc'), canSplitReg(%3 %2 %1), notUsed('hl'), notUsed('a')
 
 replace restart {
 	ld	%3, %1
@@ -1023,7 +1023,7 @@ replace restart {
 } by {
 	; common peephole 67c removed load back from stack.
 	push	hl
-}if operandsLiteral(%1), immdInRange(0 0 '+' %1 0 %2)
+}if operandsLiteral(%1), immdInRange(0 0 '+' %1 0 %2), notUsed('a')
 
 replace restart {
 	inc	hl
@@ -1690,7 +1690,7 @@ replace restart {
 	sbc	hl, %1
 	jp	%2, %3
 	; common peephole 102c removed redundant or after sbc.
-} if same(%2 'nz' 'z')
+} if same(%2 'nz' 'z'), notUsed('a'), notUsedFrom(%3 'a')
 
 replace restart {
 	sub	a, %1
