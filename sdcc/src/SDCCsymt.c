@@ -5574,12 +5574,13 @@ static bool compatibleQualifiers (sym_link *, sym_link *);
 static bool
 sameQualifiers (sym_link *target, sym_link *source)
 {
-  // TODO: Handle named qualifiers for named address spaces
+  // TODO: Handle qualifiers for intrinsic named address spaces
   return isAtomic (target) == isAtomic (source) &&
          isConst (target) == isConst (source) &&
          isVolatile (target) == isVolatile (source) &&
          isRestrict (target) == isRestrict (source) &&
-         isOptional (target) == isOptional (source);
+         isOptional (target) == isOptional (source) &&
+         isSymbolEqual (getAddrspace (target), getAddrspace (source)); // Qualifiers for non-intrinsic named address spaces.
 }
 
 /* Compare nested qualification, ignoring outer qualifiers and atomicity. */
@@ -5655,6 +5656,9 @@ checkPtrTargetQualifiers (sym_link *target, sym_link *source)
         werror (W_TARGET_LOST_QUALIFIER, "volatile");
       if (!isRestrict (target->next) && isRestrict (source->next))
         werror (W_TARGET_LOST_QUALIFIER, "restrict");
+      if (!isSymbolEqual (getAddrspace (target->next), getAddrspace (source->next)))
+        werror (W_INCOMPAT_PTYPES);
+      // TODO: qualifiers for intrinsic named address spaces
     }
   /* Unlike const, volatile and restrict, _Optional may qualify function targets. */
   if (!isOptional (target->next) && isOptional (source->next))

@@ -36,6 +36,9 @@ void test(void)
 /* Matching target qualifiers and permitted qualification additions must be accepted,
    including combinations of supported qualifiers and conversions to void pointers. */
 
+void set_space(void);
+__addressmod set_space space;
+
 void take_const(const int *);
 void take_volatile(volatile int *);
 void take_optional(_Optional int *);
@@ -49,6 +52,8 @@ void take_const_void(const void *);
 void take_volatile_void(volatile void *);
 void take_optional_void(_Optional void *);
 
+void take_space(space int *);
+
 void test_preserved_qualifiers(int *p,
           const int *pc,
           volatile int *pv,
@@ -58,7 +63,8 @@ void test_preserved_qualifiers(int *p,
           _Optional const int *poc,
           _Optional const volatile int *pocv,
           int **pp,
-          int *restrict *pr)
+          int *restrict *pr,
+          space int *ps)
 {
   take_const(p);
   take_const(pc);
@@ -104,6 +110,8 @@ void test_preserved_qualifiers(int *p,
 
   take_optional_void(p);
   take_optional_void(poi);
+
+  take_space(ps);
 }
 
 #endif
@@ -179,6 +187,9 @@ void test_union_members(union U *u, volatile union U *vu)
 
 #ifdef TEST6
 /* Pointer-to-pointer arguments must diagnose immediate qualifier loss and deeper mismatches. */
+void set_space(void);
+__addressmod set_space space;
+
 void take_void_pointer(void **);
 void take_char_pointer(char **);
 void take_int_pointer(int **);
@@ -191,6 +202,7 @@ void test(void)
   char *p = 0;
   int *restrict pr = 0;
   _Optional char *poc = 0;
+  space char *ps = 0;
   take_void_pointer(&pc); /* WARNING */
   take_char_pointer(&pc); /* WARNING */
   take_int_pointer(&pc); /* WARNING */
@@ -202,6 +214,8 @@ void test(void)
   take_void_pointer(&poc); /* WARNING */
   take_char_pointer(&poc); /* WARNING */
   take_int_pointer(&poc); /* WARNING */
+  take_void_pointer(&ps); /* WARNING */
+  take_char_pointer(&ps); /* WARNING */
 }
 #endif
 

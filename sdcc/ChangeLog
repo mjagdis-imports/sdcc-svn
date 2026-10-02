@@ -1,5 +1,11 @@
 2026-10-02 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/SDCCsymt.c,
+	  support/valdiag/tests/bug-4004.c:
+	  Fix handling of qualifiers for non-intrinsic named address spaces in the fix for bug #4004.
+
+2026-10-02 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/SDCCast.c,
 	  src/SDCCsymt.c,
 	  src/SDCCsymt.h,
