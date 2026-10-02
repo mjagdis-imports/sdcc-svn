@@ -2787,6 +2787,9 @@ geniCodeStruct (operand * left, operand * right, bool islval)
   SPEC_SCLS (retype) = SPEC_SCLS (etype);
   SPEC_OCLS (retype) = SPEC_OCLS (etype);
 
+  /* Apply artificial union volatility after the C type checks. */
+  SPEC_VOLATILE (retype) |= SPEC_STRUCT (etype)->type == UNION;
+
   if (IS_PTR (element->type))
     {
       DCL_PTR_CONST (rtype) |= DCL_PTR_CONST (element->type);

@@ -1,3 +1,10 @@
+2026-10-02 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCsymt.c,
+	  src/SDCCicode.c,
+	  support/regression/tests/union-volatile.c:
+	  Apply artificial union volatility during iCode generation instead of to the declared member types (bug #4072), patch by Christopher Bazley.
+
 2026-10-01 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* sdas/as6808/m08adr.c,

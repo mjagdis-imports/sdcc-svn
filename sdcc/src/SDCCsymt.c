@@ -1857,7 +1857,6 @@ compStructSize (structdef * sdef)
           sum = 0;
           bitOffset = 0;
         }
-      SPEC_VOLATILE (loop->etype) |= (sdef->type == UNION ? 1 : 0);
 
       /* if this is a bit field  */
       if (loop->bitVar)
