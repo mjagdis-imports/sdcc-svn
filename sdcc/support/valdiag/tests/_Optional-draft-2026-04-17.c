@@ -709,7 +709,7 @@ void free_str_1(_Optional const char *s)
 void free_str_2(_Optional const char *s)
 {
   // constraint violation: const qualifier is lost
-  free(optional_cast(s)); /* IGNORE */ //BUG: missing diagnostic
+  free(optional_cast(s)); /* WARNING */
 }
 
 // s has the intended type

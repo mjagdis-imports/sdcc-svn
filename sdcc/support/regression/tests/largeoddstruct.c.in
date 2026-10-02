@@ -37,7 +37,7 @@ struct largeoddstruct f2(struct largeoddstruct *p)
 	return (*p);
 }
 #endif
-void f3(struct largeoddstruct *p)
+void f3(const struct largeoddstruct *p)
 {
 	struct1 = *p;
 }

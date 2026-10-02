@@ -222,7 +222,7 @@ void testRetVal(void)
   ASSERT(destination == memset(destination, (int)zero, 0));
   ASSERT(destination == memset(destination, (int)zero, one));
   ASSERT(destination == memset(destination, (int)one, sizeof(destination)));
-  ASSERT(&one == memset(&one, 0, sizeof(one)));
-  ASSERT(&zero == memcpy(&zero, &one, sizeof(one)));
+  ASSERT(&one == memset((void *)&one, 0, sizeof(one)));
+  ASSERT(&zero == memcpy((void *)&zero, (void *)&one, sizeof(one)));
 #endif
 }

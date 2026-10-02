@@ -12,7 +12,7 @@ extern void msx_vfill(unsigned int addr, unsigned int value, unsigned int count)
 {
 }
 
-extern void msx_vwrite_direct(void* source, unsigned int dest, unsigned int count) __smallc
+extern void msx_vwrite_direct(const void* source, unsigned int dest, unsigned int count) __smallc
 {
 }
 

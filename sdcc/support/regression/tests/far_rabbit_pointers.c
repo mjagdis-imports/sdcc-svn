@@ -15,8 +15,8 @@ const int ci = 7;
 char array[4];
 const char carray[4];
 
-__far void *to_far(void *p);
-void *from_far(__far void *p);
+__far const void *to_far(const void *p);
+const void *from_far(__far const void *p);
 __far const char *objaddr_to_far(void);
 __far const char* cobjaddr_to_far(void);
 __far const char *aaddr_to_far(void);
@@ -37,16 +37,16 @@ void testPtr(void)
 	ASSERT(from_far(to_far(carray)) == carray);
 
 	// Commutativity of pointer arithmetic with casts.
-	ASSERT(from_far((__far char *)(to_far(array)) + 3) == array + 3);
-	ASSERT(from_far((__far char *)(to_far(carray)) + 3) == carray + 3);
+	ASSERT(from_far((__far const char *)(to_far(array)) + 3) == array + 3);
+	ASSERT(from_far((__far const char *)(to_far(carray)) + 3) == carray + 3);
 }
 
-__far void *to_far(void *p)
+__far const void *to_far(const void *p)
 {
 	return p;
 }
 
-void *from_far(__far void *p)
+const void *from_far(__far const void *p)
 {
 	return p;
 }

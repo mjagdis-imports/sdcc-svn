@@ -24,12 +24,12 @@ int32_t notinlined_fnc(int32_t val)
 }
 
 inline
-int32_t *inline_ptr_fnc(char sel)
+volatile int32_t *inline_ptr_fnc(char sel)
 {
   return sel? &glob_var32_b: &glob_var32_a;
 }
 
-int32_t notinlined_ptr_fnc(int32_t *pval)
+int32_t notinlined_ptr_fnc(volatile int32_t *pval)
 {
   return *pval;
 }
@@ -54,5 +54,5 @@ extern inline
 int32_t inline_fnc(char sel);
 
 extern inline
-int32_t *inline_ptr_fnc(char sel);
+volatile int32_t *inline_ptr_fnc(char sel);
 

@@ -9,22 +9,22 @@
 #pragma disable_warning 244
 #endif
 
-char eq(void * p1, void * p2)
+char eq(const void * p1, const void * p2)
 {
 	return (p1 == p2);
 }
 
-char neq(void * p1, void * p2)
+char neq(const void * p1, const void * p2)
 {
 	return (p1 != p2);
 }
 
-char smaller(void * p1, void * p2)
+char smaller(const void * p1, const void * p2)
 {
 	return (p1 < p2);
 }
 
-char greater(void * p1, void * p2)
+char greater(const void * p1, const void * p2)
 {
 	return (p1 > p2);
 }

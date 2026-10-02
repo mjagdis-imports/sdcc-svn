@@ -92,7 +92,7 @@ bad_long:
 __endasm;
 }
 
-unsigned char passPtr(char *p) __dynamicc __naked
+unsigned char passPtr(volatile char *p) __dynamicc __naked
 {
 __asm
 	ld	ix, #0xabcd
@@ -156,7 +156,7 @@ unsigned char passLong(long p) __dynamicc
 	return p == l;
 }
 
-unsigned char passPtr(char *p) __dynamicc
+unsigned char passPtr(volatile char *p) __dynamicc
 {
 	return p == &c;
 }

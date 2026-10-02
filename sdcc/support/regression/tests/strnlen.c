@@ -14,7 +14,7 @@ testStr(void)
 {
 #if  defined(__SDCC) || (_POSIX_C_SOURCE >= 200809L) || (__STDC_VERSION_STRING_H__ > 202311L) // strnlen is a C2Y function previously available in POSIX.
   const char hello4[] = "hello4";
-  const char hello5[7];
+  char hello5[7];
 
   memcpy (hello5, hello4, 7);
 

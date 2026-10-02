@@ -37,7 +37,7 @@ void vListInitialise( xList *pxList )
 void
 testBug(void)
 {
-	void * p = &xDelayedTaskList1.xListEnd;
+	volatile void * p = &xDelayedTaskList1.xListEnd;
 	vListInitialise( &xDelayedTaskList1 );
 	ASSERT (xDelayedTaskList1.pxIndex == p);
 }

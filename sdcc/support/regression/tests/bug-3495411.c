@@ -152,7 +152,7 @@ extern SIP_LCB_HANDLE Sip_pCurLcb = &l;
 void line_start(PCHAR pDst) {}
 void sip_add_local_uri(BOOLEAN bIP, BOOLEAN bPort) {}
 void sip_new_token(PCHAR pDst, UCHAR iLen) {}
-void sip_add_token(PCHAR pToken, PCHAR pValue) {}
+void sip_add_token(const UCHAR *pToken, PCHAR pValue) {}
 void dummy_free(void *p) {}
 PCHAR heap_save_str(PCHAR pStr) { return ((PCHAR) 42);}
 BOOLEAN Sys_bRegister;

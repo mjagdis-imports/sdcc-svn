@@ -1,5 +1,30 @@
 2026-10-02 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/SDCCast.c,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  support/regression/tests/bitfields-bits1.c.in,
+	  support/regression/tests/bitfields-bits2.c.in,
+	  support/regression/tests/bug-2188.c,
+	  support/regression/tests/bug-2590.c,
+	  support/regression/tests/bug-3495411.c,
+	  support/regression/tests/bug-3560.c,
+	  support/regression/tests/bug-3685.c,
+	  support/regression/tests/bug2823963.c,
+	  support/regression/tests/dynamicc.c,
+	  support/regression/tests/dynamiccasmchk.c,
+	  support/regression/tests/far_rabbit_pointers.c,
+	  support/regression/tests/genptrs.c,
+	  support/regression/tests/largeoddstruct.c.in,
+	  support/regression/tests/memory.c.in,
+	  support/regression/tests/strnlen.c,
+	  support/regression/tests/wcsnlen.c,
+	  support/valdiag/tests/_Optional-draft-2026-04-17.c,
+	  support/valdiag/tests/bug-4004.c:
+	  Fix bug #4004, patch by Christopher Bazley.
+
+2026-10-02 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/SDCCsymt.c:
 	  Debug dump fix for unions.
 	* src/z80/peeph.def,

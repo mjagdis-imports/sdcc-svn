@@ -39,7 +39,7 @@ void vdu_tiles_put( uint16_t offset, const uint8_t *pixels, const uint8_t *colou
 uint16_t decompress_vdu(const uint8_t *compressed_data, uint16_t dest ) {}
 
 ///< Render image to screen
-void vdu_image_put( const uint8_t **pixels, const uint8_t **colours, const uint8_t *index ) {
+void vdu_image_put( const uint8_t *const *pixels, const uint8_t *const *colours, const uint8_t *index ) {
 
     ///< Load data
     uint16_t segmentOffset = 0;

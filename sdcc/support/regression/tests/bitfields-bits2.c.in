@@ -43,7 +43,7 @@ typedef struct
 #endif
 
 bool
-bits_check_value_no_cast(const struct_8bits * var, const uint8_t value)
+bits_check_value_no_cast(const volatile struct_8bits * var, const uint8_t value)
 {
     if((var->bit0 > 0) != ((value & 0x01) > 0)) return false;
     if((var->bit1 > 0) != ((value & 0x02) > 0)) return false;
@@ -65,7 +65,7 @@ bits_check_value_no_cast(const struct_8bits * var, const uint8_t value)
 #if !defined(__SDCC_pdk13) && !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15)
 
 bool
-bits_check_value(const struct_8bits * const var, const uint8_t value)
+bits_check_value(const volatile struct_8bits * const var, const uint8_t value)
 {
     #if PRE_BITS > 0
         if(var->preBits != PRE_BIT_VALUE) return false;
@@ -87,7 +87,7 @@ bits_check_value(const struct_8bits * const var, const uint8_t value)
 }
 
 void 
-bits_set_value(struct_8bits * const var, const uint8_t value)
+bits_set_value(volatile struct_8bits * const var, const uint8_t value)
 {
     #if PRE_BITS > 0
         var->preBits = PRE_BIT_VALUE;

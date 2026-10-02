@@ -21,7 +21,7 @@ void depl(uint16_t touche, uint8_t* end_piece)
 	Control_1 = (key >> 1);
 }
 
-uint8_t possible (uint8_t * pce)
+uint8_t possible (volatile uint8_t * pce)
 {
 	return key;
 }

@@ -21,7 +21,7 @@ long passLong(long p) __dynamicc
 	return p + 1;
 }
 
-char *passPtr(char *p) __dynamicc
+volatile char *passPtr(volatile char *p) __dynamicc
 {
 	return p + 1;
 }
@@ -56,7 +56,7 @@ long passLong2(long p, long p2) __dynamicc // first parameter in bcde and on sta
 	return p + p2;
 }
 
-char *passPtr2(char *p, int p2) __dynamicc
+volatile char *passPtr2(volatile char *p, int p2) __dynamicc
 {
 	return p + p2;
 }

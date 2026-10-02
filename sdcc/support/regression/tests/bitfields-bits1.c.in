@@ -139,26 +139,26 @@ void dummy_f(void)
 
 // Return type of this function is uint16_t to trigger some peephole rules for STM8
 uint16_t 
-bits_check_value(const struct_8bits * const var, const uint8_t value)
+bits_check_value(const volatile struct_8bits * const var, const uint8_t value)
 {
     #if PRE_BITS > 0
         if(var->preBits != PRE_BIT_VALUE) return 0;
     #endif
     if(var->postBits != POST_BIT_VALUE) return 0;
     
-    if(((struct_8bits_joined*)var)->bits != value) return 0;
+    if(((const volatile struct_8bits_joined*)var)->bits != value) return 0;
     
     return 1;
 }
 void 
-bits_set_value(struct_8bits * const var, const uint8_t value)
+bits_set_value(volatile struct_8bits * const var, const uint8_t value)
 {
     #if PRE_BITS > 0
         var->preBits = PRE_BIT_VALUE;
     #endif
     var->postBits = POST_BIT_VALUE;
     
-    ((struct_8bits_joined*)var)->bits = value;
+    ((volatile struct_8bits_joined*)var)->bits = value;
 }
 
 

@@ -945,6 +945,9 @@ processParms (ast * func, value * defParm, ast ** actParm, int *parmNumber,     
 {
   RESULT_TYPE resultType;
   sym_link *functype;
+  sym_link *actualType;
+  value *convertedActual;
+  int typecompat;
 
   /* if none of them exist */
   if (!defParm && !*actParm)
@@ -1093,17 +1096,33 @@ processParms (ast * func, value * defParm, ast ** actParm, int *parmNumber,     
     }
   resolveSymbols (*actParm);
 
+  actualType = argumentTypeAfterDecay ((*actParm)->ftype, &convertedActual);
+
   /* the parameter type must be at least castable */
-  if (compareType (defParm->type, (*actParm)->ftype, false) == 0)
+  typecompat = compareType (defParm->type, actualType, false);
+  if (typecompat == 0)
     {
       werror (E_INCOMPAT_TYPES);
-      printFromToType ((*actParm)->ftype, defParm->type);
+      printFromToType (actualType, defParm->type);
+      if (convertedActual)
+        {
+          Safe_free (convertedActual->type);
+          Safe_free (convertedActual);
+        }
       return 1;
     }
 
+  if (IS_PTR (defParm->type) && (IS_PTR (actualType) || IS_FUNC (actualType)))
+    checkPtrTargetQualifiers (defParm->type, actualType);
+
+  if (convertedActual)
+    {
+      Safe_free (convertedActual->type);
+      Safe_free (convertedActual);
+    }
+
   /* if the parameter is castable then add the cast */
-  if ((IS_ARRAY((*actParm)->ftype) && IS_PTR(defParm->type)) ||
-      (compareType (defParm->type, (*actParm)->ftype, false) == -1))
+  if ((IS_ARRAY((*actParm)->ftype) && IS_PTR(defParm->type)) || typecompat == -1)
     {
       ast *pTree;
 
@@ -8970,4 +8989,3 @@ offsetofOp (sym_link *type, ast *snd)
 
   return offsetofOp_rec (type, snd, &result_type);
 }
-
