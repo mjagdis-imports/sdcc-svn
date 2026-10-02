@@ -1,5 +1,10 @@
 2026-10-02 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/SDCCsymt.c:
+	  Debug dump fix for unions.
+
+2026-10-02 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/SDCCsymt.c,
 	  src/SDCCicode.c,
 	  support/regression/tests/union-volatile.c:

@@ -4471,7 +4471,7 @@ dbuf_printTypeChain (sym_link * start, struct dbuf_s *dbuf)
               break;
 
             case V_STRUCT:
-              dbuf_printf (dbuf, "struct %s", SPEC_STRUCT (type)->tag);
+              dbuf_printf (dbuf, SPEC_STRUCT (type)->type == UNION ? "union %s" : "struct %s", SPEC_STRUCT (type)->tag);
               break;
 
             case V_SBIT:
