@@ -1,3 +1,11 @@
+2026-10-03 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCast.c,
+	  support/valdiag/tests/_Optional-draft-2026-04-17.c,
+	  support/regression/tests/bug-3954.c,
+	  support/regression/tests/bug-4071.c:
+	  Fix bugs #3954 and #4071, patch by Christopher Bazley.
+
 2026-10-02 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCsymt.c,

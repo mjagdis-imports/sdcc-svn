@@ -43,7 +43,7 @@ char *str_from_array(_Optional const char (*paocc)[64])
                          default: 0)); /* IGNORE */ // TODO: implement!
 
   // constraint violation: decayed type is pointer to const char
-  return *paocc; // TODO: implement warning!
+  return *paocc; /* WARNING */
 }
 #endif
 

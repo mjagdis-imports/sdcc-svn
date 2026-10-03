@@ -4707,9 +4707,13 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           TETYPE (tree) = getSpec (TTYPE (tree));
           /* we now have to access the memory allocated for a constexpr */
           SPEC_CONSTEXPR (TETYPE (tree)) = 0;
-          /* adjust the storage class */
+          /* Record where the pointer's target is stored. */
           if (DCL_TYPE (tree->left->ftype) != ARRAY && DCL_TYPE (tree->left->ftype) != FUNCTION)
-            SPEC_SCLS (TETYPE (tree)) = sclsFromPtr (tree->left->ftype);
+            {
+              setOClass (tree->left->ftype, TETYPE (tree));
+              SPEC_SCLS (TETYPE (tree)) = sclsFromPtr (tree->left->ftype);
+              SPEC_ADDRSPACE (TETYPE (tree)) = DCL_PTR_ADDRSPACE (tree->left->ftype);
+            }
 
           return tree;
         }
