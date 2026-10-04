@@ -7,6 +7,14 @@
 	  device/lib/wcstol.c,
 	  device/lib/wcstoll.c:
 	  Pick library fixes from the patch for bug #3952 by Christopher Bazley.
+	* support/regression/tests/bug-1029883.c.in,
+	  support/regression/tests/bug-3641.c,
+	  support/regression/tests/bug-3920.c,
+	  support/regression/tests/lonesha256.c,
+	  support/regression/tests/sha3-256.c,
+	  Pick some regression test changes from the patch for bug #3952 by Christopher Bazley.
+	* support/regression/tests/bug-2320.c:
+	  Prepare a regression test for future changes in fix for bug #3952.
 
 2026-10-03 Philipp Klaus Krause <philipp@colecovision.eu>
 

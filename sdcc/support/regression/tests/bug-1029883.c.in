@@ -32,7 +32,7 @@ inc1({sign1} {type} *valptr)
 gcse1({sign2} {type} target)
 {
   spoil(target);
-  inc1(&target);
+  inc1(({sign1} {type} *)&target);
   return target;
 }
 

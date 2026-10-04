@@ -189,20 +189,24 @@ void sha3_256_digest(uint8_t *data, uint64_t n, uint8_t *digest) {
 
 /* structs */
 struct pair {
-    unsigned char* in; /* input string */
+    unsigned char* in; /* input bytes */
+    size_t len; /* input length */
     unsigned char out[32]; /* expected output */
 };
+
+
+#define INPUT(s) (unsigned char[]){s}, sizeof(s) - 1
 
 /* known input/output pairs */
 const struct pair pairs[] = {
     /* 0: empty string */
     {
-        "",
+        INPUT(""),
         {0xa7, 0xff, 0xc6, 0xf8, 0xbf, 0x1e, 0xd7, 0x66, 0x51, 0xc1, 0x47, 0x56, 0xa0, 0x61, 0xd6, 0x62, 0xf5, 0x80, 0xff, 0x4d, 0xe4, 0x3b, 0x49, 0xfa, 0x82, 0xd8, 0x0a, 0x4b, 0x80, 0xf8, 0x43, 0x4a}
     },
     /* 1: long string */
     {
-        "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu",
+        INPUT("abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu"),
         {0x91, 0x6f, 0x60, 0x61, 0xfe, 0x87, 0x97, 0x41, 0xca, 0x64, 0x69, 0xb4, 0x39, 0x71, 0xdf, 0xdb, 0x28, 0xb1, 0xa3, 0x2d, 0xc3, 0x6c, 0xb3, 0x25, 0x4e, 0x81, 0x2b, 0xe2, 0x7a, 0xad, 0x1d, 0x18}
     }
 };
@@ -218,7 +222,7 @@ testSha (void)
 
     for (i = 0; i < sizeof(pairs)/sizeof(pairs[0]); i++) {
       unsigned char out[32];
-      sha3_256_digest(pairs[i].in, strlen(pairs[i].in), out);
+      sha3_256_digest(pairs[i].in, pairs[i].len, out);
       ASSERT(!memcmp(out, pairs[i].out, sizeof(out)));
     }
 #endif

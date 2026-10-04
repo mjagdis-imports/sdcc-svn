@@ -20,10 +20,10 @@ extern void p(char *c,...)
 #define a(x) ((x) == 0 ? as(#x, __FILE__, __LINE__):(void)0)
 
 #define BACKING_STORAGE_SIZE 8192
-char *buffer;
+unsigned char *buffer;
 #define buffer_size (BACKING_STORAGE_SIZE-2)
 unsigned buffer_p, buffer_len;
-char *buffer_gap;
+unsigned char *buffer_gap;
 
 void buffer_invariants()
 {
@@ -41,9 +41,10 @@ void buffer_invariants()
 
 void testBug(void)
 {
-	buffer = (unsigned char __xdata *)(0xa5a5);
+	buffer = (char __xdata *)(0xa5a5);
 	buffer_len = 1;
 	buffer_p = 0;
 	buffer_gap = buffer + buffer_size - buffer_len + buffer_p;
 	buffer_invariants();
 }
+

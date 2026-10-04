@@ -19,7 +19,7 @@ void
 testBug(void)
 {
 #if __SDCC_BITINT_MAXWIDTH >= 32 // TODO: When we can regression-test in --std-c23 mode, use the standard macro from limits.h instead!
-	char c = 0;
+	unsigned char c = 0;
 	loopm2(&c);
 #ifndef __SDCC_pdk15 // Bug #3643.
 	ASSERT(c == 1);

@@ -6,7 +6,7 @@
  
 #include <testfwk.h>
 
-char *p;
+unsigned char *p;
 
 extern void ABSORB(unsigned char* s, const unsigned char* d);
 
@@ -21,7 +21,7 @@ void ascon_update(unsigned char* m) {
 void
 testBug(void)
 {
-  char a = 0x5a;
+  unsigned char a = 0x5a;
   p = &a;
   ascon_update(p);
   ASSERT(a == 0x00);
