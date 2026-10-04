@@ -38,7 +38,7 @@
 long int strtol(const char *nptr, char **endptr, int base)
 {
   const char *ptr = nptr;
-  const char *rptr;
+  char *rptr;
   unsigned long int u;
   bool neg;
 

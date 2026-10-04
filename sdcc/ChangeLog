@@ -1,3 +1,13 @@
+2026-10-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* device/include/stdbit.h,
+	  device/include/stdckdint.h,
+	  device/lib/strtol.c,
+	  device/lib/strtoll.c,
+	  device/lib/wcstol.c,
+	  device/lib/wcstoll.c:
+	  Pick library fixes from the patch for bug #3952 by Christopher Bazley.
+
 2026-10-03 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCast.c,

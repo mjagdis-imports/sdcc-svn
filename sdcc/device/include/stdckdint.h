@@ -93,14 +93,14 @@ inline _Bool __ckd_mul_ulongull __CKD_ULL_IMPL(unsigned long, *)
 #else
 #define __ckd_add_default(r, a, b) \
   _Generic ((r), \
-    signed char * : __ckd_add_schar((r), (a), (b)), \
-    unsigned char * : __ckd_add_uchar((r), (a), (b)), \
-    short * : __ckd_add_short((r), (a), (b)), \
-    unsigned short * : __ckd_add_ushort((r), (a), (b)), \
-    int * : __ckd_add_int((r), (a), (b)), \
-    unsigned int * : __ckd_add_uint((r), (a), (b)), \
-    long * : __ckd_add_long((r), (a), (b)), \
-    unsigned long * : __ckd_add_ulong((r), (a), (b)))
+    signed char * : __ckd_add_schar((signed char *)(r), (a), (b)), \
+    unsigned char * : __ckd_add_uchar((unsigned char *)(r), (a), (b)), \
+    short * : __ckd_add_short((short *)(r), (a), (b)), \
+    unsigned short * : __ckd_add_ushort((unsigned short *)(r), (a), (b)), \
+    int * : __ckd_add_int((int *)(r), (a), (b)), \
+    unsigned int * : __ckd_add_uint((unsigned int *)(r), (a), (b)), \
+    long * : __ckd_add_long((long *)(r), (a), (b)), \
+    unsigned long * : __ckd_add_ulong((unsigned long *)(r), (a), (b)))
 #endif
 
 // Elegant C, but inefficient asm - SDCC can't inline the calls! - but the alternative fails stm8 regression tests?
@@ -131,14 +131,14 @@ inline _Bool __ckd_mul_ulongull __CKD_ULL_IMPL(unsigned long, *)
 #else
 #define __ckd_mul_default(r, a, b) \
   _Generic ((r), \
-    signed char * : __ckd_mul_schar((r), (a), (b)), \
-    unsigned char * : __ckd_mul_uchar((r), (a), (b)), \
-    short * : __ckd_mul_short((r), (a), (b)), \
-    unsigned short * : __ckd_mul_ushort((r), (a), (b)), \
-    int * : __ckd_mul_int((r), (a), (b)), \
-    unsigned int * : __ckd_mul_uint((r), (a), (b)), \
-    long * : __ckd_mul_long((r), (a), (b)), \
-    unsigned long * : __ckd_mul_ulong((r), (a), (b)))
+    signed char * : __ckd_mul_schar((signed char *)(r), (a), (b)), \
+    unsigned char * : __ckd_mul_uchar((unsigned char *)(r), (a), (b)), \
+    short * : __ckd_mul_short((short *)(r), (a), (b)), \
+    unsigned short * : __ckd_mul_ushort((unsigned short *)(r), (a), (b)), \
+    int * : __ckd_mul_int((int *)(r), (a), (b)), \
+    unsigned int * : __ckd_mul_uint((unsigned int *)(r), (a), (b)), \
+    long * : __ckd_mul_long((long *)(r), (a), (b)), \
+    unsigned long * : __ckd_mul_ulong((unsigned long *)(r), (a), (b)))
 #endif
 
 

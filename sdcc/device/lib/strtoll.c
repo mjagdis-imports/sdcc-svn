@@ -41,7 +41,7 @@
 long long int strtoll(const char *nptr, char **endptr, int base)
 {
   const char *ptr = nptr;
-  const char *rptr;
+  char *rptr;
   unsigned long long int u;
   bool neg;
 

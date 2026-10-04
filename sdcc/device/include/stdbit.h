@@ -378,7 +378,7 @@ void stdc_memreverse8(size_t n, unsigned char ptr[static n]);
 
 // C2Y 7.18.20 Exact-width 8-bit Memory Reversal
 #define __STDC_MEMREVERSE8U(N) \
-inline uint ## N ## _t stdc_memreverse8u ## N(uint ## N ## _t value) {stdc_memreverse8 (N / 8, &value); return(value);}
+inline uint ## N ## _t stdc_memreverse8u ## N(uint ## N ## _t value) {stdc_memreverse8 (N / 8, (unsigned char *)&value); return(value);}
 __STDC_MEMREVERSE8U(8)
 __STDC_MEMREVERSE8U(16)
 __STDC_MEMREVERSE8U(32)
@@ -406,22 +406,22 @@ extern void *__memcpy (void * restrict dest, const void * _NEAR restrict src, _N
 #if __STDC_ENDIAN_NATIVE__ == __STDC_ENDIAN_LITTLE__
 #define __STDC_LOAD8(N) \
 inline uint_least ## N ## _t stdc_load8_leu ## N (const unsigned char ptr[static (N / 8)]) {uint ## N ## _t value; __memcpy (&value, ptr, N / 8); return(value);} \
-inline uint_least ## N ## _t stdc_load8_beu ## N (const unsigned char ptr[static (N / 8)]) {uint ## N ## _t value; __memcpy (&value, ptr, N / 8); stdc_memreverse8(N / 8, &value); return(value);} \
+inline uint_least ## N ## _t stdc_load8_beu ## N (const unsigned char ptr[static (N / 8)]) {uint ## N ## _t value; __memcpy (&value, ptr, N / 8); stdc_memreverse8(N / 8, (unsigned char *)&value); return(value);} \
 inline uint_least ## N ## _t stdc_load8_leu_aligned ## N (const unsigned char ptr[static (N / 8)]) {uint ## N ## _t value; __memcpy (&value, ptr, N / 8); return(value);} \
-inline uint_least ## N ## _t stdc_load8_beu_aligned ## N (const unsigned char ptr[static (N / 8)]) {uint ## N ## _t value; __memcpy (&value, ptr, N / 8); stdc_memreverse8(N / 8, &value); return(value);} \
+inline uint_least ## N ## _t stdc_load8_beu_aligned ## N (const unsigned char ptr[static (N / 8)]) {uint ## N ## _t value; __memcpy (&value, ptr, N / 8); stdc_memreverse8(N / 8, (unsigned char *)&value); return(value);} \
 inline int_least ## N ## _t stdc_load8_les ## N (const unsigned char ptr[static (N / 8)]) {int ## N ## _t value; __memcpy (&value, ptr, N / 8); return(value);} \
-inline int_least ## N ## _t stdc_load8_bes ## N (const unsigned char ptr[static (N / 8)]) {int ## N ## _t value; __memcpy (&value, ptr, N / 8); stdc_memreverse8(N / 8, &value); return(value);} \
+inline int_least ## N ## _t stdc_load8_bes ## N (const unsigned char ptr[static (N / 8)]) {int ## N ## _t value; __memcpy (&value, ptr, N / 8); stdc_memreverse8(N / 8, (unsigned char *)&value); return(value);} \
 inline int_least ## N ## _t stdc_load8_les_aligned ## N (const unsigned char ptr[static (N / 8)]) {int ## N ## _t value; __memcpy (&value, ptr, N / 8); return(value);} \
-inline int_least ## N ## _t stdc_load8_bes_aligned ## N (const unsigned char ptr[static (N / 8)]) {int ## N ## _t value; __memcpy (&value, ptr, N / 8); stdc_memreverse8(N / 8, &value); return(value);}
+inline int_least ## N ## _t stdc_load8_bes_aligned ## N (const unsigned char ptr[static (N / 8)]) {int ## N ## _t value; __memcpy (&value, ptr, N / 8); stdc_memreverse8(N / 8, (unsigned char *)&value); return(value);}
 #else
 #define __STDC_LOAD8(N) \
-inline uint_least ## N ## _t stdc_load8_leu ## N (const unsigned char ptr[static (N / 8)]) {uint ## N ## _t value; __memcpy (&value, ptr, N / 8); stdc_memreverse8(N / 8, &value); return(value);} \
+inline uint_least ## N ## _t stdc_load8_leu ## N (const unsigned char ptr[static (N / 8)]) {uint ## N ## _t value; __memcpy (&value, ptr, N / 8); stdc_memreverse8(N / 8, (unsigned char *)&value); return(value);} \
 inline uint_least ## N ## _t stdc_load8_beu ## N (const unsigned char ptr[static (N / 8)]) {uint ## N ## _t value; __memcpy (&value, ptr, N / 8); return(value);} \
-inline uint_least ## N ## _t stdc_load8_leu_aligned ## N (const unsigned char ptr[static (N / 8)]) {uint ## N ## _t value; __memcpy (&value, ptr, N / 8); stdc_memreverse8(N / 8, &value); return(value);} \
+inline uint_least ## N ## _t stdc_load8_leu_aligned ## N (const unsigned char ptr[static (N / 8)]) {uint ## N ## _t value; __memcpy (&value, ptr, N / 8); stdc_memreverse8(N / 8, (unsigned char *)&value); return(value);} \
 inline uint_least ## N ## _t stdc_load8_beu_aligned ## N (const unsigned char ptr[static (N / 8)]) {uint ## N ## _t value; __memcpy (&value, ptr, N / 8); return(value);} \
-inline int_least ## N ## _t stdc_load8_les ## N (const unsigned char ptr[static (N / 8)]) {int ## N ## _t value; __memcpy (&value, ptr, N / 8); stdc_memreverse8(N / 8, &value); return(value);} \
+inline int_least ## N ## _t stdc_load8_les ## N (const unsigned char ptr[static (N / 8)]) {int ## N ## _t value; __memcpy (&value, ptr, N / 8); stdc_memreverse8(N / 8, (unsigned char *)&value); return(value);} \
 inline int_least ## N ## _t stdc_load8_bes ## N (const unsigned char ptr[static (N / 8)]) {int ## N ## _t value; __memcpy (&value, ptr, N / 8); return(value);} \
-inline int_least ## N ## _t stdc_load8_les_aligned ## N (const unsigned char ptr[static (N / 8)]) {int ## N ## _t value; __memcpy (&value, ptr, N / 8); stdc_memreverse8(N / 8, &value); return(value);} \
+inline int_least ## N ## _t stdc_load8_les_aligned ## N (const unsigned char ptr[static (N / 8)]) {int ## N ## _t value; __memcpy (&value, ptr, N / 8); stdc_memreverse8(N / 8, (unsigned char *)&value); return(value);} \
 inline int_least ## N ## _t stdc_load8_bes_aligned ## N (const unsigned char ptr[static (N / 8)]) {int ## N ## _t value; __memcpy (&value, ptr, N / 8); return(value);}
 #endif
 __STDC_LOAD8(8)
