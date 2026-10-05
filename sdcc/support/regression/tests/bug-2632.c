@@ -5,6 +5,11 @@
 */
 
 #include <testfwk.h>
+#ifdef __SDCC
+/* Preserve the original regression case, including incompatible pointer conversions. */
+#pragma disable_warning 244
+#endif
+
 
 #if !defined(__SDCC_mcs51) && !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) // Not enough memory
 unsigned char testArr255[255];  // Fails

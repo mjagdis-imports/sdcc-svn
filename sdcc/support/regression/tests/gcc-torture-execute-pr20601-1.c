@@ -3,6 +3,11 @@
  */
 
 #include <testfwk.h>
+#ifdef __SDCC
+/* Preserve the original regression case, including incompatible pointer conversions. */
+#pragma disable_warning 244
+#endif
+
 
 #ifdef __SDCC
 #pragma std_c11
