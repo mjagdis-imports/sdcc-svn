@@ -2167,6 +2167,13 @@ killDeadCode (ebbIndex *ebbi, bool cleanblocks)
                   ic->op == ENDCRITICAL)
                 continue;
 
+              /* Diagnose semantic dereferences before deleting their code. */
+              if (optimize.genconstprop &&
+                  (ic->left && ic->left->isSemDeref ||
+                   ic->right && ic->right->isSemDeref ||
+                   ic->result && ic->result->isSemDeref))
+                continue;
+
               /* Since both IFX & JUMPTABLE (in SKIP_IC) have been tested for */
               /* it is now safe to assume IC_LEFT, IC_RIGHT, & IC_RESULT are  */
               /* valid. */
@@ -2461,6 +2468,19 @@ checkStaticArrayParams (ebbIndex *ebbi)
           else if (IS_PTR (operandType (ic->right)) && isOptional (operandType (ic->right)->next) && !ic->left->isOptionalEliminated && !getOperandValinfo (ic, ic->right, false).nonnull)
             werrorfl (ic->filename, ic->lineno, W_OPTIONAL_ARITHMETIC);
       }
+
+  /* Clear shared operand markers only after all diagnostics have run. */
+  for (int i = 0; i < count; ++i)
+    for (iCode *ic = ebbs[i]->sch; ic; ic = ic->next)
+      if (!SKIP_IC2 (ic))
+        {
+          if (ic->left)
+            ic->left->isSemDeref = false;
+          if (ic->right)
+            ic->right->isSemDeref = false;
+          if (ic->result)
+            ic->result->isSemDeref = false;
+        }
 }
 
 /*-----------------------------------------------------------------*/
@@ -3921,6 +3941,8 @@ eBBlockFromiCode (iCode *ic)
       killDeadCode (ebbi, false);
       // Check before loop optimizations, but after dead code elimination and generalized constant propagation, so we can avoid false positives in dead branches, and have the necessary information.
       checkStaticArrayParams (ebbi);
+      /* Remove assignments kept for diagnostics before loop optimisation. */
+      kchange += killDeadCode (ebbi, false);
     }
 
   /* do loop optimizations */

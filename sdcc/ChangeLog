@@ -1,3 +1,12 @@
+2026-10-05 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCopt.c:
+	* support/regression/tests/bug-4109.c,
+	  support/valdiag/tests/bug-4109.c:
+	  Fix bug #4109: defer deletion of semantic dereferences until their diagnostics have been checked,
+	  then clear the markers and remove dead instructions; test pointer copies,
+	  null checks and single evaluation of &*. Patch by Christopher Bazley.
+
 2026-10-04 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* device/include/stdbit.h,
