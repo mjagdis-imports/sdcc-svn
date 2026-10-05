@@ -305,8 +305,8 @@ void openSimulator (char **args, int nargs)
     }
   /* now that we have opened, wait for the prompt */
   waitForSim(WAIT_PERIOD, NULL);
-  if (!isalnum(simibuff[0] || !isalnum(simibuff[1]))
-    waitForSim(WAIT_PERIOD, NULL);  
+  if (!isalnum(simibuff[0]) || !isalnum(simibuff[1]))
+    waitForSim(WAIT_PERIOD, NULL);
   simactive = 1;
 }
 #else
@@ -429,7 +429,7 @@ char *simResponse(void)
 }
 
 /*-----------------------------------------------------------------*/
-/* sendSim - sends a command to the simuator                 */
+/* sendSim - sends a command to the simuator                       */
 /*-----------------------------------------------------------------*/
 void sendSim(char *s)
 {
