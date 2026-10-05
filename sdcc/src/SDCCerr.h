@@ -276,7 +276,7 @@ enum {
   W_STATIC_ASSERTION_2          = 246, /* static assertion failed */
   E_DECL_AFTER_STATEMENT_C99    = 247, /* declaration after statement requires ISO C99 or later */
   E_SHORTCALL_INVALID_VALUE     = 248, /* Invalid value for a __z88dk_shortcall specifier */
-  E_DUPLICATE_PARAMTER_NAME     = 249, /* duplicate parameter name */
+  E_DUPLICATE_PARAMETER_NAME    = 249, /* duplicate parameter name */
   E_AUTO_FILE_SCOPE             = 250, /* auto in declaration at file scope */
   E_U8_CHAR_C23                 = 251, /* u8 character constant requires ISO C23 or later */
   E_U8_CHAR_INVALID             = 252, /* invalid u8 character constant */

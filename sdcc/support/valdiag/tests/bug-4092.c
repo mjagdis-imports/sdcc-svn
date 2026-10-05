@@ -21,3 +21,12 @@ int index;
 int nonconstant(void) { return array[index]; }
 #endif
 
+#ifdef TEST5
+/* On ds390, p[-1] reads four bytes at a byte offset of -4. The upper size
+   bound for an unknown pointer used to wrap to 3 on a 32-bit host. */
+long through_ptr_to_long(long *p) { return p[-1]; }
+#endif
+
+#ifdef TEST6
+void through_pointer_store(int *p) { p[-1] = 1; }
+#endif

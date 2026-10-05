@@ -1,3 +1,9 @@
+2026-10-05 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCgenconstprop.cc,
+	  support/valdiag/tests/bug-4092.c:
+	  Saturate pointer object-size bounds when applying byte offsets to avoid false bounds diagnostics on 32-bit hosts (bug #4092), patch by Christopher Bazley.
+
 2026-10-05 Maarten Brock <sourceforge.brock AT dse.nl>
 
 	* src/SDCCsymt.c: fix bug #4042 by applying patch by Christopher Bazley
