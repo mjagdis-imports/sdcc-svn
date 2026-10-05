@@ -1,3 +1,7 @@
+2026-10-05 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* support/sdbinutils/bfd/asxxxx.c: Fix bug #4108 by applying patch
+
 2026-10-05 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCopt.c:

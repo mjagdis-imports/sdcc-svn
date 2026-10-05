@@ -663,7 +663,7 @@ asxxxx_scan (bfd *abfd, unsigned int *p_lineno)
           break;
 
         case '\n':
-          ++p_lineno;
+          ++*p_lineno;
           break;
 
         case '\r':
