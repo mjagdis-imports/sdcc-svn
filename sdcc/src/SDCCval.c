@@ -2485,7 +2485,11 @@ valUnaryPM (value * val, bool reduceType)
   else if (SPEC_LONGLONG (val->etype) || SPEC_NOUN (val->etype) == V_BITINT)
     {
       if (SPEC_USIGN (val->etype))
-        SPEC_CVAL (val->etype).v_ulonglong = 0 - SPEC_CVAL (val->etype).v_ulonglong;
+        {
+          SPEC_CVAL (val->etype).v_ulonglong = 0 - SPEC_CVAL (val->etype).v_ulonglong;
+          if (IS_BITINT (val->etype))
+            SPEC_CVAL (val->etype).v_ulonglong &= 0xffffffffffffffffull >> (64 - SPEC_BITINTWIDTH (val->etype));
+        }
       else
         SPEC_CVAL (val->etype).v_longlong = -SPEC_CVAL (val->etype).v_longlong;
     }

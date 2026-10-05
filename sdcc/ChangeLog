@@ -1,3 +1,8 @@
+2026-10-05 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCval.c, support/valdiag/tests/bitint-negation.c:
+	  Fix bug #4100: wrap negated unsigned bit-precise constants to their declared width, patch by Christopher Bazley.
+
 2026-10-05 Maarten Brock <sourceforge.brock AT dse.nl>
 
 	* support/sdbinutils/bfd/asxxxx.c: Fix bug #4108 by applying patch
@@ -16,27 +21,6 @@
 	  support/regression/tests/gcc-torture-execute-980617-1.c,
 	  support/regression/tests/gcc-torture-execute-pr20601-1.c:
 	  Pick some regression test changes from the patch for bug #3952 by Christopher Bazley.
-
-2026-10-05 Christopher Bazley <chris.bazley.wg14@gmail.com>
-
-	* src/SDCCast.c, src/SDCCsymt.c, src/SDCCsymt.h:
-	  Diagnose incompatible implicit pointer conversions (bug #3952).
-	  Compare normalised referenced types and function return types;
-	  restore function parameter comparisons in exact type checking.
-	* support/valdiag/tests/bug-3952.c,
-	  support/valdiag/tests/function-type-parameters.c,
-	  support/regression/tests/function-type-parameters.c:
-	  Add diagnostic and runtime coverage.
-	* support/valdiag/tests/arraybounds.c,
-	  support/valdiag/tests/bug-4004.c,
-	  support/valdiag/tests/pointers.c:
-	  Update diagnostic expectations.
-	* support/regression/tests/bug-2632.c,
-	  support/regression/tests/gcc-torture-execute-20001017-2.c,
-	  support/regression/tests/gcc-torture-execute-980506-3.c,
-	  support/regression/tests/gcc-torture-execute-980617-1.c,
-	  support/regression/tests/gcc-torture-execute-pr20601-1.c:
-	  Preserve the original tested code and suppress expected warning 244.
 
 2026-10-04 Philipp Klaus Krause <philipp@colecovision.eu>
 
