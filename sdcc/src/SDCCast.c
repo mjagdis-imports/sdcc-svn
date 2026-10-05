@@ -5891,7 +5891,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           tree->right = decorateType (tree->right, resultTypeProp, reduceTypeAllowed);
           --noAlloc;
 
-          if (((int) ulFromVal (valFromType (LETYPE (tree)))) != 0)
+          if (!isEqualVal (valFromType (LETYPE (tree)), 0))
             heir = tree->right->left;
           else
             heir = tree->right->right;

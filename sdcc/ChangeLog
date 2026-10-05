@@ -1,3 +1,9 @@
+2026-10-05 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCast.c,
+	  support/regression/tests/conditional-truth.c:
+	  Fix bug #4101: test the full scalar value when folding a conditional expression, patch by Christopher Bazley.
+
 2026-10-05 Maarten Brock <sourceforge.brock AT dse.nl>
 
 	* debugger/mcs51/simi.c: fix bug #4111 by applying patch
