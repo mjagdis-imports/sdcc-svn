@@ -1,3 +1,7 @@
+2026-10-05 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* lib/bootstrap.mk: adapted for rename of sdas COPYING3 to gpl3.txt
+
 2026-08-19 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* lib/variables.mk,

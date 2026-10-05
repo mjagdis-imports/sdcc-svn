@@ -112,7 +112,7 @@ generate-setup:
 ifeq ($(CROSSCOMPILING), 1)
 	mkdir -p $(dir $(SETUPNAME))
 	cp $(ORIGDIR)/sdcc/COPYING $(BUILDDIR)$(PREFIX)/COPYING.txt; $(UNIX2DOS) $(BUILDDIR)$(PREFIX)/COPYING.txt
-	cp $(ORIGDIR)/sdcc/sdas/COPYING3 $(BUILDDIR)$(PREFIX)/COPYING3.txt; $(UNIX2DOS) $(BUILDDIR)$(PREFIX)/COPYING3.txt
+	cp $(ORIGDIR)/sdcc/sdas/gpl3.txt $(BUILDDIR)$(PREFIX)/COPYING3.txt; $(UNIX2DOS) $(BUILDDIR)$(PREFIX)/COPYING3.txt
 	cp $(ORIGDIR)/sdcc/support/scripts/sdcc.nsi $(BUILDDIR)$(PREFIX)
 	cp $(ORIGDIR)/sdcc/support/scripts/sdcc.ico $(BUILDDIR)$(PREFIX)
 	$(UNIX2DOS) $(BUILDDIR)$(PREFIX)/doc/ChangeLog_head.txt
