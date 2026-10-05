@@ -1,3 +1,10 @@
+2026-10-05 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* src/SDCCsymt.c: fix bug #4042 by applying patch by Christopher Bazley
+	  uses IS_AUTO() instead of sym->level && !IS_STATIC(sym->etype),
+	  marks block scope function declaration extern
+	* support/valdiag/tests/bug-4042.c: new, added
+
 2026-10-05 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCast.c,

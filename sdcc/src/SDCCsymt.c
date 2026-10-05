@@ -94,7 +94,8 @@ nounName (sym_link * sl)
 }
 
 bucket *SymbolTab[HASHTAB_SIZE];         // the symbol    table (all symbols)
-bucket *SymbolTabE[HASHTAB_SIZE];        // extern symbol table (for symbols declared with external linkage at block-scope before any declaration at file-scope)
+bucket *SymbolTabE[HASHTAB_SIZE];        // extern symbol table (for symbols declared with external
+                                         // linkage at block-scope before any declaration at file-scope)
 bucket *StructTab[HASHTAB_SIZE];         /* the structure table  */
 bucket *TypedefTab[HASHTAB_SIZE];        /* the typedef   table  */
 bucket *LabelTab[HASHTAB_SIZE];          /* the Label     table  */
@@ -1639,15 +1640,16 @@ addSymChain (symbol **symHead)
                   FUNC_NOPROTOTYPE (sym->type) = false;
                 }
 
-              if (IS_EXTERN (sym->etype) && IS_STATIC (csym->etype)) // Identifier declared with storage class extern while previous declaration with linkage is visible gets linkage of previous declaration.
+              // Identifier declared with storage class extern while previous declaration with linkage is visible gets linkage of previous declaration.
+              if (IS_EXTERN (sym->etype) && IS_STATIC (csym->etype))
                 {
                   SPEC_STAT (sym->etype) = SPEC_STAT (csym->etype);
                   SPEC_EXTR (sym->etype) = SPEC_EXTR (csym->etype);
                 }
 
 #if 0
-              /* If only one of the definitions used the "at" keyword, copy */
-              /* the address to the other. */
+              /* If only one of the definitions used the "at" keyword, */
+              /* copy the address to the other. */
               if (IS_SPEC (csym->etype) && SPEC_ABSA (csym->etype) && IS_SPEC (sym->etype) && !SPEC_ABSA (sym->etype))
                 {
                   SPEC_ABSA (sym->etype) = 1;
@@ -2363,7 +2365,7 @@ checkSClass (symbol *sym, bool isProto)
     }
 
   /* if this is an automatic symbol */
-  if (sym->level && (options.stackAuto || reentrant))
+  if (IS_AUTO (sym) && (options.stackAuto || reentrant))
     {
       if (SPEC_SCLS (sym->etype) != S_BIT &&
           SPEC_SCLS (sym->etype) != S_REGISTER)
@@ -2377,24 +2379,20 @@ checkSClass (symbol *sym, bool isProto)
             }
           else
             {
-              /* storage class may only be specified for statics */
-              if (!IS_STATIC (sym->etype))
-                {
-                  werror (E_AUTO_ASSUMED, sym->name);
-                }
+              werror (E_AUTO_ASSUMED, sym->name);
             }
         }
     }
 
   /* automatic symbols cannot be given   */
   /* an absolute address ignore it      */
-  if (sym->level && !IS_STATIC (sym->etype) && SPEC_ABSA (sym->etype) && (options.stackAuto || reentrant))
+  if (IS_AUTO (sym) && SPEC_ABSA (sym->etype) && (options.stackAuto || reentrant))
     {
       werror (E_AUTO_ABSA, sym->name);
       SPEC_ABSA (sym->etype) = 0;
     }
 
-  if (sym->level && !IS_STATIC (sym->etype) && (IS_DECL (sym->type) ? DCL_PTR_ADDRSPACE (sym->type) : SPEC_ADDRSPACE (sym->type)) && (options.stackAuto || reentrant))
+  if (IS_AUTO (sym) && (IS_DECL (sym->type) ? DCL_PTR_ADDRSPACE (sym->type) : SPEC_ADDRSPACE (sym->type)) && (options.stackAuto || reentrant))
     {
       werror (E_AUTO_ADDRSPACE, sym->name);
       if (IS_DECL (sym->type))
@@ -2439,7 +2437,7 @@ checkSClass (symbol *sym, bool isProto)
 
   /* if parameter or local variable then change */
   /* the storage class to reflect where the var will go */
-  if (sym->level && SPEC_SCLS (sym->etype) == S_FIXED && !IS_STATIC (sym->etype))
+  if (IS_AUTO (sym) && SPEC_SCLS (sym->etype) == S_FIXED)
     {
       if (options.stackAuto || (currFunc && IFFUNC_ISREENT (currFunc->type)))
         {
@@ -2615,7 +2613,7 @@ leaveBlockScope (int block)
           if (chain->block == block)
             {
               symbol *sym = (symbol *)chain->sym;
-              
+
               /* Temporary fix for bug #3289 - leave enums in scope. */
               /* This is also buggy but compatible with 4.1.0 and    */
               /* earlier behavior and less likely to trigger errors. */
@@ -3204,7 +3202,7 @@ comparePtrType (sym_link *dest, sym_link *src, bool mustCast, bool ignoreimplici
     mustCast = true;
 
   // Cast when introducing volatile (for correctness) or _Optional (for diagnostics) on the target.
-  if (isVolatile (dest->next) && !isVolatile (src->next) || isOptional (dest->next) && !isOptional (src->next)) 
+  if (isVolatile (dest->next) && !isVolatile (src->next) || isOptional (dest->next) && !isOptional (src->next))
     mustCast = true;
 
   if (IS_VOID (src->next) && IS_VOID (dest->next))
@@ -3282,7 +3280,7 @@ compareType (sym_link *dest, sym_link *src, bool ignoreimplicitintrinsic)
             }
           if ((IS_FARPTR (dest) ^ IS_FARPTR (src)) && (port->far_in_generic || port->generic_in_far))
             mustCast = true;
-          
+
           if (IS_PTR (src) && (IS_GENPTR (dest) || ((DCL_TYPE (src) == POINTER) && (DCL_TYPE (dest) == IPOINTER))))
             {
               return comparePtrType (dest, src, true, ignoreimplicitintrinsic);
@@ -3382,7 +3380,7 @@ compareType (sym_link *dest, sym_link *src, bool ignoreimplicitintrinsic)
             return 0;
         }
 
-      return 1; 
+      return 1;
     }
 
   if (SPEC_SHORT (dest) != SPEC_SHORT (src))
@@ -3518,7 +3516,7 @@ compareTypeExact (sym_link *dest, sym_link *src, long level, bool check_top_std_
   if ((SPEC_NOUN (dest) == V_BITINT || SPEC_NOUN (dest) == V_BITINTBITFIELD) && (SPEC_NOUN (src) == V_BITINT || SPEC_NOUN (src) == V_BITINTBITFIELD))
     {
       if (SPEC_BITINTWIDTH (dest) != SPEC_BITINTWIDTH (src) ||
-        (SPEC_USIGN (dest) && !SPEC_USIGN (src) && SPEC_BITINTWIDTH (dest) % 8)) // Cast from signed to unsigned type cannot be omitted, since it requires masking top bits.
+          (SPEC_USIGN (dest) && !SPEC_USIGN (src) && SPEC_BITINTWIDTH (dest) % 8)) // Cast from signed to unsigned type cannot be omitted, since it requires masking top bits.
         return 0;
       return SPEC_USIGN (dest) == SPEC_USIGN (src);
     }
@@ -3847,12 +3845,12 @@ checkFunction (symbol * sym, symbol * csym)
       werrorfl (sym->fileDef, sym->lineDef, E_FUNC_BODY, sym->name);
       return 0;
     }
-  
+
   /* check the return value type   */
   if (FUNC_NOPROTOTYPE (csym->type))
     {
       if (compareType (csym->type->next, sym->type->next, false) <= 0)
-        { 
+        {
           werrorfl (sym->fileDef, sym->lineDef, E_PREV_DECL_CONFLICT, csym->name, "return type", csym->fileDef, csym->lineDef);
           printFromToType (csym->type->next, sym->type->next);
           return 0;
@@ -4064,7 +4062,7 @@ processFunc (symbol *func, sym_link *funcType)
     }
 
   if (getenv ("SDCC_DEBUG_FUNCTION_POINTERS"))
-    fprintf (stderr, "SDCCsymt.c:processFunc(%s)\n", funcName);
+    fprintf (stderr, "SDCCsymt.c:processFunc(%s)\n", funcName ? funcName : "NULL");
 
   /* find the function declaration within the type */
   while (funcType && !IS_FUNC (funcType))
@@ -4092,11 +4090,11 @@ processFunc (symbol *func, sym_link *funcType)
       funcType->next = newIntLink ();
     }
 
-  // Also do return type.
+  /* Also do return type */
   if (funcType->next)
     {
       processFunc (0, funcType->next);
-      
+
       // TODO: we probably should remove named address space qualifiers for intrinsic named address spaces, too.
       if (isConst (funcType->next) || isVolatile (funcType->next) || isRestrict (funcType->next) || isAtomic (funcType->next) || isOptional (funcType->next) || getAddrspace (funcType->next))
       {
@@ -4141,7 +4139,7 @@ processFunc (symbol *func, sym_link *funcType)
       if (val->sym)
         for (value *val2 = val->next; val2; val2 = val2->next)
           if (val2->sym && !strcmp (val->sym->name, val2->sym->name))
-            werror (E_DUPLICATE_PARAMTER_NAME, val->sym->name, funcName);
+            werror (E_DUPLICATE_PARAMETER_NAME, val->sym->name, funcName);
 
       dbuf_init (&dbuf, 128);
       dbuf_printf (&dbuf, "%s parameter %d", funcName, pNum);
@@ -4315,7 +4313,7 @@ dbuf_printTypeChain (sym_link * start, struct dbuf_s *dbuf)
                 (DCL_PTR_OPTIONAL (type) ? "_Optional " : ""),
                 (IFFUNC_ISBUILTIN (type) ? "__builtin__ " : ""),
                 (IFFUNC_ISJAVANATIVE (type) ? "_JavaNative " : ""));
-              dbuf_append_str (dbuf, "( ");
+              dbuf_append_str (dbuf, "(");
               if (!FUNC_ARGS (type) && !FUNC_HASVARARGS(type) && !FUNC_NOPROTOTYPE(type))
                 dbuf_append_str (dbuf, "void ");
               for (args = FUNC_ARGS (type); args; args = args->next)
@@ -4445,7 +4443,7 @@ dbuf_printTypeChain (sym_link * start, struct dbuf_s *dbuf)
                 dbuf_append_str (dbuf, "long-");
               dbuf_append_str (dbuf, "int");
               break;
-              
+
             case V_BITINT:
               dbuf_printf (dbuf, "_BitInt(%u)", SPEC_BITINTWIDTH (type));
               break;
@@ -4489,7 +4487,7 @@ dbuf_printTypeChain (sym_link * start, struct dbuf_s *dbuf)
             case V_BBITFIELD:
               dbuf_printf (dbuf, "_Bool-bitfield {%d,%d}", SPEC_BSTR (type), SPEC_BLEN (type));
               break;
-              
+
             case V_BITINTBITFIELD:
               dbuf_printf (dbuf, "_BitInt(%d)-bitfield {%d,%d}", SPEC_BITINTWIDTH (type), SPEC_BSTR (type), SPEC_BLEN (type));
               break;
@@ -5186,7 +5184,7 @@ initCSupport (void)
               for (su = 0; su < 2; su++)
                 {
                   struct dbuf_s dbuf;
-    
+
                   dbuf_init (&dbuf, 128);
                   if (tofrom)
                     {
@@ -5453,7 +5451,8 @@ newEnumType (symbol *enumlist, sym_link *userRequestedType)
           if (!options.std_sdcc)
             werror (W_ENUM_UNDERLYING_BITINT);
         }
-      else if ((SPEC_NOUN (userRequestedType) != V_INT && SPEC_NOUN (userRequestedType) != V_CHAR && SPEC_NOUN (userRequestedType) != V_BOOL) || SPEC_ENUM (userRequestedType))
+      else if ((SPEC_NOUN (userRequestedType) != V_INT && SPEC_NOUN (userRequestedType) != V_CHAR && SPEC_NOUN (userRequestedType) != V_BOOL) ||
+               SPEC_ENUM (userRequestedType))
         {
           werror (E_ENUM_UNDERLYING_TYPE);
           /* try to keep going */
@@ -5502,7 +5501,8 @@ newEnumType (symbol *enumlist, sym_link *userRequestedType)
   if (!options.std_c23 && (!llFitsInIntType (min, type) || !llFitsInIntType (max, type)))
     werror (W_ENUM_INT_RANGE_C23);
 
-  // Otherwise: use the smallest integer type that is compatible with this range that is neither bool nor a bit-precise type (both bool and bit-prcise types are disallowed here by ISO C23).
+  // Otherwise: use the smallest integer type that is compatible with this range that is neither
+  // bool nor a bit-precise type (both bool and bit-prcise types are disallowed here by ISO C23).
   if (min >= 0 && max <= 255)
     {
       SPEC_NOUN (type) = V_CHAR;
@@ -5884,6 +5884,11 @@ prepareDeclarationSymbol (attribute *attr, sym_link *declSpecs, symbol *initDecl
       /* do the pointer stuff */
       pointerTypes (sym->type, lnk);
       addDecl (sym, 0, lnk);
+      /* A function declared at block scope without a storage-class
+         specifier has the same linkage as if declared extern. */
+      if (sym->level && IS_FUNC (sym->type) && !IS_TYPEDEF (sym->etype) &&
+          !IS_STATIC (sym->etype) && !IS_EXTERN (sym->etype))
+        SPEC_EXTR (sym->etype) = 1;
     }
 
   return sym1;
