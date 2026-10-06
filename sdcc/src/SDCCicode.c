@@ -1508,73 +1508,21 @@ operandOperation (operand * left, operand * right, int op, sym_link * type)
       retval = operandFromValue (valRecastLitVal (type, valShift (OP_VALUE (left), OP_VALUE (right), 0, true)), false);
       break;
     case EQ_OP:
-      if (IS_FLOAT (let) || IS_FLOAT (ret))
-        {
-          retval = operandFromLit (operandLitValue (left) == operandLitValue (right));
-        }
-      else if (IS_FIXED16X16 (let) || IS_FIXED16X16 (ret))
-        {
-          retval = operandFromLit (operandLitValue (left) == operandLitValue (right));
-        }
-      else if (IS_PTR (operandType (left)) || IS_PTR (operandType (right)))
-        {
-          retval = operandFromLit (operandLitValue (left) == operandLitValue (right));
-        }
-      else
-        {
-          /* this op doesn't care about signedness */
-          TYPE_TARGET_ULONG l, r;
-
-          l = (TYPE_TARGET_ULONG) double2ul (operandLitValue (left));
-          r = (TYPE_TARGET_ULONG) double2ul (operandLitValue (right));
-          /* In order to correctly compare 'signed int' and 'unsigned int' it's
-             necessary to strip them to 16 bit.
-             Literals are reduced to their cheapest type, therefore left and
-             right might have different types. It's necessary to find a
-             common type: int (used for char too) or long */
-          if (!IS_LONG (let) && !IS_LONG (ret))
-            {
-              r = (TYPE_TARGET_UINT) r;
-              l = (TYPE_TARGET_UINT) l;
-            }
-          retval = operandFromLit (l == r);
-        }
-      break;
-    case '<':
-      retval = operandFromLit (operandLitValue (left) < operandLitValue (right));
-      break;
-    case LE_OP:
-      retval = operandFromLit (operandLitValue (left) <= operandLitValue (right));
-      break;
     case NE_OP:
-      retval = operandFromLit (operandLitValue (left) != operandLitValue (right));
-      break;
+    case '<':
     case '>':
-      retval = operandFromLit (operandLitValue (left) > operandLitValue (right));
-      break;
+    case LE_OP:
     case GE_OP:
-      retval = operandFromLit (operandLitValue (left) >= operandLitValue (right));
+      retval = operandFromValue (valCompare (OP_VALUE (left), OP_VALUE (right),
+                                            op, true), false);
       break;
     case BITWISEAND:
-      retval = operandFromValue (valCastLiteral (type,
-                                                 (TYPE_TARGET_ULONG) double2ul (operandLitValue (left)) &
-                                                 (TYPE_TARGET_ULONG) double2ul (operandLitValue (right)),
-                                                 (TYPE_TARGET_ULONG) double2ul (operandLitValue (left)) &
-                                                 (TYPE_TARGET_ULONG) double2ul (operandLitValue (right))), false);
-      break;
     case '|':
-      retval = operandFromValue (valCastLiteral (type,
-                                                 (TYPE_TARGET_ULONG) double2ul (operandLitValue (left)) |
-                                                 (TYPE_TARGET_ULONG) double2ul (operandLitValue (right)),
-                                                 (TYPE_TARGET_ULONG) double2ul (operandLitValue (left)) |
-                                                 (TYPE_TARGET_ULONG) double2ul (operandLitValue (right))), false);
-      break;
     case '^':
-      retval = operandFromValue (valCastLiteral (type,
-                                                 (TYPE_TARGET_ULONG) double2ul (operandLitValue (left)) ^
-                                                 (TYPE_TARGET_ULONG) double2ul (operandLitValue (right)),
-                                                 (TYPE_TARGET_ULONG) double2ul (operandLitValue (left)) ^
-                                                 (TYPE_TARGET_ULONG) double2ul (operandLitValue (right))), false);
+      /* Fold at the operand width without rounding through double. */
+      retval = operandFromValue (valRecastLitVal (type,
+        valBitwise (OP_VALUE (left), OP_VALUE (right),
+                    op == BITWISEAND ? '&' : op, false)), false);
       break;
     case AND_OP:
       retval = operandFromLit (operandLitValue (left) && operandLitValue (right));

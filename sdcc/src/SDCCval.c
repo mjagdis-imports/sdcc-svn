@@ -3002,94 +3002,69 @@ valCompare (value * lval, value * rval, int ctype, bool reduceType)
       SPEC_USIGN (val->type) = 0;
     }
 
+  bool less, equal, greater;
+  if (IS_FLOAT (lval->etype) || IS_FLOAT (rval->etype) ||
+      IS_FIXED16X16 (lval->etype) || IS_FIXED16X16 (rval->etype))
+    {
+      double l = floatFromVal (lval);
+      double r = floatFromVal (rval);
+      less = l < r;
+      equal = l == r;
+      greater = l > r;
+    }
+  else
+    {
+      /* Promote reduced character literals before finding the common
+         arithmetic type; integer comparisons must not round via double. */
+      sym_link *ltype = IS_CHAR (lval->type) || IS_BOOLEAN (lval->type) ?
+        newIntLink () : lval->type;
+      sym_link *rtype = IS_CHAR (rval->type) || IS_BOOLEAN (rval->type) ?
+        newIntLink () : rval->type;
+      sym_link *common = computeType (ltype, rtype, RESULT_TYPE_INT, ctype);
+      TYPE_TARGET_ULONGLONG l = ullFromVal (lval);
+      TYPE_TARGET_ULONGLONG r = ullFromVal (rval);
+
+      /* Only the low word goes through the double argument. Wide casts
+         use the full integer argument, without rounding or overflow. */
+      l = ullFromVal (valCastLiteral (common, (TYPE_TARGET_ULONG) l, l));
+      r = ullFromVal (valCastLiteral (common, (TYPE_TARGET_ULONG) r, r));
+
+      if (IS_PTR (common) || IS_UNSIGNED (common))
+        {
+          less = l < r;
+          equal = l == r;
+          greater = l > r;
+        }
+      else
+        {
+          TYPE_TARGET_LONGLONG sl = (TYPE_TARGET_LONGLONG) l;
+          TYPE_TARGET_LONGLONG sr = (TYPE_TARGET_LONGLONG) r;
+          less = sl < sr;
+          equal = sl == sr;
+          greater = sl > sr;
+        }
+    }
+
   switch (ctype)
     {
-    /* FIXME: need to add long long support to inequalities */
     case '<':
-      SPEC_CVAL (val->type).v_int = floatFromVal (lval) < floatFromVal (rval);
+      SPEC_CVAL (val->type).v_int = less;
       break;
-
     case '>':
-      SPEC_CVAL (val->type).v_int = floatFromVal (lval) > floatFromVal (rval);
+      SPEC_CVAL (val->type).v_int = greater;
       break;
-
     case LE_OP:
-      SPEC_CVAL (val->type).v_int = floatFromVal (lval) <= floatFromVal (rval);
+      SPEC_CVAL (val->type).v_int = less || equal;
       break;
-
     case GE_OP:
-      SPEC_CVAL (val->type).v_int = floatFromVal (lval) >= floatFromVal (rval);
+      SPEC_CVAL (val->type).v_int = greater || equal;
       break;
-
     case EQ_OP:
-      if (SPEC_NOUN (lval->type) == V_FLOAT || SPEC_NOUN (rval->type) == V_FLOAT)
-        {
-          SPEC_CVAL (val->type).v_int = floatFromVal (lval) == floatFromVal (rval);
-        }
-      else if (SPEC_NOUN (lval->type) == V_FIXED16X16 || SPEC_NOUN (rval->type) == V_FIXED16X16)
-        {
-          SPEC_CVAL (val->type).v_int = floatFromVal (lval) == floatFromVal (rval);
-        }
-      else
-        {
-          /* integrals: ignore signedness */
-          TYPE_TARGET_ULONGLONG l, r;
-
-          l = (TYPE_TARGET_ULONGLONG) ullFromVal (lval);
-          r = (TYPE_TARGET_ULONGLONG) ullFromVal (rval);
-          /* In order to correctly compare 'signed int' and 'unsigned int' it's
-             necessary to strip them to 16 bit.
-             Literals are reduced to their cheapest type, therefore left and
-             right might have different types. It's necessary to find a
-             common type: int (used for char too) or long */
-          if (!IS_LONGLONG (lval->etype) && !IS_BITINT (lval->etype) && !IS_LONGLONG (rval->etype) && !IS_BITINT (rval->etype))
-            {
-              r = (TYPE_TARGET_ULONG) r;
-              l = (TYPE_TARGET_ULONG) l;
-            }
-          if (!IS_LONG (lval->etype) && !IS_LONG (rval->etype))
-            {
-              r = (TYPE_TARGET_UINT) r;
-              l = (TYPE_TARGET_UINT) l;
-            }
-          SPEC_CVAL (val->type).v_int = l == r;
-        }
+      SPEC_CVAL (val->type).v_int = equal;
       break;
     case NE_OP:
-      if (SPEC_NOUN (lval->type) == V_FLOAT || SPEC_NOUN (rval->type) == V_FLOAT)
-        {
-          SPEC_CVAL (val->type).v_int = floatFromVal (lval) != floatFromVal (rval);
-        }
-      else if (SPEC_NOUN (lval->type) == V_FIXED16X16 || SPEC_NOUN (rval->type) == V_FIXED16X16)
-        {
-          SPEC_CVAL (val->type).v_int = floatFromVal (lval) != floatFromVal (rval);
-        }
-      else
-        {
-          /* integrals: ignore signedness */
-          TYPE_TARGET_ULONGLONG l, r;
-
-          l = (TYPE_TARGET_ULONGLONG) ullFromVal (lval);
-          r = (TYPE_TARGET_ULONGLONG) ullFromVal (rval);
-          /* In order to correctly compare 'signed int' and 'unsigned int' it's
-             necessary to strip them to 16 bit.
-             Literals are reduced to their cheapest type, therefore left and
-             right might have different types. It's necessary to find a
-             common type: int (used for char too) or long */
-          if (!IS_LONGLONG (lval->etype) && !IS_BITINT (lval->etype) && !IS_LONGLONG (rval->etype) && !IS_BITINT (rval->etype))
-            {
-              r = (TYPE_TARGET_ULONG) r;
-              l = (TYPE_TARGET_ULONG) l;
-            }
-          if (!IS_LONG (lval->etype) && !IS_LONG (rval->etype))
-            {
-              r = (TYPE_TARGET_UINT) r;
-              l = (TYPE_TARGET_UINT) l;
-            }
-          SPEC_CVAL (val->type).v_int = l != r;
-        }
+      SPEC_CVAL (val->type).v_int = !equal;
       break;
-
     }
 
   return val;

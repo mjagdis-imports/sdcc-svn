@@ -1,5 +1,20 @@
 2026-10-06 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/SDCCast.c:
+	  Compare integral AST literals without conversion to double;
+	  test the full literal before simplifying unsigned comparisons, patch by Christopher Bazley.
+	* src/SDCCval.c:
+	  Share folding for all six comparison operators after arithmetic
+	  conversion, preserving wide integer values and signedness (#4113), patch by Christopher Bazley.
+	* src/SDCCicode.c:
+	  Reuse valCompare for comparisons and valBitwise for bitwise folding
+	  to avoid rounding and truncating wide literal operands, patch by Christopher Bazley.
+	* support/regression/tests/bug-4113.c:
+	  Test wide comparisons, integer conversion, bitwise folding,
+	  floating operands and signed versus unsigned division, based on patch by Christopher Bazley.
+
+2026-10-06 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/SDCCast.c,
 	  src/SDCCerr.c,
 	  src/SDCCerr.h,

@@ -593,6 +593,15 @@ isAstEqual (ast * t1, ast * t2)
         {
           if (t2->opval.val->sym)
             return false;
+          /* Matching literal values with different signedness can give
+             enclosing expressions different arithmetic conversions.
+             Reject such matches even when the literals compare equal;
+             isAstEqual tests expression equivalence, not C equality. */
+          else if (IS_INTEGRAL (t1->opval.val->etype) &&
+                   IS_INTEGRAL (t2->opval.val->etype))
+            return IS_UNSIGNED (t1->opval.val->etype) ==
+                     IS_UNSIGNED (t2->opval.val->etype) &&
+                   ullFromVal (t1->opval.val) == ullFromVal (t2->opval.val);
           else
             return (floatFromVal (t1->opval.val) == floatFromVal (t2->opval.val));
         }
@@ -5672,7 +5681,8 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
 
       /* if (unsigned value) > 0 then '(unsigned value) ? 1 : 0' */
       if (tree->opval.op == '>' &&
-          SPEC_USIGN (LETYPE (tree)) && IS_LITERAL (RTYPE (tree)) && ((int) ulFromVal (valFromType (RETYPE (tree)))) == 0)
+          SPEC_USIGN (LETYPE (tree)) && IS_LITERAL (RTYPE (tree)) &&
+          isEqualVal (valFromType (RETYPE (tree)), 0))
         {
           if ((resultType == RESULT_TYPE_IFX) || (resultType == RESULT_TYPE_BOOL))
             {
