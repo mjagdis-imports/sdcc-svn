@@ -1,3 +1,11 @@
+2026-10-06 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
+	* src/SDCCast.c,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  support/valdiag/tests/bug-4087.c:
+	  Fix bug #4087. Diagnose invalid alignof operands and warn for incomplete arrays before C2y, patch by Christopher Bazley.
+
 2026-10-06 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/pdk/gen.c,

@@ -797,6 +797,8 @@ struct
      "function '%s' has incomplete return type", 0},
   {E_FUNC_RETURN, ERROR_LEVEL_ERROR,
      "function '%s' has function return type", 0},
+  {W_ALIGNOF_INCOMPLETE_ARRAY_C2Y, ERROR_LEVEL_WARNING,
+     "alignof applied to an incomplete array requires ISO C2y or later", 0},
 };
 
 /* -------------------------------------------------------------------------------

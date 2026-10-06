@@ -394,6 +394,7 @@ enum {
   E_SIZEOF_BITFLD               = 364, // sizeof applied to bit-field
   E_INCOMPLETE_RETURN           = 365, // function has incomplete return type
   E_FUNC_RETURN                 = 366, // function '%s' has function return type
+  W_ALIGNOF_INCOMPLETE_ARRAY_C2Y = 367, // alignof applied to an incomplete array requires ISO C2y or later
 
   // If you get a merge conflict here, some #pragma disable_warning in support/valdiag and support/regression will likely need to be adapted to the resolution. Check there!
 

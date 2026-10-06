@@ -6524,9 +6524,17 @@ value *
 alignofOp (sym_link *type)
 {
   value *val;
+  sym_link *elementType = IS_ARRAY (type) ? type->next : type;
 
   /* make sure the type is complete and sane */
   checkTypeSanity (type, "(_Alignof)");
+  while (IS_ARRAY (elementType) && DCL_ELEM (elementType))
+    elementType = elementType->next;
+  if (IS_ARRAY (elementType) || IS_VOID (elementType) || IS_FUNC (elementType) ||
+      (IS_STRUCT (elementType) && !SPEC_STRUCT (elementType)->fields))
+    werror (E_INVALID_OP, "_Alignof");
+  else if (IS_ARRAY (type) && !DCL_ELEM (type) && !options.std_c2y)
+    werror (W_ALIGNOF_INCOMPLETE_ARRAY_C2Y);
 
   val = constVal ("1");
 
