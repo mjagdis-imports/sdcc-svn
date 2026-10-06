@@ -847,7 +847,7 @@ cheapMove (const asmop *result, int roffset, const asmop *source, int soffset, b
       if (!p_dead)
         pushPF (true);
       int stk = soffset < 8 ? source->aopu.bytes[soffset].byteu.stk : source->aopu.bytes[0].byteu.stk + soffset;
-      pointPStack(stk, true, f_dead);
+      pointPStack (stk, true, f_dead);
       emit2 ("idxm", "a, p");
       cost (1, 2);
       if (!p_dead)
@@ -857,7 +857,7 @@ cheapMove (const asmop *result, int roffset, const asmop *source, int soffset, b
     {
       if (!p_dead)
         pushPF (false);
-      pointPStack(result->aopu.bytes[roffset].byteu.stk, false, f_dead);
+      pointPStack (result->aopu.bytes[roffset].byteu.stk, false, f_dead);
       emit2 ("idxm", "p, a");
       cost (1, 2);
       if (!p_dead)
@@ -881,7 +881,7 @@ cheapMove (const asmop *result, int roffset, const asmop *source, int soffset, b
     }
   else if (result->type == AOP_STK && (source->type == AOP_DIR || source->type == AOP_IMMD || source->type == AOP_LIT || source->type == AOP_SFR) && a_dead && p_dead)
     {
-      pointPStack(result->aopu.bytes[roffset].byteu.stk, true, f_dead);
+      pointPStack (result->aopu.bytes[roffset].byteu.stk, true, f_dead);
       emit2 (source->type == AOP_SFR ? "mov.io" : "mov", "a, %s", aopGet (source, soffset));
       emit2 ("idxm", "p, a");
       cost (2, 3);
@@ -4404,11 +4404,37 @@ static void getBitFieldByte (int len, int str, bool sex)
     }
 }
 
+static void popOrA (bool p_dead)
+{
+  if (!p_dead) // Horribly inefficient
+    {
+      pushPF (false);
+      pushAF();
+      pointPStack (G.stack.pushed - 2, true, true);
+      emit2 ("idxm", "a, p");
+      cost (1, 2);
+      emit2 ("mov", "p, a");
+      popAF();
+      emit2 ("or", "a, p");
+      popPF (false);
+      adjustStack (-2, false, false);
+    }
+  else
+    {
+      emit2 ("mov", "p, a");
+      cost (1, 1);
+      popAF();
+      emit2 ("or", "a, p");
+      cost (1, 1);
+      G.p.type = AOP_INVALID;
+    }
+}
+
 /*-----------------------------------------------------------------*/
 /* genPointerGet - generate code for pointer get                   */
 /*-----------------------------------------------------------------*/
 static void
-genPointerGet (const iCode *ic)
+genPointerGet (const iCode *ic, iCode *ifx)
 {
   operand *result = IC_RESULT (ic);
   operand *left = IC_LEFT (ic);
@@ -4427,7 +4453,7 @@ genPointerGet (const iCode *ic)
   bool pushed_p = false;
 
   bool bit_field = IS_BITVAR (operandType (left)->next);
-  int size = result->aop->size;
+  int size = operandSize (ic->result); // Can't use result->size, since it is 0 for AOP_CND (i.e. non-null ifx).
   int blen, bstr;
   blen = bit_field ? (SPEC_BLEN (getSpec (operandType (IS_BITVAR (getSpec (operandType (right))) ? right : left)))) : 0;
   bstr = bit_field ? (SPEC_BSTR (getSpec (operandType (IS_BITVAR (getSpec (operandType (right))) ? right : left)))) : 0;
@@ -4441,6 +4467,9 @@ genPointerGet (const iCode *ic)
     ptype = POINTER;
 
   wassertl (aopIsLitVal (right->aop, 0, 2, 0x0000), "Unimplemented nonzero right operand in pointer read");
+
+  if (ifx && !regDead (A_IDX, ic))
+    UNIMPLEMENTED;
 
   if (left->aop->type == AOP_IMMD && (ptype == POINTER || ptype == CPOINTER) || left->aop->type == AOP_LIT && operandLitValueUll(left) & 0x8000)
     {
@@ -4470,13 +4499,26 @@ genPointerGet (const iCode *ic)
             }
 
           if (bit_field && blen < 8)
-            getBitFieldByte (blen, bstr, !SPEC_USIGN (getSpec (operandType (result))) && !IS_BOOLEAN (getSpec (operandType (result))));
+            if (ifx)
+              {
+                emit2 ("and", "a, #0x%02x", (0xff >> (8 - blen)) << bstr);
+                cost (2, 1);
+              }
+            else
+              getBitFieldByte (blen, bstr, !SPEC_USIGN (getSpec (operandType (result))) && !IS_BOOLEAN (getSpec (operandType (result))));
 
           if (aopInReg (result->aop, i, A_IDX) && (!bit_field ? i + 1 < size : blen - 8 > 0))
             {
               wassert (!pushed_a);
               pushAF();
               pushed_a = true;
+            }
+          else if (ifx)
+            {
+              if (i)
+                popOrA (regDead (P_IDX, ic));
+              if (!bit_field ? i + 1 < size : blen - 8 > 0)
+                pushAF();
             }
           else
             cheapMove (result->aop, i, ASMOP_A, 0, true, true, true);
@@ -4497,6 +4539,7 @@ genPointerGet (const iCode *ic)
 #endif
   else if (!bit_field && left->aop->type == AOP_STL && result->aop->type == AOP_STK) // Just a stack-to-stack copy
     {
+      wassert (!ifx);
       moveStackStack (result->aop->aopu.bytes[0].byteu.stk, left->aop->aopu.stk_off, size, regDead (A_IDX, ic));
     }
   else if (ptype == POINTER) // Try to use efficient idxm when we know the source is in RAM.
@@ -4520,12 +4563,23 @@ genPointerGet (const iCode *ic)
           cost (1, 2);
 
           if (bit_field && blen < 8)
-            getBitFieldByte (blen, bstr, !SPEC_USIGN (getSpec (operandType (result))) && !IS_BOOLEAN (getSpec (operandType (result))));
+            if (ifx)
+              {
+                emit2 ("and", "a, #0x%02x", (0xff >> (8 - blen)) << bstr);
+                cost (2, 1);
+              }
+            else
+              getBitFieldByte (blen, bstr, !SPEC_USIGN (getSpec (operandType (result))) && !IS_BOOLEAN (getSpec (operandType (result))));
 
           if (aopInReg (result->aop, i, A_IDX) && (!bit_field ? i + 1 < size : blen - 8 > 0))
             {
               pushAF();
               pushed_a = true;
+            }
+          else if (ifx)
+            {
+              if (!bit_field ? i + 1 < size : blen - 8 > 0)
+                pushAF();
             }
           else
             {
@@ -4540,6 +4594,8 @@ genPointerGet (const iCode *ic)
               cost (1, 1);
             }
         }
+      for (int i = 1; ifx && i < size; i++)
+        popOrA (regDead (P_IDX, ic));
       if (ptr_aop == left->aop && !(aopInReg (left->aop, 0, P_IDX) && regDead (P_IDX, ic)))
         for (int i = 1; i < size; i++)
           {
@@ -4590,7 +4646,23 @@ genPointerGet (const iCode *ic)
               emit2 ("call", "__gptrget2");
               cost (1, (ptype == CPOINTER) ? 32 : 13);
               G.p.type = AOP_INVALID;
-              genMove_o (result->aop, i, ASMOP_AP, 0, 2, true, true);
+              if (ifx)
+                {
+                  emit2 ("or", "a, p");
+                  if (i)
+                    {
+                      wassert (pushed_a);
+                      popOrA (true);
+                      pushed_a = false;
+                    }
+                  if (i + 2 < size)
+                    {
+                      pushAF();
+                      pushed_a = true;
+                    }
+                }
+              else
+                genMove_o (result->aop, i, ASMOP_AP, 0, 2, true, true);
               i++;
               continue;
             }
@@ -4600,7 +4672,13 @@ genPointerGet (const iCode *ic)
           G.p.type = AOP_INVALID;
 
           if (bit_field && blen < 8)
-            getBitFieldByte (blen, bstr, !SPEC_USIGN (getSpec (operandType (result))) && !IS_BOOLEAN (getSpec (operandType (result))));
+            if (ifx)
+              {
+                emit2 ("and", "a, #0x%02x", (0xff >> (8 - blen)) << bstr);
+                cost (2, 1);
+              }
+            else
+              getBitFieldByte (blen, bstr, !SPEC_USIGN (getSpec (operandType (result))) && !IS_BOOLEAN (getSpec (operandType (result))));
 
           if (aopInReg (result->aop, i, P_IDX) && (!bit_field ? i + 1 < size : blen - 8 > 0))
             UNIMPLEMENTED;
@@ -4608,6 +4686,13 @@ genPointerGet (const iCode *ic)
             {
               pushAF();
               pushed_a = true;
+            }
+          else if (ifx)
+            {
+              if (i)
+                popOrA (true);
+              if (!bit_field ? i + 1 < size : blen - 8 > 0)
+                pushAF();
             }
           else
             {
@@ -4622,6 +4707,27 @@ release:
     popPF (!aopInReg (result->aop, 0, A_IDX) && !aopInReg (result->aop, 1, A_IDX));
   if (pushed_a)
     popAF ();
+
+  if (ifx)
+    {
+      if (TARGET_IS_PDK13 && IC_FALSE (ifx)) // pdk13 does not have cneqsn.
+        {
+          symbol *tlbl = (regalloc_dry_run ? 0 : newiTempLabel (NULL));
+          emit2 ("ceqsn", "a, #0x00");
+          emitJP (tlbl, 0.0f);
+          cost (2, 3);
+          emitCondTargetLbl ();
+          emitJP (IC_FALSE (ifx), 0.0f);
+          emitLabel (tlbl);
+        }
+      else
+        {
+          emit2 (IC_FALSE (ifx) ? "cneqsn" : "ceqsn", "a, #0x00");
+          cost (1, 1); 
+          emitJP (IC_FALSE (ifx) ? IC_FALSE (ifx) : IC_TRUE (ifx), 0.0f);
+          emitCondTargetLbl ();
+        }
+    }
 
   freeAsmop (right);
   freeAsmop (left);
@@ -5604,7 +5710,7 @@ genPdkiCode (iCode *ic)
 
     case '>':
     case '<':
-      genCmp (ic, ifxForOp (IC_RESULT (ic), ic));
+      genCmp (ic, ifxForOp (ic->result, ic));
       break;
 
     case LE_OP:
@@ -5614,7 +5720,7 @@ genPdkiCode (iCode *ic)
 
     case NE_OP:
     case EQ_OP:
-      genCmpEQorNE (ic, ifxForOp (IC_RESULT (ic), ic));
+      genCmpEQorNE (ic, ifxForOp (ic->result, ic));
       break;
 
     case AND_OP:
@@ -5631,7 +5737,7 @@ genPdkiCode (iCode *ic)
       break;
 
     case BITWISEAND:
-      genAnd (ic, ifxForOp (IC_RESULT (ic), ic));
+      genAnd (ic, ifxForOp (ic->result, ic));
       break;
 
     case INLINEASM:
@@ -5663,7 +5769,7 @@ genPdkiCode (iCode *ic)
       break;
 
     case GET_VALUE_AT_ADDRESS:
-      genPointerGet (ic);
+      genPointerGet (ic, ifxForOp (ic->result, ic));
       break;
 
     case SET_VALUE_AT_ADDRESS:

@@ -1,5 +1,12 @@
 2026-10-06 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/pdk/gen.c,
+	  src/pdk/peeph.def,
+	  src/pdk/ralloc2.cc:
+	  RFE #609.
+
+2026-10-06 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* support/regression/tests/bug-2320.c:
 	  Match the address cast to the unsigned char buffer declaration to prepare for fix for bug #3952, patch by Christopher Bazley.
 	* support/regression/tests/bug-2347.c,

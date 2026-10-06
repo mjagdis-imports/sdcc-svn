@@ -112,6 +112,14 @@ replace restart {
 } if notUsed('z'), notVolatile(%1)
 
 replace restart {
+	%1	a, p
+	mov	p, a
+} by {
+	%1	p, a
+		; peepghole 10 removed mov via commutativity of %1
+} if notUsed('a'), same(%1 'add' 'addc' 'and' 'or' 'xor')
+
+replace restart {
 	ret	%1
 	ret
 } by {

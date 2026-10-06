@@ -534,7 +534,7 @@ static void extra_ic_generated(iCode *ic)
       return;
     }
 
-  if(ic->op != EQ_OP && ic->op != NE_OP && ic->op != '<' && ic->op != '>' && ic->op != BITWISEAND)
+  if(ic->op != EQ_OP && ic->op != NE_OP && ic->op != '<' && ic->op != '>' && ic->op != BITWISEAND && ic->op != GET_VALUE_AT_ADDRESS)
     return;
 
   ifx = ifxForOp(IC_RESULT(ic), ic);
@@ -559,7 +559,6 @@ static void extra_ic_generated(iCode *ic)
         return;
     }
 
-cnd:
   OP_SYMBOL(IC_RESULT(ic))->for_newralloc = false;
   OP_SYMBOL(IC_RESULT(ic))->regType = REG_CND;
   ifx->generated = true;
