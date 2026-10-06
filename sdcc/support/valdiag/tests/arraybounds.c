@@ -134,13 +134,13 @@ long l;
 
 char f(void)
 {
-	char *p = &l;
+	char *p = (char *)&l;
 	return(p[sizeof(long) - 1]);
 }
 
 char g(void)
 {
-	char *p = &l;
+	char *p = (char *)&l;
 	return(p[sizeof(long)]); /* WARNING */
 }
 #endif
@@ -317,7 +317,7 @@ void g1(void)
 
 void f(void)
 {
-	char a[6];
+	unsigned char a[6];
 	stdc_memreverse8(2, a);
 	stdc_memreverse8(6, a);
 	stdc_memreverse8(8, a); /* WARNING */

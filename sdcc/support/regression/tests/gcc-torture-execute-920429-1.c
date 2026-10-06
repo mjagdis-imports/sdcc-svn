@@ -3,6 +3,11 @@
  */
 
 #include <testfwk.h>
+
+#ifdef __SDCC
+/* The original GCC test initialises an unsigned-byte pointer from a literal. */
+#pragma disable_warning 244
+#endif
 #pragma disable_warning 196
 
 #ifdef __SDCC

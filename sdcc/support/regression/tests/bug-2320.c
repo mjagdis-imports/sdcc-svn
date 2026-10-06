@@ -41,7 +41,7 @@ void buffer_invariants()
 
 void testBug(void)
 {
-	buffer = (char __xdata *)(0xa5a5);
+	buffer = (unsigned char __xdata *)(0xa5a5);
 	buffer_len = 1;
 	buffer_p = 0;
 	buffer_gap = buffer + buffer_size - buffer_len + buffer_p;

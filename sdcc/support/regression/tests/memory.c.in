@@ -4,6 +4,11 @@
 */
 #include <testfwk.h>
 
+#ifdef __SDCC
+/* The string checks use the unsigned-byte buffers of the memory tests. */
+#pragma disable_warning 244
+#endif
+
 #include <string.h>
 
 #if defined(__SDCC_stm8) || defined(PORT_HOST) || defined(__SDCC_ds390) || \

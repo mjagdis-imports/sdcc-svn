@@ -9,6 +9,13 @@
 
 #include <testfwk.h>
 
+#ifdef __SDCC
+/* The original test passes signed coefficient storage to unsigned
+   interfaces.
+ */
+#pragma disable_warning 244
+#endif
+
 // Compared to other PQC signature schemes, Falcon has low memory requirements, but still too much for some targets.
 #if defined(__SDCC_pdk13) || defined(__SDCC_pdk14) || defined(__SDCC_pdk15) \
   || defined(__SDCC_mcs51) && !defined(__SDCC_MODEL_LARGE) && !defined(__SDCC_MODEL_HUGE)

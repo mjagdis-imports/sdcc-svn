@@ -6,6 +6,11 @@
 
 #include <testfwk.h>
 
+#ifdef __SDCC
+/* The original reproducer passes unsigned-byte pointers to my_strncpy. */
+#pragma disable_warning 244
+#endif
+
 #include <stdio.h>
 
 /*

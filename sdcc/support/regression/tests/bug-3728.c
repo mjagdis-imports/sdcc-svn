@@ -3,6 +3,11 @@
 */
 
 #include <testfwk.h>
+
+#ifdef __SDCC
+/* The original reproducer passes unsigned-byte arrays to string functions. */
+#pragma disable_warning 244
+#endif
 #include <string.h>
 
 const unsigned char s0[] = {0, 0};

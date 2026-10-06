@@ -1,3 +1,18 @@
+2026-10-06 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/bug-2320.c:
+	  Match the address cast to the unsigned char buffer declaration to prepare for fix for bug #3952, patch by Christopher Bazley.
+	* support/regression/tests/bug-2347.c,
+	  support/regression/tests/bug-3728.c,
+	  support/regression/tests/bug3475630.c,
+	  support/regression/tests/falcon-ntt.c,
+	  support/regression/tests/gcc-torture-execute-920429-1.c,
+	  support/regression/tests/gcc-torture-execute-930603-3.c,
+	  support/regression/tests/memory.c.in,
+	  support/regression/tests/snprintf.c.in,
+	  support/valdiag/tests/arraybounds.c:
+	  Suppress expected warning 244 without changing the tested code to prepare for fix for bug #3952, patch by Christopher Bazley.
+
 2026-10-05 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCgenconstprop.cc,

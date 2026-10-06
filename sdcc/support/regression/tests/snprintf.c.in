@@ -2,6 +2,13 @@
   type: INT, LONG, STRING, FLOAT, PTR
 */
 #include <testfwk.h>
+
+#ifdef __SDCC
+/* The string checks use an unsigned-byte buffer with unsigned-byte
+   sentinels.
+ */
+#pragma disable_warning 244
+#endif
 #include <string.h>
 #include <stdio.h>
 

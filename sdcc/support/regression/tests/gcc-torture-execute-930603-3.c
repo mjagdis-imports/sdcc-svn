@@ -5,6 +5,11 @@
 #include <testfwk.h>
 
 #ifdef __SDCC
+/* The original GCC test passes a char array to an unsigned-byte interface. */
+#pragma disable_warning 244
+#endif
+
+#ifdef __SDCC
 #pragma std_c99
 #endif
 
