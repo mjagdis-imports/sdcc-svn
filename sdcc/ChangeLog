@@ -1,4 +1,4 @@
-2026-10-07 Christopher Bazley <chris.bazley.wg14@gmail.com>
+2026-10-07 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCast.c, src/SDCCsymt.c, src/SDCCsymt.h:
 	  Diagnose incompatible implicit pointer conversions (bug #3952).
