@@ -194,11 +194,12 @@ void ReplaceOpWithCheaperOp(operand **op, operand *cop) {
   printf ("\n");
 #endif
   if (IS_PTR (operandType (*op)) && IS_PTR (operandType (cop)) &&
-    ((!isOptional (operandType (*op)->next) || (*op)->isOptionalEliminated) != (!isOptional (operandType (cop)->next) || cop->isOptionalEliminated) || (*op)->isSemDeref != cop->isSemDeref))
+      ((!isOptional (operandType (*op)->next) ||
+        (*op)->isOptionalEliminated) !=
+       (!isOptional (operandType (cop)->next) || cop->isOptionalEliminated)))
     {
       operand *nop = operandFromOperand (cop);
       nop->isOptionalEliminated = (!isOptional (operandType (*op)->next) || (*op)->isOptionalEliminated);
-      nop->isSemDeref = (*op)->isSemDeref;
       *op = nop;
     }
   else
@@ -1119,14 +1120,13 @@ algebraicOpts (iCode *ic, eBBlock *ebp)
       if (IS_OP_LITERAL (IC_RIGHT (ic)) &&
           isEqualVal (OP_VALUE (IC_RIGHT (ic)), 0))
         {
-          bool semderef = IS_PTR (operandType (ic->left)) && isOptional (operandType (ic->left)->next); // Preserve +0 as semantic dereference for _Optional.
           /* right side zero change to assignment */
           ic->op = '=';
           IC_RIGHT (ic) = IC_LEFT (ic);
           IC_LEFT (ic) = NULL;
           SET_ISADDR (IC_RIGHT (ic), 0);
           SET_ISADDR (IC_RESULT (ic), 0);
-          ic->result->isSemDeref |= semderef;
+          ic->result->isOptionalEliminated |= IS_PTR (operandType (ic->result));
           return;
         }
       if (IS_OP_LITERAL (IC_LEFT (ic)) &&
@@ -2384,7 +2384,7 @@ cseBBlock (eBBlock * ebb, int computeOnly, ebbIndex * ebbi)
           continue;
         }
 
-      if (SKIP_IC (ic))
+      if (SKIP_IC (ic) && ic->op != POINTER_NONNULL_CHECK)
         continue;
 
       if (!computeOnly)

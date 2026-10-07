@@ -1885,7 +1885,6 @@ replaceRegEqvOperand (iCode *ic, operand **opp, int force_isaddr, int new_isaddr
       nop->isConstEliminated = op->isConstEliminated;
       nop->isRestrictEliminated = op->isRestrictEliminated;
       nop->isOptionalEliminated = op->isOptionalEliminated;
-      nop->isSemDeref = op->isSemDeref;
 
       /* Copy def/use info from true symbol to register equivalent */
       /* but only if this hasn't been done already. */
@@ -2167,13 +2166,6 @@ killDeadCode (ebbIndex *ebbi, bool cleanblocks)
                   ic->op == ENDCRITICAL)
                 continue;
 
-              /* Diagnose semantic dereferences before deleting their code. */
-              if (optimize.genconstprop &&
-                  (ic->left && ic->left->isSemDeref ||
-                   ic->right && ic->right->isSemDeref ||
-                   ic->result && ic->result->isSemDeref))
-                continue;
-
               /* Since both IFX & JUMPTABLE (in SKIP_IC) have been tested for */
               /* it is now safe to assume IC_LEFT, IC_RIGHT, & IC_RESULT are  */
               /* valid. */
@@ -2287,25 +2279,6 @@ checkStaticArrayParams (ebbIndex *ebbi)
   for (int i = 0; i < count; i++)
     for (iCode *ic = ebbs[i]->sch; ic; ic = ic->next)
       {
-        if (ic->left && ic->left->isSemDeref)
-          {
-            const struct valinfo v = getOperandValinfo (ic, ic->left, false);
-            if ((v.anything || !v.nonnull) && ic->left->isSemDeref)
-              werrorfl (ic->filename, ic->lineno, W_OPTIONAL_PTR_DEREF);
-          }
-        if (ic->right && ic->right->isSemDeref)
-          {
-            const struct valinfo v = getOperandValinfo (ic, ic->right, false);
-            if ((v.anything || !v.nonnull) && ic->right->isSemDeref)
-              werrorfl (ic->filename, ic->lineno, W_OPTIONAL_PTR_DEREF);
-          }
-        if (ic->result && ic->result->isSemDeref)
-          {
-            const struct valinfo v = getOperandValinfo (ic, ic->right, false);
-            if ((v.anything || !v.nonnull) && ic->result->isSemDeref)
-              werrorfl (ic->filename, ic->lineno, W_OPTIONAL_PTR_DEREF);
-          }
-
         if ((ic->op == IPUSH || ic->op == SEND) &&
           ic->right || // variable arguments lack type information (and so do some arguments to builtin functions).
           ic->op == '=' && IS_PARM (ic->result))
@@ -2418,13 +2391,6 @@ checkStaticArrayParams (ebbIndex *ebbi)
                   werrorfl (ic->filename, ic->lineno, W_ARRAY_PARAM_LENGTH);
               }
           }
-        else if (ic->op == PCALL)
-          {
-            const struct valinfo v = getOperandValinfo (ic, ic->left, false);
-            sym_link *type = operandType (ic->left);
-            if ((v.anything || !v.nonnull) && IS_PTR (type) && isOptional (type->next) && !ic->left->isOptionalEliminated)
-              werrorfl (ic->filename, ic->lineno, W_OPTIONAL_PTR_DEREF);
-          }
         else if (ic->op == GET_VALUE_AT_ADDRESS)
           {
             const struct valinfo v = getOperandValinfo (ic, ic->left, false);
@@ -2435,9 +2401,6 @@ checkStaticArrayParams (ebbIndex *ebbi)
               werrorfl (ic->filename, ic->lineno, W_INVALID_PTR_DEREF);
             else if (!v.anything && roff + size > (long long)v.maybemaxsize)
               werrorfl (ic->filename, ic->lineno, W_MAYBE_INVALID_PTR_DEREF);
-            if ((v.anything || !v.nonnull) &&
-              (isOptional (operandType (ic->left)->next) && !ic->left->isOptionalEliminated || ic->left->isSemDeref))
-              werrorfl (ic->filename, ic->lineno, W_OPTIONAL_PTR_DEREF);
           }
         else if (POINTER_SET (ic))
           {
@@ -2447,9 +2410,6 @@ checkStaticArrayParams (ebbIndex *ebbi)
               werrorfl (ic->filename, ic->lineno, W_INVALID_PTR_DEREF);
             else if (!v.anything && size > (long long)v.maybemaxsize)
               werrorfl (ic->filename, ic->lineno, W_MAYBE_INVALID_PTR_DEREF);
-            if ((v.anything || !v.nonnull) &&
-              (isOptional(operandType (ic->result)->next) && !ic->result->isOptionalEliminated || ic->result->isSemDeref))
-              werrorfl (ic->filename, ic->lineno, W_OPTIONAL_PTR_DEREF);
           }
         else if (ic->op == '<' || ic->op == '>' || ic->op == LE_OP || ic->op == GE_OP)
           {
@@ -2462,25 +2422,35 @@ checkStaticArrayParams (ebbIndex *ebbi)
             if (left_optional_maybenull || right_optional_maybenull)
               werrorfl (ic->filename, ic->lineno, W_OPTIONAL_RELATIONAL);
           }
-        else if (ic->op == '+' || ic->op == '-')
-          if (IS_PTR (operandType (ic->left)) && isOptional (operandType (ic->left)->next) && !ic->left->isOptionalEliminated && !getOperandValinfo (ic, ic->left, false).nonnull)
-            werrorfl (ic->filename, ic->lineno, W_OPTIONAL_ARITHMETIC);
-          else if (IS_PTR (operandType (ic->right)) && isOptional (operandType (ic->right)->next) && !ic->left->isOptionalEliminated && !getOperandValinfo (ic, ic->right, false).nonnull)
-            werrorfl (ic->filename, ic->lineno, W_OPTIONAL_ARITHMETIC);
+        else if (ic->op == POINTER_NONNULL_CHECK)
+          {
+            if (ic->left && !getOperandValinfo (ic, ic->left, false).nonnull ||
+                ic->right && !getOperandValinfo (ic, ic->right, false).nonnull)
+              werrorfl (ic->filename, ic->lineno,
+                        ic->pointerCheck == POINTER_ARITHMETIC ?
+                          W_OPTIONAL_ARITHMETIC : W_OPTIONAL_PTR_DEREF);
+          }
       }
+}
 
-  /* Clear shared operand markers only after all diagnostics have run. */
-  for (int i = 0; i < count; ++i)
-    for (iCode *ic = ebbs[i]->sch; ic; ic = ic->next)
-      if (!SKIP_IC2 (ic))
-        {
-          if (ic->left)
-            ic->left->isSemDeref = false;
-          if (ic->right)
-            ic->right->isSemDeref = false;
-          if (ic->result)
-            ic->result->isSemDeref = false;
-        }
+/* Remove diagnostic uses before optimisations for code generation. */
+static bool
+removePointerChecks (ebbIndex *ebbi)
+{
+  bool removed = false;
+  for (int i = 0; i < ebbi->count; ++i)
+    for (iCode *ic = ebbi->bbOrder[i]->sch; ic; )
+      {
+        iCode *next = ic->next;
+        if (ic->op == POINTER_NONNULL_CHECK)
+          {
+            unsetDefsAndUses (ic);
+            remiCodeFromeBBlock (ebbi->bbOrder[i], ic);
+            removed = true;
+          }
+        ic = next;
+      }
+  return removed;
 }
 
 /*-----------------------------------------------------------------*/
@@ -3941,7 +3911,11 @@ eBBlockFromiCode (iCode *ic)
       killDeadCode (ebbi, false);
       // Check before loop optimizations, but after dead code elimination and generalized constant propagation, so we can avoid false positives in dead branches, and have the necessary information.
       checkStaticArrayParams (ebbi);
-      /* Remove assignments kept for diagnostics before loop optimisation. */
+    }
+
+  if (removePointerChecks (ebbi))
+    {
+      computeDataFlow (ebbi);
       kchange += killDeadCode (ebbi, false);
     }
 

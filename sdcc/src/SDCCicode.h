@@ -84,7 +84,6 @@ typedef struct operand
   bool isConstEliminated:1;         // if original const casted to non-const
   bool isRestrictEliminated:1;      // if original restrict casted to non-restrict
   bool isOptionalEliminated:1;      // if original _Optional casted to non-_Optional
-  bool isSemDeref:1;                // if original _Optional removed via semantic dereference (&*)
 
   int key;
   union
@@ -135,9 +134,16 @@ extern const operand *validateOpTypeConst (const operand * op,
 
 struct valinfos;
 
+enum pointerCheckKind
+{
+  POINTER_ARITHMETIC,
+  POINTER_DEREFERENCE
+};
+
 typedef struct iCode
 {
   unsigned int op;              /* operation defined */
+  enum pointerCheckKind pointerCheck; /* reason for POINTER_NONNULL_CHECK */
   int key;                      /* running key for this iCode */
   int seq;                      /* sequence number within routine */
   int seqPoint;                 /* sequence point */
@@ -240,7 +246,8 @@ iCodeTable;
                       SKIP_IC1(x)           ||    \
                       x->op == CRITICAL     ||    \
                       x->op == ENDCRITICAL  ||    \
-                      x->op == SEND         )
+                      x->op == SEND         ||    \
+                      x->op == POINTER_NONNULL_CHECK )
 
 #define SKIP_IC3(x) (SKIP_IC2(x)            ||    \
                      x->op == JUMPTABLE )

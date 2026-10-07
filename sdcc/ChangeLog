@@ -1,5 +1,18 @@
 2026-10-07 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/SDCC.y, src/SDCCast.c, src/SDCCast.h, src/SDCCcse.c,
+	  src/SDCCicode.c, src/SDCCicode.h, src/SDCCopt.c:
+	  Record non-null checks for arithmetic and dereferences in
+	  diagnostic-only iCode (bug #4003). Replace operand semantic-
+	  dereference markers and deferred deletion from the preliminary fix;
+	  Diagnose after value analysis and remove checks before loop
+	  optimisation, without an extra CSE pass that can introduce spills, patch by Christopher Bazley.
+	* support/regression/tests/bug-4003.c,
+	  support/valdiag/tests/bug-4003.c:
+	  Test folding, guards, discarded operations and single evaluation, patch by Christopher Bazley.
+
+2026-10-07 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/SDCCast.c, src/SDCCsymt.c, src/SDCCsymt.h:
 	  Diagnose incompatible implicit pointer conversions (bug #3952).
 	  Compare types without object storage metadata, check function return

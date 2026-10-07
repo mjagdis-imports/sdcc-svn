@@ -5014,7 +5014,8 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
 
       /* if the left & right are equal then zero */
       if (!hasSEFcalls(tree->left) && !hasSEFcalls(tree->right) &&
-        isAstEqual (tree->left, tree->right))
+        isAstEqual (tree->left, tree->right) &&
+        !(IS_PTR (LTYPE (tree)) && isOptional (LTYPE (tree)->next)))
         {
           tree->type = EX_VALUE;
           tree->opval.val = valZeroResultFromOp(LTYPE (tree), RTYPE (tree), tree->opval.op, reduceTypeAllowed);
@@ -5333,7 +5334,8 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
 
       /* if 'from' and 'to' are the same remove the superfluous cast,
        * this helps other optimizations */
-      if (compareTypeExact (LTYPE (tree), RTYPE (tree), -1, true) == 1)
+      if (!tree->values.cast.semDeref &&
+          compareTypeExact (LTYPE (tree), RTYPE (tree), -1, true) == 1)
         {
           /* mark that the explicit cast has been removed,
            * for proper processing (no integer promotion) of explicitly typecasted variable arguments */
@@ -5435,7 +5437,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
 #endif
 
       /* if the right is a literal replace the tree */
-      if (IS_LITERAL (RETYPE (tree)))
+      if (!tree->values.cast.semDeref && IS_LITERAL (RETYPE (tree)))
         {
 #if 0
           if (IS_PTR (LTYPE (tree)) && !IS_GENPTR (LTYPE (tree)))
