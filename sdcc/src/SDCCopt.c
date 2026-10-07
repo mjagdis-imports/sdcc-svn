@@ -1883,7 +1883,6 @@ replaceRegEqvOperand (iCode *ic, operand **opp, int force_isaddr, int new_isaddr
 
       nop = operandFromOperand (OP_REQV (op));
       nop->isConstEliminated = op->isConstEliminated;
-      nop->isRestrictEliminated = op->isRestrictEliminated;
       nop->isOptionalEliminated = op->isOptionalEliminated;
 
       /* Copy def/use info from true symbol to register equivalent */

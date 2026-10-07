@@ -789,6 +789,7 @@ sym_link *newEnumType (symbol *enumlist, sym_link *userRequestedType);
 void promoteAnonStructs (structdef *);
 sym_link *argumentTypeAfterDecay (sym_link *, value **);
 void checkPtrTargetQualifiers (sym_link *, sym_link *);
+void checkPtrTargetQualifiersAfterDecay (sym_link *, sym_link *);
 bool isConst (sym_link *type);
 bool isVolatile (sym_link *type);
 bool isRestrict (sym_link *type);

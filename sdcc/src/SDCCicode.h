@@ -82,7 +82,6 @@ typedef struct operand
   unsigned int isParm:1;            /* is a parameter        */
   unsigned int isLiteral:1;         /* operand is literal    */
   bool isConstEliminated:1;         // if original const casted to non-const
-  bool isRestrictEliminated:1;      // if original restrict casted to non-restrict
   bool isOptionalEliminated:1;      // if original _Optional casted to non-_Optional
 
   int key;

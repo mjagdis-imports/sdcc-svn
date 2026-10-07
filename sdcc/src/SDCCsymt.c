@@ -5842,6 +5842,25 @@ checkPtrTargetQualifiers (sym_link *target, sym_link *source)
     werror (W_TARGET_LOST_QUALIFIER, "_Optional");
 }
 
+/*-----------------------------------------------------------------*/
+/* Check referenced-type qualifiers after array type conversion.   */
+/*-----------------------------------------------------------------*/
+void
+checkPtrTargetQualifiersAfterDecay (sym_link *target, sym_link *source)
+{
+  value *converted;
+
+  source = argumentTypeAfterDecay (source, &converted);
+  if (IS_PTR (target) && (IS_PTR (source) || IS_FUNC (source)))
+    checkPtrTargetQualifiers (target, source);
+
+  if (converted)
+    {
+      Safe_free (converted->type);
+      Safe_free (converted);
+    }
+}
+
 /*-------------------------------------------------------------------*/
 /* isConstant - check if the type is constant                        */
 /*-------------------------------------------------------------------*/

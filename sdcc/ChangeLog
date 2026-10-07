@@ -1,5 +1,15 @@
 2026-10-07 Philipp Klaus Krause <philipp@colecovision.eu>
- 
+
+	* src/SDCCast.c, src/SDCCicode.c, src/SDCCicode.h, src/SDCCopt.c,
+	  src/SDCCsymt.c, src/SDCCsymt.h, support/valdiag/tests/bug-3953.c,
+	  support/valdiag/tests/bug-4006.c:
+	  Check referenced qualifiers after expression decay on assignments and
+	  returns (bug #4006). Avoid repeating incompatible-type diagnostics.
+	  Remove the late iCode qualifier checker and unused restrict-loss flag.
+	  Patch by Christopher Bazley.
+
+2026-10-07 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/SDCCast.c, src/SDCCicode.c, src/SDCCsymt.c, src/SDCCsymt.h,
 	  support/regression/tests/bug-4005.c,
 	  support/valdiag/tests/_Optional-draft-2026-04-17.c:

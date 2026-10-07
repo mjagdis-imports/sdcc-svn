@@ -6243,8 +6243,12 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
       else if (IS_ARRAY (RTYPE (tree)) && IS_REGISTER (RTYPE (tree)->next))
         werrorfl (tree->filename, tree->lineno, E_ILLEGAL_ADDR, "address of register variable");
 
-      diagnoseDissimilarPtrTargetTypes (LTYPE (tree), RTYPE (tree), tree->filename,
-                                      tree->lineno ? tree->lineno : tree->right->lineno);
+      /* Report each atomic or nested qualifier mismatch once. */
+      if (!diagnoseDissimilarPtrTargetTypes (LTYPE (tree), RTYPE (tree),
+                                            tree->filename,
+                                            tree->lineno ? tree->lineno :
+                                              tree->right->lineno))
+        checkPtrTargetQualifiersAfterDecay (LTYPE (tree), tree->right->ftype);
 
       /* if the left side of the tree is of type void
          then report error */
@@ -6363,10 +6367,14 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
 
           typecompat = compareType (currFunc->type->next, RTYPE (tree), false);
 
-          diagnoseDissimilarPtrTargetTypes (currFunc->type->next, RTYPE (tree),
-                                          tree->filename, tree->lineno);
-
           propagateConstExpr (&tree->right, resultType, reduceTypeAllowed);
+
+          /* Report each atomic or nested qualifier mismatch once. */
+          if (!diagnoseDissimilarPtrTargetTypes (currFunc->type->next,
+                                                RTYPE (tree), tree->filename,
+                                                tree->lineno))
+            checkPtrTargetQualifiersAfterDecay (currFunc->type->next,
+                                              tree->right->ftype);
 
           /* if there is going to be a casting required then add it */
           if (typecompat == -1)

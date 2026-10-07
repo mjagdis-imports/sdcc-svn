@@ -18,9 +18,9 @@ char *str_from_struct(const struct S1 *pcs)
                          default: 0));
 
   // invalid: array to pointer decay does not remove const
-  char *m = pcs->m; // constraint violation, no warning /* WARNING */
-  m = pcs->m;       // constraint violation, no warning /* WARNING */
-  return pcs->m;    // constraint violation, no warning /* WARNING */
+  char *m = pcs->m; // pointer target lost const qualifier /* WARNING */
+  m = pcs->m;       // pointer target lost const qualifier /* WARNING */
+  return pcs->m;    // pointer target lost const qualifier /* WARNING */
 }
 
 struct S2 {
@@ -35,9 +35,9 @@ char *str_from_struct2(struct S2 *pcs)
                          default: 0));
 
   // invalid: array to pointer decay does not remove const
-  char *m = pcs->m; // constraint violation, no warning /* WARNING */
-  m = pcs->m;       // constraint violation, no warning /* WARNING */
-  return pcs->m;    // constraint violation, no warning /* WARNING */
+  char *m = pcs->m; // pointer target lost const qualifier /* WARNING */
+  m = pcs->m;       // pointer target lost const qualifier /* WARNING */
+  return pcs->m;    // pointer target lost const qualifier /* WARNING */
 }
 
 char *str_from_str(const char *pcc)

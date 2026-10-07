@@ -1709,7 +1709,6 @@ operandFromOperand (operand * op)
   nop->usesDefs = op->usesDefs;
   nop->isParm = op->isParm;
   nop->isConstEliminated = op->isConstEliminated;
-  nop->isRestrictEliminated = op->isRestrictEliminated;
   nop->isOptionalEliminated = op->isOptionalEliminated;
 
   switch (nop->type)
@@ -2128,33 +2127,6 @@ geniCodeRValue (operand * op, bool force)
 }
 
 /*-----------------------------------------------------------------*/
-/* checkPtrQualifiers - check for lost pointer qualifiers          */
-/*-----------------------------------------------------------------*/
-static void
-checkPtrQualifiers (sym_link *ltype, sym_link *rtype, operand *op)
-{
-  // Also checking array rtypes is a hack (workaround for pointer decay not having happened earlier).
-  if (IS_PTR (ltype) && (IS_PTR (rtype) || IS_ARRAY (rtype)) && !IS_FUNCPTR (ltype) && !op->isConstEliminated)
-    {
-      if (!isConst (ltype->next) && isConst (rtype->next))
-        werror (W_TARGET_LOST_QUALIFIER, "const");
-#if 0
-      // disabled because SDCC will make all union fields volatile
-      // but your ptr to it need not be
-      if (!IS_VOLATILE (ltype->next) && IS_VOLATILE (rtype->next))
-        werror (W_TARGET_LOST_QUALIFIER, "volatile");
-#endif
-    }
-  if (IS_PTR (ltype) && IS_PTR (rtype))
-    {
-      if (!op->isRestrictEliminated && !isRestrict (ltype->next) && isRestrict (rtype->next))
-        werror (W_TARGET_LOST_QUALIFIER, "restrict");
-      if (!op->isOptionalEliminated && !isOptional (ltype->next) && isOptional (rtype->next))
-        werror (W_TARGET_LOST_QUALIFIER, "_Optional");
-    }
-}
-
-/*-----------------------------------------------------------------*/
 /* geniCodeCast - changes the value from one type to another       */
 /*-----------------------------------------------------------------*/
 static operand *
@@ -2183,7 +2155,6 @@ geniCodeCast (sym_link *type, operand *op, bool implicit)
     if (IS_PTR (type))
       {
         op->isConstEliminated = (isConst (opetype) && !isConst (getSpec (type)));
-        op->isRestrictEliminated = (isRestrict (opetype) && !isRestrict (getSpec (type)));
         op->isOptionalEliminated = (isOptional (opetype) && !isOptional (getSpec (type)));
       }
     if (IS_PTR (type) && compareTypeExact (type, optype, -1, true) != 1 &&
@@ -3578,7 +3549,6 @@ checkTypes (operand * left, operand * right)
         }
       right = geniCodeCast (ltype, right, true);
     }
-  checkPtrQualifiers (ltype, rtype, right);
   return right;
 }
 
@@ -4120,10 +4090,6 @@ geniCodeReturn (operand *op)
   /* return in _Noreturn function */ 
   if (currFunc && IFFUNC_ISNORETURN (currFunc->type))
     werror (W_NORETURNRETURN);
-
-  /* check if a cast is needed */
-  if (op && currFunc && currFunc->type && currFunc->type->next)
-    checkPtrQualifiers (currFunc->type->next, operandType (op), op);
 
   /* if the operand is present force an rvalue */
   if (op)
