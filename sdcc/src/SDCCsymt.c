@@ -5889,6 +5889,12 @@ prepareDeclarationSymbol (attribute *attr, sym_link *declSpecs, symbol *initDecl
       if (sym->level && IS_FUNC (sym->type) && !IS_TYPEDEF (sym->etype) &&
           !IS_STATIC (sym->etype) && !IS_EXTERN (sym->etype))
         SPEC_EXTR (sym->etype) = 1;
+
+      /* A structure with a flexible array member cannot be an array element. */
+      for (sym_link *type = sym->type; type && type->next; type = type->next)
+        if (IS_ARRAY (type) && IS_STRUCT (type->next) &&
+            SPEC_STRUCT (type->next)->b_flexArrayMember)
+          werrorfl (sym->fileDef, sym->lineDef, W_INVALID_FLEXARRAY);
     }
 
   return sym1;
