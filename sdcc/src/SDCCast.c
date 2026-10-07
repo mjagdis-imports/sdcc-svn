@@ -3364,7 +3364,8 @@ checkPtrCast (sym_link *newType, sym_link *orgType, bool implicit, bool orgIsNul
   if (IS_ARRAY (orgType))
     {
       value *val;
-      val = aggregateToPointer (valFromType (orgType));
+      val = valFromType (orgType);
+      convertArrayToPointerType (val->type);
       orgType = val->type;
       Safe_free (val);
     }
@@ -5982,7 +5983,12 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
             if (IS_DECL (type))
               {
                 if (IS_ARRAY (type))
-                  type = aggregateToPointer (valFromType (type))->type;
+                  {
+                    value *converted = valFromType (type);
+                    convertArrayToPointerType (converted->type);
+                    type = converted->type;
+                    Safe_free (converted);
+                  }
 
                 if (IS_FUNC (type))
                   type = ptrTypeFromType (type);

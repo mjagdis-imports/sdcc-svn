@@ -9,6 +9,15 @@
 #ifdef TEST1
 #include <stdio.h>
 
+/* The type check below is affected by bug #4071 on ds390 and mcs51, and
+   currently also fails on pdk13, pdk14 and pdk15. */
+#if !defined(__SDCC_ds390) && !defined(__SDCC_MODEL_LARGE) && \
+    !defined(__SDCC_pdk13) && !defined(__SDCC_pdk14) && \
+    !defined(__SDCC_pdk15) && \
+    (!defined(__SDCC_mcs51) || defined(__SDCC_STACK_AUTO))
+#define CHECK_POINTER_TO_ARRAY_CONVERSION
+#endif
+
 struct S {
   char m[64];
 };
@@ -23,7 +32,7 @@ char *str_from_struct(_Optional const struct S *pocs)
 
   static_assert(_Generic(pocs->m,
                          const char *: 1,
-                         default: 0)); /* IGNORE */ // TODO: implement!
+                         default: 0));
 
   // constraint violation: decayed type is pointer to const char
   return pocs->m; /* WARNING */
@@ -38,9 +47,11 @@ char *str_from_array(_Optional const char (*paocc)[64])
   // valid: array to pointer decay removes _Optional
   puts(*paocc);
 
+#ifdef CHECK_POINTER_TO_ARRAY_CONVERSION
   static_assert(_Generic(*paocc,
                          const char *: 1,
-                         default: 0)); /* IGNORE */ // TODO: implement!
+                         default: 0));
+#endif
 
   // constraint violation: decayed type is pointer to const char
   return *paocc; /* WARNING */
@@ -1551,4 +1562,3 @@ int main(void)
   return 0;
 }
 #endif
-

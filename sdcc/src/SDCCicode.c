@@ -2687,6 +2687,14 @@ geniCodeArray2Ptr (operand * op)
 
   /* set the pointer depending on the storage class */
   DCL_TYPE (optype) = PTR_TYPE (SPEC_OCLS (opetype));
+
+  /* Array-to-pointer conversion removes _Optional from the
+     referenced element type. */
+  if (IS_SPEC (optype->next))
+    SPEC_OPTIONAL (optype->next) = false;
+  else
+    DCL_PTR_OPTIONAL (optype->next) = false;
+
   /* now remove the storage class from this itemp */
   SPEC_SCLS (opetype) = S_FIXED;
   SPEC_OCLS (opetype) = NULL;

@@ -1,3 +1,11 @@
+2026-10-07 Philipp Klaus Krause <philipp@colecovision.eu>
+ 
+	* src/SDCCast.c, src/SDCCicode.c, src/SDCCsymt.c, src/SDCCsymt.h,
+	  support/regression/tests/bug-4005.c,
+	  support/valdiag/tests/_Optional-draft-2026-04-17.c:
+	  Centralise expression array decay and remove _Optional from its
+	  referenced element type (bug #4005), patch by Christopher Bazley.
+
 2026-10-07 Gabriele Gorla <gorlik@yahoo.com>
 
 	* sdas/as8051/i51mch.c,

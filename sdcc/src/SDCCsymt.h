@@ -795,6 +795,7 @@ bool isRestrict (sym_link *type);
 bool isAtomic (sym_link *type);
 bool isOptional (sym_link *type);
 value *aggregateToPointer (value *);
+void convertArrayToPointerType (sym_link *);
 void leaveBlockScope (int block);
 void mergeKRDeclListIntoFuncDecl (symbol *funcDecl, symbol *kr_decls);
 symbol *prepareDeclarationSymbol (attribute *attr, sym_link *declSpecs, symbol *initDeclList);
