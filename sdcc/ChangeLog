@@ -1,5 +1,13 @@
 2026-10-06 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/SDCCval.c,
+	  support/regression/tests/bug-4102.c:
+	  Fix bug #4102: fold unsigned int products in host unsigned long to
+	  avoid signed integer promotion. Assert that its range holds the
+	  full target product needed by the overflow diagnostic, patch by Christopher Bazley.
+
+2026-10-06 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/SDCCsymt.c:
 	  Insert multi-element declarator chains before the terminal specifier
 	  in addDecl, fixing function typedefs with pointer returns (#4104), patch by Christopher Bazley.

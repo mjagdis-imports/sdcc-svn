@@ -2638,7 +2638,12 @@ valMult (value * lval, value * rval, bool reduceType)
     SPEC_CVAL (val->type).v_ulong = (TYPE_TARGET_ULONG) ulFromVal (lval) * (TYPE_TARGET_ULONG) ulFromVal (rval);
   else if (SPEC_USIGN (val->type))      /* unsigned int */
     {
-      TYPE_TARGET_ULONG ul = (TYPE_TARGET_UINT) ulFromVal (lval) * (TYPE_TARGET_UINT) ulFromVal (rval);
+      /* Preserve the full product for the target overflow diagnostic. */
+      _Static_assert (ULONG_MAX / ((TYPE_TARGET_UINT) -1) >=
+                      (TYPE_TARGET_UINT) -1,
+                      "host unsigned long cannot hold a target uint product");
+      unsigned long ul = (unsigned long) (TYPE_TARGET_UINT) ulFromVal (lval) *
+        (unsigned long) (TYPE_TARGET_UINT) ulFromVal (rval);
 
       SPEC_CVAL (val->type).v_uint = (TYPE_TARGET_UINT) ul;
       if (ul != (TYPE_TARGET_UINT) ul)
