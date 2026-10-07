@@ -88,15 +88,9 @@
  *		int	rprterr		report errors flag
  *
  *	functions called:
- *		void	binop()		asexpr.c
- *		void	clrexpr()	asexpr.c
- *		void	expr()		asexpr.c
+ *		void	exprx()		asexpr.c
  *		void	exprscan()	asexpr.c
- *		int	get()		aslex.c
  *		int	getnb()		aslex.c
- *		int	oprio()		asexpr.c
- *		void	xerr()		assubr.c
- *		void	term()		asexpr.c
  *		void	unget()		aslex.c
  *
  *
@@ -804,8 +798,6 @@ absexpr(void)
  *		char *	jp		pointer to assembler-source text
  *		a_uint	n		constant evaluation running sum
  *		int	r		current evaluation radix
- *		int	t		temporary radix flag & value
- *		mne	mp		pointer to a mne structure
  *		sym *	sp		pointer to a sym structure
  *		tsym *	tp		pointer to a tsym structure
  *		int	v		current digit evaluation
@@ -842,10 +834,9 @@ term(struct expr *esp)
 	int c, d;
 	const char *jp;
 	char id[NCPS];
-	struct mne  *mp;
 	struct sym  *sp;
 	struct tsym *tp;
-	int r, t;
+	int r;
 	a_uint n;
 
 	r = expr_radix;

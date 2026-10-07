@@ -80,7 +80,8 @@ static char i51pg1[256] = {
 void
 machine(struct mne *mp)
 {
-	int op, t, t1, v1;
+	a_uint op;
+	int t, t1, v1;
 	struct expr e, e1;
 
 	/*

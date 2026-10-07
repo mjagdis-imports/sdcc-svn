@@ -1971,7 +1971,7 @@ loop:
 #endif
 			comma(0);
 			if (more())
-                                cnt = (int) absexpr();
+				cnt = absexpr();
 			/*
 			 * Open File
 			 */
@@ -2699,8 +2699,8 @@ equate(char *id, struct expr *e1, a_uint equtype)
 			err('.');
 	} else {
 		switch(equtype) {
-		case O_EQU:
 		default:
+		case O_EQU:
 			break;
 
 		case O_GBLEQU:
@@ -2953,10 +2953,10 @@ fndidx(char *str)
  *					variable length instruction formats
  *
  *	functions called:
- *		none
+ *		outall()		asout.c
  *
  *	side effects:
- *		Current area saved, new area loaded, buffers flushed.
+ *		Area changed and buffers flushed.
  */
 
 void
@@ -2968,13 +2968,13 @@ newdot(struct area *nap)
         /* fprintf (stderr, "%s dot.s_area->a_size: %d dot.s_addr: %d\n",
                 oap->a_id, dot.s_area->a_size, dot.s_addr); */
 	oap->a_fuzz = fuzz;
-	if (oap->a_flag & A_OVR) {
+	if ((oap->a_flag & A_OVR) == A_OVR) {
 		// the size of an overlay is the biggest size encountered
 		if (oap->a_size < dot.s_addr) {
 			oap->a_size = dot.s_addr;
 		}
 	}
-	else if (oap->a_flag & A_ABS) {
+	else if ((oap->a_flag & A_ABS) == A_ABS) {
 		oap->a_addr = dot.s_org;
 		oap->a_size += dot.s_addr - dot.s_org;
 		dot.s_addr = dot.s_org = 0;
@@ -2983,12 +2983,12 @@ newdot(struct area *nap)
 		oap->a_addr = 0;
 		oap->a_size = dot.s_addr;
 	}
-	if (nap->a_flag & A_OVR) {
+	if ((nap->a_flag & A_OVR) == A_OVR) {
 		// a new overlay starts at 0, no fuzz
 		dot.s_addr = 0;
 		fuzz = 0;
 	}
-	else if (nap->a_flag & A_ABS) {
+	else if ((nap->a_flag & A_ABS) == A_ABS) {
 		// a new absolute starts at org, no fuzz
 		dot.s_addr = dot.s_org;
 		fuzz = 0;
@@ -3108,11 +3108,11 @@ usage(void)
 {
 	char   **dp;
 
-	fprintf(stderr, "\n%s Assembler %s  (%s)\n\n", is_sdas() ? "sdas" : "ASxxxx", VERSION, cpu);
-	fprintf(stderr, "\nCopyright (C) %s  Alan R. Baldwin", COPYRIGHT);
-	fprintf(stderr, "\nThis program comes with ABSOLUTELY NO WARRANTY.\n\n");
+	fprintf(stdout, "\n%s Assembler %s  (%s)\n\n", is_sdas() ? "sdas" : "ASxxxx", VERSION, cpu);
+	fprintf(stdout, "\nCopyright (C) %s  Alan R. Baldwin", COPYRIGHT);
+	fprintf(stdout, "\nThis program comes with ABSOLUTELY NO WARRANTY.\n\n");
 	for (dp = usetxt; *dp; dp++) {
-		fprintf(stderr, "%s\n", *dp);
+		fprintf(stdout, "%s\n", *dp);
 	}
 }
 

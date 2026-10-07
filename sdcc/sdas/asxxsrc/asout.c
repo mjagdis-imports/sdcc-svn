@@ -183,19 +183,23 @@
  *	area in PC increments, and the area flags (ff).  The area flags
  *	specify the area properties:
  *
- *		OVR/CON (0x04/0x00 i.e.  bit position 2)
- *		ABS/REL (0x08/0x00 i.e.  bit position 3)
- *		PAG (0x10 i.e.  bit position 4)
+ *		Basic PC Increment Size in Bytes	<1:0>
+ *		OVR/CON		(0x0404/0x0400 i.e.  bit position 2) 
+ *		ABS/REL		(0x0808/0x0800 i.e.  bit position 3) 
+ *		PAG/NOPAG	(0x1010/0x1000 i.e.  bit position 4) 
+ *		DSEG/CSEG	(0x4040/0x4000 i.e.  bit position 6)
+ *		BANKED/NOBANK	(0x8080/0x8000 i.e   bit position 7)
  *
  *
- *	(8)	T Line 
+ *      (6)     T Line
  *
  *		T xx xx nn nn nn nn nn ...  
  *
  * 	The  T  line contains the assembled code output by the assem-
  *	bler with xx xx being the offset address from the  current  area
  *	base address and nn being the assembled instructions and data in
- *      byte format.
+ *	byte format.  (xx xx and nn nn can be 2, 3, or 4 bytes as
+ *	specified by the .REL file header.) 
  *
  *
  *	(9)	R Line 
@@ -208,21 +212,22 @@
  *	coded in groups of 4 bytes:  
  *
  *	1.  n1 is the relocation mode and object format 
- *              1.  bit 0 word(0x00)/byte(0x01)
- *              2.  bit 1 relocatable area(0x00)/symbol(0x02)
- *              3.  bit 2 normal(0x00)/PC relative(0x04) relocation
- *              4.  bit  3  1-byte(0x00)/2-byte(0x08) object format for
- *                  byte data
- *              5.  bit 4 signed(0x00)/unsigned(0x10) byte data
- *              6.  bit 5 normal(0x00)/page '0'(0x20) reference
- *              7.  bit 6 normal(0x00)/page 'nnn'(0x40) reference
- *              8.  bit 7 normal(0x00)/MSB of value
+ *	 	1.  bits <1:0> specify the number of bytes to output) 
+ *	 	2.  bit 2 signed(0x00)/unsigned(0x04) byte data 
+ *		3.  bit 3 normal(0x00)/MSB(0x08) of value (2nd byte)
+ *	 	4.  bit 4 normal(0x00)/page '0'(0x10) reference 
+ *	 	5.  bit 5 normal(0x00)/page 'nnn'(0x20) reference
+ *			PAGX mode if both bits are set
+ *	 	6.  bit 6 normal(0x00)/PC relative(0x40) relocation 
+ *	 	7.  bit 7 relocatable area(0x00)/symbol(0x80) 
  *
- *      2.  n2  is  a byte index into the corresponding
+ *	2.  n2 is a byte index and merge mode index
+ *		1.  bits <3:0> are a byte index into the corresponding
  *			(i.e.  preceeding) T line data (i.e.  a pointer to
  *			the data to be updated  by  the  relocation).
- *              The T line data may be 1-byte or 2-byte byte data
- *              format or 2-byte word format.
+ *		2.  bits <7:4> are an index into a selected merge mode.
+ *			Currently mode 0 simply specifies to use standard
+ *			byte addressing modes and merging is ignored.
  *
  *	3.  xx xx  is the area/symbol index for the area/symbol be-
  *	 	ing referenced.  the corresponding area/symbol is found
@@ -440,7 +445,7 @@ write_rmode(int r, int n)
  *
  *	global variables:
  *		int	hilo		byte order
- *		char	*txtp		T line output pointer
+ *              char *  txtp            Pointer to T Line Values
  *
  *	functions called:
  *		int	lobyte()	asout.c

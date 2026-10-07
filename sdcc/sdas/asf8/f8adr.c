@@ -191,11 +191,12 @@ srch(char *str)
 		return(1);
 	}
 
-	if (!*str)
+	if (!*str) {
 		if (!(ctype[*ptr & 0x007F] & LTR16)) {
 			ip = ptr;
 			return(1);
 		}
+	}
 	return(0);
 }
 

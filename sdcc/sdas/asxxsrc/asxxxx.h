@@ -329,12 +329,12 @@ struct	area
 #define A_4BYTE 0x0003		/* 4 Byte Word Length */
 #define	A_BYTES	0x0003		/* Word Length Mask */
 
-#define A_CON	0x0000          /* Concatenating */
-#define A_OVR	0x0004          /* Overlaying */
-#define A_REL	0x0000          /* Relocatable */
-#define A_ABS	0x0008          /* Absolute */
-#define A_NOPAG	0x0000          /* Non-Paged */
-#define A_PAG	0x0010          /* Paged */
+#define	A_CON	0x0400		/* Concatenating */
+#define	A_OVR	0x0404		/* Overlaying */
+#define	A_REL	0x0800		/* Relocatable */
+#define	A_ABS	0x0808		/* Absolute */
+#define	A_NOPAG	0x1000		/* Non-Paged */
+#define	A_PAG	0x1010		/* Paged */
 
 /* sdas specific */
 /* Additional flags for 8051 address spaces */
@@ -351,6 +351,10 @@ struct	area
  *	The "R_" relocation constants define values used in
  *	generating the assembler relocation output data for
  *	areas, symbols, and code.
+ *
+ * Note:  The PAGE modes, PCR modes, Signed, Unsigned,
+ *        and MSB codes are mutually exclusive !!!
+ *
  *
  * Relocation flags
  *

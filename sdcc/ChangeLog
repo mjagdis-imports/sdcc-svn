@@ -1,3 +1,15 @@
+2026-10-07 Gabriele Gorla <gorlik@yahoo.com>
+
+	* sdas/as8051/i51mch.c,
+	  sdas/asf8/f8adr.c,
+	  sdas/asgb/gb.h,
+	  sdas/asxxsrc/asexpr.c,
+	  sdas/asxxsrc/asmain.c,
+	  sdas/asxxsrc/asout.c,
+	  sdas/asxxsrc/asxxxx.h,
+	  sdas/asz80/z80mch.c:
+	  Update the "A_" area constants to match upstream asxxxx.
+
 2026-10-07 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* support/regression/tests/bug-4002.c,

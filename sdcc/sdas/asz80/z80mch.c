@@ -1735,13 +1735,13 @@ machine(struct mne *mp)
 		case 0x2a: /* BSRL DE,B */
 		case 0x2b: /* BSRF DE,B */
 		case 0x2c: /* BRLC DE,B */
-			 t1 = addr(&e1);
-			 comma(1);
-			 t2 = addr(&e2);
-			 if (t1 != S_R16 || e1.e_addr != DE || t2 != S_R8 || e2.e_addr != B) {
+			t1 = addr(&e1);
+			comma(1);
+			t2 = addr(&e2);
+			if (t1 != S_R16 || e1.e_addr != DE || t2 != S_R8 || e2.e_addr != B) {
 				aerr();
 			}
-			 break;
+			break;
 		}
 		outab(0xED);
 		outab(op);
