@@ -1,5 +1,12 @@
 2026-10-07 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* support/regression/tests/bug-4002.c,
+	  support/valdiag/tests/_Optional-draft-2026-04-17.c,
+	  support/valdiag/tests/bug-4002.c:
+	  Tests for bug #4002 (which was fixed along with #4003 earlier today), patch by Christopher Bazley.
+
+2026-10-07 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/SDCC.y, src/SDCCast.c, src/SDCCast.h, src/SDCCcse.c,
 	  src/SDCCicode.c, src/SDCCicode.h, src/SDCCopt.c:
 	  Record non-null checks for arithmetic and dereferences in

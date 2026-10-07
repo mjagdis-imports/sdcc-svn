@@ -495,7 +495,7 @@ ptrdiff_t blue(_Optional int *poi, int *pi)
 
 int *green(_Optional int *poi)
 {
-  return poi - 0; // recommended diagnostic /* IGNORE */ // BUG: missing warning
+  return poi - 0; // recommended diagnostic /* WARNING */
 }
 
 int *black(_Optional int *poi)
