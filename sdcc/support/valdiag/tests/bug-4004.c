@@ -574,17 +574,28 @@ void test(PlainReturnFunc *p,
   take_optional_pointee_return(optional_pointee_return);
 
   /* Discarding referenced qualifiers remains invalid under N3449. */
-  take_plain_return(const_pointee_return); /* WARNING */
-  take_plain_return(volatile_pointee_return); /* WARNING */
-  take_plain_return(restrict_pointee_return); /* WARNING */
-  take_plain_return(optional_pointee_return); /* WARNING */
   take_plain_return(pc); /* WARNING */
   take_plain_return(pv); /* WARNING */
   take_plain_return(pr); /* WARNING */
   take_plain_return(po); /* WARNING */
 }
 
-
+void incompatible_return_designator_0(void)
+{
+  take_plain_return(const_pointee_return); /* ERROR */
+}
+void incompatible_return_designator_1(void)
+{
+  take_plain_return(volatile_pointee_return); /* ERROR */
+}
+void incompatible_return_designator_2(void)
+{
+  take_plain_return(restrict_pointee_return); /* ERROR */
+}
+void incompatible_return_designator_3(void)
+{
+  take_plain_return(optional_pointee_return); /* ERROR */
+}
 #endif
 
 #ifdef TEST13
@@ -683,12 +694,12 @@ void test_variance(ConstPointeeParamFunc *pc,
 #endif
 
 #ifdef TEST16
-/* C23 requires compatible return types; N3449 would permit these covariant conversions.
-   Const/restrict designators and pointer values are grouped. Volatile/_Optional
-   designators need separate functions because error 78 stops checking that function. */
-/* SDCC emits error 78 for this function designator conversion, whereas
-   the const/restrict cases and function-pointer arguments emit warning 244.
-   ISO C requires a diagnostic; it does not require this severity difference. */
+/* C23 requires compatible return types; N3449 would permit these covariant
+   conversions. Keep function designators in separate functions because
+   error 78 stops checking the enclosing function. */
+/* Function designator conversions emit error 78; function-pointer arguments
+   emit warning 244. Keep designators separate because error 78 ends checking
+   of the enclosing function. */
 void test_variance_volatile_designator(void)
 {
   take_volatile_pointee_return(plain_return); /* ERROR */
@@ -702,13 +713,20 @@ void test_variance_optional_designator(void)
 
 void test_variance(PlainReturnFunc *p)
 {
-  take_const_pointee_return(plain_return); /* WARNING */
-  take_restrict_pointee_return(plain_return); /* WARNING */
-
   take_const_pointee_return(p); /* WARNING */
   take_volatile_pointee_return(p); /* WARNING */
   take_restrict_pointee_return(p); /* WARNING */
   take_optional_pointee_return(p); /* WARNING */
+}
+
+void incompatible_covariant_designator_0(void)
+{
+  take_const_pointee_return(plain_return); /* ERROR */
+}
+
+void incompatible_covariant_designator_1(void)
+{
+  take_restrict_pointee_return(plain_return); /* ERROR */
 }
 #endif
 

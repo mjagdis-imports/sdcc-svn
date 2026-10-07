@@ -36,6 +36,11 @@
 
 #include <testfwk.h>
 
+#ifdef __SDCC
+/* The original probes use int pointers; SDCC's wchar_t is unsigned long. */
+#pragma disable_warning 244
+#endif
+
 #pragma disable_warning 85
 
 #define SKIP_EVALUATED_COMMA_ASSIGN /* Looks like testing for some particular implementation-defined behaviour to me */

@@ -1121,7 +1121,11 @@ processParms (ast * func, value * defParm, ast ** actParm, int *parmNumber,     
       return 1;
     }
 
-  if (IS_PTR (defParm->type) && (IS_PTR (actualType) || IS_FUNC (actualType)))
+  /* Both checks diagnose atomic and nested qualifier mismatches. Run the
+     referenced-type check first and skip qualifier checking if it diagnoses. */
+  if (!diagnoseDissimilarPtrTargetTypes (defParm->type, actualType,
+                                       (*actParm)->filename, (*actParm)->lineno) &&
+      IS_PTR (defParm->type) && (IS_PTR (actualType) || IS_FUNC (actualType)))
     checkPtrTargetQualifiers (defParm->type, actualType);
 
   if (convertedActual)
@@ -6231,6 +6235,9 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
       else if (IS_ARRAY (RTYPE (tree)) && IS_REGISTER (RTYPE (tree)->next))
         werrorfl (tree->filename, tree->lineno, E_ILLEGAL_ADDR, "address of register variable");
 
+      diagnoseDissimilarPtrTargetTypes (LTYPE (tree), RTYPE (tree), tree->filename,
+                                      tree->lineno ? tree->lineno : tree->right->lineno);
+
       /* if the left side of the tree is of type void
          then report error */
       if (IS_VOID (LTYPE (tree)))
@@ -6347,6 +6354,9 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
             }
 
           typecompat = compareType (currFunc->type->next, RTYPE (tree), false);
+
+          diagnoseDissimilarPtrTargetTypes (currFunc->type->next, RTYPE (tree),
+                                          tree->filename, tree->lineno);
 
           propagateConstExpr (&tree->right, resultType, reduceTypeAllowed);
 

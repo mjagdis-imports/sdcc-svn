@@ -1,3 +1,19 @@
+2026-10-07 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
+	* src/SDCCast.c, src/SDCCsymt.c, src/SDCCsymt.h:
+	  Diagnose incompatible implicit pointer conversions (bug #3952).
+	  Compare types without object storage metadata, check function return
+	  types and restore parameter comparison in compareTypeExact, patch by Christopher Bazley.
+	  Print pointer type details only when warning 244 is emitted.
+	* support/valdiag/tests/bug-3952.c,
+	  support/valdiag/tests/function-type-parameters.c,
+	  support/regression/tests/function-type-parameters.c:
+	  Add diagnostic and runtime coverage, patch by Christopher Bazley.
+	* support/valdiag/tests/bug-4004.c, support/valdiag/tests/pointers.c:
+	  Update diagnostic expectations, patch by Christopher Bazley.
+	* support/regression/tests/p99-conformance.c:
+	  Suppress expected warning 244 without changing the tested code, patch by Christopher Bazley.
+
 2026-10-07 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCsymt.c,

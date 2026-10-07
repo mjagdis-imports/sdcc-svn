@@ -3084,6 +3084,15 @@ computeType (sym_link * type1, sym_link * type2, RESULT_TYPE resultType, int op)
   return rType;
 }
 
+/* Require compatible return types. compareType also checks SDCC
+   calling conventions and pointer representations. */
+static bool
+compatibleFunctionReturnTypes (sym_link *dest, sym_link *src)
+{
+  return compatibleTypes (dest, src) &&
+    compareType (dest, src, false) > 0;
+}
+
 /*------------------------------------------------------------------*/
 /* compareFuncType - compare function prototypes                    */
 /*------------------------------------------------------------------*/
@@ -3100,7 +3109,7 @@ compareFuncType (sym_link *dest, sym_link *src)
     return 0;
 
   /* check the return value type   */
-  if (compareType (dest->next, src->next, false) <= 0)
+  if (!compatibleFunctionReturnTypes (dest->next, src->next))
     return 0;
 
   /* Really, reentrant should match regardless of argCnt, but     */
@@ -3170,6 +3179,9 @@ compareFuncType (sym_link *dest, sym_link *src)
         {
           checkValue = acargs;
         }
+      /* Parameter adjustment does not remove atomicity. */
+      if (isAtomic (exargs->type) != isAtomic (checkValue->type))
+        return 0;
       if (IFFUNC_ISREENT (dest) && compareType (exargs->type, checkValue->type, false) <= 0)
         {
           return 0;
@@ -3486,10 +3498,8 @@ compareTypeExact (sym_link *dest, sym_link *src, long level, bool check_top_std_
                       else
                         checkValue = acargs;
 
-#if 0
-                      if (!compareTypeExact (exargs->type, checkValue->type, -1))
+                      if (!similarTypes (exargs->type, checkValue->type))
                         return 0;
-#endif
                     }
 
                   /* if one them ended we have a problem */
@@ -3622,6 +3632,109 @@ compareTypeExact (sym_link *dest, sym_link *src, long level, bool check_top_std_
   return 1;
 }
 
+/* Return true if the types are compatible, excluding object storage
+   metadata. */
+bool
+compatibleTypes (sym_link *dest, sym_link *src)
+{
+  sym_link *dest_type = copyLinkChain (dest);
+  sym_link *src_type = copyLinkChain (src);
+  sym_link *type;
+  bool compatible;
+
+  /* An unspecified array bound is compatible with a specified bound. */
+  for (sym_link *d = dest_type, *s = src_type; d && s; d = d->next, s = s->next)
+    if (IS_ARRAY (d) && IS_ARRAY (s) && (!DCL_ELEM (d) || !DCL_ELEM (s)))
+      DCL_ELEM (d) = DCL_ELEM (s) = DCL_ELEM (d) ? DCL_ELEM (d) : DCL_ELEM (s);
+
+  for (type = dest_type; type; type = type->next)
+    if (IS_SPEC (type))
+      {
+        SPEC_SCLS (type) = S_FIXED;
+        SPEC_STAT (type) = false;
+        SPEC_ABSA (type) = false;
+      }
+  for (type = src_type; type; type = type->next)
+    if (IS_SPEC (type))
+      {
+        SPEC_SCLS (type) = S_FIXED;
+        SPEC_STAT (type) = false;
+        SPEC_ABSA (type) = false;
+      }
+
+  compatible = compareTypeExact (dest_type, src_type, -1, true);
+  while (dest_type)
+    {
+      type = dest_type->next;
+      Safe_free (dest_type);
+      dest_type = type;
+    }
+  while (src_type)
+    {
+      type = src_type->next;
+      Safe_free (src_type);
+      src_type = type;
+    }
+  return compatible;
+}
+
+/* Return true if the types are compatible after ignoring outermost
+   access qualifiers and object storage metadata. Atomicity, qualifiers
+   at deeper levels and pointer kinds must match. */
+bool
+similarTypes (sym_link *dest, sym_link *src)
+{
+  /* Before C23, qualification of an array typedef applies to its element
+     type; since C23, the array and element types are identically qualified.
+     SDCC stores this qualification on the element type. Skip matching array
+     layers so this compatibility check ignores immediate qualification;
+     pointer target qualifier loss is checked separately. */
+  while (IS_ARRAY (dest) && IS_ARRAY (src))
+    {
+      if (DCL_ELEM (dest) && DCL_ELEM (src) && DCL_ELEM (dest) != DCL_ELEM (src))
+        return false;
+      dest = dest->next;
+      src = src->next;
+    }
+
+  sym_link *dest_type = copyLinkChain (dest);
+  sym_link *src_type = copyLinkChain (src);
+
+  if (IS_SPEC (dest_type))
+    {
+      SPEC_CONST (dest_type) = SPEC_VOLATILE (dest_type) = false;
+      SPEC_RESTRICT (dest_type) = SPEC_OPTIONAL (dest_type) = false;
+    }
+  else if (dest_type)
+    {
+      DCL_PTR_CONST (dest_type) = DCL_PTR_VOLATILE (dest_type) = false;
+      DCL_PTR_RESTRICT (dest_type) = DCL_PTR_OPTIONAL (dest_type) = false;
+    }
+  if (IS_SPEC (src_type))
+    {
+      SPEC_CONST (src_type) = SPEC_VOLATILE (src_type) = false;
+      SPEC_RESTRICT (src_type) = SPEC_OPTIONAL (src_type) = false;
+    }
+  else if (src_type)
+    {
+      DCL_PTR_CONST (src_type) = DCL_PTR_VOLATILE (src_type) = false;
+      DCL_PTR_RESTRICT (src_type) = DCL_PTR_OPTIONAL (src_type) = false;
+    }
+
+  bool similar = compatibleTypes (dest_type, src_type);
+  for (sym_link *next; dest_type; dest_type = next)
+    {
+      next = dest_type->next;
+      Safe_free (dest_type);
+    }
+  for (sym_link *next; src_type; src_type = next)
+    {
+      next = src_type->next;
+      Safe_free (src_type);
+    }
+  return similar;
+}
+
 /*-----------------------------------------------------------------------------*/
 /* compareTypeInexact - will do type check return 1 if representation is same. */
 /* Useful for redundancy elimination.                                          */
@@ -3665,6 +3778,50 @@ inCalleeSaveList (char *s)
   if (options.all_callee_saves)
     return 1;
   return isinSetWith (options.calleeSavesSet, s, calleeCmp);
+}
+
+/* Return true if two pointers reference similar types.
+   Outermost access qualifiers on the referenced types may differ here;
+   atomicity and nested qualification must match. Loss of those
+   outermost access qualifiers is checked elsewhere by
+   checkPtrTargetQualifiers; pointer-kind conversions are checked
+   elsewhere by compareType and checkPtrCast. */
+static bool
+similarPtrTargetTypes (sym_link *dest, sym_link *src)
+{
+  wassert (IS_PTR (dest) && IS_PTR (src));
+  return similarTypes (dest->next, src->next);
+}
+
+/* Diagnose dissimilar referenced types in an implicit conversion.
+   Apply array decay to the source; ignore conversions unless both types are
+   pointers.
+   The void/object-pointer exception does not require similar referenced types.
+   Function/object pointer conversions use target-specific checks
+   because SDCC permits some such conversions as extensions. Return true for
+   dissimilar referenced types, so qualifier checks avoid repeating the
+   diagnostic, including when warning 244 is disabled. */
+bool
+diagnoseDissimilarPtrTargetTypes (sym_link *dest, sym_link *src, const char *filename, int lineno)
+{
+  value *converted;
+
+  src = argumentTypeAfterDecay (src, &converted);
+  bool dissimilar = IS_FUNCPTR (dest) == IS_FUNCPTR (src) && IS_PTR (dest) && IS_PTR (src) &&
+    !IS_VOID (dest->next) && !IS_VOID (src->next) &&
+    !similarPtrTargetTypes (dest, src);
+  if (dissimilar)
+    {
+      if (werrorfl (filename, lineno, W_INCOMPAT_PTYPES))
+        printFromToType (src, dest);
+    }
+
+  if (converted)
+    {
+      Safe_free (converted->type);
+      Safe_free (converted);
+    }
+  return dissimilar;
 }
 
 /*-----------------------------------------------------------------*/
@@ -3849,14 +4006,14 @@ checkFunction (symbol * sym, symbol * csym)
   /* check the return value type   */
   if (FUNC_NOPROTOTYPE (csym->type))
     {
-      if (compareType (csym->type->next, sym->type->next, false) <= 0)
+      if (!compatibleTypes (csym->type->next, sym->type->next))
         {
           werrorfl (sym->fileDef, sym->lineDef, E_PREV_DECL_CONFLICT, csym->name, "return type", csym->fileDef, csym->lineDef);
           printFromToType (csym->type->next, sym->type->next);
           return 0;
         }
     }
-  else if (compareType (csym->type, sym->type, false) <= 0) // todo: needs tigther checking!
+  else if (compareType (csym->type, sym->type, false) <= 0)
     {
       werrorfl (sym->fileDef, sym->lineDef, E_PREV_DECL_CONFLICT, csym->name, "type", csym->fileDef, csym->lineDef);
       printFromToType (csym->type, sym->type);
