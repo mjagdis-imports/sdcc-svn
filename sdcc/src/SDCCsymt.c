@@ -539,8 +539,8 @@ addDecl (symbol *sym, int type, sym_link *p)
     {
       sym->etype = mergeSpec (sym->etype, head, sym->name);
     }
-  // type ends in spec, p is single decl element: p goes before spec
-  else if (IS_SPEC (sym->etype) && !IS_SPEC (head) && head == tail)
+  // type ends in spec, p is a declarator chain: p goes before spec
+  else if (IS_SPEC (sym->etype) && !IS_SPEC (head) && !IS_SPEC (tail))
     {
       t = sym->type;
       while (t->next != sym->etype)
