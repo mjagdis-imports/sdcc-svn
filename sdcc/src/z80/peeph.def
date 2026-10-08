@@ -2494,19 +2494,6 @@ replace restart {
 }
 
 replace restart {
-	pop	af
-	ld	%1,#%2
-	ld	%3 (%1),%4
-	ld	%1,#%5
-} by {
-	ld	a,%4
-	ld	(#%2 + %3),a
-	; common peephole 148 used #%2 directly instead of going through %1 using indirect addressing.
-	pop	af
-	ld	%1,#%5
-} if notSame(%3 'a')
-
-replace restart {
 	ld	%1,a
 	bit	%2,%1
 } by {
@@ -3016,24 +3003,6 @@ replace restart {
 	%5	c, %6
 %9:
 } if same(%5 'jr' 'jp' 'call'), notUsed('a'), canAssign('b' %3), newLabel(%9)
-
-replace restart {
-	ld	a, #0xff
-	cp	a, %1
-	%2	nc, %3
-} by {
-	; common peephole 195-1: remove always true check
-} if same(%2 'jr' 'jp' 'call'), notUsed('a'), labelRefCountChange(%3 -1)
-
-replace restart {
-	ld	a, #0xff
-	sub	a, %1
-	ld	a, #0xff
-	sbc	a, %2
-	%3	nc, %4
-} by {
-	; common peephole 195-2: remove always true check
-} if same(%3 'jr' 'jp' 'call'), notUsed('a'), labelRefCountChange(%4 -1)
 
 // These ex-generating rules should be among the last ones since ex counts as a read from both hl and de for notUsed().
 barrier

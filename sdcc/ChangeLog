@@ -1,5 +1,11 @@
 2026-10-08 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/z80/peeph-sm83.def,
+	  src/z80/peeph.def:
+	  Remove some untested (i.e. they apply for no regression test) peephole optimizer rules suspected to be broken.
+
+2026-10-08 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/z80/peeph.def,
 	  support/regression/tests/bug-4115.c:
 	  Fix bug #4115 (the reproducible part).
