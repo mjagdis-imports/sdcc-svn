@@ -320,7 +320,7 @@ replace {
 	; sm83 peephole 19 pushed #%2 via flags
 	cp	a
 	push	af
-} if operandsLiteral(%2), immdInRange(0xC0 0xC0 '+' %2 0 %x3), notUsed('f')
+} if operandsLiteral(%2), immdInRange(0xC0 0xC0 '+' %2 0 %x3), notUsed('f'), notUsed('a')
 
 replace restart {
 	inc	hl

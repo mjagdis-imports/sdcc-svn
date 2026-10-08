@@ -951,8 +951,8 @@ replace restart {
 replace restart {
 	ld	%4, #%1
 	add	%4, sp
-	ld	%5 (iy), #%2
-	ld	%6 (iy), #%3
+	ld	%5 (%4), #%2
+	ld	%6 (%4), #%3
 } by {
 	; common peephole 65 used hl instead of %4.
 	ld	hl, #%1 + %5

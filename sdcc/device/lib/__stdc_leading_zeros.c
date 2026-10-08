@@ -33,7 +33,7 @@
 
 static_assert(INT_FAST8_MAX >= ULLONG_WIDTH, "Unsuitable return type");
 
-unsigned _BitInt(8) __stdc_leading_zeros(unsigned long long value, uint_fast8_t width)
+__stdc_bitcount_t __stdc_leading_zeros(unsigned long long value, uint_fast8_t width)
 {
 	for(int_fast8_t i = width - 1; i >= 0; i--)
 		if(value & (1ull << i))

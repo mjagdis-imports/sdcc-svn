@@ -1,5 +1,19 @@
 2026-10-08 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* device/include/stdbit.h,
+	  device/lib/__stdc_bit_width.c,
+	  device/lib/__stdc_count_ones.c,
+	  device/lib/__stdc_first_leading_one.c,
+	  device/lib/__stdc_first_trailing_one.c,
+	  device/lib/__stdc_leading_zeros.c,
+	  device/lib/__stdc_trailing_ones.c:
+	  Make stdbit.h usable without _BitInt.
+	* src/z80/peeph-sm83.def,
+	  src/z80/peeph.def:
+	  Peephole optimizer rule fixes.
+
+2026-10-08 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/z80/peeph-sm83.def,
 	  src/z80/peeph.def:
 	  Remove some untested (i.e. they apply for no regression test) peephole optimizer rules suspected to be broken.

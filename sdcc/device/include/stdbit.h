@@ -219,8 +219,14 @@ default: (sizeof(x) * CHAR_BIT))
 #define __typewidth(x) (sizeof(x) * CHAR_BIT)
 #endif
 
+#if __SDCC_BITINT_MAXWIDTH >= 8
+typedef unsigned _BitInt(8) __stdc_bitcount_t;
+#else
+typedef uint8_t __stdc_bitcount_t;
+#endif
+
 // C23 7.18.3 Count Trailing Ones
-unsigned _BitInt(8) __stdc_leading_zeros(unsigned long long value, uint_fast8_t width);
+__stdc_bitcount_t __stdc_leading_zeros(unsigned long long value, uint_fast8_t width);
 #define stdc_leading_zeros(value) __stdc_leading_zeros((value), __typewidth(value))
 #define stdc_leading_zeros_uc(value) ((unsigned int)(stdc_leading_zeros((unsigned char)(value)))
 #define stdc_leading_zeros_us(value) ((unsigned int)(stdc_leading_zeros((unsigned short)(value)))
@@ -237,7 +243,7 @@ unsigned _BitInt(8) __stdc_leading_zeros(unsigned long long value, uint_fast8_t 
 #define stdc_leading_ones_ull(value) ((int)(stdc_leading_ones((unsigned long long)(value))))
 
 // C23 7.18.6 Count Trailing Ones
-unsigned _BitInt(8) __stdc_trailing_ones(unsigned long long value);
+__stdc_bitcount_t __stdc_trailing_ones(unsigned long long value);
 #define stdc_trailing_ones(value) __stdc_trailing_ones(value) // Todo: Use some speed-optimized variants here later. Via _Generic or sizeof.
 #define stdc_trailing_ones_uc(value) ((unsigned int)(stdc_trailing_ones((unsigned char)(value)))
 #define stdc_trailing_ones_us(value) ((unsigned int)(stdc_trailing_ones((unsigned short)(value)))
@@ -254,7 +260,7 @@ unsigned _BitInt(8) __stdc_trailing_ones(unsigned long long value);
 #define stdc_trailing_zeros_ull(value) ((unsigned int)(stdc_count_trailing_ones((unsigned long long)(~(value))))
 
 // C23 7.18.8 First Leading One
-unsigned _BitInt(8) __stdc_first_leading_one(unsigned long long value, uint_fast8_t width);
+__stdc_bitcount_t __stdc_first_leading_one(unsigned long long value, uint_fast8_t width);
 #define stdc_first_leading_one(value) __stdc_first_leading_one((value), __typewidth(value))
 #define stdc_first_leading_one_uc(value) ((unsigned int)(stdc_first_leading_one((unsigned char)(~(value))))
 #define stdc_first_leading_one_us(value) ((unsigned int)(stdc_first_leading_one((unsigned short)(~(value))))
@@ -271,7 +277,7 @@ unsigned _BitInt(8) __stdc_first_leading_one(unsigned long long value, uint_fast
 #define stdc_first_leading_zero_ull(value) ((unsigned int)(stdc_first_leading_zero((unsigned long long)(~(value))))
 
 // C23 7.18.10 First Trailing One
-unsigned _BitInt(8) __stdc_first_trailing_one(unsigned long long value);
+__stdc_bitcount_t __stdc_first_trailing_one(unsigned long long value);
 #define stdc_first_trailing_one(value) __stdc_first_trailing_one(value) // Todo: Use some speed-optimized variants here later. Via _Generic or sizeof.
 #define stdc_first_trailing_one_uc(value) ((unsigned int)(stdc_first_trailing_one((unsigned char)(value)))
 #define stdc_first_trailing_one_us(value) ((unsigned int)(stdc_first_trailing_one((unsigned short)(value)))
@@ -288,7 +294,7 @@ unsigned _BitInt(8) __stdc_first_trailing_one(unsigned long long value);
 #define stdc_first_trailing_zero_ull(value) ((unsigned int)(stdc_first_trailing_zero((unsigned long long)(value)))
 
 // C23 7.18.11 Count Ones
-unsigned _BitInt(8) __stdc_count_ones(unsigned long long value);
+__stdc_bitcount_t __stdc_count_ones(unsigned long long value);
 #define stdc_count_ones(value) __stdc_count_ones(value) // Todo: Use some speed-optimized variants here later. Via _Generic or sizeof.
 #define stdc_count_ones_uc(value) ((unsigned int)(stdc_count_ones((unsigned char)(value)))
 #define stdc_count_ones_us(value) ((unsigned int)(stdc_count_ones((unsigned short)(value)))
@@ -313,7 +319,7 @@ unsigned _BitInt(8) __stdc_count_ones(unsigned long long value);
 #define stdc_has_single_bit_ull(value) stdc_has_single_bit((unsigned long long)(value))
 
 // C23 7.18.14 Bit Width
-unsigned _BitInt(8) __stdc_bit_width(unsigned long long value);
+__stdc_bitcount_t __stdc_bit_width(unsigned long long value);
 #define stdc_bit_width(value) __stdc_bit_width(value) // Todo: Use some speed-optimized variants here later. Via _Generic or sizeof.
 #define stdc_bit_width_uc(value) ((unsigned int)(stdc_bit_width((unsigned char)(value)))
 #define stdc_bit_width_us(value) ((unsigned int)(stdc_bit_width((unsigned short)(value)))
