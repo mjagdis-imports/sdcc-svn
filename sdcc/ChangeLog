@@ -1,5 +1,11 @@
 2026-10-08 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/z80/peeph.def,
+	  support/regression/tests/bug-4115.c:
+	  Fix bug #4115 (the reproducible part).
+
+2026-10-08 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/SDCCval.c:
 	  Adjust function parameters to pointers before qualifier checking and
 	  symbol binding, fixing indirect calls (bug #3028, related to #3358), patch by Christopher Bazley.
