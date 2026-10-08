@@ -1,5 +1,14 @@
 2026-10-08 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/SDCCval.c:
+	  Adjust function parameters to pointers before qualifier checking and
+	  symbol binding, fixing indirect calls (bug #3028, related to #3358), patch by Christopher Bazley.
+	* support/regression/tests/bug-3028.c,
+	  support/valdiag/tests/bug-3028.c:
+	  Test named and unnamed parameters, redeclarations, calls and _Optional, patch by Christopher Bazley.
+
+2026-10-08 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/SDCCast.c,
 	  src/SDCCerr.c,
 	  src/SDCCerr.h,

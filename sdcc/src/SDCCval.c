@@ -3720,6 +3720,17 @@ checkParameterTypeList (value *forward_declaration, value *parameters)
     }
   for (value *p = parameters; p; p = p->next)
     {
+      /* Adjust function parameters before checking qualifiers or binding
+         their symbols, so the parameter denotes a pointer object. */
+      if (IS_FUNC (p->type))
+        {
+          sym_link *pointer = newLink (DECLARATOR);
+          DCL_TYPE (pointer) = UPOINTER;
+          pointer->next = p->type;
+          p->type = pointer;
+          if (p->sym)
+            p->sym->type = pointer;
+        }
       changePointer (p->type);
       checkQualifiers (p->sym, p->type, false, true);
       if (p->sym)
