@@ -347,7 +347,7 @@ enum {
   E_ATOMIC_FUNCTION             = 317, // _Atomic function
   E_ATOMIC_SPEC_ATOMIC          = 318, // _Atomic specifier on atomic type
   E_ATOMIC_SPEC_QUALIFIED       = 319, // _Atomic specifier on qualified type
-  E_BLOCK_SCOPE_EXTERN_INIT     = 320, // block scope variable declared extern and intialized
+  E_BLOCK_SCOPE_EXTERN_INIT     = 320, // block-scope variable declared extern and initialized
   E_BLOCK_SCOPE_FUNC_SCLASS     = 321, // Function declared at block scope with explicit storage-class specifier other than extern
   W_PTR2INT_NOREPRESENT         = 322, // Cast of pointer to integer type that cannot represent all values of the pointer type
   W_MAIN_TYPE                   = 323, // Function main should be void main(void) or int main(void)

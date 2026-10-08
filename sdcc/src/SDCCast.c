@@ -6592,6 +6592,7 @@ typeofOp (ast *tree)
   for (spec_type = type; !IS_SPEC (spec_type); spec_type = spec_type->next);
   SPEC_SCLS (spec_type) = 0;
   SPEC_STAT (spec_type) = 0;
+  SPEC_EXTR (spec_type) = 0;
   return type;
 }
 
