@@ -3,6 +3,7 @@
 
 #include <testfwk.h>
 
+#ifdef __SDCC // Lack of a way to check for _Optional support for host.
 static int
 function (void)
 {
@@ -19,7 +20,7 @@ function_address (_Optional Fn *p)
   return 0;
 }
 
-#if !defined(__SDCC_pdk13) && !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15)
+#if !defined(__SDCC_pdk13) && !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) // Lack of memory.
 struct Item
 {
   unsigned char tag;
@@ -53,10 +54,12 @@ fill (unsigned short count, void *storage)
     }
 }
 #endif
+#endif
 
 void
 testBug (void)
 {
+#ifdef __SDCC // Lack of a way to check for _Optional support for host.
   _Optional const volatile int *p = 0;
   int *restrict _Optional *pp = 0;
 
@@ -68,7 +71,7 @@ testBug (void)
   ASSERT (_Generic (pp + 0, int *restrict *: 1, default: 0));
   ASSERT (_Generic (&p[0], const volatile int *: 1, default: 0));
 
-#if !defined(__SDCC_pdk13) && !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15)
+#if !defined(__SDCC_pdk13) && !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) // Lack of memory.
   fill (8, &table);
   for (unsigned char i = 0; i < 8; ++i)
     {
@@ -78,5 +81,6 @@ testBug (void)
       ASSERT (table.items[i].third == i + 3);
       ASSERT (table.items[i].last == i + 4);
     }
+#endif
 #endif
 }
