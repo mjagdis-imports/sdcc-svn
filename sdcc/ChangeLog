@@ -1,7 +1,15 @@
 2026-10-09 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/pic16/glue.c:
-	  Fix an issue in inline function handling, bug #4122, patch by  zeynelsagcan.
+	  Fix an issue in inline function handling, bug #4122, patch by zeynelsagcan.
+	* device/lib/pic16/libsdcc/fixed16x16/fps16x16_eq.c,
+	  device/lib/pic16/libsdcc/fixed16x16/fps16x16_gt.c,
+	  device/lib/pic16/libsdcc/fixed16x16/fps16x16_gteq.c,
+	  device/lib/pic16/libsdcc/fixed16x16/fps16x16_lt.c,
+	  device/lib/pic16/libsdcc/fixed16x16/fps16x16_lteq.c,
+	  device/lib/pic16/libsdcc/fixed16x16/fps16x16_neq.c,
+	  src/SDCCsymt.c:
+	  Make fixed-point comparison support functions return unsigned char.
 
 2026-10-08 Philipp Klaus Krause <philipp@colecovision.eu>
 

@@ -31,7 +31,7 @@ union u_t {
   __fixed16x16 fix;
 };
 
-char
+unsigned char
 __fps16x16_neq (__fixed16x16 a, __fixed16x16 b)
 {
   union u_t u1, u2;

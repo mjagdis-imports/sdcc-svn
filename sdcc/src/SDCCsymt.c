@@ -5348,18 +5348,16 @@ initCSupport (void)
 
   if (TARGET_IS_PIC16)
     {
-      sym_link *charType = (options.signed_char) ? SCHARTYPE : UCHARTYPE;
-
       fps16x16_add = funcOfType ("__fps16x16_add", fixed16x16Type, fixed16x16Type, 2, options.float_rent);
       fps16x16_sub = funcOfType ("__fps16x16_sub", fixed16x16Type, fixed16x16Type, 2, options.float_rent);
       fps16x16_mul = funcOfType ("__fps16x16_mul", fixed16x16Type, fixed16x16Type, 2, options.float_rent);
       fps16x16_div = funcOfType ("__fps16x16_div", fixed16x16Type, fixed16x16Type, 2, options.float_rent);
-      fps16x16_eq = funcOfType ("__fps16x16_eq", charType, fixed16x16Type, 2, options.float_rent);
-      fps16x16_neq = funcOfType ("__fps16x16_neq", charType, fixed16x16Type, 2, options.float_rent);
-      fps16x16_lt = funcOfType ("__fps16x16_lt", charType, fixed16x16Type, 2, options.float_rent);
-      fps16x16_lteq = funcOfType ("__fps16x16_lteq", charType, fixed16x16Type, 2, options.float_rent);
-      fps16x16_gt = funcOfType ("__fps16x16_gt", charType, fixed16x16Type, 2, options.float_rent);
-      fps16x16_gteq = funcOfType ("__fps16x16_gteq", charType, fixed16x16Type, 2, options.float_rent);
+      fps16x16_eq = funcOfType ("__fps16x16_eq", UCHARTYPE, fixed16x16Type, 2, options.float_rent);
+      fps16x16_neq = funcOfType ("__fps16x16_neq", UCHARTYPE, fixed16x16Type, 2, options.float_rent);
+      fps16x16_lt = funcOfType ("__fps16x16_lt", UCHARTYPE, fixed16x16Type, 2, options.float_rent);
+      fps16x16_lteq = funcOfType ("__fps16x16_lteq", UCHARTYPE, fixed16x16Type, 2, options.float_rent);
+      fps16x16_gt = funcOfType ("__fps16x16_gt", UCHARTYPE, fixed16x16Type, 2, options.float_rent);
+      fps16x16_gteq = funcOfType ("__fps16x16_gteq", UCHARTYPE, fixed16x16Type, 2, options.float_rent);
 
       for (tofrom = 0; tofrom < 2; tofrom++)
         {
