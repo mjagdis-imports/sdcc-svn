@@ -2661,6 +2661,21 @@ valMult (value * lval, value * rval, bool reduceType)
   return reduceType ? cheapestVal (val) : val;
 }
 
+/* Recognise minimum divided by minus one in the computed signed type.
+   Handle it before host division: 32- and 64-bit host operations can
+   overflow, and narrower _BitInt results need correct sign extension. */
+static bool
+valDivisionOverflow (value *val, value *lval, value *rval)
+{
+  if (!IS_INTEGRAL (val->type) || SPEC_USIGN (val->type) || IS_CHAR (val->type))
+    return false;
+
+  TYPE_TARGET_ULONGLONG sign = 1ULL << (bitsForType (val->type) - 1);
+  TYPE_TARGET_ULONGLONG mask = sign | (sign - 1);
+  return (ullFromVal (lval) & mask) == sign &&
+    (ullFromVal (rval) & mask) == mask;
+}
+
 /*------------------------------------------------------------------*/
 /* valDiv  - Divide   constants                                     */
 /*------------------------------------------------------------------*/
@@ -2679,6 +2694,22 @@ valDiv (value * lval, value * rval, bool reduceType)
   val = newValue ();
   val->type = val->etype = computeType (lval->etype, rval->etype, RESULT_TYPE_INT, '/');
   SPEC_SCLS (val->etype) = S_LITERAL;   /* will remain literal */
+
+  if (valDivisionOverflow (val, lval, rval))
+    {
+      /* Return the signed minimum value for the overflowing quotient.
+         This avoids host overflow. */
+      TYPE_TARGET_LONGLONG minimum =
+        -1 - (TYPE_TARGET_LONGLONG) ((1ULL << (bitsForType (val->type) - 1)) - 1);
+      if (SPEC_LONGLONG (val->type) || IS_BITINT (val->type))
+        SPEC_CVAL (val->etype).v_longlong = minimum;
+      else if (SPEC_LONG (val->type))
+        SPEC_CVAL (val->etype).v_long = (TYPE_TARGET_LONG) minimum;
+      else
+        SPEC_CVAL (val->etype).v_int = (TYPE_TARGET_INT) minimum;
+      return reduceType ? cheapestVal (val) : val;
+    }
+
 
   if (IS_FLOAT (val->type))
     SPEC_CVAL (val->type).v_float = floatFromVal (lval) / floatFromVal (rval);
@@ -2730,6 +2761,14 @@ valMod (value * lval, value * rval, bool reduceType)
   val = newValue ();
   val->type = val->etype = computeType (lval->etype, rval->etype, RESULT_TYPE_INT, '%');
   SPEC_SCLS (val->etype) = S_LITERAL;   /* will remain literal */
+
+  if (valDivisionOverflow (val, lval, rval))
+    {
+      /* Return zero for the remainder without evaluating host remainder. */
+      SPEC_CVAL (val->etype).v_ulonglong = 0;
+      return reduceType ? cheapestVal (val) : val;
+    }
+
 
   if (SPEC_LONGLONG (val->type) || IS_BITINT (val->type))
     {
