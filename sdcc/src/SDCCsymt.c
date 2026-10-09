@@ -5628,19 +5628,18 @@ newEnumType (symbol *enumlist, sym_link *userRequestedType)
   if (userRequestedType)
     {
       checkTypeSanity (userRequestedType, NULL);
-      if (SPEC_NOUN (userRequestedType) == V_BITINT)
-        {
-          if (!options.std_sdcc)
-            werror (W_ENUM_UNDERLYING_BITINT);
-        }
-      else if ((SPEC_NOUN (userRequestedType) != V_INT && SPEC_NOUN (userRequestedType) != V_CHAR && SPEC_NOUN (userRequestedType) != V_BOOL) ||
-               SPEC_ENUM (userRequestedType))
+      if (!IS_SPEC (userRequestedType) ||
+          (SPEC_NOUN (userRequestedType) != V_BITINT && SPEC_NOUN (userRequestedType) != V_INT &&
+           SPEC_NOUN (userRequestedType) != V_CHAR && SPEC_NOUN (userRequestedType) != V_BOOL) ||
+          SPEC_ENUM (userRequestedType))
         {
           werror (E_ENUM_UNDERLYING_TYPE);
           /* try to keep going */
           SPEC_NOUN (type) = V_INT;
           return type;
         }
+      if (SPEC_NOUN (userRequestedType) == V_BITINT && !options.std_c2y && !options.std_sdcc)
+        werror (W_ENUM_UNDERLYING_BITINT);
 
       SPEC_NOUN (type) = SPEC_NOUN (userRequestedType);
       SPEC_SIGN (type) = SPEC_SIGN (userRequestedType);

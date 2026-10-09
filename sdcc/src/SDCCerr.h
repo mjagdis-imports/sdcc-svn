@@ -341,7 +341,7 @@ enum {
   E_INVALID_OCTAL               = 311, /* \o{...} used without valid octal digits */
   E_SELECTION_DECLARATION_C2Y   = 312, /* declaration within selection header requires ISO C2y or later */
   E_COMPLIT_SCLASS_C23          = 313, // compound literals with storage class specifier require ISO C23 or later
-  W_ENUM_UNDERLYING_BITINT      = 314, // enum's underlying type may not be a bit-precise type in ISO C23
+  W_ENUM_UNDERLYING_BITINT      = 314, // enum's underlying bit-precise type requires ISO C2y or later
   W_BITINTWIDTH_1_C2Y           = 315, // signed bit-precise integer type of width 1 requires ISO C2y or later
   E_ATOMIC_ARRAY                = 316, // _Atomic array
   E_ATOMIC_FUNCTION             = 317, // _Atomic function
