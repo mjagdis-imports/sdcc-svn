@@ -403,17 +403,6 @@ replace restart {
 	push	de
 } if notUsed('hl' 'e')
 
-//TODO: remove if unused
-replace restart {
-	ex	de, hl
-	push	%1
-	push	de
-} by {
-	; common peephole 28 pushed hl directly instead of going through de.
-	push	%1
-	push	hl
-} if notSame(%1 'hl' 'de'), notUsed('de' 'hl')
-
 replace restart {
 	ld	%4, %1
 	ld	%5, %2
@@ -658,14 +647,14 @@ replace restart {
 } by {
 	; common peephole 45 replace 16-bit immediate load by 8-bit one.
 	ld	%3, #%4
-} if canSplitReg(%1 %5 %3), immdInRange(0x00 0xff '&' %2 0xff %4), canAssign(%3 %4), notUsed(%5)
+} if canSplitReg(%1 %5 %3), immdInRange(0x00 0xff '&' %2 0xff %4), canAssign(%3 '#1'), notUsed(%5)
 
 replace restart {
 	ld	%1, #%2
 } by {
 	; common peephole 46 replace 16-bit immediate load by 8-bit one.
 	ld	%3, #%4
-} if canSplitReg(%1 %3 %5), immdInRange(0x00 0xff '/' %2 256 %4), canAssign(%3 %4), notUsed(%5)
+} if canSplitReg(%1 %3 %5), immdInRange(0x00 0xff '/' %2 256 %4), canAssign(%3 '#1'), notUsed(%5)
 
 replace restart {
 	ld	a, %1 (%3)
@@ -1161,30 +1150,6 @@ replace restart {
 	; common peephole 77d decremented immediate.
 } if operandsLiteral(%3), immdInRange(0 256 '+' %3 1 %4), notUsed('f')
 
-replace {
-	ld	%1, #%2 - 0
-} by {
-	ld	%1, #%2 + 0
-	; common peephole 77e changed -0 to +0.
-}
-
-replace {
-	ld	%1, #%2 + 0
-	dec	%1
-} by {
-	ld	%1, #%2 - 1
-	; common peephole 77f decremented immediate.
-} if notUsed('f')
-
-// should improve flag based optimizations
-replace restart {
-	jp	%1, %2
-	jp	%2
-} by {
-	; common peephole 78 removed redundant jp
-	jp	%2
-} if labelRefCountChange(%2 -1)
-
 replace restart {
 	jp	nc, %1
 	jp	%2
@@ -1257,21 +1222,6 @@ replace restart {
 %1:
 } if labelRefCountChange(%1 -1)
 
-// A peephole that makes the code longer. Let's hope it's worth it in speed gain and further optimization potential.
-replace restart {
-	ld	a, #0x00
-%1:
-	bit	%2, a
-	jp	z, %3
-} by {
-	ld	a, #0x00
-	jp	%3
-	; common peephole 86 jumped directly to %3 instead of testing a first.
-%1:
-	bit	%2, a
-	jp	z, %3
-} if labelRefCountChange(%3 +1)
-
 replace restart {
 	ld	%1, %2
 	jp	%3
@@ -1290,15 +1240,6 @@ replace restart {
 	; common peephole 87b removed unreachable jump to %3
 	jp	%1
 } if labelRefCount(%2 0), labelRefCountChange(%3 -1)
-
-replace restart {
-	ld	%1, #0x01
-	bit	0, %1
-	jp	z, %2
-} by {
-	ld	%1, #0x01
-	; common peephole 89 removed impossible jump to %2.
-} if labelRefCountChange(%2 -1)
 
 replace restart {
 	rlca
@@ -1663,38 +1604,38 @@ replace restart {
 } if same(%2 'inc' 'dec'), notUsed('cf' 'hf' 'nf' 'sf' 'pf')
 
 replace restart {
-	xor	a,%1
-	or	a,a
+	xor	a, %1
+	or	a, a
 } by {
-	xor	a,%1
+	xor	a, %1
 	; common peephole 101 removed redundant or after xor.
 }
 
 replace restart {
-	xor	a,%1 (%2)
-	or	a,a
+	xor	a, %1 (%2)
+	or	a, a
 } by {
-	xor	a,%1 (%2)
+	xor	a, %1 (%2)
 	; common peephole 102 removed redundant or after xor.
 }
 
 replace restart {
-	dec	a
+	%2	a
 	or	a, a
 } by {
-	; common peephole 102a removed redundant or after dec.
-	dec	a
-} if notUsed('cf')
+	; common peephole 102a removed redundant or after %2.
+	%2	a
+} if notUsed('cf'), same(%2 'dec' 'inc')
 
 replace restart {
-	dec	%1
+	%2	%1
 	ld	a, %1
 	or	a, a
 } by {
-	; common peephole 102b removed redundant or after dec.
-	dec	%1
+	; common peephole 102b removed redundant or after %2.
+	%2	%1
 	ld	a, %1
-} if notUsed('cf')
+} if notUsed('cf'), same(%2 'dec' 'inc')
 
 //TODO: check on other flags
 replace restart {
@@ -1758,7 +1699,7 @@ replace restart {
 	%3	%1
 	ld	%2, %1
 	; common peephole 104b %3 %1 directly to remove redundant load from %2 into %1
-} if same(%1 'a' 'b' 'c' 'd' 'e' 'h' 'l' '(hl)'), same(%3 'inc' 'dec')
+} if same(%1 'a' 'b' 'c' 'd' 'e' 'h' 'l' '(hl)'), same(%3 'inc' 'dec'), notVolatile(%1)
 
 replace restart {
 	push	de
@@ -1894,12 +1835,12 @@ replace restart {
 
 replace restart {
 	ld	%1, (hl)
-	inc	%1
+	%2	%1
 	ld	(hl), %1
 } by {
-	inc	(hl)
+	%2	(hl)
 	; common peephole 115 incremented in (hl) instead of going through %1.
-} if notUsed(%1)
+} if notUsed(%1), same(%2 'inc' 'dec')
 
 replace restart {
 	ld	%1, (hl)
@@ -2265,15 +2206,6 @@ replace {
 	ld	%1, #%4
 } if operandsLiteral(%2 %3), immdInRange(0 0xFFFF '-' %2 %3 %x4), canSplitReg(%1 %0 %0)
 
-
-// Bug #3102
-//replace {
-//	ld	%1, (#%2 + 0)
-//} by {
-//	; common peephole 130g removed unnecessary +0 to immediate
-//	ld	%1, (#%2)
-//}
-
 replace {
 	ld	(#%2 + 0), %1
 } by {
@@ -2318,19 +2250,11 @@ replace restart {
 
 replace restart {
 	pop	af
-	ld	sp,%1
+	ld	sp, %1
 } by {
 	; common peephole 133 removed redundant pop af.
-	ld	sp,%1
+	ld	sp, %1
 } if notUsed('a')
-
-replace restart {
-	inc	sp
-	ld	sp,%1
-} by {
-	; common peephole 134 removed redundant inc sp.
-	ld	sp,%1
-}
 
 replace restart {
 	call    %1
@@ -2587,20 +2511,6 @@ replace restart {
 	; common peephole 154c reuseded zero of register (which has just been tested to be #0x00).
 	ld	a, %1
 } if same(%4 'inc' 'dec'), notUsed('f')
-
-replace restart {
-	add	a, #%1
-} by {
-	; common peephole 155a turned add into inc.
-	inc	a
-} if operandsLiteral(%1), immdInRange(1 1 '+' %1 0 %2), notUsed('cf')
-
-replace restart {
-	sub	a, #%1
-} by {
-	; common peephole 155b turned sub into dec.
-	dec	a
-} if operandsLiteral(%1), immdInRange(1 1 '+' %1 0 %2), notUsed('cf')
 
 replace restart {
 	add	a, #%1

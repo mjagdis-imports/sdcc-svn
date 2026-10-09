@@ -1,7 +1,7 @@
 2026-10-09 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/z80/peeph.def:
-	  Remove two peephole optimizer rules that do not improve the code in any regression tests, fix some others.
+	  Remove some peephole optimizer rules that do not improve the code in any regression tests, fix some others.
 
 2026-10-09 Philipp Klaus Krause <philipp@colecovision.eu>
 
