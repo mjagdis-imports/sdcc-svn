@@ -2,6 +2,8 @@
 
 	* src/z80/peeph.def:
 	  Remove some peephole optimizer rules that do not improve the code in any regression tests, fix some others.
+	* support/regression/tests/bug-4123.c:
+	  Add new tests for some peephole optimizer rules no longer triggered in other tests.
 
 2026-10-09 Philipp Klaus Krause <philipp@colecovision.eu>
 
