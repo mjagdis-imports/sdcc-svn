@@ -13,7 +13,7 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License 
+   You should have received a copy of the GNU General Public License
    along with this library; see the file COPYING. If not, write to the
    Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA.
@@ -30,21 +30,25 @@
 
 void *bsearch(const void *key, const void *base, size_t nmemb, size_t size, int (*compar)(const void *, const void *) __reentrant)
 {
-	for(const char *left = base; nmemb;)
+	for (const char *left = base; nmemb;)
 	{
 		const char *middle = left + nmemb / 2 * size;
 		int c = (*compar)(key, middle);
 
-		if(c < 0)
+		if (c < 0)
+		{
 			nmemb = nmemb / 2;
-		else if(c > 0)
+		}
+		else if (c > 0)
 		{
 			left = middle + size;
 			nmemb = (nmemb - 1) / 2;
 		}
 		else
-			return(middle);
+		{
+			return (void*)middle;
+		}
 	}
 
-	return(0);
+	return NULL;
 }

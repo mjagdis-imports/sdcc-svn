@@ -13,7 +13,7 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
    GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License 
+   You should have received a copy of the GNU General Public License
    along with this library; see the file COPYING. If not, write to the
    Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA.
@@ -225,7 +225,7 @@ typedef unsigned _BitInt(8) __stdc_bitcount_t;
 typedef uint8_t __stdc_bitcount_t;
 #endif
 
-// C23 7.18.3 Count Trailing Ones
+// C23 7.18.3 Count Leading Zeros
 __stdc_bitcount_t __stdc_leading_zeros(unsigned long long value, uint_fast8_t width);
 #define stdc_leading_zeros(value) __stdc_leading_zeros((value), __typewidth(value))
 #define stdc_leading_zeros_uc(value) ((unsigned int)(stdc_leading_zeros((unsigned char)(value)))

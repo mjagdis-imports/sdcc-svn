@@ -1,3 +1,10 @@
+2026-10-11 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* device/lib/_strpbrk.c,
+	* device/lib/bsearch.c: fixed new warnings
+	* src/mcs51/gen.c (pointerCode): changed parameter from sym_link* to operand*
+	* src/ds390/gen.c: synced to mcs51
+
 2026-10-09 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/z80/peeph.def:

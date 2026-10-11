@@ -595,12 +595,12 @@ newAsmop (short type)
 }
 
 /*-----------------------------------------------------------------*/
-/* pointerCode - returns the code for a pointer type               */
+/* pointerCode - returns the code for a pointer operand            */
 /*-----------------------------------------------------------------*/
 static int
-pointerCode (sym_link * etype)
+pointerCode (operand * pointer)
 {
-  return PTR_TYPE (SPEC_OCLS (etype));
+  return PTR_TYPE (SPEC_OCLS (getSpec (operandType (pointer))));
 }
 
 /*-----------------------------------------------------------------*/
@@ -669,6 +669,18 @@ leftRightUseAcc (iCode * ic)
 }
 
 /*-----------------------------------------------------------------*/
+/* stackoffset - stack offset for symbol                           */
+/*-----------------------------------------------------------------*/
+static int
+stackoffset (const symbol * sym)
+{
+  int offset = sym->stack;
+  if (sym->stack < 0)
+    offset -= _G.nRegsSaved;
+  return offset;
+}
+
+/*-----------------------------------------------------------------*/
 /* aopForSym - for a true symbol                                   */
 /*-----------------------------------------------------------------*/
 static asmop *
@@ -713,10 +725,9 @@ aopForSym (iCode * ic, symbol * sym, bool result, bool useDP2)
         {
           if (sym->onStack)
             {
-              signed char offset = ((sym->stack < 0) ?
-                                    ((signed char) (sym->stack - _G.nRegsSaved)) : ((signed char) sym->stack)) & 0xff;
+              int offset = stackoffset (sym);
 
-              if ((abs (offset) <= 3) || (accuse && (abs (offset) <= 7)))
+              if ((abs (offset) < 3) || (accuse && (abs (offset) < 4)))
                 {
                   emitcode ("mov", "%s,_bp", aop->aopu.aop_ptr->name);
                   while (offset < 0)
@@ -733,12 +744,18 @@ aopForSym (iCode * ic, symbol * sym, bool result, bool useDP2)
               else
                 {
                   if (accuse)
-                    emitcode ("push", "acc");
-                  emitcode ("mov", "a,_bp");
-                  emitcode ("add", "a,#!constbyte", (unsigned)offset);
-                  emitcode ("mov", "%s,a", aop->aopu.aop_ptr->name);
-                  if (accuse)
-                    emitcode ("pop", "acc");
+                    {
+                      emitcode ("xch", "a,%s", aop->aopu.aop_ptr->name);
+                      emitcode ("mov", "a,_bp");
+                      emitcode ("add", "a,#0x%02x", offset & 0xff);
+                      emitcode ("xch", "a,%s", aop->aopu.aop_ptr->name);
+                    }
+                  else
+                    {
+                      emitcode ("mov", "a,_bp");
+                      emitcode ("add", "a,#0x%02x", offset & 0xff);
+                      emitcode ("mov", "%s,a", aop->aopu.aop_ptr->name);
+                    }
                 }
             }
           else
@@ -754,7 +771,7 @@ aopForSym (iCode * ic, symbol * sym, bool result, bool useDP2)
 
   if (sym->onStack && options.stack10bit)
     {
-      short stack_val = -((sym->stack < 0) ? ((short) (sym->stack - _G.nRegsSaved)) : ((short) sym->stack));
+      int offset = stackoffset (sym);
       if (_G.dptrInUse)
         {
           emitcode ("push", dpl);
@@ -764,48 +781,39 @@ aopForSym (iCode * ic, symbol * sym, bool result, bool useDP2)
       /* It's on the 10 bit stack, which is located in
        * far data space.
        */
-      if (stack_val < 0 && stack_val > -5)
-        {
-          /* between -5 & -1 */
-          if (options.model == MODEL_FLAT24)
-            {
-              emitcode ("mov", "%s,#!constbyte", dpx, (unsigned)((options.stack_loc >> 16) & 0xff));
-            }
-          emitcode ("mov", "%s,_bpx+1", dph);
-          emitcode ("mov", "%s,_bpx", dpl);
+      if (offset > 0 && (6 + (useDP2 ? 6 : 0) + offset < 12 + (accuse ? 4 : 0)))
+        {// 6 + useDP2*6 + offset bytes
           if (useDP2)
-            {
-              emitcode ("mov", "dps,#1");
-            }
-          stack_val = -stack_val;
-          while (stack_val--)
+            emitcode ("mov", "dps,#1");
+
+          emitcode ("mov", "%s,_bpx", dpl);
+          emitcode ("mov", "%s,_bpx+1", dph);
+          while (offset--)
             {
               emitcode ("inc", "dptr");
             }
+
           if (useDP2)
-            {
-              emitcode ("mov", "dps,#0");
-            }
+            emitcode ("mov", "dps,#0");
         }
       else
-        {
+        {// 12 + accuse*4 bytes
           if (accuse)
             emitcode ("push", "acc");
 
           emitcode ("mov", "a,_bpx");
-          emitcode ("clr", "c");
-          emitcode ("subb", "a,#!constbyte", (unsigned)(stack_val & 0xff));
+          emitcode ("add", "a,#!constbyte", (unsigned)(offset & 0xff));
           emitcode ("mov", "%s,a", dpl);
           emitcode ("mov", "a,_bpx+1");
-          emitcode ("subb", "a,#!constbyte", (unsigned)((stack_val >> 8) & 0xff));
+          emitcode ("addc", "a,#!constbyte", (unsigned)((offset >> 8) & 0xff));
           emitcode ("mov", "%s,a", dph);
-          if (options.model == MODEL_FLAT24)
-            {
-              emitcode ("mov", "%s,#!constbyte", dpx, (unsigned)((options.stack_loc >> 16) & 0xff));
-            }
 
           if (accuse)
             emitcode ("pop", "acc");
+        }
+      if (options.model == MODEL_FLAT24)
+        {
+          emitcode ("mov", "%s,#!constbyte", dpx, (unsigned)((options.stack_loc >> 16) & 0xff));
         }
       sym->aop = aop = newAsmop ((short) (useDP2 ? AOP_DPTR2 : AOP_DPTR));
       aop->size = getSize (sym->type);
@@ -871,27 +879,33 @@ aopForRemat (symbol * sym)
   asmop *aop = newAsmop (AOP_IMMD);
   int ptr_type = 0;
   int val = 0;
+  sym_link *from_type = NULL;
+  const char *from_name = NULL;
   struct dbuf_s dbuf;
 
   for (;;)
     {
       if (ic->op == '+')
-        val += (int) operandLitValue (IC_RIGHT (ic));
+        {
+          val += (int) operandLitValue (IC_RIGHT (ic));
+          ic = OP_SYMBOL (IC_LEFT (ic))->rematiCode;
+        }
       else if (ic->op == '-')
-        val -= (int) operandLitValue (IC_RIGHT (ic));
+        {
+          val -= (int) operandLitValue (IC_RIGHT (ic));
+          ic = OP_SYMBOL (IC_LEFT (ic))->rematiCode;
+        }
       else if (IS_CAST_ICODE (ic))
         {
-          sym_link *from_type = operandType (IC_RIGHT (ic));
+          from_type = operandType (IC_RIGHT (ic));
+          from_name = IS_SYMOP (IC_RIGHT (ic)) ? OP_SYMBOL (IC_RIGHT (ic))->name : NULL;
           aop->aopu.aop_immd.from_cast_remat = 1;
           ic = OP_SYMBOL (IC_RIGHT (ic))->rematiCode;
-          ptr_type = pointerTypeToGPByte (DCL_TYPE (from_type),
-                                          IS_SYMOP (IC_RIGHT (ic)) ? OP_SYMBOL (IC_RIGHT (ic))->name : NULL, sym->name);
-          continue;
         }
       else
-        break;
-
-      ic = OP_SYMBOL (IC_LEFT (ic))->rematiCode;
+        {
+          break;
+        }
     }
 
   dbuf_init (&dbuf, 128);
@@ -913,6 +927,7 @@ aopForRemat (symbol * sym)
   /* set immd2 field if required */
   if (aop->aopu.aop_immd.from_cast_remat)
     {
+      ptr_type = pointerTypeToGPByte (DCL_TYPE (from_type), from_name, sym->name);
       dbuf_init (&dbuf, 128);
       dbuf_tprintf (&dbuf, "#!constbyte", (unsigned)ptr_type);
       aop->aopu.aop_immd.aop_immd2 = dbuf_detach_c_str (&dbuf);
@@ -4824,7 +4839,7 @@ adjustArithmeticResult (iCode * ic)
       struct dbuf_s dbuf;
 
       dbuf_init (&dbuf, 128);
-      dbuf_printf (&dbuf, "#%02x", pointerTypeToGPByte (pointerCode (getSpec (operandType (IC_LEFT (ic)))), NULL, NULL));
+      dbuf_printf (&dbuf, "#%02x", pointerTypeToGPByte (pointerCode (IC_LEFT (ic)), NULL, NULL));
       aopPut (IC_RESULT (ic), dbuf_c_str (&dbuf), GPTRSIZE - 1);
       dbuf_destroy (&dbuf);
     }
@@ -11942,35 +11957,23 @@ genAddrOf (iCode * ic)
      variable */
   if (sym->onStack)
     {
+      const int stack_offset = stackoffset (sym);
+
       /* if 10 bit stack */
       if (options.stack10bit)
         {
           struct dbuf_s dbuf;
-          int offset;
 
           dbuf_init (&dbuf, 128);
           dbuf_tprintf (&dbuf, "#!constbyte", (unsigned)((options.stack_loc >> 16) & 0xffu));
           /* if it has an offset then we need to compute it */
-          /*        emitcode ("subb", "a,#!constbyte", */
-          /*                  -((sym->stack < 0) ? */
-          /*                    ((short) (sym->stack - _G.nRegsSaved)) : */
-          /*                    ((short) sym->stack)) & 0xff); */
-          /*        emitcode ("mov","b,a"); */
-          /*        emitcode ("mov","a,#!constbyte",(-((sym->stack < 0) ? */
-          /*                                       ((short) (sym->stack - _G.nRegsSaved)) : */
-          /*                                       ((short) sym->stack)) >> 8) & 0xff); */
-          if (sym->stack)
+          if (stack_offset)
             {
               emitcode ("mov", "a,_bpx");
-              emitcode ("add", "a,#!constbyte", (unsigned)(((sym->stack < 0) ?
-                                                 ((char) (sym->stack - _G.nRegsSaved)) : ((char) sym->stack)) & 0xffu));
+              emitcode ("add", "a,#!constbyte", (unsigned)(stack_offset & 0xff));
               emitcode ("mov", "b,a");
               emitcode ("mov", "a,_bpx+1");
-
-              offset = (((sym->stack < 0) ? ((short) (sym->stack - _G.nRegsSaved)) : ((short) sym->stack)) >> 8) & 0xff;
-
-              emitcode ("addc", "a,#!constbyte", (unsigned)offset);
-
+              emitcode ("addc", "a,#!constbyte", (unsigned)((stack_offset >> 8) & 0xff));
               if (aopPutUsesAcc (IC_RESULT (ic), "b", 0))
                 {
                   emitpush ("acc");
@@ -11997,7 +12000,7 @@ genAddrOf (iCode * ic)
           if (sym->stack)
             {
               emitcode ("mov", "a,_bp");
-              emitcode ("add", "a,#!constbyte", (unsigned)((char) sym->stack & 0xff));
+              emitcode ("add", "a,#!constbyte", (unsigned)(stack_offset & 0xff));
               aopPut (IC_RESULT (ic), "a", 0);
             }
           else
@@ -12061,7 +12064,7 @@ genAddrOf (iCode * ic)
       struct dbuf_s dbuf;
 
       dbuf_init (&dbuf, 128);
-      dbuf_printf (&dbuf, "#0x%02x", pointerTypeToGPByte (pointerCode (getSpec (operandType (IC_LEFT (ic)))), NULL, NULL));
+      dbuf_printf (&dbuf, "#0x%02x", pointerTypeToGPByte (pointerCode (IC_LEFT (ic)), NULL, NULL));
       aopPut (IC_RESULT (ic), dbuf_c_str (&dbuf), GPTRSIZE - 1);
       dbuf_destroy (&dbuf);
     }

@@ -645,12 +645,12 @@ newAsmop (short type)
 }
 
 /*-----------------------------------------------------------------*/
-/* pointerCode - returns the code for a pointer type               */
+/* pointerCode - returns the code for a pointer operand            */
 /*-----------------------------------------------------------------*/
 static int
-pointerCode (sym_link * etype)
+pointerCode (operand * pointer)
 {
-  return PTR_TYPE (SPEC_OCLS (etype));
+  return PTR_TYPE (SPEC_OCLS (getSpec (operandType (pointer))));
 }
 
 /*-----------------------------------------------------------------*/
@@ -722,7 +722,7 @@ leftRightUseAcc (iCode * ic)
 /* stackoffset - stack offset for symbol                           */
 /*-----------------------------------------------------------------*/
 static int
-stackoffset (symbol * sym)
+stackoffset (const symbol * sym)
 {
   int offset = sym->stack;
   if (options.omitFramePtr)
@@ -4040,7 +4040,7 @@ pushbigreturn (operand *result)
       emitpush ("acc");
       emitcode ("mov", "a, #(%s >> 8)", sym->rname);
       emitpush ("acc");
-      emitcode ("mov", "a, #0x%02x", pointerTypeToGPByte (pointerCode (getSpec (operandType (result))), 0, 0));
+      emitcode ("mov", "a, #0x%02x", pointerTypeToGPByte (pointerCode (result), NULL, NULL));
       emitpush ("acc");
     }
   else if (!options.useXstack)
@@ -4051,7 +4051,7 @@ pushbigreturn (operand *result)
       emitpush ("acc");
       emitcode ("clr", "a");
       emitpush ("acc");
-      emitcode ("mov", "a, #0x%02x", pointerTypeToGPByte (pointerCode (getSpec (operandType (result))), 0, 0));
+      emitcode ("mov", "a, #0x%02x", pointerTypeToGPByte (pointerCode (result), NULL, NULL));
       emitpush ("acc");
     }
   else
@@ -4069,7 +4069,7 @@ pushbigreturn (operand *result)
       emitcode ("clr", "a");
       emitcode ("movx", "@r0,a");
       emitcode ("inc", "r0");
-      emitcode ("mov", "a, #0x%02x", pointerTypeToGPByte (pointerCode (getSpec (operandType (result))), 0, 0));
+      emitcode ("mov", "a, #0x%02x", pointerTypeToGPByte (pointerCode (result), NULL, NULL));
       emitcode ("movx", "@r0,a");
     }
 }
@@ -5880,17 +5880,17 @@ adjustArithmeticResult (iCode * ic)
           IC_RIGHT (ic) && AOP_SIZE (IC_RIGHT (ic)) < GPTRSIZE &&
           !sameRegs (AOP (IC_RESULT (ic)), AOP (IC_LEFT (ic))) && !sameRegs (AOP (IC_RESULT (ic)), AOP (IC_RIGHT (ic))))
         {
-          dbuf_printf (&dbuf, "#0x%02x", pointerTypeToGPByte (pointerCode (getSpec (operandType (IC_LEFT (ic)))), NULL, NULL));
+          dbuf_printf (&dbuf, "#0x%02x", pointerTypeToGPByte (pointerCode (IC_LEFT (ic)), NULL, NULL));
           opPut (IC_RESULT (ic), dbuf_c_str (&dbuf), GPTRSIZE - 1);
         }
       else if (IC_LEFT (ic) && AOP_SIZE (IC_LEFT (ic)) < GPTRSIZE && !sameRegs (AOP (IC_RESULT (ic)), AOP (IC_LEFT (ic))))
         {
-          dbuf_printf (&dbuf, "#0x%02x", pointerTypeToGPByte (pointerCode (getSpec (operandType (IC_LEFT (ic)))), NULL, NULL));
+          dbuf_printf (&dbuf, "#0x%02x", pointerTypeToGPByte (pointerCode (IC_LEFT (ic)), NULL, NULL));
           opPut (IC_RESULT (ic), dbuf_c_str (&dbuf), GPTRSIZE - 1);
         }
       else if (IC_RIGHT (ic) && AOP_SIZE (IC_RIGHT (ic)) < GPTRSIZE && !sameRegs (AOP (IC_RESULT (ic)), AOP (IC_RIGHT (ic))))
         {
-          dbuf_printf (&dbuf, "#0x%02x", pointerTypeToGPByte (pointerCode (getSpec (operandType (IC_RIGHT (ic)))), NULL, NULL));
+          dbuf_printf (&dbuf, "#0x%02x", pointerTypeToGPByte (pointerCode (IC_RIGHT (ic)), NULL, NULL));
           opPut (IC_RESULT (ic), dbuf_c_str (&dbuf), GPTRSIZE - 1);
         }
       dbuf_destroy (&dbuf);
@@ -12660,7 +12660,7 @@ genAddrOf (iCode * ic)
      variable */
   if (sym->onStack)
     {
-      int stack_offset = stackoffset (sym);
+      const int stack_offset = stackoffset (sym);
 
       /* if it has an offset then we need to compute it */
       if (stack_offset)
@@ -12721,7 +12721,7 @@ genAddrOf (iCode * ic)
       struct dbuf_s dbuf;
 
       dbuf_init (&dbuf, 128);
-      dbuf_printf (&dbuf, "#0x%02x", pointerTypeToGPByte (pointerCode (getSpec (operandType (IC_LEFT (ic)))), NULL, NULL));
+      dbuf_printf (&dbuf, "#0x%02x", pointerTypeToGPByte (pointerCode (IC_LEFT (ic)), NULL, NULL));
       opPut(IC_RESULT (ic), dbuf_c_str (&dbuf), GPTRSIZE - 1);
       dbuf_destroy (&dbuf);
     }

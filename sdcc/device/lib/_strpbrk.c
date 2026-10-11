@@ -32,16 +32,18 @@
 
 char * strpbrk ( const char * string, const char * control )
 {
-	char *ret = NULL;
+	const char *ret = NULL;
 	register char ch;
 
-	while (ch = *control) {
-		char * p = strchr(string, ch);
-		if (p != NULL && (ret == NULL || p < ret)) {
+	while (ch = *control)
+	{
+		const char * p = strchr(string, ch);
+		if (p != NULL && (ret == NULL || p < ret))
+		{
 			ret = p;
 		}
 		control++;
 	}
 
-	return (ret);
+	return (char *)ret;
 }
