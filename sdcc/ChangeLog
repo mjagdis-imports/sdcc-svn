@@ -1,3 +1,12 @@
+2026-10-12 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
+	* src/SDCCsymt.c: Apply initialiser conversions before auto type
+	  inference (bug #4139). Inspect a copy of the initialiser and retain
+	  the final specifier for inferred pointer types.
+	* support/valdiag/tests/bug-4139.c,
+	  support/regression/tests/bug-4139.c: Test qualification, array and
+	  function conversions, explicit qualifiers and initialiser evaluation.
+
 2026-10-11 Maarten Brock <sourceforge.brock AT dse.nl>
 
 	* device/lib/_strpbrk.c,

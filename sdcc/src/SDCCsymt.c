@@ -6071,7 +6071,20 @@ prepareDeclarationSymbol (attribute *attr, sym_link *declSpecs, symbol *initDecl
       /* C23 auto type inference */
       if (autocandidate && !sym->type && sym->ival && sym->ival->type == INIT_NODE)
         {
-          sym->type = sym->etype = typeofOp (sym->ival->init.node);
+          /* Decoration can replace nodes, so inspect a copy and leave the
+             initialiser ready for its later evaluation. */
+          sym_link *type = typeofOp (copyAst (sym->ival->init.node));
+
+          /* Infer the initialiser's type after the conversions required
+             for a value, rather than its unconverted typeof type. */
+          if (IS_ARRAY (type))
+            convertArrayToPointerType (type);
+          else if (IS_FUNC (type))
+            type = ptrTypeFromType (type);
+          removeQualifiers (type);
+
+          sym->type = type;
+          sym->etype = getSpec (type);
           SPEC_SCLS (lnk) = 0;
         }
       /* do the pointer stuff */
