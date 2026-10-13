@@ -6584,12 +6584,20 @@ sym_link *
 typeofOp (ast *tree)
 {
   ++noAlloc;
-  tree = decorateType (resolveSymbols (tree), RESULT_TYPE_NONE, false);
+  tree = resolveSymbols (tree);
+  /* Preserve object qualification even when a constexpr value is folded. */
+  bool object_const = IS_AST_SYM_VALUE (tree) && !IS_LITERAL (AST_SYMBOL (tree)->etype) &&
+    isConst (AST_SYMBOL (tree)->type);
+  tree = decorateType (tree, RESULT_TYPE_NONE, false);
   tree->decorated = 0; // Reset, so we redecorate parameters later at CALL node to ensure that register parameters get marked correctly.
   --noAlloc;
   sym_link *type = copyLinkChain (tree->ftype);
   sym_link *spec_type;
   for (spec_type = type; !IS_SPEC (spec_type); spec_type = spec_type->next);
+  /* Const on a scalar literal is internal value metadata, not a qualifier
+     of the expression's C type. Do not transfer it into a declaration. */
+  if (IS_SPEC (type) && IS_LITERAL (spec_type) && !object_const)
+    SPEC_CONST (spec_type) = 0;
   SPEC_SCLS (spec_type) = 0;
   SPEC_STAT (spec_type) = 0;
   SPEC_EXTR (spec_type) = 0;

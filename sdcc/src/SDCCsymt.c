@@ -3523,6 +3523,21 @@ compareTypeExact (sym_link *dest, sym_link *src, long level, bool check_top_std_
   if (IS_BITFIELD (dest) && IS_BITFIELD (src) && (SPEC_BLEN (dest) != SPEC_BLEN (src) || SPEC_BSTR (dest) != SPEC_BSTR (src)))
     return 0;
 
+  /* Check qualifiers before the bit-precise type comparison can return. */
+  if (check_top_std_qual)
+    {
+      if (SPEC_CONST (dest) != SPEC_CONST (src))
+        return 0;
+      if (SPEC_RESTRICT (dest) != SPEC_RESTRICT (src))
+        return 0;
+      if (SPEC_VOLATILE (dest) != SPEC_VOLATILE (src))
+        return 0;
+      if (SPEC_ATOMIC (dest) != SPEC_ATOMIC (src))
+        return 0;
+      if (SPEC_OPTIONAL (dest) != SPEC_OPTIONAL (src))
+        return 0;
+    }
+
   if ((SPEC_NOUN (dest) == V_BITINT || SPEC_NOUN (dest) == V_BITINTBITFIELD) && (SPEC_NOUN (src) == V_BITINT || SPEC_NOUN (src) == V_BITINTBITFIELD))
     {
       if (SPEC_BITINTWIDTH (dest) != SPEC_BITINTWIDTH (src) ||
@@ -3561,19 +3576,6 @@ compareTypeExact (sym_link *dest, sym_link *src, long level, bool check_top_std_
         return 0;
     }
 
-  if (check_top_std_qual)
-    {
-      if (SPEC_CONST (dest) != SPEC_CONST (src))
-        return 0;
-      if (SPEC_RESTRICT (dest) != SPEC_RESTRICT (src))
-        return 0;
-      if (SPEC_VOLATILE (dest) != SPEC_VOLATILE (src))
-        return 0;
-      if (SPEC_ATOMIC (dest) != SPEC_ATOMIC (src))
-        return 0;
-      if (SPEC_OPTIONAL (dest) != SPEC_OPTIONAL (src))
-        return 0;
-    }
   if (SPEC_STAT (dest) != SPEC_STAT (src))
     return 0;
   if (SPEC_ABSA (dest) != SPEC_ABSA (src))

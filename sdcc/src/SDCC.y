@@ -932,7 +932,9 @@ struct_or_union_specifier
                     compatible = false;
                   else if (strcmp (fieldsym1->name, fieldsym2->name))
                     compatible = false;
-                  else if (compareType (fieldsym1->type, fieldsym2->type, true) <= 0)
+                  /* Corresponding members require the same type, not just
+                     compatible types with a possible composite array bound. */
+                  else if (compareTypeExact (fieldsym1->type, fieldsym2->type, -1, true) <= 0)
                     compatible = false;
                }
               if (!compatible)

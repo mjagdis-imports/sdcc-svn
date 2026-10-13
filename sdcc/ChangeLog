@@ -1,3 +1,21 @@
+2026-10-13 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
+	* src/SDCC.y, src/SDCCsymt.c:
+	  Require the same member types in repeated aggregate definitions
+	  (bug #4133). Check scalar qualifiers before exact comparison of
+	  bit-precise types can return. Patch by Christopher Bazley.
+	* support/valdiag/tests/bug-4133.c:
+	  Test array bounds, member and pointer-target qualifiers, typedefs
+	  and adjusted function parameter types. Patch by Christopher Bazley.
+	* src/SDCCast.c:
+	  Do not transfer artificial scalar-literal const qualification into
+	  typeof declarations (bug #4130). Preserve genuine const objects,
+	  including constexpr objects whose values are folded. Patch by Christopher Bazley.
+	* support/valdiag/tests/bug-4130.c,
+	  support/regression/tests/bug-4130.c:
+	  Test literal-derived objects and return types, object qualification
+	  and pointer targets. Patch by Christopher Bazley.
+
 2026-10-13 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCsymt.c:
