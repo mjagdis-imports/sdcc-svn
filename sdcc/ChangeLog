@@ -3,6 +3,9 @@
 	* support/regression/tests/bug-4139.c:
 	  Suppress the expected non-const string-literal warning in the
 	  runtime test without changing the inferred pointer type, patch by Christopher Bazley.
+	* support/regression/tests/bug-4123.c,
+	  support/regression/tests/bug-4123-2.c:
+	  Add tests for peephole optimizer rules, part of bug #4123.
 
 2026-10-12 Gabriele Gorla <gorlik@yahoo.com>
 
