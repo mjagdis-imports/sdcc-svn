@@ -8,7 +8,7 @@ static int calls;
 
 static int
 next(int value)
-#ifdef __SDCC_pdk14
+#ifdef SDCC_PDK
 __reentrant
 #endif
 {

@@ -1,3 +1,8 @@
+2026-10-12 Gabriele Gorla <gorlik@yahoo.com>
+
+	* support/regression/tests/bug-4139.c:
+	  Fix test for all pdk.
+
 2026-10-12 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
 	* src/SDCCsymt.c: Apply initialiser conversions before auto type
