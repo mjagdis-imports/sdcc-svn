@@ -6035,7 +6035,11 @@ prepareDeclarationSymbol (attribute *attr, sym_link *declSpecs, symbol *initDecl
 {
   symbol *sym , *sym1;
 
-  bool autocandidate = options.std_c23 && IS_SPEC (declSpecs) && SPEC_SCLS (declSpecs) == S_AUTO;
+  /* Infer a type only when the declaration has no type specifier.
+     Length and signedness specifiers can imply int without setting a noun. */
+  bool autocandidate = options.std_c23 && IS_SPEC (declSpecs) && SPEC_SCLS (declSpecs) == S_AUTO &&
+    !SPEC_NOUN (declSpecs) && !SPEC_LONG (declSpecs) && !SPEC_LONGLONG (declSpecs) &&
+    !SPEC_SHORT (declSpecs) && !SPEC_SIGN (declSpecs) && !SPEC_USIGN (declSpecs);
 
   for (sym1 = sym = reverseSyms (initDeclList); sym != NULL; sym = sym->next)
     {

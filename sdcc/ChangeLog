@@ -1,4 +1,14 @@
-2026-10-09 Philipp Klaus Krause <philipp@colecovision.eu>
+2026-10-13 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCsymt.c:
+	  Infer auto types only when no type specifier is present. Keep
+	  ordinary initialisation for explicitly typed auto declarations,
+	  including length and signedness specifiers that imply int (bug #4140), patch by Christopher Bazley.
+	* support/valdiag/tests/bug-4140.c,
+	  support/regression/tests/bug-4140.c:
+	  Test explicit types, conversions, qualifiers and inference controls, patch by Christopher Bazley.
+
+2026-10-13 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* support/regression/tests/bug-4139.c:
 	  Suppress the expected non-const string-literal warning in the
