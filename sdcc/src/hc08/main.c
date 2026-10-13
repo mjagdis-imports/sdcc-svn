@@ -211,7 +211,7 @@ _hc08_genAssemblerStart (FILE * of)
     fprintf (of, "\t.optsdcc -m%s\n", port->target);
 
   if (TARGET_IS_S08)
-    fprintf (of, "\t.cs08\n");
+    fprintf (of, "\t.hcs08\n");
 
   fprintf (of, "\n");
 

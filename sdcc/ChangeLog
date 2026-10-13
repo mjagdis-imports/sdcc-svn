@@ -2,6 +2,10 @@
 
 	* support/regression/tests/bug-4139.c:
 	  Fix test for all pdk.
+	* sdas/as6808/m08pst.c,
+	  src/SDCCglue.c,
+	  src/hc08/main.c:
+	  Renamed .cs08 to .hcs08
 
 2026-10-12 Christopher Bazley <chris.bazley.wg14@gmail.com>
 

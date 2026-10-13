@@ -115,8 +115,8 @@ struct	mne	mne[] = {
     {	NULL,	".include",	S_INCL,		0,	I_CODE	},
     {	NULL,	".incbin",	S_INCL,		0,	I_BNRY	},
     {	NULL,	".area",	S_AREA,		0,	0	},
-    {	NULL,	".psharea",	S_AREA,		0,	O_PSH	},	
-    {	NULL,	".poparea",	S_AREA,		0,	O_POP	},	
+    {	NULL,	".psharea",	S_AREA,		0,	O_PSH	},
+    {	NULL,	".poparea",	S_AREA,		0,	O_POP	},
 /*    {	NULL,	".bank",	S_BANK,		0,	0	},	*/
     {	NULL,	".org",		S_ORG,		0,	0	},
     {	NULL,	".radix",	S_RADIX,	0,	0	},
@@ -242,7 +242,6 @@ struct	mne	mne[] = {
 
     {	NULL,	".hc08",	S_CPU,		0,	X_HC08	},
     {	NULL,	".hcs08",	S_CPU,		0,	X_HCS08	},
-    {   NULL,   ".cs08",        S_CPU,          0,      X_HCS08 },
     {	NULL,	".6805",	S_CPU,		0,	X_6805	},
     {	NULL,	".hc05",	S_CPU,		0,	X_HC05	},
 

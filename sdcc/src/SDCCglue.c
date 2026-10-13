@@ -2418,10 +2418,6 @@ glue (void)
   /* print module name */
   tfprintf (asmFile, "\t!module\n", moduleName);
 
-  // TODO: Move this from here to port-specific genAssemblerStart (like we did for the z80-related ports already)?
-  if (TARGET_IS_S08)
-    fprintf (asmFile, "\t.cs08\n");
-
   tfprintf (asmFile, "\t!fileprelude\n");
 
   /* Let the port generate any global directives, etc. */
