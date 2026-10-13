@@ -1,4 +1,11 @@
-2026-10-13 Christopher Bazley <chris.bazley.wg14@gmail.com>
+2026-10-09 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCast.c,
+	  support/valdiag/tests/bug-4125.c,
+	  support/regression/tests/bug-4125.c:
+	  Require integer types for both shift operands, patch by Christopher Bazley.
+
+2026-10-13 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCC.y, src/SDCCsymt.c:
 	  Require the same member types in repeated aggregate definitions

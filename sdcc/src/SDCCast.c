@@ -5218,7 +5218,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
 
     case LEFT_OP:
     case RIGHT_OP:
-      if (!IS_INTEGRAL (LTYPE (tree)) || !IS_INTEGRAL (tree->left->etype))
+      if (!IS_INTEGRAL (LTYPE (tree)) || !IS_INTEGRAL (RTYPE (tree)))
         {
           werrorfl (tree->filename, tree->lineno, E_SHIFT_OP_INVALID);
           werrorfl (tree->filename, tree->lineno, W_CONTINUE, "left & right types are ");
