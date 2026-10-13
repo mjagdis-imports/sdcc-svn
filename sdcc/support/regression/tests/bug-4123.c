@@ -1,4 +1,5 @@
-/* New tests for some existing z80 peephole optimizer rules that were no longer triggered by their original testcases. */
+/* New tests for some existing z80 peephole optimizer rules that were no longer triggered by their original testcases.
+   Manually found testcases */
 
 #include <testfwk.h>
 

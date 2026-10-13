@@ -2,6 +2,8 @@
 #include <testfwk.h>
 #ifdef __SDCC
 #pragma std_c23
+/* String inference produces char *, so warning 360 is expected below. */
+#pragma disable_warning 360
 #endif
 
 static int calls;

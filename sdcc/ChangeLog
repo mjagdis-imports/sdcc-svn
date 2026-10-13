@@ -1,3 +1,9 @@
+2026-10-09 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/bug-4139.c:
+	  Suppress the expected non-const string-literal warning in the
+	  runtime test without changing the inferred pointer type, patch by Christopher Bazley.
+
 2026-10-12 Gabriele Gorla <gorlik@yahoo.com>
 
 	* support/regression/tests/bug-4139.c:
