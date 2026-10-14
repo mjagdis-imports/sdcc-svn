@@ -1,6 +1,12 @@
 /* Explicitly typed auto objects retain their declared types and conversions. */
+
 #include <testfwk.h>
+
+#ifdef __SDCC
 #pragma std_c23
+#elif __STDC_VERSION__ < 202311L
+#define SKIP_C23_TESTS
+#endif
 
 static int calls;
 
@@ -70,6 +76,7 @@ testExplicitAutoTypes(void)
   ASSERT(braced == 4);
   ASSERT(assigned == 5);
 
+#ifndef SKIP_C23_TESTS
   /* Omitting a type still permits inference, including explicit qualifiers. */
   auto inferred = 6;
   _Static_assert(_Generic(&inferred, int *: 1, default: 0), "int object");
@@ -85,4 +92,5 @@ testExplicitAutoTypes(void)
   _Static_assert(_Generic(&inferred_float, float *: 1, default: 0), "float object");
   ASSERT(inferred_small == 200);
   ASSERT(inferred_float == 2.5f);
+#endif
 }

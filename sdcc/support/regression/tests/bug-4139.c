@@ -1,9 +1,13 @@
 /* Type inference uses value conversions and evaluates the initialiser once. */
+
 #include <testfwk.h>
+
 #ifdef __SDCC
 #pragma std_c23
 /* String inference produces char *, so warning 360 is expected below. */
 #pragma disable_warning 360
+#elif __STDC_VERSION__ < 202311L
+#define SKIP_C23_TESTS
 #endif
 
 static int calls;
@@ -21,6 +25,7 @@ __reentrant
 void
 testInferenceConversions(void)
 {
+#ifndef SKIP_C23_TESTS
   const int source = 3;
   auto copy = source;
   ++copy;
@@ -78,4 +83,5 @@ testInferenceConversions(void)
   auto small_copy = small;
   ASSERT(sizeof(small_copy) == sizeof(small));
   ASSERT(small_copy == 200);
+#endif
 }

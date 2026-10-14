@@ -1,3 +1,10 @@
+2026-10-14 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* support/regression/tests/bug-4130.c,
+	* support/regression/tests/bug-4139.c,
+	* support/regression/tests/bug-4140.c,
+	* support/regression/tests/bug-4141.c: check whether the compiler is C23 compatible
+
 2026-10-14 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* support/regression/tests/bug-4123-2.c:
