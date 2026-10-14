@@ -91,3 +91,17 @@ void testf77c(void)
     ASSERT(x == 11);
 }
 
+void f102d(unsigned char *p, unsigned char n) { // rule 102
+    *p -= n;
+    if (*p) { *p = 1; }
+}
+
+void testf102(void)
+{
+    unsigned char p[2] = {1, 3};
+    f102d(p + 1, 1);
+    ASSERT(p[1] == 1);
+    f102d(p + 1, 1);
+    ASSERT(p[1] == 0);
+}
+
