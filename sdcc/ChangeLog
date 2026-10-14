@@ -4,6 +4,8 @@
 	  Another test for z80 peephole optimizer rules, towards fixing bug #4123.
 	* src/z80/peeph.def:
 	  Remove some untested peephole optimizer rules, for which no tests were found, towards fixing bugs #4123, #4115.
+	* support/regression/tests/bug-2810.c:
+	  Add a test for a bug that was fixed a while ago along with a different one.
 
 2026-10-13 Christopher Bazley <chris.bazley.wg14@gmail.com>
 

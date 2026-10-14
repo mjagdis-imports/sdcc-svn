@@ -96,7 +96,7 @@ void f102d(unsigned char *p, unsigned char n) { // rule 102
     if (*p) { *p = 1; }
 }
 
-void testf102(void)
+void testf102d(void)
 {
     unsigned char p[2] = {1, 3};
     f102d(p + 1, 1);
