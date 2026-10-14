@@ -6089,6 +6089,12 @@ prepareDeclarationSymbol (attribute *attr, sym_link *declSpecs, symbol *initDecl
             type = ptrTypeFromType (type);
           removeQualifiers (type);
 
+          /* Processing the inferred function pointer must not rename or
+             reallocate the original function's parameter symbols. */
+          for (sym_link *link = type; link; link = link->next)
+            if (IS_FUNC (link))
+              FUNC_ARGS (link) = copyValueChain (FUNC_ARGS (link));
+
           sym->type = type;
           sym->etype = getSpec (type);
           SPEC_SCLS (lnk) = 0;

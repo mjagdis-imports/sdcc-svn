@@ -1,3 +1,11 @@
+2026-10-13 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
+	* src/SDCCsymt.c: Copy function parameter values and symbols when
+	  inferring a function-pointer type, so processing the new declaration
+	  cannot rename the original function's parameters (bug #4141).
+	* support/regression/tests/bug-4141.c: Test inferred pointers and
+	  direct calls after inference, including two-argument reentrant calls.
+
 2026-10-09 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCast.c,
