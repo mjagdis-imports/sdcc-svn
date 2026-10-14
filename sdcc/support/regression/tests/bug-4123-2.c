@@ -42,6 +42,28 @@ void g4(unsigned char a, unsigned char b, unsigned char c, unsigned char d)
     ASSERT(d == 4);
 }
 
+unsigned char gv;
+void barrier(void);
+void f76(void) { // rule 76
+    unsigned char arr[3], pad[2];
+    arr[2] = gv;
+    pad[0] = 1; pad[1] = 2;
+    barrier();
+    arr[2] |= 4;
+    gv = arr[2];
+}
+
+void testf76(void)
+{
+    gv = 2;
+    f76();
+    ASSERT(gv == 6);
+}
+
+void barrier(void)
+{
+}
+
 #include <stdint.h>
 #pragma disable_warning 127
 char obj[8] = {1, 2, 3, 4, 5, 6, 7, 8};

@@ -1,3 +1,8 @@
+2026-10-14 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/bug-4123-2.c:
+	  Another test for z80 peephole optimizer rules, towards fixing bug #4123.
+
 2026-10-13 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
 	* src/SDCCsymt.c: Copy function parameter values and symbols when
@@ -6,7 +11,7 @@
 	* support/regression/tests/bug-4141.c: Test inferred pointers and
 	  direct calls after inference, including two-argument reentrant calls.
 
-2026-10-09 Philipp Klaus Krause <philipp@colecovision.eu>
+2026-10-13 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCast.c,
 	  support/valdiag/tests/bug-4125.c,
