@@ -80,7 +80,17 @@ create_cfg_genconstprop (cfg_t &cfg, iCode *start_ic, ebbIndex *ebbi)
   // Get control flow graph from sdcc.
   for (ic = start_ic; ic; ic = ic->next)
     {
-      if (ic->op != GOTO && ic->op != RETURN && ic->op != JUMPTABLE && ic->next)
+      // A _Noreturn call cannot fall through to the next instruction.
+      // Otherwise a rejected null path can rejoin the non-null path.
+      bool noreturn_call = false;
+      if (ic->op == CALL || ic->op == PCALL)
+        {
+          sym_link *type = operandType (IC_LEFT (ic));
+          if (IS_FUNCPTR (type))
+            type = type->next;
+          noreturn_call = type && FUNC_ISNORETURN (type);
+        }
+      if (!noreturn_call && ic->op != GOTO && ic->op != RETURN && ic->op != JUMPTABLE && ic->next)
         boost::add_edge(key_to_index[ic->key], key_to_index[ic->next->key], cfg);
 
       if (ic->op == GOTO)

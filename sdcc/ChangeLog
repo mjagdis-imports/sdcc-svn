@@ -1,3 +1,17 @@
+2026-10-17 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* support/valdiag/tests/bug-4139.c: fixed for pdk13 & pdk15
+	* support/regression/tests/bug2783061.c: fixed warning 357 instead of ignoring it,
+	  enabled for all targets
+
+2026-10-17 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
+	* src/SDCCgenconstprop.cc: Do not add a fall-through edge after calls
+	  to _Noreturn functions in the value-analysis graph. Avoid spurious
+	  _Optional dereference diagnostics after a null guard (bug #4146).
+	* support/valdiag/tests/bug-4146.c: Test guarded calls and
+	  conditional expressions, with unsafe and early-return controls.
+
 2026-10-14 Maarten Brock <sourceforge.brock AT dse.nl>
 
 	* support/regression/tests/bug-4130.c,

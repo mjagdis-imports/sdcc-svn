@@ -59,7 +59,7 @@ void f(void)
 #ifdef TEST6
 int g(int)
 /* PDK14 requires reentrancy for an indirect call with an int argument. */
-#ifdef __SDCC_pdk14
+#if defined(__SDCC_pdk13) || defined (__SDCC_pdk14) || defined(__SDCC_pdk15)
 __reentrant
 #endif
 ;
@@ -149,7 +149,7 @@ int f(void)
 #ifdef TEST14
 int g(int)
 /* PDK14 requires reentrancy for an indirect call with an int argument. */
-#ifdef __SDCC_pdk14
+#if defined(__SDCC_pdk13) || defined (__SDCC_pdk14) || defined(__SDCC_pdk15)
 __reentrant
 #endif
 ;

@@ -5,33 +5,27 @@
 #include <stdarg.h>
 #include <testfwk.h>
 
-#ifdef __SDCC
-#pragma disable_warning 357
-#endif
-
-#define CP	(void __code*)0x1234
+#define CP	(const void __code*)0x1234
 #define XP	(void __xdata*)0x5678
 
 void
 varargs_fn (char k, ...)
 {
   va_list arg;
-  void __code * cp;
+  const void __code * cp;
   void __xdata * xp;
-  void * gp;
+  const void * gp;
 
   va_start (arg, k);
 
-  cp = va_arg (arg, void __code *);
+  cp = va_arg (arg, const void __code *);
   ASSERT (cp == CP);
   xp = va_arg (arg, void __xdata *);
   ASSERT (xp == XP);
   gp = va_arg (arg, void *);
   ASSERT (gp == (void *)CP);
-#if !defined(__SDCC_mcs51)
   /* bug 2713 - casting literal pointer to generic pointer modified upper bits */
   ASSERT ((int)gp == 0x1234);
-#endif
   gp = va_arg (arg, void *);
   ASSERT (gp == (void *)XP);
 
@@ -41,8 +35,8 @@ varargs_fn (char k, ...)
 void
 testBug (void)
 {
-  void __code * cp = CP;
+  const void __code * cp = CP;
   void __xdata * xp = XP;
 
-  varargs_fn('k', (void __code *)cp, (void __xdata *)xp, cp, xp);
+  varargs_fn('k', (const void __code *)cp, (void __xdata *)xp, cp, xp);
 }
