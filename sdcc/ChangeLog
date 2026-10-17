@@ -1,3 +1,8 @@
+2026-10-17 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/bug-4123-3.c:
+	  Further tests for z80 peephole optimizer rules, towards fixing bug #4123.
+
 2026-10-17 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
 	* src/SDCC.y,
@@ -25,6 +30,8 @@
 
 	* support/scripts/sdcc.nsi:
 	  Include HuC6280 port in Windows installer, fix bug #4114.
+	* support/regression/tests/bug-4123-2.c:
+	  Further tests for z80 peephole optimizer rules, towards fixing bug #4123.
 
 2026-10-17 Maarten Brock <sourceforge.brock AT dse.nl>
 
