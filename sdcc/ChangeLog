@@ -1,3 +1,8 @@
+2026-10-17 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/scripts/sdcc.nsi:
+	  Include HuC6280 port in Windows installer, fix bug #4114.
+
 2026-10-17 Maarten Brock <sourceforge.brock AT dse.nl>
 
 	* support/valdiag/tests/bug-4139.c: fixed for pdk13 & pdk15
