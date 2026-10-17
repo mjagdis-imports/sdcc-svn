@@ -1,3 +1,10 @@
+2026-10-17 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
+	* src/SDCCast.c (constExprTree): Read the constexpr flag from the
+	  symbol's type specifier, including for pointer objects (bug #4151).
+	* support/regression/tests/bug-4151.c: Test compound literals with
+	  pointer initialisers supplied by parameters and local variables.
+
 2026-10-17 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* support/scripts/sdcc.nsi:

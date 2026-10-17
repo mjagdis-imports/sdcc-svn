@@ -2133,7 +2133,7 @@ constExprTree (ast *cexpr)
           // the offset of a struct field will never change
           return true;
         }
-      if (IS_AST_SYM_VALUE (cexpr) && SPEC_CONSTEXPR (AST_SYMBOL (cexpr)->type))
+      if (IS_AST_SYM_VALUE (cexpr) && SPEC_CONSTEXPR (AST_SYMBOL (cexpr)->etype))
         {
           // a C23 constexpr is by definition a constant expression
           return true;
