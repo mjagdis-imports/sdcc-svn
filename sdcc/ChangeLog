@@ -1,5 +1,21 @@
 2026-10-17 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
+	* src/SDCC.y,
+	* src/SDCCsymt.h,
+	* src/SDCCerr.c,
+	* src/SDCCerr.h:
+	Track member lists under construction, including C23 redefinitions.
+	Diagnose a nested definition before it can complete the enclosing
+	type, and retain a separate type for error recovery (bug #4116).
+	* support/valdiag/tests/bug-4116.c:
+	Test that an error is reported for union and struct redefinitions
+	nested within themselves, including indirectly and when a struct
+	tag is reused for a nested union or vice versa.
+	Test that no error is reported for a struct or union definition
+	that contains a pointer to itself, and other valid cases.
+
+2026-10-17 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
 	* src/SDCCast.c (constExprTree): Read the constexpr flag from the
 	  symbol's type specifier, including for pointer objects (bug #4151).
 	* support/regression/tests/bug-4151.c: Test compound literals with

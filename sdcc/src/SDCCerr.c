@@ -799,6 +799,8 @@ struct
      "function '%s' has function return type", 0},
   {W_ALIGNOF_INCOMPLETE_ARRAY_C2Y, ERROR_LEVEL_WARNING,
      "alignof applied to an incomplete array requires ISO C2y or later", 0},
+  {E_STRUCT_DEF_NESTED, ERROR_LEVEL_ERROR,
+     "nested definition of struct/union '%s'", 0},
 };
 
 /* -------------------------------------------------------------------------------
