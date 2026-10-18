@@ -52,6 +52,8 @@
 	  src/mos6502/genrshift.c,
 	  support/regression/bug-4152.c:
 	  Fix bug #4152.
+	* src/mos6502/gen.c:
+	  Improve "neg" for 65c02 and HuC6280.
 
 2026-10-18 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
