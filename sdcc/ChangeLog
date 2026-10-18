@@ -1,5 +1,11 @@
 2026-10-18 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
+	* support/regression/tests/bug-4107.c: Use explicitly nonbanked
+	  function pointers when testing the distinction from banked pointers
+	  (bug #4107). Functions are banked by default in MCS51 huge mode.
+
+2026-10-18 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
 	* src/SDCCast.c, src/SDCCerr.c, src/SDCCerr.h: Diagnose compatible
 	  types in a generic association list, including unselected
 	  associations (bug #4134).

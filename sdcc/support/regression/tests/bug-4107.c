@@ -12,6 +12,10 @@ typedef banked_function_type *banked_pointer_type;
 int banked_f (int) __banked;
 banked_pointer_type banked_pf;
 
+typedef int nonbanked_function_type (int) __nonbanked;
+typedef nonbanked_function_type *nonbanked_pointer_type;
+nonbanked_pointer_type nonbanked_pf;
+
 __xdata int *xp;
 __data int *dp;
 #endif
@@ -56,9 +60,10 @@ testFunctionPointerTypes (void)
   ASSERT (_Generic (&banked_f, banked_pointer_type: 1, default: 0));
   ASSERT (_Generic (banked_f, banked_function_type *: 1, default: 0));
   ASSERT (_Generic (banked_f, banked_pointer_type: 1, default: 0));
-  /* Banked and ordinary function pointers must not become interchangeable. */
-  ASSERT (_Generic (pf, banked_pointer_type: 0, pointer_type: 1));
-  ASSERT (_Generic (banked_pf, pointer_type: 0, banked_pointer_type: 1));
+  /* Explicitly nonbanked pointers must differ from banked pointers,
+     including in huge mode where functions are banked by default. */
+  ASSERT (_Generic (nonbanked_pf, banked_pointer_type: 0, nonbanked_pointer_type: 1));
+  ASSERT (_Generic (banked_pf, nonbanked_pointer_type: 0, banked_pointer_type: 1));
   ASSERT (sizeof (banked_function_type *) == sizeof (banked_pointer_type));
 #endif
 
