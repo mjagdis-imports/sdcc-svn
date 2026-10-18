@@ -47,6 +47,11 @@
 	  Remove timestamp from linker output.
 	* src/mos6502/peeph.def:
 	  Add dead transfer TXA peephole rule.
+	* src/mos6502/gen.c,
+	  src/mos6502/genlshift.c,
+	  src/mos6502/genrshift.c,
+	  support/regression/bug-4152.c:
+	  Fix bug #4152.
 
 2026-10-18 Christopher Bazley <chris.bazley.wg14@gmail.com>
 

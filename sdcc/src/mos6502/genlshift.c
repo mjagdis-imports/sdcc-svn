@@ -869,9 +869,10 @@ m6502_genLeftShift (iCode * ic)
   operand *result = IC_RESULT (ic);
 
   int size, offset;
-  symbol *loop_label, *skip_label;
+  symbol *bitloop, *endlabel;
   reg_info *countreg = NULL;
   bool restore_a = false;
+  bool restore_x = false;
   bool restore_y = false;
 
   m6502_emitComment (TRACEGEN, __func__);
@@ -887,18 +888,19 @@ m6502_genLeftShift (iCode * ic)
     (0xff >> (8 - SPEC_BITINTWIDTH (resulttype) % 8)) : 0xff;
   bool maskedtopbyte = (topbytemask != 0xff);
 
+  size = AOP_SIZE (result);
+
   /* if the shift count is known then do it as efficiently as possible */
   if (AOP_TYPE (right) == AOP_LIT &&
-      (getSize (operandType (result)) == 1 || getSize (operandType (result)) == 2 || getSize (operandType (result)) == 4))
+      (size == 1 || size == 2 || size == 4))
     {
       int shCount = (int) ulFromVal (AOP (right)->aopu.aop_lit);
       genLeftShiftLiteral (left, result, shCount);
       goto release;
     }
 
-  /* shift count is unknown then we have to form
-     a loop get the loop count in X : Note: we take
-     only the lower order byte since shifting
+  /* shift count is unknown then we have to form a loop.
+     Note: we take only the lower order byte since shifting
      more that 64 bits make no sense anyway, ( the
      largest size of an object can be only 64 bits ) */
 
@@ -908,9 +910,8 @@ m6502_genLeftShift (iCode * ic)
     aopResult = forceZeropageAop (AOP (result), m6502_sameRegs (AOP (left), AOP (result)));
 #endif
 
-  size = AOP_SIZE (result);
-  loop_label = m6502_safeNewiTempLabel (NULL);
-  skip_label = m6502_safeNewiTempLabel (NULL);
+  bitloop = m6502_safeNewiTempLabel (NULL);
+  endlabel = m6502_safeNewiTempLabel (NULL);
 
   if (!m6502_reg_a->isDead && !IS_AOP_WITH_A (AOP (result)))
     {
@@ -924,8 +925,8 @@ m6502_genLeftShift (iCode * ic)
 
   bool msb_in_x = (src_x || dst_x) && AOP_TYPE (result) != AOP_DIR;
 
-  bool early_load_count = (AOP_TYPE (left) == AOP_SOF || AOP_TYPE (right) == AOP_SOF ||
-                           IS_AOP_WITH_A (AOP (right)) || m6502_sameRegs (AOP (result), AOP (right)) );
+  bool early_load_count = (AOP_TYPE(left)==AOP_SOF || AOP_TYPE(right)==AOP_SOF
+                           || IS_AOP_WITH_A(AOP(right)) || m6502_sameRegs(AOP(result), AOP(right)) );
 
   int a_loc = ( src_x | dst_x ) ? 0 : size-1;
 
@@ -948,6 +949,9 @@ m6502_genLeftShift (iCode * ic)
         }
       countreg = m6502_reg_y;
     }
+
+  if(AOP_TYPE (left) == AOP_SOF || AOP_TYPE (right) == AOP_SOF || AOP_TYPE (result) == AOP_SOF)
+    restore_x = storeRegTempIfSurv(m6502_reg_x);
 
   m6502_emitComment (TRACEGEN, "  %s - enter size:%d src_x:%d dst_x:%d tmsb:%d countreg:%s",
                      __func__, size, src_x, dst_x, msb_in_x, countreg->name);
@@ -1012,6 +1016,7 @@ m6502_genLeftShift (iCode * ic)
 
       if (IS_AOP_XY (AOP (left)))
         m6502_transferRegReg (m6502_reg_y, m6502_reg_a, true);
+
     }
   else if (dst_x)
     {
@@ -1043,13 +1048,16 @@ m6502_genLeftShift (iCode * ic)
   // FIXME: make this conditional on opt code-speed
   if (size==8 /*|| size==4*/)
     {
-      symbol *skiplbl = m6502_safeNewiTempLabel (NULL);
-      symbol *looplbl = m6502_safeNewiTempLabel (NULL);
+      symbol *byteskip = m6502_safeNewiTempLabel (NULL);
+      symbol *byteloop = m6502_safeNewiTempLabel (NULL);
 
       m6502_emitCmp (countreg, 8);
-      m6502_emitBranch ("bcc", skiplbl);
-      m6502_safeEmitLabel (looplbl);
-      m6502_dirtyAllRegs ();
+      m6502_emitBranch ("bcc", byteskip);
+      m6502_safeEmitLabel (byteloop);
+      m6502_dirtyReg(m6502_reg_a);
+      m6502_dirtyReg(m6502_reg_y);
+      if(m6502_reg_x->aop!=&m6502_tsxaop)
+        m6502_dirtyReg(m6502_reg_x);
 
       if (size==8)
         {
@@ -1081,14 +1089,14 @@ m6502_genLeftShift (iCode * ic)
       //if (size==8)
       {
         m6502_emitCmp (countreg, 8);
-        m6502_emitBranch ("bcs", looplbl);
+        m6502_emitBranch ("bcs", byteloop);
       }
       m6502_loadRegFromAop (m6502_reg_a, AOP (result), a_loc);
-      m6502_safeEmitLabel (skiplbl);
+      m6502_safeEmitLabel (byteskip);
     }
 
   m6502_emitCmp (countreg, 0);
-  m6502_emitBranch ("beq", skip_label);
+  m6502_emitBranch ("beq", endlabel);
 
   if (msb_in_x && late_x)
     {
@@ -1100,7 +1108,7 @@ m6502_genLeftShift (iCode * ic)
   //  if (IS_AOP_WITH_A (AOP (right)) && m6502_sameRegs (AOP (left), AOP (result)) )
   //    m6502_loadRegFromAop (m6502_reg_a, AOP (left), a_loc);
 
-  m6502_safeEmitLabel (loop_label); // loop label
+  m6502_safeEmitLabel (bitloop); // bit loop label
 
   if (a_loc==0)
     {
@@ -1125,12 +1133,12 @@ m6502_genLeftShift (iCode * ic)
     }
 
   m6502_rmwWithReg ("dec", countreg);
-  m6502_emitBranch ("bne", loop_label);
+  m6502_emitBranch ("bne", bitloop);
 
   if (msb_in_x && countreg != m6502_reg_x)
     m6502_loadRegTemp (m6502_reg_x);
 
-  m6502_safeEmitLabel (skip_label); // end label
+  m6502_safeEmitLabel (endlabel); // end label
 
   if (msb_in_x && countreg == m6502_reg_x)
     m6502_loadRegTemp (m6502_reg_x);
@@ -1178,6 +1186,8 @@ m6502_genLeftShift (iCode * ic)
       countreg->litConst = 0;
     }
 
+  if (restore_x)
+    m6502_loadRegTemp (m6502_reg_x);
   if (restore_y)
     m6502_loadRegTemp (m6502_reg_y);
   if (restore_a)

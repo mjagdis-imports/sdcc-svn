@@ -2265,7 +2265,7 @@ m6502_rmwWithReg (char *rmwop, reg_info * reg)
 /**************************************************************************
  * m6502_rmwWithAop - Emit read/modify/write instruction rmwop with the byte at
  *                logical offset loffset of asmop aop.
- *                Supports: bit, dec, inc, lsl, lsr, neg, rol, ror
+ *                Supports: bit, dec, inc, asl, lsr, neg, rol, ror
  *************************************************************************/
 void
 m6502_rmwWithAop (char *rmwop, asmop * aop, int loffset)
@@ -2287,16 +2287,9 @@ m6502_rmwWithAop (char *rmwop, asmop * aop, int loffset)
 
     case AOP_DIR:
     case AOP_EXT:
-      m6502_emitComment (TRACE_AOP, "  m6502_rmwWithAop DIR/EXT");
-      m6502_emitOp (rmwop, aopAdrStr(aop, loffset, false));
-      dirtyRegAop (NULL, aop, loffset);
-      break;
-
     case AOP_SOF:
-      m6502_emitComment (TRACE_AOP, "  m6502_rmwWithAop AOP_SOF");
-      // FIXME: figure out if asr handling should be here
-      // or if asr should be generated at all by the codegen
-      m6502_emitOp (rmwop, aopAdrStr (aop, loffset, false));
+      m6502_emitComment (TRACE_AOP, "  m6502_rmwWithAop DIR/EXT/SOF");
+      m6502_emitOp (rmwop, aopAdrStr(aop, loffset, false));
       dirtyRegAop (NULL, aop, loffset);
       break;
 
