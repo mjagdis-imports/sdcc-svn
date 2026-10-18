@@ -1845,6 +1845,53 @@ loop:
                 lmode = (lnlist & LIST_LST) ? SLIST : NLIST;
 		return;
 
+	case S_TRACE:
+		flags = 0;
+		while ((c=endline()) != 0) {
+			if (c == ',') {
+				c = getnb();
+			}
+			if (c == '(') {
+				do {
+					if ((c = getnb()) == '!') {
+						flags |= TRC_NOT;
+					} else {
+						unget(c);
+						getid(id, -1);
+						if (symeq(id, "ins", 1)) { flags |= TRC_INS; } else
+						if (symeq(id, "asm", 1)) { flags |= TRC_ASM; } else
+						if (symeq(id, "inc", 1)) { flags |= TRC_INC; } else
+						if (symeq(id, "mcr", 1)) { flags |= TRC_MCR; } else
+						if (symeq(id, "rpt", 1)) { flags |= TRC_RPT; } else {
+							err('u');
+						}
+					}
+					c = endline();
+				} while (c == ',') ;
+				if (c != ')') {
+					qerr();
+				}
+			} else {
+				flags = TRC_ALL;
+			}
+		}
+		if (flags == 0) {
+			flags = TRC_ALL;
+		} else
+		if (flags & TRC_NOT) {
+			switch(mp->m_valu) {
+			case O_TRC:	trcflags = TRC_NONE;	break;
+			case O_NTRC:	trcflags = TRC_ALL;	break;
+			default:				break;
+			}
+		}
+		switch(mp->m_valu) {
+		case O_TRC:	trcflags |=  (flags & TRC_ALL);	break;
+		case O_NTRC:	trcflags &= (~flags & TRC_ALL);	break;
+		default:				break;
+		}
+		return;
+
 	case S_PAGE:
 		lmode = NLIST;
 		if (more()) {
@@ -1855,7 +1902,7 @@ loop:
 		if (!n && flevel)
 			return;
 
-                lop = NLPP;
+		lop = (lnlist & LIST_PAG) ? NLPP : 1;
 		return;
 
 	default:
@@ -1868,6 +1915,23 @@ loop:
 	 * process the assembler directives here.
 	 */
 	switch (m_type) {
+
+	case S_OPTN:	/* .enabl (op = 1), .dsabl (op = 0) */
+		if ((c = getnb()) == '(') {
+			do {
+				getid(id, -1);
+				/* 'C' Style Numbers - 0nnn (Octal), 0xnnn (Hex), Else Decimal */
+				if (symeq(id, "csn", 1)) { csn = mp->m_flag; } else
+				/* External Machine Options */
+				if (*mchoptn_ptr && ((*mchoptn_ptr)(id, (int) (mp->m_valu)))) { ; } else {
+					err('u');
+				}
+			} while ((c = getnb()) == ',');
+			if (c != ')')
+				qerr();
+		}
+		lmode = SLIST;
+		break;
 
 	case S_HEADER:
 		switch(mp->m_valu) {
@@ -2406,8 +2470,47 @@ loop:
 			err('e');
 		}
 		lmode = ELIST;
-//              eqt_area = NULL;
+		eqt_area = NULL;
 		laddr = e1.e_addr;
+		break;
+
+	case S_MSB:
+		switch (mp->m_valu) {
+		default:
+		case O_MSB:
+			clrexpr(&e1);
+			expr(&e1);
+			if (!is_abs(&e1)) {
+				err('o');
+			}
+			if (e1.e_addr >= (a_uint) a_bytes) {
+				err('o');
+			} else {
+				as_msb = (int) e1.e_addr;
+			}
+			break;
+
+		case O_HILO:
+		case O_LOHI:
+			c = (mp->m_valu == O_HILO) ? 1 : 0;
+			if ((pass != 0) && ((int) hilo != c)) {
+				err('m');
+			}
+			hilo = c;
+			break;
+		}
+		lmode = SLIST;
+		break;
+
+	case S_END:
+		lmode = SLIST;
+		if (more()) {
+			sp = lookup(".__.END.");
+			if (sp->s_type != S_NEW && (sp->s_flag & S_ASG) == 0) {
+				err('m');
+			}
+			equate(".__.END.", &e1, O_GBLEQU);
+		}
 		break;
 
 	case S_MACRO:

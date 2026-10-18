@@ -879,4 +879,15 @@ minit(void)
 	r65c00 = 0;
 	r65c02 = 0;
 	huc6280 = 0;
+
+	/*
+	 * Automatic Direct Page
+	 */
+	autodpcnst = 1;
+	autodpsmbl = 1;
+	/*
+	 * External Calls
+	 */
+	/* .enabl/.dsabl Extension */
+	mchoptn_ptr = mchoptn;
 }

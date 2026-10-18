@@ -310,7 +310,7 @@
  *		none
  *
  *	functions called:
- *		void	outatxb()	asout.c
+ *              void    outaxb()        asout.c
  *
  *	side effects:
  *		Absolute data is processed.
@@ -866,8 +866,7 @@ outr3b(struct expr *esp, int r)
 	dot.s_addr += (i/p_bytes) + (i % p_bytes ? 1 : 0);
 }
 
-#ifdef ONLY_ASXXXX
-/*)Function	void	outmerge(esp, r, v)
+/*)Function	a_uint	outmerge(esp, r, v)
  *
  *		a_uint	esp		expr value
  *		int	r		relocation mode
@@ -921,7 +920,84 @@ a_uint outmerge(a_uint esp, int r, a_uint base)
 	}
 	return((base & ~mp->m_dbits) | m);
 }
-#endif
+
+/*)Function	void	outrbm(esp, r, v)
+ *
+ *		expr *	esp		pointer to expr structure
+ *		int	r		relocation mode
+ *		a_uint	v		data to merge into
+ *
+ *	The function outrbm() merges the data in the expr structure esp
+ *	and the variable v using the merge specification coded in r.
+ *	If the data in esp is absolute then the merged value is output
+ *	as an absolute byte.  If relocatable then the value of esp is
+ *	output as a relocatable object followed by the absolute value
+ *	of v.  The linker will merge the relocatable data with the
+ *	opcode data using the selected merge specification.
+ *	If the .REL output is enabled then the appropriate information
+ *	is loaded into the txt and rel buffers.
+ *
+ *	local variables:
+ *		a_uint	m		merged value
+ *		int	n		symbol/area reference number
+ *
+ *	global variables:
+ *		int	oflag		-o, generate relocatable output flag
+ *		int	pass		assembler pass number
+ *		char *	relp		pointer to rel array
+ *		char *	txtp		pointer to txt array
+ *
+ *	functions called:
+ *		a_uint	outmerge()	asout.c
+ *		void	out_lxb()	asout.c
+ *		void	outchk()	asout.c
+ *		void	out_txb()	asout.c
+ *		void	write_rmode()	asout.c
+ *		void	out_rw()	asout.c
+ *
+ *	side effects:
+ *		R and T Lines updated.  Listing updated.
+ *		The current assembly address is incremented by 1.
+ */
+void
+outrbm(struct expr *esp, int r, a_uint v)
+{
+	a_uint m;
+	int n;
+
+	if (pass == 2) {
+		m = outmerge(esp->e_addr, r, v);
+		if (esp->e_flag == 0 && esp->e_base.e_ap == NULL) {
+			/*
+			 * Absolute Destination.
+			 */
+			out_lxb(1, m, 0);
+			if (oflag) {
+				outchk(1, 0);
+				out_txb(1, m);
+			}
+		} else {
+			/*
+			 * Relocatable Destination.
+			 */
+			r |= R_BYTE | esp->e_rlcf;
+			out_lxb(1, m, 0);
+			if (oflag) {
+				outchk(1, 0);
+				out_txb(1, m);
+				if (esp->e_flag) {
+					n = esp->e_base.e_sp->s_ref;
+					r |= R_SYM;
+				} else {
+					n = esp->e_base.e_ap->a_ref;
+				}
+				write_rmode(r, txtp - txt - 1);
+				out_rw(n);
+			}
+		}
+	}
+	dot.s_addr += 1;
+}
 
 /*)Function	void	outdp(carea, esp, r)
  *

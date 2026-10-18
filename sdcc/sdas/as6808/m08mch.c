@@ -404,7 +404,14 @@ machine(struct mne *mp)
 		t2 = addr(&e2);
 		if (t2 != S_DIR)
 			xerr('a', "Require Direct Mode For Second Argument.");
-		outab(op + 2*(e1.e_addr&0x07));
+		if (is_abs(&e1)) {
+			v1 = (int) e1.e_addr;
+			if (v1 & ~0x07)
+				xerr('a', "Valid Bit Values Are 0 -> 7.");
+			outab(op | ((v1 & 0x07) << 1));
+		} else {
+			outrbm(&e1, R_MBRO | R_3BIT, op);
+		}
 		outrb(&e2, R_PAG0);
 		break;
 
@@ -418,7 +425,14 @@ machine(struct mne *mp)
 			xerr('a', "Require Direct Mode For Second Argument.");
 		comma(1);
 		expr(&e3);
-		outab(op + 2*(e1.e_addr&0x07));
+		if (is_abs(&e1)) {
+			v1 = (int) e1.e_addr;
+			if (v1 & ~0x07)
+				xerr('a', "Valid Bit Values Are 0 -> 7.");
+			outab(op | ((v1 & 0x07) << 1));
+		} else {
+			outrbm(&e1, R_MBRO | R_3BIT, op);
+		}
 		outrb(&e2, R_PAG0);
 		if (mchpcr(&e3, &v3, 1)) {
 			if ((v3 < -128) || (v3 > 127))

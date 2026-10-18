@@ -144,8 +144,8 @@ struct	mne	mne[] = {
 
 	/* assembler */
 
-/*    {	NULL,	".enabl",	S_OPTN,		0,	O_ENBL	},	*/
-/*    {	NULL,	".dsabl",	S_OPTN,		0,	O_DSBL	},	*/
+    {	NULL,	".enabl",	S_OPTN,		0,	O_ENBL	},
+    {	NULL,	".dsabl",	S_OPTN,		0,	O_DSBL	},
     {	NULL,	".page",	S_PAGE,		0,	0	},
     {	NULL,	".title",	S_HEADER,	0,	O_TITLE	},
     {	NULL,	".sbttl",	S_HEADER,	0,	O_SBTTL	},
@@ -155,12 +155,12 @@ struct	mne	mne[] = {
     {	NULL,	".area",	S_AREA,		0,	0	},
     {	NULL,	".psharea",	S_AREA,		0,	O_PSH	},	
     {	NULL,	".poparea",	S_AREA,		0,	O_POP	},	
-/*    {	NULL,	".bank",	S_BANK,		0,	0	},	*/
+/*    {	NULL,	".bank",	S_BANK,		0,	0	}, */
     {	NULL,	".org",		S_ORG,		0,	0	},
     {	NULL,	".radix",	S_RADIX,	0,	0	},
     {	NULL,	".globl",	S_GLOBL,	0,	0	},
     {	NULL,	".local",	S_LOCAL,	0,	0	},
-     {	NULL,	".if",		S_CONDITIONAL,	0,	O_IF	},
+    {	NULL,	".if",		S_CONDITIONAL,	0,	O_IF	},
     {	NULL,	".iff",		S_CONDITIONAL,	0,	O_IFF	},
     {	NULL,	".ift",		S_CONDITIONAL,	0,	O_IFT	},
     {	NULL,	".iftf",	S_CONDITIONAL,	0,	O_IFTF	},
@@ -241,10 +241,10 @@ struct	mne	mne[] = {
     {	NULL,	".16bit",	S_BITS,		0,	O_2BYTE	},
     {	NULL,	".24bit",	S_BITS,		0,	O_3BYTE	},
 /*    {	NULL,	".32bit",	S_BITS,		0,	O_4BYTE	},	*/
-/*    {	NULL,	".trace",	S_TRACE,	0,	O_TRC	},	*/
-/*    {	NULL,	".ntrace",	S_TRACE,	0,	O_NTRC	},	*/
+    {	NULL,	".trace",	S_TRACE,	0,	O_TRC	},
+    {	NULL,	".ntrace",	S_TRACE,	0,	O_NTRC	},
 /*    {	NULL,	"_______",	S_CONST,	0,	VALUE	},	*/
-/*    {	NULL,	".end",		S_END,		0,	0	},	*/
+    {	NULL,	".end",		S_END,		0,	0	},
 
 /* sdas specific */
 /*    {   NULL,   ".df",          S_FLOAT,        0,      0       },	*/

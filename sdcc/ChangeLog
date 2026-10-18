@@ -3,6 +3,22 @@
 	* src/SDCCicode.c,
 	  src/mcs51/gen.c:
 	  Change true/false to lowercase, fix typo.
+	* sdas/as6500/r65mch.c,
+	  sdas/as6500/r65pst.c,
+	  sdas/as6808/m08mch.c,
+	  sdas/as6808/m08pst.c,
+	  sdas/as8051/i51mch.c,
+	  sdas/as8051/i51pst.c,
+	  sdas/as8xcxxx/ds8pst.c,
+	  sdas/asgb/gbpst.c,
+	  sdas/asrab/rabpst.c,
+	  sdas/astlcs90/t90pst.c,
+	  sdas/asxxsrc/asmain.c,
+	  sdas/asxxsrc/asout.c,
+	  sdas/asxxsrc/asxxxx.h,
+	  sdas/asz80/z80pst.c,
+	  sdas/linksrc/lkarea.c:
+	  More changes from upstream asxxxx V6.10
 
 2026-10-18 Christopher Bazley <chris.bazley.wg14@gmail.com>
 

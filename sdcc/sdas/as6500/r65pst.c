@@ -128,8 +128,8 @@ struct	mne	mne[] = {
 
 	/* assembler */
 
-/*    {	NULL,	".enabl",	S_OPTN,		0,	O_ENBL	},	*/
-/*    {	NULL,	".dsabl",	S_OPTN,		0,	O_DSBL	},	*/
+    {	NULL,	".enabl",	S_OPTN,		0,	O_ENBL	},
+    {	NULL,	".dsabl",	S_OPTN,		0,	O_DSBL	},
     {	NULL,	".page",	S_PAGE,		0,	0	},
     {	NULL,	".title",	S_HEADER,	0,	O_TITLE	},
     {	NULL,	".sbttl",	S_HEADER,	0,	O_SBTTL	},
@@ -225,10 +225,10 @@ struct	mne	mne[] = {
 /*    {	NULL,	".16bit",	S_BITS,		0,	O_2BYTE	},	*/
 /*    {	NULL,	".24bit",	S_BITS,		0,	O_3BYTE	},	*/
 /*    {	NULL,	".32bit",	S_BITS,		0,	O_4BYTE	},	*/
-/*    {	NULL,	".trace",	S_TRACE,	0,	O_TRC	},	*/
-/*    {	NULL,	".ntrace",	S_TRACE,	0,	O_NTRC	},	*/
+    {	NULL,	".trace",	S_TRACE,	0,	O_TRC	},
+    {	NULL,	".ntrace",	S_TRACE,	0,	O_NTRC	},
 /*    {	NULL,	"_______",	S_CONST,	0,	VALUE	},	*/
-/*    {	NULL,	".end",		S_END,		0,	0	},	*/
+    {	NULL,	".end",		S_END,		0,	0	},
 
 /* sdas specific */
 /*    {   NULL,   ".df",          S_FLOAT,        0,      0       },	*/

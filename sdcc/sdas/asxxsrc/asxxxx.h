@@ -377,6 +377,11 @@ struct	area
 #define R_SGND  0x00            /* Signed Byte */
 #define R_USGN  0x10            /* Unsigned Byte */
 
+#define R_MBRS  0x0004          /* Merge Bit Range Signed */
+#define R_MBRU  0x0008          /* Merge Bit Range Unsigned */
+#define R_MBRO  0x0008          /* Merge Bit Range Overflow */
+#define R_OVRF  0x0008          /* Overflow */
+
 #define R_LSB   0x00            /* low byte */
 #define R_MSB   0x80            /* high byte */
 
