@@ -6001,6 +6001,8 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
                 if (SPEC_SCLS_IMPLICITINTRINSIC (type))
                   SPEC_SCLS (type) = S_FIXED;
               }
+            /* Nonbanked function pointers use the code-pointer kind. */
+            changePointer (type);
             removeQualifiers (type);
           }
 

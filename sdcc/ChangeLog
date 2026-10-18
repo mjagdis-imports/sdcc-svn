@@ -1,5 +1,19 @@
 2026-10-18 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
+	* src/SDCCast.c, src/SDCCsymt.c: Use consistent function-pointer kinds
+	  for type names and converted _Generic controlling expressions, so
+	  equivalent types compare correctly (bug #4107).
+	* support/valdiag/tests/bug-4107.c:
+	  Test rejection of duplicate compatible function-pointer associations
+	  in generic selections.
+	* support/regression/tests/bug-4107.c:
+	  Test equivalent function-pointer spellings, function-designator
+	  conversion and pointers to function pointers.
+	  Test banked function pointers and distinct object address spaces on
+	  MCS51.
+
+2026-10-18 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
 	* src/SDCC.y: Append leading pointers after the complete direct abstract
 	  declarator, preserving array dimensions in unnamed parameters and type
 	  names (bug #4105).

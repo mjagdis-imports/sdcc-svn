@@ -4219,6 +4219,7 @@ void
 processFuncPtr (sym_link * funcType)
 {
   processFunc (NULL, funcType);
+  changePointer (funcType);
 }
 
 /*-----------------------------------------------------------------*/
