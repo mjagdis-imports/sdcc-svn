@@ -1883,9 +1883,17 @@ parameter_declaration
 abstract_declarator
    : pointer { $$ = reverseLink($1); }
    | direct_abstract_declarator
-   | pointer direct_abstract_declarator   { $1 = reverseLink($1); $2->next = $1; $$ = $2;
-          if (IS_PTR($1) && IS_FUNC($2))
-            DCL_TYPE($1) = CPOINTER;
+   | pointer direct_abstract_declarator
+        {
+          sym_link *p;
+
+          $1 = reverseLink ($1);
+          for (p = $2; p->next; p = p->next)
+            ;
+          p->next = $1;
+          $$ = $2;
+          if (IS_PTR ($1) && IS_FUNC ($2))
+            DCL_TYPE ($1) = CPOINTER;
         }
    ;
 
