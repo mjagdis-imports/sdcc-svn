@@ -1,5 +1,16 @@
 2026-10-18 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
+	* src/SDCCsymt.c, src/SDCCerr.c, src/SDCCerr.h:
+	  Require complete parameters in function definitions (bug #4135).
+	  Check adjusted by-value structure and union parameters in
+	  checkFunction, which is called for definitions, before
+	  allocating target-specific storage.
+	* support/valdiag/tests/bug-4135.c:
+	  Test incomplete structures and unions, later parameter positions,
+	  and valid declarations, adjusted parameters and complete types.
+
+2026-10-18 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
 	* src/SDCCsymt.c, src/SDCC.y, src/SDCCerr.c, src/SDCCerr.h:
 	  Diagnose non-integer array length expressions (bug #4142).
 	  Recover with length one instead of converting an invalid expression.

@@ -803,6 +803,8 @@ struct
      "nested definition of struct/union '%s'", 0},
   {E_ARRAY_LENGTH_NON_INTEGER, ERROR_LEVEL_ERROR,
      "array length not an integer", 0},
+  {E_INCOMPLETE_PARAMETER, ERROR_LEVEL_ERROR,
+     "parameter %d of function '%s' has incomplete type", 0},
 };
 
 /* -------------------------------------------------------------------------------

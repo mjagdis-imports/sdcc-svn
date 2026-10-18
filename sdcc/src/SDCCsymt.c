@@ -3975,6 +3975,18 @@ checkFunction (symbol * sym, symbol * csym)
       return 0;
     }
 
+  /* This check is specific to definitions. After parameter adjustment,
+     incomplete structures and unions still cannot be passed by value. */
+  bool incompleteParameter = false;
+  for (argCnt = 1, acargs = FUNC_ARGS (sym->type); acargs; acargs = acargs->next, argCnt++)
+    if (IS_STRUCT (acargs->type) && !SPEC_STRUCT (acargs->etype)->fields)
+      {
+        werrorfl (sym->fileDef, sym->lineDef, E_INCOMPLETE_PARAMETER, argCnt, sym->name);
+        incompleteParameter = true;
+      }
+  if (incompleteParameter)
+    return 0;
+
   /* function cannot return aggregate */
   if ((TARGET_IS_DS390)  && IS_AGGREGATE (sym->type->next))
     {
