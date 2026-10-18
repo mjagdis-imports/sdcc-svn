@@ -123,11 +123,11 @@ newpag(FILE *fp)
 	/*
 	 * Total string length is 78 characters.
 	 */
-	n = 78 - strlen(np) - strlen(tp);
+	n = 78 - strlen(tp);
 	/*
 	 * Output string.
 	 */
-	fprintf(fp, "%s%*s%s\n", tp, n, " ", np);
+	fprintf(fp, "%s%*s\n", tp, n, " ");
 	lop = 3;
 }
 

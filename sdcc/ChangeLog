@@ -25,6 +25,8 @@
 	  sdas/asz80/z80pst.c,
 	  sdas/linksrc/lkarea.c:
 	  More changes from upstream asxxxx V6.10
+	* sdas/linksrc/lkarea.c:
+	  Remove timestamp from linker output.
 
 2026-10-18 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
