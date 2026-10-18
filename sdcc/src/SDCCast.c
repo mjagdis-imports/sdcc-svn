@@ -6038,6 +6038,20 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
                 for (assoc_etype = assoc_type; !IS_SPEC(assoc_etype); assoc_etype = assoc_etype->next);
                 checkTypeSanity (assoc_etype, "(_Generic)");
 
+                /* Duplicate types are forbidden even when neither
+                   association matches the controlling type. The list is
+                   reversed: other is the earlier source association. */
+                for (ast *other = assoc_list->left; other; other = other->left)
+                  if (other->right->left &&
+                      SPEC_ADDRSPACE (assoc_etype) ==
+                        SPEC_ADDRSPACE (getSpec (other->right->left->opval.lnk)) &&
+                      compatibleTypes (assoc_type, other->right->left->opval.lnk))
+                    {
+                      werrorfl (assoc->filename, assoc->lineno, E_DUPLICATE_GENERIC_TYPE,
+                                other->right->filename, other->right->lineno);
+                      goto errorTreeReturn;
+                    }
+
                 /* treat as non-equal if the address spaces differ */
                 if (SPEC_ADDRSPACE (getSpec (type)) != SPEC_ADDRSPACE (getSpec (assoc_type)))
                   continue;

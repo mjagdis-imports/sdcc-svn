@@ -398,6 +398,7 @@ enum {
   E_STRUCT_DEF_NESTED           = 368, // defining declarations of the same struct or union are nested
   E_ARRAY_LENGTH_NON_INTEGER    = 369, // array length not an integer
   E_INCOMPLETE_PARAMETER        = 370, // function definition has an incomplete parameter type
+  E_DUPLICATE_GENERIC_TYPE      = 371, // generic association type is compatible with previous association at %s:%d
 
   // If you get a merge conflict here, some #pragma disable_warning in support/valdiag and support/regression will likely need to be adapted to the resolution. Check there!
 

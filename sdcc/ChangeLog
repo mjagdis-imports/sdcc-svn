@@ -1,3 +1,15 @@
+2026-10-18 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
+	* src/SDCCast.c, src/SDCCerr.c, src/SDCCerr.h: Diagnose compatible
+	  types in a generic association list, including unselected
+	  associations (bug #4134).
+	  Identify whichever is the later association and include the earlier
+	  file and line.
+	  Use type compatibility for the comparison so that unspecified and
+	  specified array bounds are handled correctly.
+	* support/valdiag/tests/bug-4134.c: Check duplicate and distinct types,
+	  compatible array bounds and multiline diagnostic locations.
+
 2026-10-18 Maarten Brock <sourceforge.brock AT dse.nl>
 
 	* src/mcs51/ralloc.c: fixed bug #4153

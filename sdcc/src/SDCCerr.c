@@ -805,6 +805,8 @@ struct
      "array length not an integer", 0},
   {E_INCOMPLETE_PARAMETER, ERROR_LEVEL_ERROR,
      "parameter %d of function '%s' has incomplete type", 0},
+  {E_DUPLICATE_GENERIC_TYPE, ERROR_LEVEL_ERROR,
+     "generic association type is compatible with previous association at %s:%d", 0},
 };
 
 /* -------------------------------------------------------------------------------
