@@ -801,6 +801,8 @@ struct
      "alignof applied to an incomplete array requires ISO C2y or later", 0},
   {E_STRUCT_DEF_NESTED, ERROR_LEVEL_ERROR,
      "nested definition of struct/union '%s'", 0},
+  {E_ARRAY_LENGTH_NON_INTEGER, ERROR_LEVEL_ERROR,
+     "array length not an integer", 0},
 };
 
 /* -------------------------------------------------------------------------------

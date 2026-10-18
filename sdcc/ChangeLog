@@ -1,5 +1,14 @@
 2026-10-18 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
+	* src/SDCCsymt.c, src/SDCC.y, src/SDCCerr.c, src/SDCCerr.h:
+	  Diagnose non-integer array length expressions (bug #4142).
+	  Recover with length one instead of converting an invalid expression.
+	* support/valdiag/tests/bug-4142.c: Test that errors are
+	  reported for invalid named and abstract array declarations,
+	  and for negative lengths, but not for valid cases.
+
+2026-10-18 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
 	* src/SDCCval.c: Detect overflow while accumulating each digit
 	  of an integer literal (bug #4127).  Produce one range warning
 	  per literal.

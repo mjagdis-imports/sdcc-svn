@@ -1932,7 +1932,13 @@ array_abstract_declarator
         if (val && SPEC_SCLS (val->etype) == S_LITERAL)
           {
             DCL_ARRAY_LENGTH_TYPE ($$) = ARRAY_LENGTH_KNOWN_CONST;
-            DCL_ELEM ($$) = (int) ulFromVal (val);
+            if (!IS_INTEGRAL (val->type))
+              {
+                werror (E_ARRAY_LENGTH_NON_INTEGER);
+                DCL_ELEM ($$) = 1; /* Recover as for a negative array length. */
+              }
+            else
+              DCL_ELEM ($$) = (int) ulFromVal (val);
           }
         else
           {

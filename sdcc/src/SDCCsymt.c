@@ -1476,7 +1476,13 @@ arraySizes (sym_link *type, const char *name)
   if ((IS_ARRAY (type) || IS_PTR (type)) && !DCL_ELEM (type) && DCL_ELEM_AST (type))
     {
       value *tval = constExprValue (DCL_ELEM_AST (type), false);
-      if (!tval || (SPEC_SCLS (tval->etype) != S_LITERAL))
+      if (tval && !IS_INTEGRAL (tval->type))
+        {
+          werrorfl (DCL_ELEM_AST (type)->filename, DCL_ELEM_AST (type)->lineno, E_ARRAY_LENGTH_NON_INTEGER);
+          DCL_ARRAY_LENGTH_TYPE (type) = ARRAY_LENGTH_KNOWN_CONST;
+          DCL_ELEM (type) = 1; /* Recover as for a negative array length. */
+        }
+      else if (!tval || (SPEC_SCLS (tval->etype) != S_LITERAL))
         {
           if (!options.std_c99)
             werror (E_VLA_TYPE_C99);
