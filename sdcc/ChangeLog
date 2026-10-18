@@ -1,3 +1,9 @@
+2026-10-18 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* src/mcs51/ralloc.c: fixed bug #4153
+	* support/regression/tests/bug-4153.c: from patch in bug #4153
+	* support/regression/tests/genptrs.c: fixed warning
+
 2026-10-18 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/SDCCicode.c,

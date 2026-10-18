@@ -1208,7 +1208,7 @@ positionRegs (symbol * result, symbol * opsym, int chOp)
   int change = 0;
 
   /* if the result has been spilt then cannot share */
-  if (opsym->isspilt)
+  if (result->isspilt || opsym->isspilt)
     return 0;
 
   for (;;)
