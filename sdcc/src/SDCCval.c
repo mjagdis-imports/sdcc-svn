@@ -1330,8 +1330,13 @@ sepStrToUll (const char *nptr, char **endptr, int base)
 {
   wassert (base >= 2 && base <= 16);
 
-  unsigned long long ret = 0ull;
+  TYPE_TARGET_ULONGLONG ret = 0;
+  const TYPE_TARGET_ULONGLONG max = (TYPE_TARGET_ULONGLONG)-1;
   bool separated = false;
+  bool overflow = false;
+
+  /* The target long long must match its internal representation. */
+  wassert (LONGLONGSIZE * 8 == sizeof (ret) * CHAR_BIT);
 
   for(;;nptr++)
     {
@@ -1357,9 +1362,16 @@ sepStrToUll (const char *nptr, char **endptr, int base)
       if (!(next >= 0 && next < base))
         break;
 
+      /* Detect overflow before accumulating the digit, but retain the
+         existing accumulated result. */
+      if (ret > (max - next) / base)
+        overflow = true;
       ret *= base;
       ret += next;
     }
+
+  if (overflow)
+    werror (W_CONST_RANGE, "for a 64-bit integer literal");
 
   if(separated && !options.std_c23)
     werror (W_DIGIT_SEPARATOR_C23);

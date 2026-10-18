@@ -1,5 +1,22 @@
 2026-10-18 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
+	* src/SDCCval.c: Detect overflow while accumulating each digit
+	  of an integer literal (bug #4127).  Produce one range warning
+	  per literal.
+	  Do not alter SDCC's previous interpretation of the accumulated
+	  value.  Use the target's unsigned long long representation and
+	  check that it matches LONGLONGSIZE.
+	* support/regression/tests/bug-4127.c: Test that valid boundary
+	  values are parsed correctly by using arithmetic to make the
+	  tests independent of <limits.h>.
+	* support/valdiag/tests/bug-4127.c: Test that overflowing literal
+	  values are diagnosed with each supported radix and with digit
+	  separators.
+	  Test that valid boundary values and literals with a huge number
+	  of leading zeros are not incorrectly diagnosed.
+
+2026-10-18 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
 	* src/SDCCast.c:
 	  Require a scalar first operand of a conditional expression
 	  allowing array and function conversion (bug #4084).
