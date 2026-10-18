@@ -5895,6 +5895,15 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
       /* the type is value of the colon operator (on the right) */
       assert (IS_COLON_OP (tree->right));
 
+      /* Array and function operands are subject to pointer conversion. */
+      if (!IS_ARITHMETIC (LTYPE (tree)) && !IS_PTR (LTYPE (tree)) &&
+          !IS_ARRAY (LTYPE (tree)) && !IS_FUNC (LTYPE (tree)) &&
+          !IS_NULLPTR (LTYPE (tree)))
+        {
+          werrorfl (tree->filename, tree->lineno, E_INVALID_OP, "conditional");
+          goto errorTreeReturn;
+        }
+
       propagateConstExpr (&tree->left, resultType, reduceTypeAllowed);
 
       /* If already known then replace the tree : optimizer will do it

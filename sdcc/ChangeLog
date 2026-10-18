@@ -1,5 +1,17 @@
 2026-10-18 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
+	* src/SDCCast.c:
+	  Require a scalar first operand of a conditional expression
+	  allowing array and function conversion (bug #4084).
+	  Diagnose structure, union and void conditions; preserve valid
+	  arithmetic, pointer and nullptr_t conditions.
+	* support/valdiag/tests/bug-4084.c:
+	  Add test cases for invalid usage of structure, union and void types.
+	  Add test cases for valid usage of int, float, pointer, array and
+	  function types; also a test case for valid usage of nullptr_t.
+
+2026-10-18 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
 	* src/SDCCast.c, src/SDCCsymt.c: Use consistent function-pointer kinds
 	  for type names and converted _Generic controlling expressions, so
 	  equivalent types compare correctly (bug #4107).
