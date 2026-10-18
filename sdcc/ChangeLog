@@ -27,6 +27,8 @@
 	  More changes from upstream asxxxx V6.10
 	* sdas/linksrc/lkarea.c:
 	  Remove timestamp from linker output.
+	* src/mos6502/peeph.def:
+	  Add dead transfer TXA peephole rule.
 
 2026-10-18 Christopher Bazley <chris.bazley.wg14@gmail.com>
 

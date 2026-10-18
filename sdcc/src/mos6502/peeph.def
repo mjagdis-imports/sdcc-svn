@@ -112,6 +112,16 @@ replace restart {
 	; Peephole dead transfer TY - removed dead tay
 } if notUsed('n' 'z' 'y')
 
+replace restart {
+	tax
+	txs
+	txa
+} by {
+	tax
+	txs
+	; Peephole dead transfer TXA - removed dead TXA
+}
+
 ////////////////////////////////////////////////////////
 // Dead operations
 ////////////////////////////////////////////////////////
