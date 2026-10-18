@@ -3542,15 +3542,15 @@ genIpop (iCode *ic)
   if (OP_SYMBOL (IC_LEFT (ic))->isspilt)
     return;
 
-  aopOp (IC_LEFT (ic), ic, FALSE);
+  aopOp (IC_LEFT (ic), ic, false);
   size = AOP_SIZE (IC_LEFT (ic));
   offset = size - 1;
   while (size--)
     {
-      emitpop (opGet (IC_LEFT (ic), offset--, FALSE, TRUE));
+      emitpop (opGet (IC_LEFT (ic), offset--, false, true));
     }
 
-  freeAsmop (IC_LEFT (ic), NULL, ic, TRUE);
+  freeAsmop (IC_LEFT (ic), NULL, ic, true);
 }
 
 /*-----------------------------------------------------------------*/
@@ -4211,14 +4211,14 @@ genCall (iCode * ic)
          || IS_TRUE_SYMOP (IC_RESULT (ic))))
     {
       _G.accInUse++;
-      aopOp (IC_RESULT (ic), ic, FALSE);
+      aopOp (IC_RESULT (ic), ic, false);
       _G.accInUse--;
 
       assignResultValue (IC_RESULT (ic), IC_LEFT (ic));
       accuse = (IC_RESULT (ic)->aop->regs[A_IDX] > 0);
-      assignResultGenerated = TRUE;
+      assignResultGenerated = true;
 
-      freeAsmop (IC_RESULT (ic), NULL, ic, TRUE);
+      freeAsmop (IC_RESULT (ic), NULL, ic, true);
     }
 
   /* adjust the stack for parameters if required */

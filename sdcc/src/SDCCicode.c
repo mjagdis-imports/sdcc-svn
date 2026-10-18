@@ -709,7 +709,7 @@ newiCodeParm (int op, operand *left, value *param, sym_link *ftype, int *stack)
             (*stack)++;
           else if (IFFUNC_ISDYNAMICC (ftype) && getSize (argtype)  == 3 && IS_FARPTR (argtype)) // Dynamic C passes pointers to __far as 32 bits.
             (*stack)++;
-          else if (TARGET_PDK_LIKE && getSize (argtype) % 2) // pdk needs even-oligned stack.
+          else if (TARGET_PDK_LIKE && getSize (argtype) % 2) // pdk needs even-aligned stack.
             (*stack)++;
         }
     }

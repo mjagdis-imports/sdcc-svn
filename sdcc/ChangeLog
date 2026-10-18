@@ -1,3 +1,9 @@
+2026-10-18 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/SDCCicode.c,
+	  src/mcs51/gen.c:
+	  Change true/false to lowercase, fix typo.
+
 2026-10-18 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
 	* src/SDCCsymt.c, src/SDCCerr.c, src/SDCCerr.h:
