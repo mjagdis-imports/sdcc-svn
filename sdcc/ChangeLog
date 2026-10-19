@@ -1,3 +1,8 @@
+2026-10-18 Gabriele Gorla <gorlik@yahoo.com>
+
+	* sdas/asxxsrc/asout.c
+	  Partially revert change #16948 to correct bug in lst/rst output.
+
 2026-10-18 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
 	* support/regression/tests/bug-4107.c: Use explicitly nonbanked

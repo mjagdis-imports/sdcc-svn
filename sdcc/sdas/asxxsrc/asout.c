@@ -1750,11 +1750,13 @@ void
 out_lxb(int i, a_uint v, int t)
 {
 	if ((int) hilo) {
-		if (i >= 3) out_lb(thrdbyte(v),t ? t|R_HIGH : 0);
+                if (i >= 3) out_lb(thrdbyte(v),t ? t|R_HIGH : 0);
+                if (i >= 2) out_lb(hibyte(v),t);
 		if (i >= 1) out_lb(lobyte(v),t);
 	} else {
 		if (i >= 1) out_lb(lobyte(v),t);
-		if (i >= 2) out_lb(hibyte(v),t);
+                if (i >= 2) out_lb(hibyte(v),t);
+                if (i >= 3) out_lb(thrdbyte(v),t ? t|R_HIGH : 0);
 	}
 }
 
