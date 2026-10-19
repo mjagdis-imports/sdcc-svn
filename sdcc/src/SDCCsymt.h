@@ -804,6 +804,7 @@ symbol *prepareDeclarationSymbol (attribute *attr, sym_link *declSpecs, symbol *
 
 extern const char *nounName (sym_link *);     /* noun strings */
 extern void printFromToType (sym_link *, sym_link *);
+extern void printWithTypes (sym_link *, sym_link *);
 
 #endif
 

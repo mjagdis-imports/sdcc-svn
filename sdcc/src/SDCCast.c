@@ -6089,6 +6089,32 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
       return tree;
 
     case ':':
+      {
+        value *convertedL, *convertedR;
+        sym_link *leftType = argumentTypeAfterDecay (LTYPE (tree), &convertedL),
+                 *rightType = argumentTypeAfterDecay (RTYPE (tree), &convertedR);
+
+        /* Castability alone does not satisfy the conditional operator's
+           requirement for compatible referenced types */
+        if (IS_FUNCPTR (leftType) == IS_FUNCPTR (rightType) &&
+            IS_PTR (leftType) && IS_PTR (rightType) &&
+            !IS_VOID (leftType->next) && !IS_VOID (rightType->next) &&
+            !similarTypes (leftType->next, rightType->next))
+          {
+            werrorfl (tree->filename, tree->lineno, W_INCOMPAT_PTYPES);
+            printWithTypes (leftType, rightType);
+          }
+        if (convertedL)
+          {
+            Safe_free (convertedL->type);
+            Safe_free (convertedL);
+          }
+        if (convertedR)
+          {
+            Safe_free (convertedR->type);
+            Safe_free (convertedR);
+          }
+      }
       if ((compareType (LTYPE (tree), RTYPE (tree), false) == 0) && (compareType (RTYPE (tree), LTYPE (tree), false) == 0))
         {
           if (IS_PTR (LTYPE (tree)) && !IS_GENPTR (LTYPE (tree)))
@@ -6103,7 +6129,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
         !(IS_ARRAY(RTYPE (tree)) && IS_INTEGRAL(LTYPE (tree))))
         {
           werrorfl (tree->filename, tree->lineno, E_TYPE_MISMATCH, "conditional operator", " ");
-          printFromToType (RTYPE (tree), LTYPE (tree));
+          printWithTypes (RTYPE (tree), LTYPE (tree));
         }
 
       TTYPE (tree) = computeType (LTYPE (tree), RTYPE (tree), resultType, tree->opval.op);

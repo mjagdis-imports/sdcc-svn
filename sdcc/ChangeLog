@@ -1,3 +1,20 @@
+2026-10-19 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
+	* src/SDCCast.c,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  support/valdiag/tests/bug-4126.c,
+	  support/regression/tests/bug-4126.c:
+	  Diagnose incompatible pointer operands of conditional expressions
+	  (bug #4126).
+	  Apply array decay before checking the referenced types of operands
+	  of the conditional operator that have pointer type.  The obvious
+	  way to fix this would be to reuse diagnoseDissimilarPtrTargetTypes
+	  but its style of output is inappropriate because there is no
+	  'from' or 'to' ordering between the two operands.  Instead, a new
+	  function, printWithTypes, is used for both W_INCOMPAT_PTYPES and
+	  the existing potential E_TYPE_MISMATCH.
+
 2026-10-18 Gabriele Gorla <gorlik@yahoo.com>
 
 	* sdas/asxxsrc/asout.c

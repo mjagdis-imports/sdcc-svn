@@ -43,6 +43,19 @@ printFromToType (sym_link * from, sym_link * to)
   dbuf_write_and_destroy (&dbuf, stderr);
 }
 
+void
+printWithTypes (sym_link * from, sym_link * to)
+{
+  struct dbuf_s dbuf;
+  dbuf_init (&dbuf, 1024);
+  dbuf_append_str (&dbuf, "with type '");
+  dbuf_printTypeChain (from, &dbuf);
+  dbuf_append_str (&dbuf, "'\n and type '");
+  dbuf_printTypeChain (to, &dbuf);
+  dbuf_append_str (&dbuf, "'\n");
+  dbuf_write_and_destroy (&dbuf, stderr);
+}
+
 /* noun strings */
 const char *
 nounName (sym_link * sl)
