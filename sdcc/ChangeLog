@@ -1,5 +1,18 @@
 2026-10-19 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
+	* src/SDCCcse.c: A zero-offset structure member access introduces
+	  a pointer cast. Treating that cast as sensitive to signedness
+	  prevented pointer copy propagation and reuse of the result of a
+	  condition-guarded load of the first member's value. The
+	  dereference therefore used a different temporary from the one
+	  known to be non-null (bug #4148).
+	  Classify casts from pointer types as insensitive to signedness
+	  so that the result of such a member load can be reused.
+	* support/valdiag/tests/bug-4148.c: Test guarded and unsafe member
+	  loads at zero and nonzero offsets.
+
+2026-10-19 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
 	* src/SDCCicode.c (geniCodeStruct): Preserve volatility inherited
 	  from the enclosing structure on the member's outer qualifier
 	  (bug #4149).
