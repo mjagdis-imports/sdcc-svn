@@ -1,5 +1,14 @@
 2026-10-19 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
+	* src/SDCC.y: Diagnose invalid atomic array and function types
+	  before accessing specifier fields, and recover with int
+	  (bug #4132). Inspect qualifiers through the type chain and set
+	  the atomic flag on pointer declarators for pointer types.
+	* support/valdiag/tests/bug-4132.c: Test rejection of invalid atomic
+	  types and unsupported atomics, and valid non-atomic declarations.
+
+2026-10-19 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
 	* src/SDCCcse.c: A zero-offset structure member access introduces
 	  a pointer cast. Treating that cast as sensitive to signedness
 	  prevented pointer copy propagation and reuse of the result of a

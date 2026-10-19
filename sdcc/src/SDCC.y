@@ -752,11 +752,21 @@ type_specifier_without_struct_or_union
    | ATOMIC '(' type_name ')' {
                   checkTypeSanity ($3, "(_Atomic)");
                   $$=$3;
-                  if (SPEC_ATOMIC($$))
+                  /* Recover with a scalar type after diagnosing an invalid
+                     derived type, so later specifier handling stays valid. */
+                  if (IS_ARRAY($$) || IS_FUNC($$))
+                    {
+                      werror (IS_ARRAY($$) ? E_ATOMIC_ARRAY : E_ATOMIC_FUNCTION);
+                      $$=newIntLink();
+                    }
+                  if (isAtomic($$))
                     werror (E_ATOMIC_SPEC_ATOMIC);
-                  if (SPEC_CONST($$) || SPEC_RESTRICT($$) || SPEC_VOLATILE($$) || SPEC_ATOMIC($$))
+                  if (isConst($$) || isRestrict($$) || isVolatile($$) || isAtomic($$))
                     werror (E_ATOMIC_SPEC_QUALIFIED);
-                  SPEC_ATOMIC($$) = 1;
+                  if (IS_PTR($$))
+                    DCL_PTR_ATOMIC($$) = 1;
+                  else
+                    SPEC_ATOMIC($$) = 1;
                   werror (E_ATOMIC_UNSUPPORTED);
                }
    | DECIMAL128 {
