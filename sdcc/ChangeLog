@@ -1,5 +1,16 @@
 2026-10-19 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
+	* src/SDCCicode.c (geniCodeStruct): Preserve volatility inherited
+	  from the enclosing structure on the member's outer qualifier
+	  (bug #4149).
+	* src/SDCCcse.c (findCheaperOp): Do not discard volatile target
+	  qualification when substituting a pointer operand.
+	* support/valdiag/tests/bug-4149.c: Test repeated
+	  volatile member reads at zero and nonzero offsets, direct
+	  qualification, and valid single-read local pointer guards.
+
+2026-10-19 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
 	* src/SDCCast.c: Reject non-arithmetic, non-pointer increment
 	  operands (bug #4136).
 	  Check the operand type before marking it as an lvalue for

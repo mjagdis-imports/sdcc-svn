@@ -432,6 +432,14 @@ DEFSETFUNC (findCheaperOp)
           return 0;
         }
 
+      /* Keep the volatile qualification of the object read through a pointer. */
+      if (IS_PTR (operandType (cop)) && IS_PTR (operandType (*opp)) &&
+          isVolatile (operandType (cop)->next) && !isVolatile (operandType (*opp)->next))
+        {
+          *opp = NULL;
+          return 0;
+        }
+
       *opp = operandFromOperand (*opp);
 
       if ((*opp)->isaddr != cop->isaddr && IS_ITEMP (cop))
