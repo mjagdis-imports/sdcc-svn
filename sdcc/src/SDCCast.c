@@ -4224,6 +4224,13 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
     case DEC_OP:
       {
         sym_link *ltc = (tree->right ? RTYPE (tree) : LTYPE (tree));
+        /* nullptr_t is scalar, but increment and decrement require an
+           arithmetic or pointer operand. */
+        if (!IS_ARITHMETIC (ltc) && !IS_PTR (ltc))
+          {
+            werrorfl (tree->filename, tree->lineno, E_PLUS_INVALID, tree->opval.op == INC_OP ? "++" : "--");
+            goto errorTreeReturn;
+          }
         COPYTYPE (TTYPE (tree), TETYPE (tree), ltc);
         if (!tree->initMode && IS_CONSTANT (TTYPE (tree)))
           werrorfl (tree->filename, tree->lineno, E_CODE_WRITE, tree->opval.op == INC_OP ? "++" : "--");

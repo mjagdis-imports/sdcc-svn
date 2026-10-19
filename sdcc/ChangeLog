@@ -1,5 +1,18 @@
 2026-10-19 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
+	* src/SDCCast.c: Reject non-arithmetic, non-pointer increment
+	  operands (bug #4136).
+	  Check the operand type before marking it as an lvalue for
+	  increment or decrement. This rejects nullptr_t and aggregate
+	  operands for both prefix and postfix forms, while retaining
+	  arithmetic and pointer operations.
+	* support/valdiag/tests/bug-4136.c: Negative tests for increment
+	  and decrement of nullptr_t.  Negative tests for increment of an
+	  object of structure type and a const int.  Positive tests for
+	  increment and decrement of pointer, float and int objects.
+
+2026-10-19 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
 	* src/SDCCast.c,
 	  src/SDCCsymt.c,
 	  src/SDCCsymt.h,
