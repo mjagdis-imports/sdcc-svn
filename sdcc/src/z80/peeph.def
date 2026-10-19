@@ -1987,19 +1987,6 @@ replace {
 }
 
 replace restart {
-	push	hl
-	pop	iy
-	pop	hl
-	inc	iy
-} by {
-	inc	hl
-	push	hl
-	pop	iy
-	pop	hl
-	; common peephole 131a incremented in hl instead of iy.
-}
-
-replace restart {
 	push	bc
 	pop	iy
 	inc	iy

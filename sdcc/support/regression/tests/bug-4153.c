@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#ifndef __SDCC_pdk14 // Lack of memory
 struct entry {
   uint8_t prio;
   uint8_t mac[6];
@@ -42,9 +43,11 @@ uint8_t check(uint8_t port) __reentrant
 {
   return port == 0xff;
 }
+#endif
 
 void testBug(void)
 {
+#ifndef __SDCC_pdk14 // Lack of memory
   uint8_t i;
 
   for (i = 0; i < 8; i++)
@@ -59,4 +62,5 @@ void testBug(void)
   ASSERT(cost[3] == 0x12345678);
   ASSERT(timer[3] == 3);
   ASSERT(id[0] == 0 && id[1] == 0 && id[2] == 0);
+#endif
 }
