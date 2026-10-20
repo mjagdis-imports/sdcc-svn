@@ -1,5 +1,15 @@
 2026-10-20 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
+	* src/SDCCval.c: Preserve signed integer values when converting a
+	  constexpr initialiser from integer to float type (bug #4144).
+	  Obtain the value as double through floatFromVal, which respects
+	  the source integer type's signedness. Leave integer conversions
+	  unchanged.
+	* support/regression/tests/bug-4144.c: Test six failing return-context
+	  conversions and six cases that pass before and after the fix.
+
+2026-10-20 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
 	* src/SDCC.y: Diagnose non-integer subscripts in designated
 	  initialisers using E_IDX_NOT_INT (bug #4143).
 	* support/valdiag/tests/bug-4143.c: Test subscripts of floating-point

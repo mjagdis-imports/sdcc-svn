@@ -3386,7 +3386,8 @@ valRecastLitVal (sym_link * dtype, value * val)
   else
     {
       ull = (TYPE_TARGET_ULONGLONG) ullFromVal (val);
-      fval = (double)ull;
+      /* Use the source integer's signedness when converting to double. */
+      fval = floatFromVal (val);
     }
 
   if (dtype)
