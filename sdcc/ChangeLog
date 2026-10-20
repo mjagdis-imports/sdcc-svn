@@ -1,5 +1,11 @@
 2026-10-20 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
+	* support/valdiag/tests/bug-2660.c:
+	  Test the absence of a spurious pointer-type diagnostic for a function
+	  address cast in a static aggregate initialiser (bug #2660).
+
+2026-10-20 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
 	* support/regression/tests/bug-2497.c:
 	  Test a static function declared through a function typedef and called
 	  through a pointer (bug #2497).
