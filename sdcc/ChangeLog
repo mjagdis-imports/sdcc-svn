@@ -1,5 +1,11 @@
 2026-10-20 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
+	* support/valdiag/tests/bug-3016.c:
+	  Test diagnostics for the original malformed file-scope array bound
+	  (bug #3016).
+
+2026-10-20 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
 	* support/valdiag/tests/bug-2860.c:
 	  Compile both reported identifier-list declarations without executing the
 	  function with no return statement (bug #2860).
