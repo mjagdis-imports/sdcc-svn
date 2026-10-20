@@ -1,5 +1,10 @@
 2026-10-20 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
+	* support/valdiag/tests/bug-2147.c:
+	  Test diagnostics for excess scalar initialisers (bug #2147).
+
+2026-10-20 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
 	* support/valdiag/tests/bug-1102.c:
 	  Test diagnostics for an initialiser for an incomplete structure (bug #1102).
 
