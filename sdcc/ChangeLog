@@ -1,3 +1,12 @@
+2026-10-20 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
+	* src/SDCCicode.c (geniCodeStruct): Apply inherited volatile
+	  qualification to the element type of array members, including
+	  arrays of pointers (bug #4161).
+	* support/valdiag/tests/optional-volatile.c: Test volatile pointer
+	  reads and valid single-read copies. Include the reported pointer
+	  array member example.
+
 2026-10-20 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* support/regression/tests/bug-4153.c:

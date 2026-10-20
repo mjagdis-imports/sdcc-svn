@@ -2783,8 +2783,17 @@ geniCodeStruct (operand * left, operand * right, bool islval)
     }
   else
     {
+      sym_link *qualified_type = rtype;
+
+      /* An array member inherits volatile on its element type. */
+      while (IS_ARRAY (qualified_type))
+        qualified_type = qualified_type->next;
+      if (IS_PTR (qualified_type))
+        DCL_PTR_VOLATILE (qualified_type) |= SPEC_VOLATILE (etype);
+      else
+        SPEC_VOLATILE (qualified_type) |= SPEC_VOLATILE (etype);
+
       SPEC_CONST (retype) |= SPEC_CONST (etype);
-      SPEC_VOLATILE (retype) |= SPEC_VOLATILE (etype);
       SPEC_RESTRICT (retype) |= SPEC_RESTRICT (etype);
       SPEC_OPTIONAL (retype) |= SPEC_OPTIONAL (etype);
     }
