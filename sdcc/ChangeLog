@@ -1,5 +1,11 @@
 2026-10-20 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
+	* support/valdiag/tests/bug-3037.c:
+	  Compile the reported inline extern reference and diagnose the duplicate
+	  parameter name from the discussion (bug #3037).
+
+2026-10-20 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
 	* support/valdiag/tests/bug-3016.c:
 	  Test diagnostics for the original malformed file-scope array bound
 	  (bug #3016).
