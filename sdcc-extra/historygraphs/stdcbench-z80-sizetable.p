@@ -7,11 +7,11 @@ set ylabel "size [B]"
 # Configure arrow length (to make the plot look nice)
 arrowlength = 500
 
-trans(x) = x < 10000 ? x : x - 18000
+trans(x) = x < 9500 ? x : x - 18000
 set yrange [8000:14000]
-set ytics ("8000" 8000, "9000" 9000, "10000" 10000, "29000" 11000, "30000" 12000, "31000" 13000, "32000" 14000)
+set ytics ("8000" 8000, "9000" 9000, "28000" 10000, "29000" 11000, "30000" 12000, "31000" 13000, "32000" 14000)
 set arrow from graph 0, first 6750 to graph 1, first 6750 nohead lt 500 lw 20 lc bgnd
-set label "c90lib module enabled" at 10221, 10000 front
+set label "c90lib module enabled" at 10221, 9500 front
 set arrow from 9256, 9140 to 9256, 8640 front
 set label "3.5.0" at 9256, 9140 front
 set arrow from 9618, 8589+arrowlength to 9618, 8589 front
@@ -35,5 +35,5 @@ set label "4.5.0" at 15246, trans(28576)+arrowlength
 set arrow from 16640, trans(28201)+arrowlength to 16640, trans(28201)
 set label "4.6.0" at 16640, trans(28201)+arrowlength
 
-plot "stdcbench-z80-sizetable" using 1:(trans($4)) title "default", "stdcbench-z80-sizetable" using 1:(trans($2)) title "size", "stdcbench-z80-sizetable" using 1:(trans($3)) title "speed", 10000 lt rgb "white" lw 20 notitle
+plot "stdcbench-z80-sizetable" using 1:(trans($4)) title "default", "stdcbench-z80-sizetable" using 1:(trans($2)) title "size", "stdcbench-z80-sizetable" using 1:(trans($3)) title "speed", 9500 lt rgb "white" lw 20 notitle
 

@@ -1,3 +1,10 @@
+2026-10-20 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/bug-4123-2.c:
+	  Further tests for z80 peephole optimizer rules, towards fixing bug #4123.
+	* src/z80/peeph.def:
+	  Remove peephole optimizer rule for which no tests were found.
+
 2026-10-20 Maarten Brock <sourceforge.brock AT dse.nl>
 
 	* src/mcs51/gen.c (genPointerPush): fix mov r1,@r0 bug found in bug-4131.c
@@ -32,7 +39,7 @@
 
 2026-10-20 Philipp Klaus Krause <philipp@colecovision.eu>
 
-	* support/regression/tests/bug-4153.c:
+	* support/regression/tests/bug-4123-2.c:
 	  Further tests for z80 peephole optimizer rules, towards fixing bug #4123.
 	* src/z80/peeph.def:
 	  Remove peephole optimizer rule for which no tests were found.

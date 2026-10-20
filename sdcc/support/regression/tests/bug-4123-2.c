@@ -123,6 +123,44 @@ int g105(int a, char b, char c, char d, char e)
     return a + b + c + d + e;
 }
 
+int f127b(unsigned char y, unsigned char zg) {
+    unsigned char t;
+    t = gb - y;
+    gb = t;
+    if (t == 0) {
+        if (zg) return 2;
+        return 0;
+    }
+    return 1;
+}
+
+void test127b(void)
+{
+    gb = 2;
+    ASSERT(f127b(1, 1) == 1);
+    ASSERT(gb == 1);
+    ASSERT(f127b(1, 1) == 2);
+    ASSERT(gb == 0);
+}
+
+#if !defined(__SDCC_pdk13) && !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) && !defined(__SDCC_mcs51) // Lack of memory.
+#pragma disable_warning 85
+int f130c(void) {
+    long a[70];
+    volatile long x, y;
+    x = 0x12345678UL;
+    y = 1L;
+    return (int)(x >> 16);
+}
+#endif
+
+void test130x(void)
+{
+#if !defined(__SDCC_pdk13) && !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) && !defined(__SDCC_mcs51) // Lack of memory.
+    ASSERT(f130c() == 0x1234);
+#endif
+}
+
 void f131b(char *bp, unsigned n) { // rule 131b
   register char *ep = bp + n, *sp;
   while (bp < ep) {
@@ -203,5 +241,24 @@ void test146(void)
     f146();
     ASSERT(G1 == 100);
     ASSERT(G2 == 42);
+}
+
+unsigned long G32;
+
+void f194_2(void) // rule 194-2
+{
+  register int w = G2;
+  unsigned long v = G32;
+  if (v >= 0x1234)
+    G1 = 1;
+  G1 = w;
+}
+
+void test194_2(void)
+{
+  G2 = 3;
+  G32 = 0x1234;
+  f194_2();
+  ASSERT(G1 == 3);
 }
 
