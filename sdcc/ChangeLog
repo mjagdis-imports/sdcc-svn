@@ -1,5 +1,10 @@
 2026-10-20 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
+	* support/valdiag/tests/bug-2152.c:
+	  Test overflow diagnostics for the reported delay calculation (bug #2152).
+
+2026-10-20 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
 	* support/valdiag/tests/bug-2147.c:
 	  Test diagnostics for excess scalar initialisers (bug #2147).
 
