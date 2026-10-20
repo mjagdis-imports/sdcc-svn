@@ -2066,6 +2066,11 @@ designator
                 werror (E_CONST_EXPECTED);
                 elemno = 0; /* arbitrary fixup */
               }
+            else if (!IS_INTEGRAL (tval->type))
+              {
+                werror (E_IDX_NOT_INT);
+                elemno = 0; /* arbitrary fixup */
+              }
             else
               {
                 if ((elemno = (int) ulFromVal(tval)) < 0)

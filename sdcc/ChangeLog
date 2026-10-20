@@ -1,5 +1,14 @@
 2026-10-20 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
+	* src/SDCC.y: Diagnose non-integer subscripts in designated
+	  initialisers using E_IDX_NOT_INT (bug #4143).
+	* support/valdiag/tests/bug-4143.c: Test subscripts of floating-point
+	  type, negative and nonconstant subscripts, ordinary array subscripting
+	  and valid test cases with integer expressions and explicit casts.
+
+
+2026-10-20 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
 	* src/SDCCicode.c (geniCodeStruct): Apply inherited volatile
 	  qualification to the element type of array members, including
 	  arrays of pointers (bug #4161).
