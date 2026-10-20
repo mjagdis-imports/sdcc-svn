@@ -1,3 +1,10 @@
+2026-10-19 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* src/ds390/ralloc.c,
+	* src/mcs51/ralloc.c: replaced useReg() & open code by allocThisReg(),
+	  (spillThis): fix bug #4154
+	* support/regression/tests/bug-4154.c: from patch in bug #4154
+
 2026-10-19 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* support/regression/tests/bug-4153.c:

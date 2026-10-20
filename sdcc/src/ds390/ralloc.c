@@ -100,11 +100,33 @@ int ds390_nRegs = 13;
 int ds390_nBitRegs = 0;
 
 static void spillThis (symbol *);
-static void freeAllRegs ();
 static iCode *packRegsDPTRuse (operand *);
 static int packRegsDPTRnuse (operand *, unsigned);
 
 
+/*-----------------------------------------------------------------*/
+/* allocThisReg - allocates a particular register (if free)        */
+/*-----------------------------------------------------------------*/
+static reg_info *
+allocThisReg (reg_info *reg)
+{
+  if (!reg)
+    {
+      werror (E_INTERNAL_ERROR, __FILE__, __LINE__, "allocThisReg - Allocating NULL register");
+      exit (1);
+    }
+
+  if (!reg->isFree)
+    {
+      return NULL;
+    }
+
+  reg->isFree = 0;
+  if (currFunc)
+    currFunc->regsUsed = bitVectSetBit (currFunc->regsUsed, reg->rIdx);
+
+  return reg;
+}
 
 /*-----------------------------------------------------------------*/
 /* allocReg - allocates register of given type                     */
@@ -120,18 +142,12 @@ allocReg (short type)
          free register will do */
       if (!type && regs390[i].isFree)
         {
-          regs390[i].isFree = 0;
-          if (currFunc)
-            currFunc->regsUsed = bitVectSetBit (currFunc->regsUsed, i);
-          return &regs390[i];
+          return allocThisReg (&regs390[i]);
         }
       /* otherwise look for specific type of register */
       if (regs390[i].isFree && regs390[i].type == type)
         {
-          regs390[i].isFree = 0;
-          if (currFunc)
-            currFunc->regsUsed = bitVectSetBit (currFunc->regsUsed, i);
-          return &regs390[i];
+          return allocThisReg (&regs390[i]);
         }
     }
   return NULL;
@@ -169,6 +185,21 @@ freeReg (reg_info *reg)
 }
 
 /*-----------------------------------------------------------------*/
+/* freeAllRegs - mark all registers as free                        */
+/*-----------------------------------------------------------------*/
+static void
+freeAllRegs ()
+{
+  int i;
+
+  for (i = 0; i < ds390_nRegs; i++)
+    regs390[i].isFree = 1;
+
+  for (i = B0_IDX; i < ds390_nBitRegs; i++)
+    regs390[i].isFree = 1;
+}
+
+/*-----------------------------------------------------------------*/
 /* nFreeRegs - returns number of free registers                    */
 /*-----------------------------------------------------------------*/
 static int
@@ -197,15 +228,6 @@ nfreeRegsType (int type)
     }
 
   return nFreeRegs (type);
-}
-
-/*-----------------------------------------------------------------*/
-/* useReg - marks a register  as used                              */
-/*-----------------------------------------------------------------*/
-static void
-useReg (reg_info *reg)
-{
-  reg->isFree = 0;
 }
 
 /*-----------------------------------------------------------------*/
@@ -863,7 +885,7 @@ tryAgain:
   /* make sure partially assigned registers aren't reused */
   for (j = 0; j <= sym->nRegs; j++)
     if (sym->regs[j])
-      sym->regs[j]->isFree = 0;
+      allocThisReg (sym->regs[j]);
 
   /* this looks like an infinite loop but
      in reality selectSpil will abort  */
@@ -895,7 +917,7 @@ tryAgain:
   /* make sure partially assigned registers aren't reused */
   for (j = 0; j <= sym->nRegs && j < 8; j++)
     if (sym->regs[j])
-      sym->regs[j]->isFree = 0;
+      allocThisReg (sym->regs[j]);
 
   /* this looks like an infinite loop but
      in reality selectSpil will abort  */
@@ -1135,7 +1157,7 @@ reassignLR (operand * op)
   _G.blockSpil--;
 
   for (i = 0; i < sym->nRegs; i++)
-    sym->regs[i]->isFree = 0;
+    allocThisReg (sym->regs[i]);
 }
 
 /*-----------------------------------------------------------------*/
@@ -1738,12 +1760,12 @@ fillGaps (void)
 
               /* mark these registers as used */
               for (k = 0; k < clr->nRegs; k++)
-                useReg (clr->regs[k]);
+            allocThisReg (clr->regs[k]);
             }
 
           if (willCauseSpill (sym->nRegs, sym->regType))
             {
-              /* NOPE :( clear all registers & and continue */
+              /* NOPE :( clear all registers and continue */
               freeAllRegs ();
               continue;
             }
@@ -2136,21 +2158,6 @@ regTypeNum ()
 }
 
 /*-----------------------------------------------------------------*/
-/* freeAllRegs - mark all registers as free                        */
-/*-----------------------------------------------------------------*/
-static void
-freeAllRegs ()
-{
-  int i;
-
-  for (i = 0; i < ds390_nRegs; i++)
-    regs390[i].isFree = 1;
-
-  for (i = B0_IDX; i < ds390_nBitRegs; i++)
-    regs390[i].isFree = 1;
-}
-
-/*-----------------------------------------------------------------*/
 /* deallocStackSpil - this will set the stack pointer back         */
 /*-----------------------------------------------------------------*/
 static
@@ -2272,7 +2279,8 @@ packRegsForAssign (iCode * ic, eBBlock * ebp)
           break;
         }
 
-      if (IS_SYMOP (IC_LEFT (dic)) && (IC_LEFT (dic)->key == IC_RESULT (ic)->key || IC_LEFT (dic)->key == IC_RIGHT (ic)->key))
+      if (IS_SYMOP (IC_LEFT (dic)) && 
+          (IC_LEFT (dic)->key == IC_RESULT (ic)->key || IC_LEFT (dic)->key == IC_RIGHT (ic)->key))
         {
           dic = NULL;
           break;
@@ -2890,7 +2898,6 @@ packRegsForAccUse (iCode * ic)
   /* if shift operation make sure right side is not a literal */
   if (uic->op == RIGHT_OP && (isOperandLiteral (IC_RIGHT (uic)) || getSize (operandType (IC_RESULT (uic))) > 1))
     return;
-
   if (uic->op == LEFT_OP && (isOperandLiteral (IC_RIGHT (uic)) || getSize (operandType (IC_RESULT (uic))) > 1))
     return;
 
@@ -2962,7 +2969,7 @@ packForPush (iCode * ic, eBBlock ** ebpp, int blockno)
   if (!IS_SYMOP (IC_RIGHT (dic)))
     return;
 
-  if ((IS_SYMOP (IC_RIGHT (dic)) && OP_SYMBOL (IC_RIGHT (dic))->addrtaken) || isOperandGlobal (IC_RIGHT (dic)))
+  if (OP_SYMBOL (IC_RIGHT (dic))->addrtaken || isOperandGlobal (IC_RIGHT (dic)))
     disallowHiddenAssignment = 1;
 
   /* make sure the right side does not have any definitions
