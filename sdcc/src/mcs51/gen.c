@@ -3477,7 +3477,8 @@ genPointerPush (iCode *ic)
     {
       aop = newAsmop (0);
       wassert (preg = getFreePtr (ic, aop, false));
-      emitcode ("mov", "%s,%s", preg->name, opGet (left, 0, false, true));
+      const char * l = opGet (left, 0, false, true);
+      emitcode ("mov", "%s,%s", *l == '@' ? preg->dname : preg->name, l);
     }
   else
     {
