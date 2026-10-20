@@ -1,3 +1,8 @@
+2026-10-20 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
+	* support/valdiag/tests/bug-1102.c:
+	  Test diagnostics for an initialiser for an incomplete structure (bug #1102).
+
 2026-10-20 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* support/regression/tests/bug-4123-2.c:
