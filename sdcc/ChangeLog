@@ -1,5 +1,11 @@
 2026-10-20 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
+	* support/valdiag/tests/bug-2860.c:
+	  Compile both reported identifier-list declarations without executing the
+	  function with no return statement (bug #2860).
+
+2026-10-20 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
 	* support/valdiag/tests/bug-2843.c:
 	  Test the absence of an unreachable-code diagnostic for the reported switch
 	  (bug #2843).
