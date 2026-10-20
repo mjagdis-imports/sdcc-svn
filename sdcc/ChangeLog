@@ -1,5 +1,11 @@
 2026-10-20 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
+	* support/valdiag/tests/bug-3053.c:
+	  Compile the DS390 va_list pointer reproducer without executing its
+	  undefined behaviour (bug #3053).
+
+2026-10-20 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
 	* support/valdiag/tests/bug-3037.c:
 	  Compile the reported inline extern reference and diagnose the duplicate
 	  parameter name from the discussion (bug #3037).
