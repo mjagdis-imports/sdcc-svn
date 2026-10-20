@@ -1998,17 +1998,6 @@ replace restart {
 } if notUsed('bc')
 
 replace restart {
-	ld	hl,%1
-	add	hl,%2
-	push	hl
-	pop	iy
-} by {
-	ld	iy,%1
-	add	iy,%2
-	; common peephole 132 added in iy instead of hl.
-} if notUsed('hl'), notSame(%2 'hl')
-
-replace restart {
 	pop	af
 	ld	sp, %1
 } by {

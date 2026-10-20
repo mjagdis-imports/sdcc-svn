@@ -154,3 +154,54 @@ void test140a(void)
   ASSERT(G == 10);
 }
 
+#if defined(__SDCC_stm8) || defined(__SDCC_z80) || defined(__SDCC_z80n) || defined(__SDCC_z180) || defined(__SDCC_r2k) || defined(__SDCC_r3ka) || defined(__SDCC_sm83)
+#define SDCCCALL0 __sdcccall(0)
+#else
+#define SDCCCALL0
+#endif
+
+int G1, G2;
+void h144(char a, int b) SDCCCALL0 { G1 = a + b; }
+void g144(int x) SDCCCALL0 { G2 = x; }
+void f144(void) SDCCCALL0 { // rule 144
+    h144(1, 2);
+    g144(42);
+}
+
+void test144(void)
+{
+    f144();
+    ASSERT(G1 == 3);
+    ASSERT(G2 == 42);
+}
+
+void h145(char a, int b) SDCCCALL0 { G1 = a + b; }
+void g145(char c1, char c2) SDCCCALL0 { G2 = c1 + c2; }
+void f145(int d1, char p3, char p4) SDCCCALL0 { // rule 145
+    p3 += d1 & p4;
+    p4 += p3;
+    h145(1, 2);
+    g145(p3, p4);
+}
+
+void test145(void)
+{
+    f145(3, 1, 6);
+    ASSERT(G1 == 3);
+    ASSERT(G2 == 12);
+}
+
+void h146(int a) SDCCCALL0 { G1 = a; }
+void g146(char c) SDCCCALL0 { G2 = c; }
+void f146(void) SDCCCALL0 {
+    h146(100);
+    g146(42);
+}
+
+void test146(void)
+{
+    f146();
+    ASSERT(G1 == 100);
+    ASSERT(G2 == 42);
+}
+
