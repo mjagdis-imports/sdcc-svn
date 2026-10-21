@@ -1,5 +1,11 @@
 2026-10-21 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
+	* support/valdiag/tests/bug-4051.c:
+	  Test diagnostics for the reported malformed declarations produced by an
+	  undefined concatenation macro (bug #4051).
+
+2026-10-21 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
 	* support/regression/tests/bug-3862.c:
 	  Test a compound literal using inline function parameters and check the
 	  returned pointer and structure members (bug #3862).
