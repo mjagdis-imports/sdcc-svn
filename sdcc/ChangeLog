@@ -1,5 +1,10 @@
 2026-10-21 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
+	* support/regression/tests/bug-3408.c:
+	  Test a local structure used in an aggregate initialiser (bug #3408).
+
+2026-10-21 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
 	* support/regression/tests/bug-3392.c:
 	  Test the reported constant-folded logical and arithmetic negations
 	  (bug #3392).
