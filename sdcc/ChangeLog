@@ -1,4 +1,10 @@
-2026-10-20 Christopher Bazley <chris.bazley.wg14@gmail.com>
+2026-10-21 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
+	* support/regression/tests/bug-3392.c:
+	  Test the reported constant-folded logical and arithmetic negations
+	  (bug #3392).
+
+2026-10-21 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
 	* support/valdiag/tests/bug-3370.c:
 	  Test diagnostics for excess aggregate initialisers following a function
