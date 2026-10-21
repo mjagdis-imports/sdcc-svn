@@ -93,7 +93,7 @@ typedef unsigned long long int  uint_fast64_t;
 
 #if __SDCC_BITINT_MAXWIDTH >= 64
 #define __typewidth(x) _Generic((x), \
-signed _BitInt(1) : 1, /* C2y */ \
+/* C2y, triggers warning 315: signed _BitInt(1) : 1, */ \
 unsigned _BitInt(1) : 1, \
 signed _BitInt(2) : 2, \
 unsigned _BitInt(2) : 2, \
@@ -233,28 +233,19 @@ typedef uint8_t __stdc_bitcount_t;
 // C23 7.18.3 Count Leading Zeros
 __stdc_bitcount_t __stdc_leading_zeros(unsigned long long value, uint_fast8_t width);
 #define stdc_leading_zeros(value) __stdc_leading_zeros((value), __typewidth(value))
-#define stdc_leading_zeros_uc(value) ((unsigned int)(stdc_leading_zeros((unsigned char)(value)))
-#define stdc_leading_zeros_us(value) ((unsigned int)(stdc_leading_zeros((unsigned short)(value)))
-#define stdc_leading_zeros_ui(value) ((unsigned int)(stdc_leading_zeros((unsigned int)(value)))
-#define stdc_leading_zeros_ul(value) ((unsigned int)(stdc_leading_zeros((unsigned long)(value)))
-#define stdc_leading_zeros_ull(value) (((unsigned int)(stdc_leading_zeros((unsigned long long)(value)))
+#define stdc_leading_zeros_uc(value) ((unsigned int)(stdc_leading_zeros((unsigned char)(value))))
+#define stdc_leading_zeros_us(value) ((unsigned int)(stdc_leading_zeros((unsigned short)(value))))
+#define stdc_leading_zeros_ui(value) ((unsigned int)(stdc_leading_zeros((unsigned int)(value))))
+#define stdc_leading_zeros_ul(value) ((unsigned int)(stdc_leading_zeros((unsigned long)(value))))
+#define stdc_leading_zeros_ull(value) (((unsigned int)(stdc_leading_zeros((unsigned long long)(value))))
 
 // C23 7.18.4 Count Leading Ones
 #define stdc_leading_ones(value) __stdc_leading_zeros(~(value), __typewidth(value))
-#define stdc_leading_ones_uc(value) ((unsigned int)(stdc_leading_ones((unsigned char)(value)))
-#define stdc_leading_ones_us(value) ((unsigned int)(stdc_leading_ones((unsigned short)(value)))
-#define stdc_leading_ones_ui(value) ((unsigned nt)(stdc_leading_ones((unsigned int)(value)))
-#define stdc_leading_ones_ul(value) ((unsigned int)(stdc_leading_ones((unsigned long)(value)))
+#define stdc_leading_ones_uc(value) ((unsigned int)(stdc_leading_ones((unsigned char)(value))))
+#define stdc_leading_ones_us(value) ((unsigned int)(stdc_leading_ones((unsigned short)(value))))
+#define stdc_leading_ones_ui(value) ((unsigned nt)(stdc_leading_ones((unsigned int)(value))))
+#define stdc_leading_ones_ul(value) ((unsigned int)(stdc_leading_ones((unsigned long)(value))))
 #define stdc_leading_ones_ull(value) ((int)(stdc_leading_ones((unsigned long long)(value))))
-
-// C23 7.18.6 Count Trailing Ones
-__stdc_bitcount_t __stdc_trailing_ones(unsigned long long value);
-#define stdc_trailing_ones(value) __stdc_trailing_ones(value) // Todo: Use some speed-optimized variants here later. Via _Generic or sizeof.
-#define stdc_trailing_ones_uc(value) ((unsigned int)(stdc_trailing_ones((unsigned char)(value)))
-#define stdc_trailing_ones_us(value) ((unsigned int)(stdc_trailing_ones((unsigned short)(value)))
-#define stdc_trailing_ones_ui(value) ((unsigned int)(stdc_trailing_ones((unsigned int)(value)))
-#define stdc_trailing_ones_ul(value) ((unsigned int)(stdc_trailing_ones((unsigned long)(value)))
-#define stdc_trailing_ones_ull(value) ((unsigned int)(stdc_trailing_ones((unsigned long long)(value)))
 
 // C23 7.18.5 Count Trailing Zeros
 #define stdc_trailing_zeros(value) __stdc_trailing_ones((typeof(value))~(value))
@@ -263,6 +254,23 @@ __stdc_bitcount_t __stdc_trailing_ones(unsigned long long value);
 #define stdc_trailing_zeros_ui(value) ((unsigned int)(stdc_count_trailing_ones((unsigned int)(~(value))))
 #define stdc_trailing_zeros_ul(value) ((unsigned int)(stdc_count_trailing_ones((unsigned long)(~(value))))
 #define stdc_trailing_zeros_ull(value) ((unsigned int)(stdc_count_trailing_ones((unsigned long long)(~(value))))
+
+// C23 7.18.6 Count Trailing Ones
+__stdc_bitcount_t __stdc_trailing_ones(unsigned long long value);
+#define stdc_trailing_ones(value) __stdc_trailing_ones(value) // Todo: Use some speed-optimized variants here later. Via _Generic or sizeof.
+#define stdc_trailing_ones_uc(value) ((unsigned int)(stdc_trailing_ones((unsigned char)(value))))
+#define stdc_trailing_ones_us(value) ((unsigned int)(stdc_trailing_ones((unsigned short)(value))))
+#define stdc_trailing_ones_ui(value) ((unsigned int)(stdc_trailing_ones((unsigned int)(value))))
+#define stdc_trailing_ones_ul(value) ((unsigned int)(stdc_trailing_ones((unsigned long)(value))))
+#define stdc_trailing_ones_ull(value) ((unsigned int)(stdc_trailing_ones((unsigned long long)(value))))
+
+// C23 7.18.7 First Leading Zero
+#define stdc_first_leading_zero(value) __stdc_first_leading_one(~(value), __typewidth(value))
+#define stdc_first_leading_zero_uc(value) ((unsigned int)(stdc_first_leading_zero((unsigned char)(~(value))))
+#define stdc_first_leading_zero_us(value) ((unsigned int)(stdc_first_leading_zero((unsigned short)(~(value))))
+#define stdc_first_leading_zero_ui(value) ((unsigned int)(stdc_first_leading_zero((unsigned int)(~(value))))
+#define stdc_first_leading_zero_ul(value) ((unsigned int)(stdc_first_leading_zero((unsigned long)(~(value))))
+#define stdc_first_leading_zero_ull(value) ((unsigned int)(stdc_first_leading_zero((unsigned long long)(~(value))))
 
 // C23 7.18.8 First Leading One
 __stdc_bitcount_t __stdc_first_leading_one(unsigned long long value, uint_fast8_t width);
@@ -273,47 +281,39 @@ __stdc_bitcount_t __stdc_first_leading_one(unsigned long long value, uint_fast8_
 #define stdc_first_leading_one_ul(value) ((unsigned int)(stdc_first_leading_one((unsigned long)(~(value))))
 #define stdc_first_leading_one_ull(value) ((unsigned int)(stdc_first_leading_one((unsigned long long)(~(value))))
 
-// C23 7.18.7 First Leading Zero
-#define stdc_first_leading_zero(value) __stdc_first_leading_one(~(value), __typewidth(value))
-#define stdc_first_leading_zero_uc(value) ((unsigned int)(stdc_first_leading_zero((unsigned char)(~(value))))
-#define stdc_first_leading_zero_us(value) ((unsigned int)(stdc_first_leading_zero((unsigned short)(~(value))))
-#define stdc_first_leading_zero_ui(value) ((unsigned int)(stdc_first_leading_zero((unsigned int)(~(value))))
-#define stdc_first_leading_zero_ul(value) ((unsigned int)(stdc_first_leading_zero((unsigned long)(~(value))))
-#define stdc_first_leading_zero_ull(value) ((unsigned int)(stdc_first_leading_zero((unsigned long long)(~(value))))
+// C23 7.18.9 First Trailing Zero
+#define stdc_first_trailing_zero(value) __stdc_first_trailing_one((unsigned long long)~(value)) // Todo: Use some speed-optimized variants here later. Via _Generic or sizeof.
+#define stdc_first_trailing_zero_uc(value) ((unsigned int)(stdc_first_trailing_zero((unsigned char)(value))))
+#define stdc_first_trailing_zero_us(value) ((unsigned int)(stdc_first_trailing_zero((unsigned short)(value))))
+#define stdc_first_trailing_zero_ui(value) ((unsigned int)(stdc_first_trailing_zero((unsigned int)(value))))
+#define stdc_first_trailing_zero_ul(value) ((unsigned int)(stdc_first_trailing_zero((unsigned long)(value))))
+#define stdc_first_trailing_zero_ull(value) ((unsigned int)(stdc_first_trailing_zero((unsigned long long)(value))))
 
 // C23 7.18.10 First Trailing One
 __stdc_bitcount_t __stdc_first_trailing_one(unsigned long long value);
 #define stdc_first_trailing_one(value) __stdc_first_trailing_one(value) // Todo: Use some speed-optimized variants here later. Via _Generic or sizeof.
-#define stdc_first_trailing_one_uc(value) ((unsigned int)(stdc_first_trailing_one((unsigned char)(value)))
-#define stdc_first_trailing_one_us(value) ((unsigned int)(stdc_first_trailing_one((unsigned short)(value)))
-#define stdc_first_trailing_one_ui(value) ((unsigned int)(stdc_first_trailing_one((unsigned int)(value)))
-#define stdc_first_trailing_one_ul(value) ((unsigned int)(stdc_first_trailing_one((unsigned long)(value)))
-#define stdc_first_trailing_one_ull(value) ((unsigned int)(stdc_first_trailing_one((unsigned long long)(value)))
+#define stdc_first_trailing_one_uc(value) ((unsigned int)(stdc_first_trailing_one((unsigned char)(value))))
+#define stdc_first_trailing_one_us(value) ((unsigned int)(stdc_first_trailing_one((unsigned short)(value))))
+#define stdc_first_trailing_one_ui(value) ((unsigned int)(stdc_first_trailing_one((unsigned int)(value))))
+#define stdc_first_trailing_one_ul(value) ((unsigned int)(stdc_first_trailing_one((unsigned long)(value))))
+#define stdc_first_trailing_one_ull(value) ((unsigned int)(stdc_first_trailing_one((unsigned long long)(value))))
 
-// C23 7.18.9 First Trailing Zero
-#define stdc_first_trailing_zero(value) __stdc_first_trailing_one((unsigned long long)~(value)) // Todo: Use some speed-optimized variants here later. Via _Generic or sizeof.
-#define stdc_first_trailing_zero_uc(value) ((unsigned int)(stdc_first_trailing_zero((unsigned char)(value)))
-#define stdc_first_trailing_zero_us(value) ((unsigned int)(stdc_first_trailing_zero((unsigned short)(value)))
-#define stdc_first_trailing_zero_ui(value) ((unsigned int)(stdc_first_trailing_zero((unsigned int)(value)))
-#define stdc_first_trailing_zero_ul(value) ((unsigned int)(stdc_first_trailing_zero((unsigned long)(value)))
-#define stdc_first_trailing_zero_ull(value) ((unsigned int)(stdc_first_trailing_zero((unsigned long long)(value)))
-
-// C23 7.18.11 Count Ones
-__stdc_bitcount_t __stdc_count_ones(unsigned long long value);
-#define stdc_count_ones(value) __stdc_count_ones(value) // Todo: Use some speed-optimized variants here later. Via _Generic or sizeof.
-#define stdc_count_ones_uc(value) ((unsigned int)(stdc_count_ones((unsigned char)(value)))
-#define stdc_count_ones_us(value) ((unsigned int)(stdc_count_ones((unsigned short)(value)))
-#define stdc_count_ones_ui(value) ((unsigned int)(stdc_count_ones((unsigned int)(value)))
-#define stdc_count_ones_ul(value) ((unsigned int)(stdc_count_ones((unsigned long)(value)))
-#define stdc_count_ones_ull(value) ((unsigned int)(stdc_count_ones((unsigned long long)(value)))
-
-// C23 7.18.12 Count Zeros
+// C23 7.18.11 Count Zeros
 #define stdc_count_zeros(value) stdc_count_ones((typeof(value))~(value))
 #define stdc_count_zeros_uc(value) ((unsigned int)(stdc_count_ones((unsigned char)(~(value))))
 #define stdc_count_zeros_us(value) ((unsigned int)(stdc_count_ones((unsigned short)(~(value))))
 #define stdc_count_zeros_ui(value) ((unsigned int)(stdc_count_ones((unsigned int)(~(value))))
 #define stdc_count_zeros_ul(value) ((unsigned int)(stdc_count_ones((unsigned long)(~(value))))
 #define stdc_count_zeros_ull(value) ((unsigned int)(stdc_count_ones((unsigned long long)(~(value))))
+
+// C23 7.18.12 Count Ones
+__stdc_bitcount_t __stdc_count_ones(unsigned long long value);
+#define stdc_count_ones(value) __stdc_count_ones(value) // Todo: Use some speed-optimized variants here later. Via _Generic or sizeof.
+#define stdc_count_ones_uc(value) ((unsigned int)(stdc_count_ones((unsigned char)(value))))
+#define stdc_count_ones_us(value) ((unsigned int)(stdc_count_ones((unsigned short)(value))))
+#define stdc_count_ones_ui(value) ((unsigned int)(stdc_count_ones((unsigned int)(value))))
+#define stdc_count_ones_ul(value) ((unsigned int)(stdc_count_ones((unsigned long)(value))))
+#define stdc_count_ones_ull(value) ((unsigned int)(stdc_count_ones((unsigned long long)(value))))
 
 // C23 7.18.13 Single-bit Check
 #define stdc_has_single_bit(value) ((_Bool)(stdc_count_ones(value) == 1))
@@ -326,27 +326,28 @@ __stdc_bitcount_t __stdc_count_ones(unsigned long long value);
 // C23 7.18.14 Bit Width
 __stdc_bitcount_t __stdc_bit_width(unsigned long long value);
 #define stdc_bit_width(value) __stdc_bit_width(value) // Todo: Use some speed-optimized variants here later. Via _Generic or sizeof.
-#define stdc_bit_width_uc(value) ((unsigned int)(stdc_bit_width((unsigned char)(value)))
-#define stdc_bit_width_us(value) ((unsigned int)(stdc_bit_width((unsigned short)(value)))
-#define stdc_bit_width_ui(value) ((unsigned int)(stdc_bit_width((unsigned int)(value)))
-#define stdc_bit_width_ul(value) ((unsigned int)(stdc_bit_width((unsigned long)(value)))
-#define stdc_bit_width_ull(value) ((unsigned int)(stdc_bit_width((unsigned long long)(value)))
+#define stdc_bit_width_uc(value) ((unsigned int)(stdc_bit_width((unsigned char)(value))))
+#define stdc_bit_width_us(value) ((unsigned int)(stdc_bit_width((unsigned short)(value))))
+#define stdc_bit_width_ui(value) ((unsigned int)(stdc_bit_width((unsigned int)(value))))
+#define stdc_bit_width_ul(value) ((unsigned int)(stdc_bit_width((unsigned long)(value))))
+#define stdc_bit_width_ull(value) ((unsigned int)(stdc_bit_width((unsigned long long)(value))))
 
 // C23 7.18.15 Bit Floor
 #define stdc_bit_floor(value) ((typeof(value))((1ull << stdc_bit_width(value)) >> 1))
 #define stdc_bit_floor_uc(value) ((unsigned char)(1 << stdc_bit_width(value)((unsigned char)(value))) >> 1)
 #define stdc_bit_floor_us(value) ((unsigned short)(1 << stdc_bit_width((unsigned short)(value))) >> 1)
-#define stdc_bit_floor_ui(value) (1u << stdc_bit_width((unsigned int)(value) >> 1)
-#define stdc_bit_floor_ul(value) (1ul << stdc_bit_width((unsigned long)(value) >> 1)
-#define stdc_bit_floor_ull(value) (1ull << stdc_bit_width((unsigned long long)(value) >> 1)
+#define stdc_bit_floor_ui(value) ((unsigned int)(1u << stdc_bit_width((unsigned int)(value))) >> 1)
+#define stdc_bit_floor_ul(value) ((unsigned long)(1ul << stdc_bit_width((unsigned long)(value))) >> 1)
+#define stdc_bit_floor_ull(value) ((unsigned long long)(1ull << stdc_bit_width((unsigned long long)(value))) >> 1)
 
 // C23 7.18.16 Bit Ceiling
 unsigned long long __stdc_bit_ceilull(unsigned long long value);
 #define stdc_bit_ceil(value) ((typeof(value))(__stdc_bit_ceilull(value))) // Todo: Use some speed-optimized variants here later. Via _Generic or sizeof.
-#define stdc_bit_ceil_uc(value) (stdc_bit_ceil(value)((unsigned char)(value))))
-#define stdc_bit_ceil_us(value) (stdc_bit_ceil(value)((unsigned short)(value))))
-#define stdc_bit_ceil_ui(value) (stdc_bit_ceil(value)((unsigned int)(value))))
-#define stdc_bit_ceil_ul(value) (stdc_bit_ceil(value)((unsigned long)(value))))
+#define stdc_bit_ceil_uc(value) ((unsigned char)(stdc_bit_ceil(value)((unsigned char)(value))))
+#define stdc_bit_ceil_us(value) ((unsigned short)(stdc_bit_ceil(value)((unsigned short)(value))))
+#define stdc_bit_ceil_ui(value) ((unsigned int)(stdc_bit_ceil(value)((unsigned int)(value))))
+#define stdc_bit_ceil_ul(value) ((unsigned long)(stdc_bit_ceil(value)((unsigned long)(value))))
+#define stdc_bit_ceil_ull(value) ((unsigned long long)(stdc_bit_ceil(value)((unsigned long long)(value))))
 
 // C2Y 7.18.17 Rotate Left
 #define __STDC_ROTATE_LEFT {count %= (sizeof(value) * 8); return(value << count) | (value >> (sizeof(value) * 8 - count));}
@@ -354,6 +355,7 @@ inline unsigned char stdc_rotate_left_uc (unsigned char value, unsigned int coun
 inline unsigned short stdc_rotate_left_us (unsigned short value, unsigned int count)__STDC_ROTATE_LEFT
 inline unsigned long stdc_rotate_left_ul (unsigned long value, unsigned int count) __STDC_ROTATE_LEFT
 inline unsigned long long stdc_rotate_left_ull (unsigned long long value, unsigned int count) __STDC_ROTATE_LEFT
+#if __SDCC_BITINT_MAXWIDTH >= 64
 #define stdc_rotate_left(value, count) \
 _Generic((value), \
 unsigned char: stdc_rotate_left_uc((value), (count)), \
@@ -365,6 +367,15 @@ unsigned long: stdc_rotate_left_ul((value), (count)), \
 unsigned _BitInt(32): stdc_rotate_left_ul((value), (count)), \
 unsigned long long: stdc_rotate_left_ull((value), (count)), \
 unsigned _BitInt(64): stdc_rotate_left_ull((value), (count)))
+#else
+#define stdc_rotate_left(value, count) \
+_Generic((value), \
+unsigned char: stdc_rotate_left_uc((value), (count)), \
+unsigned short: stdc_rotate_left_us((value), (count)), \
+unsigned int: stdc_rotate_left_us((value), (count)), \
+unsigned long: stdc_rotate_left_ul((value), (count)), \
+unsigned long long: stdc_rotate_left_ull((value), (count)))
+#endif
 
 // C2Y 7.18.18 Rotate Right
 #define __STDC_ROTATE_RIGHT {count %= (sizeof(value) * 8); return(value >> count) | (value << (sizeof(value) * 8 - count));}
@@ -372,6 +383,7 @@ inline unsigned char stdc_rotate_right_uc (unsigned char value, unsigned int cou
 inline unsigned short stdc_rotate_right_us (unsigned short value, unsigned int count)__STDC_ROTATE_RIGHT
 inline unsigned long stdc_rotate_right_ul (unsigned long value, unsigned int count) __STDC_ROTATE_RIGHT
 inline unsigned long long stdc_rotate_right_ull (unsigned long long value, unsigned int count) __STDC_ROTATE_RIGHT
+#if __SDCC_BITINT_MAXWIDTH >= 64
 #define stdc_rotate_right(value, count) \
 _Generic((value), \
 unsigned char: stdc_rotate_right_uc((value), (count)), \
@@ -383,6 +395,15 @@ unsigned long: stdc_rotate_right_ul((value), (count)), \
 unsigned _BitInt(32): stdc_rotate_right_ul((value), (count)), \
 unsigned long long: stdc_rotate_right_ull((value), (count)), \
 unsigned _BitInt(64): stdc_rotate_right_ull((value), (count)))
+#else
+#define stdc_rotate_right(value, count) \
+_Generic((value), \
+unsigned char: stdc_rotate_right_uc((value), (count)), \
+unsigned short: stdc_rotate_right_us((value), (count)), \
+unsigned int: stdc_rotate_right_us((value), (count)), \
+unsigned long: stdc_rotate_right_ul((value), (count)), \
+unsigned long long: stdc_rotate_right_ull((value), (count)))
+#endif
 
 // C2Y 7.18.19 8-bit Memory Reversal
 void stdc_memreverse8(size_t n, unsigned char ptr[static n]);
@@ -405,13 +426,11 @@ __STDC_MEMREVERSE8U(64)
 
 #if defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_r2k) || defined(__SDCC_r2ka) || defined(__SDCC_r3ka) || defined (__SDCC_ez80) || defined (__SDCC_z80n) || defined(__SDCC_r800)
 #define __memcpy(dst, src, n) __builtin_memcpy(dst, src, n)
-#else
-#if defined(__SDCC_huc6280)
+#elif defined(__SDCC_huc6280)
 // huc memcpy needs parameters in DATA (not ZP)
 extern void *__memcpy (void * restrict dest, const void * restrict src, size_t n);
 #else
 extern void *__memcpy (void * restrict dest, const void * _NEAR restrict src, _NEAR size_t n);
-#endif
 #endif
 
 #if __STDC_ENDIAN_NATIVE__ == __STDC_ENDIAN_LITTLE__

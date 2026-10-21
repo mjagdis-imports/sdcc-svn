@@ -2480,7 +2480,6 @@ void
 pic16_toBoolean (operand * oper)
 {
   int size = AOP_SIZE (oper) - 1;
-  int offset = 1;
 
   DEBUGpic16_emitcode ("; ***", "%s  %d", __FUNCTION__, __LINE__);
 
@@ -5818,6 +5817,7 @@ genOrOp (iCode * ic)
   pic16_freeAsmop (result, NULL, ic, TRUE);
 }
 
+#if 0
 /*-----------------------------------------------------------------*/
 /* isLiteralBit - test if lit == 2^n                               */
 /*-----------------------------------------------------------------*/
@@ -5840,6 +5840,7 @@ isLiteralBit (unsigned long lit)
       return idx + 1;
   return 0;
 }
+#endif
 
 /*-----------------------------------------------------------------*/
 /* continueIfTrue -                                                */

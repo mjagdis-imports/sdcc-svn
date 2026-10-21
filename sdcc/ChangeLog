@@ -1,3 +1,20 @@
+2026-10-21 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* device/include/stdbit.h: fixed parentheses in macros,
+	  removed signed _BitInt(1) case because of warning 315,
+	  check __SDCC_BITINT_MAXWIDTH >= 64 for stdc_rotate_left/right,
+	  picked from patch for bug #4147 by zeynelsagcan
+	* device/lib/__stdc_bit_ceilull.c,
+	* device/lib/__stdc_bit_width.c,
+	* device/lib/__stdc_count_ones.c,
+	* device/lib/__stdc_first_leading_one.c,
+	* device/lib/__stdc_first_trailing_one.c,
+	* device/lib/__stdc_leading_zeros.c,
+	* device/lib/__stdc_trailing_ones.c: define ULLONG_WIDTH if non-existent,
+	  always include assert.h
+	* device/lib/pic16/libc/Makefile.am,
+	* device/lib/pic16/libc/Makefile.in: added __stdc_* sources
+
 2026-10-21 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
 	* support/valdiag/tests/bug-4051.c:

@@ -150,6 +150,10 @@ am_libc18f_a_OBJECTS = isblank.$(OBJEXT) iscntrl.$(OBJEXT) \
 	ltoa.$(OBJEXT) malloc.$(OBJEXT) memfree.$(OBJEXT) \
 	memfreemax.$(OBJEXT) memmisc.$(OBJEXT) setjmp.$(OBJEXT) \
 	rand.$(OBJEXT) realloc.$(OBJEXT) x_ftoa.$(OBJEXT) \
+	__stdc_bit_ceilull.$(OBJEXT) __stdc_bit_width.$(OBJEXT) \
+	__stdc_count_ones.$(OBJEXT) __stdc_first_leading_one.$(OBJEXT) \
+	__stdc_first_trailing_one.$(OBJEXT) \
+	__stdc_leading_zeros.$(OBJEXT) __stdc_trailing_ones.$(OBJEXT) \
 	memccpy.$(OBJEXT) memchr.$(OBJEXT) memchrpgm.$(OBJEXT) \
 	memchrram.$(OBJEXT) memcmp.$(OBJEXT) memcpy.$(OBJEXT) \
 	memcpypgm2ram.$(OBJEXT) memcpyram2ram.$(OBJEXT) \
@@ -177,21 +181,27 @@ am__v_at_1 =
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
-am__depfiles_remade = ./$(DEPDIR)/atof.Po ./$(DEPDIR)/atoi.Po \
-	./$(DEPDIR)/atol.Po ./$(DEPDIR)/atoll.Po ./$(DEPDIR)/calloc.Po \
-	./$(DEPDIR)/cnvfrac.Po ./$(DEPDIR)/cnvint.Po \
-	./$(DEPDIR)/crc16.Po ./$(DEPDIR)/cvtdec.Po \
-	./$(DEPDIR)/delay100ktcy.Po ./$(DEPDIR)/delay100tcy.Po \
-	./$(DEPDIR)/delay10ktcy.Po ./$(DEPDIR)/delay10tcy.Po \
-	./$(DEPDIR)/delay1ktcy.Po ./$(DEPDIR)/delay1mtcy.Po \
-	./$(DEPDIR)/fprintf.Po ./$(DEPDIR)/free.Po \
-	./$(DEPDIR)/g_ftoa.Po ./$(DEPDIR)/isblank.Po \
-	./$(DEPDIR)/iscntrl.Po ./$(DEPDIR)/isdigit.Po \
-	./$(DEPDIR)/isgraph.Po ./$(DEPDIR)/islower.Po \
-	./$(DEPDIR)/isprint.Po ./$(DEPDIR)/ispunct.Po \
-	./$(DEPDIR)/isspace.Po ./$(DEPDIR)/isupper.Po \
-	./$(DEPDIR)/isxdigit.Po ./$(DEPDIR)/itoa.Po \
-	./$(DEPDIR)/ltoa.Po ./$(DEPDIR)/malloc.Po \
+am__depfiles_remade = ./$(DEPDIR)/__stdc_bit_ceilull.Po \
+	./$(DEPDIR)/__stdc_bit_width.Po \
+	./$(DEPDIR)/__stdc_count_ones.Po \
+	./$(DEPDIR)/__stdc_first_leading_one.Po \
+	./$(DEPDIR)/__stdc_first_trailing_one.Po \
+	./$(DEPDIR)/__stdc_leading_zeros.Po \
+	./$(DEPDIR)/__stdc_trailing_ones.Po ./$(DEPDIR)/atof.Po \
+	./$(DEPDIR)/atoi.Po ./$(DEPDIR)/atol.Po ./$(DEPDIR)/atoll.Po \
+	./$(DEPDIR)/calloc.Po ./$(DEPDIR)/cnvfrac.Po \
+	./$(DEPDIR)/cnvint.Po ./$(DEPDIR)/crc16.Po \
+	./$(DEPDIR)/cvtdec.Po ./$(DEPDIR)/delay100ktcy.Po \
+	./$(DEPDIR)/delay100tcy.Po ./$(DEPDIR)/delay10ktcy.Po \
+	./$(DEPDIR)/delay10tcy.Po ./$(DEPDIR)/delay1ktcy.Po \
+	./$(DEPDIR)/delay1mtcy.Po ./$(DEPDIR)/fprintf.Po \
+	./$(DEPDIR)/free.Po ./$(DEPDIR)/g_ftoa.Po \
+	./$(DEPDIR)/isblank.Po ./$(DEPDIR)/iscntrl.Po \
+	./$(DEPDIR)/isdigit.Po ./$(DEPDIR)/isgraph.Po \
+	./$(DEPDIR)/islower.Po ./$(DEPDIR)/isprint.Po \
+	./$(DEPDIR)/ispunct.Po ./$(DEPDIR)/isspace.Po \
+	./$(DEPDIR)/isupper.Po ./$(DEPDIR)/isxdigit.Po \
+	./$(DEPDIR)/itoa.Po ./$(DEPDIR)/ltoa.Po ./$(DEPDIR)/malloc.Po \
 	./$(DEPDIR)/memccpy.Po ./$(DEPDIR)/memchr.Po \
 	./$(DEPDIR)/memchrpgm.Po ./$(DEPDIR)/memchrram.Po \
 	./$(DEPDIR)/memcmp.Po ./$(DEPDIR)/memcpy.Po \
@@ -377,6 +387,10 @@ libc18f_a_SOURCES = ctype/isblank.c ctype/iscntrl.c ctype/isdigit.c \
 	stdlib/itoa.c stdlib/ltoa.c stdlib/malloc.c stdlib/memfree.c \
 	stdlib/memfreemax.c stdlib/memmisc.c stdlib/setjmp.c \
 	stdlib/rand.c stdlib/realloc.c stdlib/x_ftoa.c \
+	../../__stdc_bit_ceilull.c ../../__stdc_bit_width.c \
+	../../__stdc_count_ones.c ../../__stdc_first_leading_one.c \
+	../../__stdc_first_trailing_one.c \
+	../../__stdc_leading_zeros.c ../../__stdc_trailing_ones.c \
 	string/memccpy.c string/memchr.c string/memchrpgm.c \
 	string/memchrram.c string/memcmp.c string/memcpy.c \
 	string/memcpypgm2ram.c string/memcpyram2ram.c string/memmove.c \
@@ -486,6 +500,13 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/__stdc_bit_ceilull.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/__stdc_bit_width.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/__stdc_count_ones.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/__stdc_first_leading_one.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/__stdc_first_trailing_one.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/__stdc_leading_zeros.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/__stdc_trailing_ones.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atof.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atoi.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atol.Po@am__quote@ # am--include-marker
@@ -1313,6 +1334,104 @@ x_ftoa.obj: stdlib/x_ftoa.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o x_ftoa.obj `if test -f 'stdlib/x_ftoa.c'; then $(CYGPATH_W) 'stdlib/x_ftoa.c'; else $(CYGPATH_W) '$(srcdir)/stdlib/x_ftoa.c'; fi`
 
+__stdc_bit_ceilull.o: ../../__stdc_bit_ceilull.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT __stdc_bit_ceilull.o -MD -MP -MF $(DEPDIR)/__stdc_bit_ceilull.Tpo -c -o __stdc_bit_ceilull.o `test -f '../../__stdc_bit_ceilull.c' || echo '$(srcdir)/'`../../__stdc_bit_ceilull.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/__stdc_bit_ceilull.Tpo $(DEPDIR)/__stdc_bit_ceilull.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='../../__stdc_bit_ceilull.c' object='__stdc_bit_ceilull.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o __stdc_bit_ceilull.o `test -f '../../__stdc_bit_ceilull.c' || echo '$(srcdir)/'`../../__stdc_bit_ceilull.c
+
+__stdc_bit_ceilull.obj: ../../__stdc_bit_ceilull.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT __stdc_bit_ceilull.obj -MD -MP -MF $(DEPDIR)/__stdc_bit_ceilull.Tpo -c -o __stdc_bit_ceilull.obj `if test -f '../../__stdc_bit_ceilull.c'; then $(CYGPATH_W) '../../__stdc_bit_ceilull.c'; else $(CYGPATH_W) '$(srcdir)/../../__stdc_bit_ceilull.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/__stdc_bit_ceilull.Tpo $(DEPDIR)/__stdc_bit_ceilull.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='../../__stdc_bit_ceilull.c' object='__stdc_bit_ceilull.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o __stdc_bit_ceilull.obj `if test -f '../../__stdc_bit_ceilull.c'; then $(CYGPATH_W) '../../__stdc_bit_ceilull.c'; else $(CYGPATH_W) '$(srcdir)/../../__stdc_bit_ceilull.c'; fi`
+
+__stdc_bit_width.o: ../../__stdc_bit_width.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT __stdc_bit_width.o -MD -MP -MF $(DEPDIR)/__stdc_bit_width.Tpo -c -o __stdc_bit_width.o `test -f '../../__stdc_bit_width.c' || echo '$(srcdir)/'`../../__stdc_bit_width.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/__stdc_bit_width.Tpo $(DEPDIR)/__stdc_bit_width.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='../../__stdc_bit_width.c' object='__stdc_bit_width.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o __stdc_bit_width.o `test -f '../../__stdc_bit_width.c' || echo '$(srcdir)/'`../../__stdc_bit_width.c
+
+__stdc_bit_width.obj: ../../__stdc_bit_width.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT __stdc_bit_width.obj -MD -MP -MF $(DEPDIR)/__stdc_bit_width.Tpo -c -o __stdc_bit_width.obj `if test -f '../../__stdc_bit_width.c'; then $(CYGPATH_W) '../../__stdc_bit_width.c'; else $(CYGPATH_W) '$(srcdir)/../../__stdc_bit_width.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/__stdc_bit_width.Tpo $(DEPDIR)/__stdc_bit_width.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='../../__stdc_bit_width.c' object='__stdc_bit_width.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o __stdc_bit_width.obj `if test -f '../../__stdc_bit_width.c'; then $(CYGPATH_W) '../../__stdc_bit_width.c'; else $(CYGPATH_W) '$(srcdir)/../../__stdc_bit_width.c'; fi`
+
+__stdc_count_ones.o: ../../__stdc_count_ones.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT __stdc_count_ones.o -MD -MP -MF $(DEPDIR)/__stdc_count_ones.Tpo -c -o __stdc_count_ones.o `test -f '../../__stdc_count_ones.c' || echo '$(srcdir)/'`../../__stdc_count_ones.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/__stdc_count_ones.Tpo $(DEPDIR)/__stdc_count_ones.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='../../__stdc_count_ones.c' object='__stdc_count_ones.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o __stdc_count_ones.o `test -f '../../__stdc_count_ones.c' || echo '$(srcdir)/'`../../__stdc_count_ones.c
+
+__stdc_count_ones.obj: ../../__stdc_count_ones.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT __stdc_count_ones.obj -MD -MP -MF $(DEPDIR)/__stdc_count_ones.Tpo -c -o __stdc_count_ones.obj `if test -f '../../__stdc_count_ones.c'; then $(CYGPATH_W) '../../__stdc_count_ones.c'; else $(CYGPATH_W) '$(srcdir)/../../__stdc_count_ones.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/__stdc_count_ones.Tpo $(DEPDIR)/__stdc_count_ones.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='../../__stdc_count_ones.c' object='__stdc_count_ones.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o __stdc_count_ones.obj `if test -f '../../__stdc_count_ones.c'; then $(CYGPATH_W) '../../__stdc_count_ones.c'; else $(CYGPATH_W) '$(srcdir)/../../__stdc_count_ones.c'; fi`
+
+__stdc_first_leading_one.o: ../../__stdc_first_leading_one.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT __stdc_first_leading_one.o -MD -MP -MF $(DEPDIR)/__stdc_first_leading_one.Tpo -c -o __stdc_first_leading_one.o `test -f '../../__stdc_first_leading_one.c' || echo '$(srcdir)/'`../../__stdc_first_leading_one.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/__stdc_first_leading_one.Tpo $(DEPDIR)/__stdc_first_leading_one.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='../../__stdc_first_leading_one.c' object='__stdc_first_leading_one.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o __stdc_first_leading_one.o `test -f '../../__stdc_first_leading_one.c' || echo '$(srcdir)/'`../../__stdc_first_leading_one.c
+
+__stdc_first_leading_one.obj: ../../__stdc_first_leading_one.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT __stdc_first_leading_one.obj -MD -MP -MF $(DEPDIR)/__stdc_first_leading_one.Tpo -c -o __stdc_first_leading_one.obj `if test -f '../../__stdc_first_leading_one.c'; then $(CYGPATH_W) '../../__stdc_first_leading_one.c'; else $(CYGPATH_W) '$(srcdir)/../../__stdc_first_leading_one.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/__stdc_first_leading_one.Tpo $(DEPDIR)/__stdc_first_leading_one.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='../../__stdc_first_leading_one.c' object='__stdc_first_leading_one.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o __stdc_first_leading_one.obj `if test -f '../../__stdc_first_leading_one.c'; then $(CYGPATH_W) '../../__stdc_first_leading_one.c'; else $(CYGPATH_W) '$(srcdir)/../../__stdc_first_leading_one.c'; fi`
+
+__stdc_first_trailing_one.o: ../../__stdc_first_trailing_one.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT __stdc_first_trailing_one.o -MD -MP -MF $(DEPDIR)/__stdc_first_trailing_one.Tpo -c -o __stdc_first_trailing_one.o `test -f '../../__stdc_first_trailing_one.c' || echo '$(srcdir)/'`../../__stdc_first_trailing_one.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/__stdc_first_trailing_one.Tpo $(DEPDIR)/__stdc_first_trailing_one.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='../../__stdc_first_trailing_one.c' object='__stdc_first_trailing_one.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o __stdc_first_trailing_one.o `test -f '../../__stdc_first_trailing_one.c' || echo '$(srcdir)/'`../../__stdc_first_trailing_one.c
+
+__stdc_first_trailing_one.obj: ../../__stdc_first_trailing_one.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT __stdc_first_trailing_one.obj -MD -MP -MF $(DEPDIR)/__stdc_first_trailing_one.Tpo -c -o __stdc_first_trailing_one.obj `if test -f '../../__stdc_first_trailing_one.c'; then $(CYGPATH_W) '../../__stdc_first_trailing_one.c'; else $(CYGPATH_W) '$(srcdir)/../../__stdc_first_trailing_one.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/__stdc_first_trailing_one.Tpo $(DEPDIR)/__stdc_first_trailing_one.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='../../__stdc_first_trailing_one.c' object='__stdc_first_trailing_one.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o __stdc_first_trailing_one.obj `if test -f '../../__stdc_first_trailing_one.c'; then $(CYGPATH_W) '../../__stdc_first_trailing_one.c'; else $(CYGPATH_W) '$(srcdir)/../../__stdc_first_trailing_one.c'; fi`
+
+__stdc_leading_zeros.o: ../../__stdc_leading_zeros.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT __stdc_leading_zeros.o -MD -MP -MF $(DEPDIR)/__stdc_leading_zeros.Tpo -c -o __stdc_leading_zeros.o `test -f '../../__stdc_leading_zeros.c' || echo '$(srcdir)/'`../../__stdc_leading_zeros.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/__stdc_leading_zeros.Tpo $(DEPDIR)/__stdc_leading_zeros.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='../../__stdc_leading_zeros.c' object='__stdc_leading_zeros.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o __stdc_leading_zeros.o `test -f '../../__stdc_leading_zeros.c' || echo '$(srcdir)/'`../../__stdc_leading_zeros.c
+
+__stdc_leading_zeros.obj: ../../__stdc_leading_zeros.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT __stdc_leading_zeros.obj -MD -MP -MF $(DEPDIR)/__stdc_leading_zeros.Tpo -c -o __stdc_leading_zeros.obj `if test -f '../../__stdc_leading_zeros.c'; then $(CYGPATH_W) '../../__stdc_leading_zeros.c'; else $(CYGPATH_W) '$(srcdir)/../../__stdc_leading_zeros.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/__stdc_leading_zeros.Tpo $(DEPDIR)/__stdc_leading_zeros.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='../../__stdc_leading_zeros.c' object='__stdc_leading_zeros.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o __stdc_leading_zeros.obj `if test -f '../../__stdc_leading_zeros.c'; then $(CYGPATH_W) '../../__stdc_leading_zeros.c'; else $(CYGPATH_W) '$(srcdir)/../../__stdc_leading_zeros.c'; fi`
+
+__stdc_trailing_ones.o: ../../__stdc_trailing_ones.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT __stdc_trailing_ones.o -MD -MP -MF $(DEPDIR)/__stdc_trailing_ones.Tpo -c -o __stdc_trailing_ones.o `test -f '../../__stdc_trailing_ones.c' || echo '$(srcdir)/'`../../__stdc_trailing_ones.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/__stdc_trailing_ones.Tpo $(DEPDIR)/__stdc_trailing_ones.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='../../__stdc_trailing_ones.c' object='__stdc_trailing_ones.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o __stdc_trailing_ones.o `test -f '../../__stdc_trailing_ones.c' || echo '$(srcdir)/'`../../__stdc_trailing_ones.c
+
+__stdc_trailing_ones.obj: ../../__stdc_trailing_ones.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT __stdc_trailing_ones.obj -MD -MP -MF $(DEPDIR)/__stdc_trailing_ones.Tpo -c -o __stdc_trailing_ones.obj `if test -f '../../__stdc_trailing_ones.c'; then $(CYGPATH_W) '../../__stdc_trailing_ones.c'; else $(CYGPATH_W) '$(srcdir)/../../__stdc_trailing_ones.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/__stdc_trailing_ones.Tpo $(DEPDIR)/__stdc_trailing_ones.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='../../__stdc_trailing_ones.c' object='__stdc_trailing_ones.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o __stdc_trailing_ones.obj `if test -f '../../__stdc_trailing_ones.c'; then $(CYGPATH_W) '../../__stdc_trailing_ones.c'; else $(CYGPATH_W) '$(srcdir)/../../__stdc_trailing_ones.c'; fi`
+
 memccpy.o: string/memccpy.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT memccpy.o -MD -MP -MF $(DEPDIR)/memccpy.Tpo -c -o memccpy.o `test -f 'string/memccpy.c' || echo '$(srcdir)/'`string/memccpy.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/memccpy.Tpo $(DEPDIR)/memccpy.Po
@@ -1817,7 +1936,14 @@ clean: clean-am
 clean-am: clean-generic clean-libLIBRARIES clean-local mostlyclean-am
 
 distclean: distclean-am
-		-rm -f ./$(DEPDIR)/atof.Po
+		-rm -f ./$(DEPDIR)/__stdc_bit_ceilull.Po
+	-rm -f ./$(DEPDIR)/__stdc_bit_width.Po
+	-rm -f ./$(DEPDIR)/__stdc_count_ones.Po
+	-rm -f ./$(DEPDIR)/__stdc_first_leading_one.Po
+	-rm -f ./$(DEPDIR)/__stdc_first_trailing_one.Po
+	-rm -f ./$(DEPDIR)/__stdc_leading_zeros.Po
+	-rm -f ./$(DEPDIR)/__stdc_trailing_ones.Po
+	-rm -f ./$(DEPDIR)/atof.Po
 	-rm -f ./$(DEPDIR)/atoi.Po
 	-rm -f ./$(DEPDIR)/atol.Po
 	-rm -f ./$(DEPDIR)/atoll.Po
@@ -1940,7 +2066,14 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-		-rm -f ./$(DEPDIR)/atof.Po
+		-rm -f ./$(DEPDIR)/__stdc_bit_ceilull.Po
+	-rm -f ./$(DEPDIR)/__stdc_bit_width.Po
+	-rm -f ./$(DEPDIR)/__stdc_count_ones.Po
+	-rm -f ./$(DEPDIR)/__stdc_first_leading_one.Po
+	-rm -f ./$(DEPDIR)/__stdc_first_trailing_one.Po
+	-rm -f ./$(DEPDIR)/__stdc_leading_zeros.Po
+	-rm -f ./$(DEPDIR)/__stdc_trailing_ones.Po
+	-rm -f ./$(DEPDIR)/atof.Po
 	-rm -f ./$(DEPDIR)/atoi.Po
 	-rm -f ./$(DEPDIR)/atol.Po
 	-rm -f ./$(DEPDIR)/atoll.Po
