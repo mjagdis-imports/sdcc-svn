@@ -14,7 +14,7 @@
 # Broken: 8984-9000, 9104 (bug #2280), 9106-9114 (whetstone build segfaults), 9379-9418 (SDCC build fails), 9424 (library build fails) 9477 (SDCC build fails), 9891-9946 (stdcbench build fails), 9958-10147 (Dhrystone z80 build fails) 10233-10270 (stdcbench build segfaults), 10185-10340 (stdcbench build segfaults). 10345-10668 (sdcpp build fails). 10408 (stdcbench build segfaults). 10426-10462 (coremark build fails) 10682 (library build fails for mcs51) 11952 (library build fails). 13699 (sdcpp build fails). 14225-14238 (sdcc build fails), 14400 (build fails). 14463 (stm8 lib build fails)m 14464 (coremark build fails for z80). 16233-16331 (benchmarks issues on R4K).
 # Build of large-stack-auto lib for mcs51 was enabled in 9521.
 
-REVISIONS_R4K2 = 16340 16351 16354 16379 16400 16474 16532 16640 16642 16671 16700 16726 16753 16800 17000
+REVISIONS_R4K2 = 16340 16351 16354 16379 16400 16474 16532 16640 16642 16671 16700 16726 16753 16800 17000 17032 17034 17035 17036 17043 17050
 REVISIONS_R4K1 = 15725 15768 15890 15891 15944 15945 15957 16016 16053 16153 16176 16220
 REVISIONS_R4K = $(REVISIONS_R4K1) $(REVISIONS_R4K2)
 REVISIONS_R3KA_WHETSTONE = 12891 12900 12969 13131 13200 13300 13495 13689 13709 13748 13772 13800 13804 13813 13825 13845 13885 13900 14000 14184 14208 14211 14246 14248 14253 14300 14346 14370 14398 14405 14443 14448 14453 14472 14510 14528 14648 14650 14710 14738 14817 14889 14955 14958 14996 15015 15022 15029 15032 15037 15060 15093 15104 15117 15118 15119 15172 15240 15246 15317 15418 15435 15451 15486 15550 15580 15669 15724 $(REVISIONS_R4K1) 16233 16305 16311 $(REVISIONS_R4K2)
@@ -114,17 +114,21 @@ BENCHMARKS_WHETSTONE_STM8_SCORES = $(patsubst %image.ihx, %score, $(filter $(BEN
 BENCHMARKS_WHETSTONE_MCS51_SCORES = $(patsubst %image.ihx, %score, $(filter $(BENCHMARKS_WHETSTONE), $(BENCHMARKS_MCS51)))
 BENCHMARKS_WHETSTONE_R3KA_SCORES = $(patsubst %image.ihx, %score, $(filter $(BENCHMARKS_WHETSTONE), $(BENCHMARKS_R3KA_WHETSTONE)))
 BENCHMARKS_WHETSTONE_R4K_SCORES = $(patsubst %image.ihx, %score, $(filter $(BENCHMARKS_WHETSTONE), $(BENCHMARKS_R4K)))
+BENCHMARKS_WHETSTONE_Z80_SCORES = $(patsubst %image.ihx, %score, $(filter $(BENCHMARKS_WHETSTONE), $(BENCHMARKS_Z80)))
 BENCHMARKS_DHRYSTONE_STM8_SCORES = $(patsubst %image.ihx, %score, $(filter $(BENCHMARKS_DHRYSTONE), $(BENCHMARKS_STM8)))
 BENCHMARKS_DHRYSTONE_MCS51_SCORES = $(patsubst %image.ihx, %score, $(filter $(BENCHMARKS_DHRYSTONE), $(BENCHMARKS_MCS51)))
 BENCHMARKS_DHRYSTONE_R3KA_SCORES = $(patsubst %image.ihx, %score, $(filter $(BENCHMARKS_DHRYSTONE), $(BENCHMARKS_R3KA)))
 BENCHMARKS_DHRYSTONE_R4K_SCORES = $(patsubst %image.ihx, %score, $(filter $(BENCHMARKS_DHRYSTONE), $(BENCHMARKS_R4K)))
+BENCHMARKS_DHRYSTONE_Z80_SCORES = $(patsubst %image.ihx, %score, $(filter $(BENCHMARKS_DHRYSTONE), $(BENCHMARKS_Z80)))
 BENCHMARKS_COREMARK_STM8_SCORES = $(patsubst %image.ihx, %score, $(filter $(BENCHMARKS_COREMARK), $(BENCHMARKS_STM8)))
 BENCHMARKS_COREMARK_R3KA_SCORES = $(patsubst %image.ihx, %score, $(filter $(BENCHMARKS_COREMARK), $(BENCHMARKS_R3KA)))
 BENCHMARKS_COREMARK_R4K_SCORES = $(patsubst %image.ihx, %score, $(filter $(BENCHMARKS_COREMARK), $(BENCHMARKS_R4K)))
+BENCHMARKS_COREMARK_Z80_SCORES = $(patsubst %image.ihx, %score, $(filter $(BENCHMARKS_COREMARK), $(BENCHMARKS_Z80)))
 BENCHMARKS_STDCBENCH_STM8_SCORES = $(patsubst %image.ihx, %score, $(filter $(BENCHMARKS_STDCBENCH), $(BENCHMARKS_STM8)))
 BENCHMARKS_STDCBENCH_MCS51_SCORES = $(patsubst %image.ihx, %score, $(filter $(BENCHMARKS_STDCBENCH), $(BENCHMARKS_MCS51)))
 BENCHMARKS_STDCBENCH_R3KA_SCORES = $(patsubst %image.ihx, %score, $(filter $(BENCHMARKS_STDCBENCH), $(BENCHMARKS_R3KA_STDCBENCH)))
 BENCHMARKS_STDCBENCH_R4K_SCORES = $(patsubst %image.ihx, %score, $(filter $(BENCHMARKS_STDCBENCH), $(BENCHMARKS_R4K)))
+BENCHMARKS_STDCBENCH_Z80_SCORES = $(patsubst %image.ihx, %score, $(filter $(BENCHMARKS_STDCBENCH), $(BENCHMARKS_Z80)))
 
 .PHONY: all clean
 
@@ -424,6 +428,15 @@ whetstone-r4k-scoretable: $(BENCHMARKS_WHETSTONE_R4K_SCORES)
 		echo $$r $$SIZE_SIZE $$SIZE_SPEED $$SIZE_DEFAULT >> $@; \
 	done
 
+whetstone-z80-scoretable: $(BENCHMARKS_WHETSTONE_Z80_SCORES)
+	echo "Revision size speed default" > $@
+	for r in $(REVISIONS_Z80); do \
+		SIZE_SIZE=`cat whetstone-z80-size-$$r/score`; \
+		SIZE_SPEED=`cat whetstone-z80-speed-$$r/score`; \
+		SIZE_DEFAULT=`cat whetstone-z80-default-$$r/score `; \
+		echo $$r $$SIZE_SIZE $$SIZE_SPEED $$SIZE_DEFAULT >> $@; \
+	done
+
 dhrystone-stm8-scoretable: $(BENCHMARKS_DHRYSTONE_STM8_SCORES)
 	echo "Revision size speed default" > $@
 	for r in $(REVISIONS); do \
@@ -460,6 +473,15 @@ dhrystone-r4k-scoretable: $(BENCHMARKS_DHRYSTONE_R4K_SCORES)
 		echo $$r $$SIZE_SIZE $$SIZE_SPEED $$SIZE_DEFAULT >> $@; \
 	done
 
+dhrystone-z80-scoretable: $(BENCHMARKS_DHRYSTONE_Z80_SCORES)
+	echo "Revision size speed default" > $@
+	for r in $(REVISIONS_Z80); do \
+		SIZE_SIZE=`cat dhrystone-z80-size-$$r/score`; \
+		SIZE_SPEED=`cat dhrystone-z80-speed-$$r/score`; \
+		SIZE_DEFAULT=`cat dhrystone-z80-default-$$r/score `; \
+		echo $$r $$SIZE_SIZE $$SIZE_SPEED $$SIZE_DEFAULT >> $@; \
+	done
+
 coremark-stm8-scoretable: $(BENCHMARKS_COREMARK_STM8_SCORES)
 	echo "Revision size speed default" > $@
 	for r in $(REVISIONS); do \
@@ -484,6 +506,15 @@ coremark-r4k-scoretable: $(BENCHMARKS_COREMARK_R4K_SCORES)
 		SIZE_SIZE=`cat coremark-r4k-size-$$r/score`; \
 		SIZE_SPEED=`cat coremark-r4k-speed-$$r/score`; \
 		SIZE_DEFAULT=`cat coremark-r4k-default-$$r/score `; \
+		echo $$r $$SIZE_SIZE $$SIZE_SPEED $$SIZE_DEFAULT >> $@; \
+	done
+
+coremark-z80-scoretable: $(BENCHMARKS_COREMARK_Z80_SCORES)
+	echo "Revision size speed default" > $@
+	for r in $(REVISIONS_Z80); do \
+		SIZE_SIZE=`cat coremark-z80-size-$$r/score`; \
+		SIZE_SPEED=`cat coremark-z80-speed-$$r/score`; \
+		SIZE_DEFAULT=`cat coremark-z80-default-$$r/score `; \
 		echo $$r $$SIZE_SIZE $$SIZE_SPEED $$SIZE_DEFAULT >> $@; \
 	done
 
@@ -520,6 +551,15 @@ stdcbench-r4k-scoretable: $(BENCHMARKS_STDCBENCH_R4K_SCORES)
 		SIZE_SIZE=`cat stdcbench-r4k-size-$$r/score`; \
 		SIZE_SPEED=`cat stdcbench-r4k-speed-$$r/score`; \
 		SIZE_DEFAULT=`cat stdcbench-r4k-default-$$r/score `; \
+		echo $$r $$SIZE_SIZE $$SIZE_SPEED $$SIZE_DEFAULT >> $@; \
+	done
+
+stdcbench-z80-scoretable: $(BENCHMARKS_STDCBENCH_Z80_SCORES)
+	echo "Revision size speed default" > $@
+	for r in $(REVISIONS_Z80); do \
+		SIZE_SIZE=`cat stdcbench-z80-size-$$r/score`; \
+		SIZE_SPEED=`cat stdcbench-z80-speed-$$r/score`; \
+		SIZE_DEFAULT=`cat stdcbench-z80-default-$$r/score `; \
 		echo $$r $$SIZE_SIZE $$SIZE_SPEED $$SIZE_DEFAULT >> $@; \
 	done
 
@@ -560,6 +600,9 @@ $(BENCHMARKS_WHETSTONE_R3KA_SCORES): %/score: %/image.ihx
 $(BENCHMARKS_WHETSTONE_R4K_SCORES): %/score: %/image.ihx
 	echo "scale=3;" 1000000 / `./execute_benchmark-r4k $(R4K_TTY) $< | sed -e "s/Loops: 10, Iterations: 1, Duration: //" | sed -e "s/ msec.*//"` | bc > $@
 
+$(BENCHMARKS_WHETSTONE_Z80_SCORES): %/score: %/image.ihx
+	echo "scale=3;" 1000000 / `./execute_benchmark-z80 $(Z80_TTY) $< | sed -e "s/Loops: 10, Iterations: 1, Duration: //" | sed -e "s/ msec.//"` | bc > $@
+
 $(BENCHMARKS_DHRYSTONE_STM8_SCORES): %/score: %/image.ihx
 	./execute_benchmark-stm8 $(STM8_TTY) $< | sed -e "s/Dhrystones per Second: //" > $@
 
@@ -572,6 +615,9 @@ $(BENCHMARKS_DHRYSTONE_R3KA_SCORES): %/score: %/image.ihx
 $(BENCHMARKS_DHRYSTONE_R4K_SCORES): %/score: %/image.ihx
 	./execute_benchmark-r4k $(R4K_TTY) $< | sed -e "s/Dhrystones per Second: //" > $@
 
+$(BENCHMARKS_DHRYSTONE_Z80_SCORES): %/score: %/image.ihx
+	./execute_benchmark-z80 $(Z80_TTY) $< | sed -e "s/Dhrystones per Second: //" > $@
+
 $(BENCHMARKS_COREMARK_STM8_SCORES): %/score: %/image.ihx
 	echo "scale=3;" 60000 / `./execute_benchmark-stm8 $(STM8_TTY) $< | sed -e "s/Total ticks : //"` | bc > $@
 
@@ -580,6 +626,9 @@ $(BENCHMARKS_COREMARK_R3KA_SCORES): %/score: %/image.ihx
 
 $(BENCHMARKS_COREMARK_R4K_SCORES): %/score: %/image.ihx
 	echo "scale=3;" 1966080 / `./execute_benchmark-r4k $(R4K_TTY) $< | sed -e "s/Total ticks : //"` | bc > $@
+
+$(BENCHMARKS_COREMARK_Z80_SCORES): %/score: %/image.ihx
+	echo "scale=3;" 1966080 / `./execute_benchmark-z80 $(Z80_TTY) $< | sed -e "s/Total ticks : //"` | bc > $@
 
 $(BENCHMARKS_STDCBENCH_STM8_SCORES): %/score: %/image.ihx
 	./execute_benchmark-stm8 $(STM8_TTY) $< | sed -e "s/stdcbench final score: //" > $@
@@ -592,4 +641,7 @@ $(BENCHMARKS_STDCBENCH_R3KA_SCORES): %/score: %/image.ihx
 
 $(BENCHMARKS_STDCBENCH_R4K_SCORES): %/score: %/image.ihx
 	./execute_benchmark-r4k $(R4K_TTY) $< | sed -e "s/stdcbench final score: //" > $@
+
+$(BENCHMARKS_STDCBENCH_Z80_SCORES): %/score: %/image.ihx
+	./execute_benchmark-z80 $(Z80_TTY) $< | sed -e "s/stdcbench final score: //" > $@
 

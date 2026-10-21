@@ -3,7 +3,7 @@
 # Z80-MBC2 board must be attached.
 # Needs read/write access to the serial device
 
-STM8FLASH=/home/philipp/stm8flash/stm8flash
+ILOAD=iload-z80-mbc2.py
 
 if [ $# != 2 ]; then
 	echo "execute_benchmark-z80: Execute a benchmark on an Z80-MBC2 board and report the results line"
@@ -11,15 +11,25 @@ if [ $# != 2 ]; then
 	exit 1
 fi
 
-# Setup serial device
+# Ensure that we don't get any leftover results from an old benchmark still running on the device
+if ! python3 $ILOAD $1 hello-z80/hello.ihx &> /dev/null; then
+	echo "FAILED to write hello.ihx to device!"
+	exit 1
+fi
 stty --file $1 115200 cooked
-sleep 2
+while read -r line; do
+	if [ "$line" == "Hello, World!" ]; then
+		break
+	fi
+done < "$1"
 
 # Load benchmark onto the board
-if ! $STM8FLASH -c stlinkv2 -p stm8af5288 -w "$2" &> /dev/null; then
+if ! python3 $ILOAD $1 "$2" &> /dev/null; then
 	echo "FAILED to write benchmark to device!"
 	exit 1
 fi
+
+stty --file $1 115200 cooked
 while read -r line; do
 	# Whetstone result
 	if [[ "$line" == "Loops:"* ]]; then
