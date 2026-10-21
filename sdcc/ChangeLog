@@ -1,3 +1,8 @@
+2026-10-21 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* device/include/stdbit.h:
+	  Pick some bits from patch for bug #4147 by zeynelsagcan.
+
 2026-10-21 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
 	* support/valdiag/tests/bug-3835.c:

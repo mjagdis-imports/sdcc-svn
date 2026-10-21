@@ -80,7 +80,7 @@ typedef unsigned long long int  uint_fast64_t;
 
 #endif // __SPECIFIED_WIDTH_INTEGER_TYPES_DEFINED
 
-// C2X 7.18.2 Endian
+// C23 7.18.2 Endian
 
 #define __STDC_ENDIAN_LITTLE__ 0
 #define __STDC_ENDIAN_BIG__ 1
@@ -93,6 +93,7 @@ typedef unsigned long long int  uint_fast64_t;
 
 #if __SDCC_BITINT_MAXWIDTH >= 64
 #define __typewidth(x) _Generic((x), \
+signed _BitInt(1) : 1, /* C2y */ \
 unsigned _BitInt(1) : 1, \
 signed _BitInt(2) : 2, \
 unsigned _BitInt(2) : 2, \
@@ -103,8 +104,12 @@ unsigned _BitInt(4) : 4, \
 signed _BitInt(5) : 5, \
 unsigned _BitInt(5) : 5, \
 signed _BitInt(6) : 6, \
+unsigned _BitInt(6) : 6, \
+signed _BitInt(7) : 7, \
 unsigned _BitInt(7) : 7, \
 signed _BitInt(8) : 8, \
+unsigned _BitInt(8) : 8, \
+signed _BitInt(9) : 9, \
 unsigned _BitInt(9) : 9, \
 signed _BitInt(10) : 10, \
 unsigned _BitInt(10) : 10, \
@@ -198,7 +203,7 @@ signed _BitInt(54) : 54, \
 unsigned _BitInt(54) : 54, \
 signed _BitInt(55) : 55, \
 unsigned _BitInt(55) : 55, \
-signed _BitInt(56) : 16, \
+signed _BitInt(56) : 56, \
 unsigned _BitInt(56) : 56, \
 signed _BitInt(57) : 57, \
 unsigned _BitInt(57) : 57, \
