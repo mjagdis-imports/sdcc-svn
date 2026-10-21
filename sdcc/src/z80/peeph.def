@@ -1790,65 +1790,6 @@ replace restart {
 %2:
 } if same(%4 'or' 'and'), canSplitReg(%1 %0 %0), labelRefCountChange(%2 -1)
 
-//TODO: check on other flags
-replace restart {
-%1:
-	ld	a, (%5)
-	inc	%5
-	ld	%3, a
-	ld	a, (%6)
-	inc	%6
-	sub	a, %3
-	ld	%4, a
-	jp	nz, %2
-	or	a,%3
-	jp	nz, %1
-%2:
-} by {
-%1:
-	ld	a, (%5)
-	inc	%5
-	ld	%3, a
-	ld	a, (%6)
-	inc	%6
-	sub	a, %3
-	jp	nz, %2
-	cp	a,%3
-	jp	nz, %1
-%2:
-	; common peephole 128b sped up loop body.
-	ld	%4, a
-} if canSplitReg(%5 %7 %8), canSplitReg(%6 %9 %10), operandsNotRelated(%3 %5 %6), operandsNotRelated(%3 %5 %6), notSame(%3 %4), labelRefCount(%2 1)
-
-replace restart {
-%1:
-	ld	a, (%5)
-	ld	%3, a
-	inc	%5
-	ld	a, (%6)
-	inc	%6
-	sub	a, %3
-	ld	%4, a
-	jp	nz, %2
-	or	a,%3
-	jp	nz, %1
-%2:
-} by {
-%1:
-	ld	a, (%5)
-	inc	%5
-	ld	%3, a
-	ld	a, (%6)
-	inc	%6
-	sub	a, %3
-	jp	nz, %2
-	cp	a,%3
-	jp	nz, %1
-%2:
-	; common peephole 128c sped up loop body.
-	ld	%4, a
-} if canSplitReg(%5 %7 %8), canSplitReg(%6 %9 %10), operandsNotRelated(%3 %5 %6), operandsNotRelated(%3 %5 %6), notSame(%3 %4), labelRefCount(%2 1)
-
 replace restart {
 	ld	hl,#%1
 	add	hl,%2
@@ -2102,18 +2043,6 @@ replace restart {
 	; common peephole 146 used ex to move #%1 onto the stack.
 	inc	sp
 } if isPort('z80' 'z80n' 'z180' 'ez80'), notUsed('sf' 'zf' 'hf' 'pf' 'nf' 'cf'), notUsed('a'), notUsed('hl')
-
-replace restart {
-	ld	%1,#%2
-	ld	%3 (%1),a
-%4:
-	ld	%1,%5
-} by {
-	ld	(#%2 + %3),a
-	; common peephole 147 directly used #%2 instead of going through %1 using indirect addressing.
-%4:
-	ld	%1,%5
-}
 
 replace restart {
 	ld	%1,a
@@ -2415,17 +2344,6 @@ replace restart {
 	ld	%8, %6
 } if notSame(%1 'ix' 'iy'), notSame(%2 'ix' 'iy'), canSplitReg(%1 %5 %6), canSplitReg(%2 %7 %8), operandsLiteral(%3 %4), immdInRange(0 0 '-' %3 %4 %9)
 
-// special case for ix/iy, which can't load to/from hl
-replace restart {
-	ld	%1, #%3
-	ld	%2, #%4
-} by {
-	ld	%1, #%3
-	; common peephole 174b reused value still in %1.
-	ld	%7, %5
-	ld	%8, %6
-} if notSame(%1 'hl'), notSame(%2 'hl'), canSplitReg(%1 %5 %6), canSplitReg(%2 %7 %8), operandsLiteral(%3 %4), immdInRange(0 0 '-' %3 %4 %9), notSame(%1 'ix' 'iy'), notSame(%2 'ix' 'iy')
-
 replace restart {
 	ld	%1, %2 (ix)
 	ld	%3 (ix), %1
@@ -2498,19 +2416,6 @@ replace restart {
 	ld	%1, %4 (%3)
 	dec	%3
 } if operandsNotRelated(%1 %3), immdInRange(-128 127 '-' %2 1 %4)
-
-//next rules optimize code after the call
-//replaces lot of `inc sp` by `ld hl,#n; add hl,sp; ld sp,hl`
-replace restart {
-	inc	sp
-	pop	%1
-	ld	%2 (%3), %4
-} by {
-	inc	sp
-	; common peephole 190: move pop instruction after register store
-	ld	%2 (%3), %4
-	pop	%1
-} if notSame(%1 %3 %4), operandsNotRelated(%1 %4)
 
 replace restart {
 	inc	sp

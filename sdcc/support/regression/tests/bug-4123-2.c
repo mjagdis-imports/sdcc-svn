@@ -243,6 +243,25 @@ void test146(void)
     ASSERT(G2 == 42);
 }
 
+void f156e(void) // rule 156e
+{
+  register int x, y;
+  x = G1;
+  y = G2;
+  y++;
+  x += 2;
+  x -= 2;
+  G1 = x + y;
+}
+
+void test156e(void)
+{
+  G1 = 3;
+  G2 = 4;
+  f156e();
+  ASSERT(G1 == 8);
+}
+
 unsigned long G32;
 
 void f194_2(void) // rule 194-2
