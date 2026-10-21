@@ -136,6 +136,7 @@ struct valinfos;
 enum pointerCheckKind
 {
   POINTER_ARITHMETIC,
+  POINTER_RELATIONAL,
   POINTER_DEREFERENCE
 };
 

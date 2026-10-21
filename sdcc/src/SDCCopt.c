@@ -2410,24 +2410,15 @@ checkStaticArrayParams (ebbIndex *ebbi)
             else if (!v.anything && size > (long long)v.maybemaxsize)
               werrorfl (ic->filename, ic->lineno, W_MAYBE_INVALID_PTR_DEREF);
           }
-        else if (ic->op == '<' || ic->op == '>' || ic->op == LE_OP || ic->op == GE_OP)
-          {
-            bool left_optional_maybenull = false;
-            bool right_optional_maybenull = false;
-            if (IS_PTR (operandType (ic->left)) && isOptional (operandType (ic->left)->next) && !ic->left->isOptionalEliminated)
-              left_optional_maybenull = !getOperandValinfo (ic, ic->left, false).nonnull;
-            if (IS_PTR (operandType (ic->right)) && isOptional (operandType (ic->right)->next) && !ic->right->isOptionalEliminated)
-              right_optional_maybenull = !getOperandValinfo (ic, ic->right, false).nonnull;
-            if (left_optional_maybenull || right_optional_maybenull)
-              werrorfl (ic->filename, ic->lineno, W_OPTIONAL_RELATIONAL);
-          }
         else if (ic->op == POINTER_NONNULL_CHECK)
           {
             if (ic->left && !getOperandValinfo (ic, ic->left, false).nonnull ||
                 ic->right && !getOperandValinfo (ic, ic->right, false).nonnull)
               werrorfl (ic->filename, ic->lineno,
                         ic->pointerCheck == POINTER_ARITHMETIC ?
-                          W_OPTIONAL_ARITHMETIC : W_OPTIONAL_PTR_DEREF);
+                          W_OPTIONAL_ARITHMETIC :
+                        ic->pointerCheck == POINTER_RELATIONAL ?
+                          W_OPTIONAL_RELATIONAL : W_OPTIONAL_PTR_DEREF);
           }
       }
 }

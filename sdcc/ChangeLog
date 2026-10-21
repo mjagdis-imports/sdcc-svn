@@ -1,3 +1,17 @@
+2026-10-21 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
+	* src/SDCCicode.h (enum pointerCheckKind): Add POINTER_RELATIONAL.
+	* src/SDCCicode.c (picPointerCheck, geniCodeLogic):
+	  Record relational pointer checks before the common type can add
+	  _Optional to the other operand (bug #4169).
+	* src/SDCCopt.c (checkStaticArrayParams):
+	  Diagnose the recorded source operands instead of the converted
+	  comparison operands.
+	* support/valdiag/tests/bug-4169.c: Test all four operators in both
+	  operand orders, checked and unchecked optional operands, equality
+	  comparisons and an explicit cast to an optional target type.
+
+
 2026-10-21 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/z80/gen.c:

@@ -504,7 +504,8 @@ PRINTFUNC (picReceive)
 PRINTFUNC (picPointerCheck)
 {
   dbuf_printf (dbuf, "\t%s (%s) ", s,
-               ic->pointerCheck == POINTER_ARITHMETIC ? "arithmetic" : "dereference");
+               ic->pointerCheck == POINTER_ARITHMETIC ? "arithmetic" :
+               ic->pointerCheck == POINTER_RELATIONAL ? "relational" : "dereference");
   if (IC_LEFT (ic))
     dbuf_printOperand (IC_LEFT (ic), dbuf);
   if (IC_LEFT (ic) && IC_RIGHT (ic))
@@ -3292,6 +3293,13 @@ geniCodeLogic (operand * left, operand * right, int op, ast * tree)
   sym_link *ctype, *ttype;
   sym_link *rtype = operandType (right);
   sym_link *ltype = operandType (left);
+
+  /* Check the source pointers before the common type can add _Optional
+     to the other operand. Equality comparisons permit null pointers. */
+  if (op == '<' || op == '>' || op == LE_OP || op == GE_OP)
+    {
+      recordPointerCheck (left, right, POINTER_RELATIONAL);
+    }
 
   /* left is integral type and right is literal then
      check if the literal value is within bounds */
