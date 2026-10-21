@@ -1,5 +1,11 @@
 2026-10-21 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
+	* support/valdiag/tests/bug-3835.c:
+	  Compile both reduced memory-mapped member-access examples from the
+	  discussion without executing them (bug #3835).
+
+2026-10-21 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
 	* support/regression/tests/bug-3470.c:
 	  Correct the test heading, check the returned value and enable the existing
 	  reproducer for MCS51 with stack parameters (bug #3470).
