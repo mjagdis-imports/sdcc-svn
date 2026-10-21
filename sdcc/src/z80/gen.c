@@ -5482,7 +5482,49 @@ skip_byte:
           continue;
         }
 
-      // No byte can be assigned safely (i.e. the assignment is a permutation). Cache one in the accumulator.
+      // No byte can be assigned safely (i.e. the assignment is a permutation).
+
+      // If the permutation contains a swap of a with the high-order byte of a register pair, do it via push/pop, if we can.
+      i = source->regs[A_IDX] - soffset;
+      if (i >= 0 && i < n && !assigned[i]) // a is involved.
+        {
+          int j = result->regs[A_IDX] - roffset;
+          if (j >= 0 && j < n && !assigned[j] && // Check if it is a swap of a with another register.
+            result->aopu.aop_reg[roffset + i] == source->aopu.aop_reg[soffset + j] &&
+            result->aopu.aop_reg[roffset + j] == source->aopu.aop_reg[soffset + i])
+            {
+              bool c_free = bc_dead && (source->regs[C_IDX] < soffset || source->regs[C_IDX] >= soffset + n) && (result->regs[C_IDX] < roffset || result->regs[C_IDX] >= roffset + n);
+              bool e_free = de_dead && (source->regs[E_IDX] < soffset || source->regs[E_IDX] >= soffset + n) && (result->regs[E_IDX] < roffset || result->regs[E_IDX] >= roffset + n);
+              bool l_free = hl_dead && (source->regs[L_IDX] < soffset || source->regs[L_IDX] >= soffset + n) && (result->regs[L_IDX] < roffset || result->regs[L_IDX] >= roffset + n);
+              bool iyl_free = iy_dead && (source->regs[IYL_IDX] < soffset || source->regs[IYL_IDX] >= soffset + n) && (result->regs[IYL_IDX] < roffset || result->regs[IYL_IDX] >= roffset + n);
+              if (aopInReg (result, roffset + i, B_IDX) && (f_dead || c_free) ||
+                aopInReg (result, roffset + i, D_IDX) && (f_dead || e_free) ||
+                aopInReg (result, roffset + i, H_IDX) && (f_dead || l_free) ||
+                HAS_IYL_INST && aopInReg (result, roffset + i, IYH_IDX) && (f_dead || iyl_free))
+                {
+                  PAIR_ID pair = aopInReg (result, roffset + i, B_IDX) ? PAIR_BC : aopInReg (result, roffset + i, D_IDX) ? PAIR_DE : aopInReg (result, roffset + i, H_IDX) ? PAIR_HL : PAIR_IY; 
+                  if (f_dead)
+                    {
+                      _push (pair);
+                      emit3_o (A_LD, result, roffset + i, ASMOP_A, 0);
+                      _pop (PAIR_AF);
+                    }
+                  else
+                    {
+                      _push (PAIR_AF);
+                      emit3_o (A_LD, ASMOP_A, 0, result, roffset + i);
+                      _pop (pair);
+                    }
+                  assigned[i] = true;
+                  assigned[j] = true;
+                  regsize -= 2;
+                  size -= 2;
+                  continue;
+                }
+            }
+        }
+
+      // Otherwise cache one in the accumulator.
 
       if (cached_byte != -1)
         {
@@ -5497,7 +5539,12 @@ skip_byte:
           break;
 
       wassertl_bt (i != n, "genCopy error: Trying to cache non-existent byte in accumulator.");
-      if (!a_free && !pushed_a)
+      if (source->regs[A_IDX] > soffset && source->regs[A_IDX] < soffset + n && !assigned[source->regs[A_IDX] - soffset] && result->regs[roffset + source->regs[A_IDX] - soffset] != A_IDX)
+        {
+          // Would overwrite still-needed a.
+          UNIMPLEMENTED;
+        }
+      else if (!a_free && !pushed_a)
         {
           _push (PAIR_AF);
           pushed_a = TRUE;

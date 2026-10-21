@@ -1,3 +1,10 @@
+2026-10-21 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Fix bug #4166, inspired by patch by Christopher Bazley.
+	* support/regression/tests/bug-4166.c:
+	  Test for bug #4166, patch by Christopher Bazley.
+
 2026-10-21 Maarten Brock <sourceforge.brock AT dse.nl>
 
 	* device/include/stdbit.h: fixed parentheses in macros,
