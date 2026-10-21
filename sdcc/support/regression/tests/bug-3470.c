@@ -1,4 +1,4 @@
-/* bug-3459.c
+/* bug-3470.c
    A bug in CSE resulted in a used temporary holding the address of a struct parameter being optimized out during loop optimizations.
    This was visible as a crash during code generation.
    The testcase is manually simplified code originally created by csmith.
@@ -13,7 +13,7 @@
 #include <stdint.h>
 
 #if !defined(__SDCC_pdk13) && !defined(__SDCC_pdk14) // Lack of memory
-#if !defined(__SDCC_mcs51) && !defined(__SDCC_pdk15) && !defined(__SDCC_ds390) // Remaining aspects of bug
+#if (!defined(__SDCC_mcs51) && !defined(__SDCC_pdk15) && !defined(__SDCC_ds390)) || (defined(__SDCC_mcs51) && defined(__SDCC_STACK_AUTO)) // MCS51 needs stack parameters for func_5.
 struct S0 {
    signed f0 : 3;
    signed f1 : 12;
@@ -78,8 +78,8 @@ void
 testBug (void)
 {
 #if !defined( __SDCC_pdk13) && !defined( __SDCC_pdk14) // Lack of memory
-#if !defined(__SDCC_mcs51) && !defined(__SDCC_pdk15) && !defined(__SDCC_ds390) // Remaining aspects of bug
-    func_1();
+#if (!defined(__SDCC_mcs51) && !defined(__SDCC_pdk15) && !defined(__SDCC_ds390)) || (defined(__SDCC_mcs51) && defined(__SDCC_STACK_AUTO)) // MCS51 needs stack parameters for func_5.
+    ASSERT (func_1() == 0x33B75CABUL);
 #endif
 #endif
 }
