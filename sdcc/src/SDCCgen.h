@@ -46,6 +46,7 @@ typedef struct lineElem_s
   unsigned int isDebug:1;
   unsigned int isLabel:1;
   unsigned int visited:1;
+  unsigned int mightBeVolatileAccess:1;
   asmLineNodeBase *aln;
 }
 lineElem_t;
@@ -63,6 +64,7 @@ typedef struct lineNode_s
   unsigned int isDebug:1;
   unsigned int isLabel:1;
   unsigned int visited:1;
+  unsigned int mightBeVolatileAccess:1;
   asmLineNodeBase *aln;
 #endif
   struct lineNode_s *prev;

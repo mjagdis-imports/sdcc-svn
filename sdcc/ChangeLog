@@ -1,3 +1,14 @@
+2026-10-22 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
+	* src/SDCCgen.h (lineElem_t, lineNode): Record possible volatile accesses.
+	* src/SDCCpeeph.c (mightHaveVolatileAccess, notVolatileVariable,
+	  notVolatile, replaceRule, peepHole): Preserve volatile-access information
+	  through peephole replacements, including SET_VALUE_AT_ADDRESS stores,
+	  protecting required accesses even when instruction iCode associations
+	  are lost or changed (bugs #4202, #4203 and #4204). Make the no-parameter
+	  notVolatile rule restriction use the preserved information instead of
+	  scanning the lines’ current iCode associations.
+
 2026-10-22 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/z80/gen.c,
