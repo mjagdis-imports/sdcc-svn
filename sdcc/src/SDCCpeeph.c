@@ -1019,7 +1019,29 @@ notVolatileVariable(const char *var, lineNode *currPl, lineNode *endPl)
       if (var[0] == '#')
         return true;
       if (var[0] == '(')
-        return global_not_volatile;
+        {
+          /* Resolve only an exact direct symbol operand. Register-indirect
+             accesses and address expressions still need the fallback. */
+          const char *name = var + 1;
+          size_t len = 0;
+          if (*name != '_')
+            return global_not_volatile;
+          while (ISCHARALNUM (name[len]) || name[len] == '_')
+            len++;
+          if (len > SDCC_NAME_MAX || name[len] != ')' || name[len + 1])
+            return global_not_volatile;
+          memcpy (symname, name, len);
+          symname[len] = '\0';
+
+          /* As for direct calls, look up the C name without its leading
+             underscore. Verify the assembly name to reject shadowed or
+             renamed symbols. Instruction iCode associations need not survive
+             peephole rewrites. */
+          const symbol *sym = findSym (SymbolTab, NULL, symname + 1);
+          if (sym && !strcmp (sym->rname, symname))
+            return !isVolatile (sym->type);
+          return global_not_volatile;
+        }
       if (strstr (var, "(bc)"))
         return global_not_volatile;
       if (strstr (var, "(de)"))
