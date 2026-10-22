@@ -38,14 +38,15 @@
 
     <p>The simulator can be started in the following way: </p>
 
-    <p><tt><font color="blue">$</font> ucsim_XXX [-bBEgGhHlmPqVvw] [-a
-      nr] [-c file] [-C cfg_file] [-e command] [-I if_optionlist] [-k
-      portnum] [-o colorlist] [-p prompt] [-R seed]\n [-s file] [-S
-      optionlist] [-t CPU] [-U uartnr] [-u hw] [-X freq[k|M]]\n [-z
-      portnum] [-Z portnum] [file[@memory][:offset][#range]...]</tt> </p>
+    <p><tt><font color="blue">$</font> ucsim_XXX [-AbBEgGhHlmPqvVw]
+      [-a nr] [-c file] [-C cfg_file] [-e command] [-I if_optionlist]
+      [-k portnum] [-o colorlist] [-p prompt] [-R seed]\n [-s file]
+      [-S optionlist] [-t CPU] [-U uartnr] [-u hw] [-X freq[k|M]]\n
+      [-z portnum] [-Z portnum] [-i inspec[,...]]
+      [file[@memory][:offset][#range]...]</tt> </p>
 
     <a name="inspec">
-      <h3>Input files</h3>
+      <h3>Input files and specifiers</h3>
     </a>
     
     <p>Specified files must be names of Intel HEX or OMF, or Motorola S19
@@ -76,6 +77,14 @@
       check succeeds. Range check is done <b>before</b> the
       offset parameter is applied.</p>
 
+    <p>Input specifiers (@memory:offset#range) can be defined either
+    by appending them to the filename parameter or by using the -i
+    option. The parameter for the first -i option will be split by
+    comma and all specifiers will be used for loading the first
+    file. Subsequent uses of -i option define specifiers for second
+    file, and so on. If specifiers are provided via the -i option then
+    any specifiers included in filename parameter are ignored.</p>
+    
     <a name="options">
       <h3>Options: </h3>
     </a>
@@ -152,6 +161,15 @@
         used to determine CPU type using <tt><b>-t</b></tt> option. </dd>
 
 
+      <dt><tt><b><a name="i-option">-i inspec</a></b></tt></dt>
+
+      <dd>Comma separated list of input specifiers:
+      @mem:offset#range,...  This option can be used several times,
+      given specifiers will be used when file parameters are
+      loaded. Specifiers in first -i option will be used to load first
+      file parameter, and so on.</dd>
+
+      
       <dt><tt><b>-I if=memory[address],in=file,out=file</b></tt></dt>
 
       <dd>Specify options (as comma separated list) for the simulator interface.
@@ -278,12 +296,17 @@
 
       <dd>Using this option you can specify any string to be the prompt of
         command interpreter, for example:
-        <pre><font color="blue">$</font> ucsim_51 -p "s51&gt; "
-	  <font color="green">ucsim 0.2.12, Copyright (C) 1997 Daniel Drotos, Talker Bt.
-	    ucsim comes with ABSOLUTELY NO WARRANTY; for details type `show w'.
-	    This is free software, and you are welcome to redistribute it
-	    under certain conditions; type `show c' for details.
-	    0s51&gt; </font></pre>
+
+<!-- @BLOCK@ prompt e56b705c5785f6df1f8de60e57c460db -->
+<pre class="eg">$ ucsim_51 -p "s51> "
+<span style="color: #F5F1DE; background-color: #000316">uCsim 0.9.10, Copyright (C) 1997 Daniel Drotos.
+uCsim comes with ABSOLUTELY NO WARRANTY; for details type `show w'.
+This is free software, and you are welcome to redistribute it
+under certain conditions; type `show c' for details.
+</span><span style="color: #aa5500; background-color: #000316">0</span><span style="color: #ffffff; background-color: #000316">s51&gt; </span>
+</pre>
+	<!-- @END@ -->
+
       </dd>
 
       
