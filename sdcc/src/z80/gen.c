@@ -10077,16 +10077,19 @@ genPlus (iCode * ic)
   if (size > 1 &&
     !(size == 2 && isPair (leftop) && (rightop->type == AOP_LIT || rightop->type == AOP_IY)) && !(size == 2 && leftop->type == AOP_STL && isPairDead (PAIR_HL, ic))) // No need to setup if a single 16 bit addition is sufficient below.
     {
-      if (!couldDestroyCarry (leftop) && (couldDestroyCarry (rightop) || couldDestroyCarry (IC_RESULT (ic)->aop)))
+      if (!couldDestroyCarry (leftop) && (couldDestroyCarry (rightop) || couldDestroyCarry (ic->result->aop)))
         {
           cheapMove (ASMOP_A, 0, leftop, offset, true);
           premoved = TRUE;
         }
 
-      if ((requiresHL (IC_RESULT (ic)->aop) && IC_RESULT (ic)->aop->type != AOP_REG || requiresHL (leftop) && leftop->type != AOP_REG || requiresHL (rightop) && rightop->type != AOP_REG) &&
+      if ((requiresHL (ic->result->aop) && ic->result->aop->type != AOP_REG || requiresHL (leftop) && leftop->type != AOP_REG || requiresHL (rightop) && rightop->type != AOP_REG) &&
         (leftop->regs[L_IDX] > 0 || leftop->regs[H_IDX] > 0 || rightop->regs[L_IDX] > 0 || rightop->regs[H_IDX] > 0))
         UNIMPLEMENTED;
-      setupToPreserveCarry (IC_RESULT (ic)->aop, leftop, rightop);
+      if (requiresHL (ic->result->aop) && couldDestroyCarry (ic->result->aop) &&
+        (leftop->regs[L_IDX] >= 0 || leftop->regs[H_IDX] >= 0 || rightop->regs[L_IDX] >= 0 || rightop->regs[H_IDX] >= 0))
+        UNIMPLEMENTED;
+      setupToPreserveCarry (ic->result->aop, leftop, rightop);
     }
   // But if we don't actually want to use hl for the addition, it can make sense to setup an op to use cheaper hl instead of iy.
   if (size == 1 && !aopInReg(leftop, 0, H_IDX) && !aopInReg(leftop, 0, L_IDX) && !aopInReg(rightop, 0, H_IDX) && !aopInReg(rightop, 0, L_IDX) && isPairDead (PAIR_HL, ic))

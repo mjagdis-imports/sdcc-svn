@@ -1,3 +1,9 @@
+2026-10-22 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  support/regression/tests/bug-4186.c:
+	  Fix bug #4186.
+
 2026-10-22 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
 	* src/SDCCpeeph.c (notVolatileVariable):
@@ -25,7 +31,6 @@
 	* support/valdiag/tests/bug-4169.c: Test all four operators in both
 	  operand orders, checked and unchecked optional operands, equality
 	  comparisons and an explicit cast to an optional target type.
-
 
 2026-10-21 Philipp Klaus Krause <philipp@colecovision.eu>
 
