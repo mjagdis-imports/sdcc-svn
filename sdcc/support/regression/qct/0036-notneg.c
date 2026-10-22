@@ -1,3 +1,4 @@
+/* Bug #3392: double negation must produce one for a nonzero operand. */
 int
 main()
 {

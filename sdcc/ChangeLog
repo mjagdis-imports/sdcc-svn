@@ -1,3 +1,10 @@
+2026-10-22 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
+	* support/regression/MakeList: Enable qct/0036-notneg.c on MCS51
+	  and DS390 (bug #3392).
+	* support/regression/qct/0036-notneg.c: Identify the bug tested.
+	* support/regression/tests/bug-3392.c: Remove the duplicate test.
+
 2026-10-21 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
 	* src/SDCCicode.h (enum pointerCheckKind): Add POINTER_RELATIONAL.

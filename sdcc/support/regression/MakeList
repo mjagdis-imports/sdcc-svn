@@ -369,12 +369,6 @@ EXCLUDE_mcs51-small += ${EXCLUDE_mcs51-medium}
 ###################################################
 # Failures
 
-# Failure - Bug #3392
-EXCLUDE_ARCH_mcs51 += \
-	qct_0036-notneg
-EXCLUDE_ds390 += \
-	qct_0036-notneg
-
 # infinite loop while compiling bug #3990
 EXCLUDE_stm8-large += \
 	smallserpent
