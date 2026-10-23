@@ -1,5 +1,14 @@
 2026-10-23 Lishin <lishin1008@gmail.com>
 
+	* device/include/stdlib.h,
+	  device/lib/div.c,
+	  device/lib/ldiv.c,
+	  device/lib/lldiv.c:
+	  Enable div(), ldiv(), and lldiv() for the DS390 flat24 model.
+	  These functions return structs.
+
+2026-10-23 Lishin <lishin1008@gmail.com>
+
 	* src/SDCCast.c,
 	  src/SDCCsymt.c,
 	  src/ds390/gen.c,

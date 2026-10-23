@@ -156,7 +156,7 @@ typedef struct
 	long long int quot;
 	long long int rem;
 } lldiv_t;
-#if !defined(__SDCC_ds390) // struct return not yet supported
+#if !defined(__SDCC_ds390) || defined(__SDCC_MODEL_FLAT24) // DS390 struct return is supported only in flat24.
 div_t div(int numer, int denom);
 ldiv_t ldiv(long int numer, long int denom);
 #if !(defined(SDCC_MOS) && defined(__SDCC_STACK_AUTO)) && !defined(__SDCC_hc08) && !defined(__SDCC_s08) // size of struct return is limited to <= 8

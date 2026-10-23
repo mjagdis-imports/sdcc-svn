@@ -28,7 +28,7 @@
 
 #include <stdlib.h>
 
-#if !defined(__SDCC_ds390) // struct return not yet supported
+#if !defined(__SDCC_ds390) || defined(__SDCC_MODEL_FLAT24) // DS390 struct return is supported only in flat24.
 #if !(defined(SDCC_MOS) && defined(__SDCC_STACK_AUTO)) && !defined(__SDCC_hc08) && !defined(__SDCC_s08) // struct return limited to <=8
 lldiv_t lldiv(long long int numer, long long int denom)
 {
