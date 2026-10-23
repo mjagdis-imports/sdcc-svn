@@ -1,5 +1,14 @@
 2026-10-23 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
+	* src/SDCCopt.c (optimizeFinalCast): Retain pointer casts that change
+	  the volatility of the pointed-to type. Replacing the cast pointer
+	  with its source otherwise loses the qualification before register
+	  allocation and can allow a required volatile read to be deleted by
+	  peephole optimisation. This change is a precondition for removing
+	  the check for currFunc->funcUsesVolatile in notVolatileVariable.
+
+2026-10-23 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
 	* src/SDCCast.c (decorateType): Diagnose incompatible referenced
 	  types in pointer comparisons and non-object pointer operands of
 	  relational operators before optimisation. Apply array and function

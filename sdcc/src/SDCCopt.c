@@ -3235,6 +3235,10 @@ optimizeFinalCast (ebbIndex *ebbi)
 
              if (!IS_PTR (type1) || IS_BITFIELD(type1->next) || !IS_PTR (type2) || IS_BITFIELD(type2->next))
                continue;
+
+             /* The access must retain the volatility specified by the cast. */
+             if (isVolatile (type1->next) != isVolatile (type2->next))
+               continue;
             }
 
           // Introducinvg the duplicate smbol in the commented-out parts below would fix the type.
