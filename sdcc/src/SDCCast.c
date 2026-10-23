@@ -8188,7 +8188,7 @@ createFunction (symbol * name, ast * body)
     {
       GcurMemmap = statsg;
       codeOutBuf = &statsg->oBuf;
-      eBBlockFromiCode (iCodeFromAst (decorateType (resolveSymbols (staticAutos), RESULT_TYPE_NONE, true))); // todo: currFunc non-NULL here! problem for funcUsesVolatile, etc?
+      eBBlockFromiCode (iCodeFromAst (decorateType (resolveSymbols (staticAutos), RESULT_TYPE_NONE, true)));
       staticAutos = NULL;
     }
 

@@ -365,7 +365,6 @@ typedef struct symbol
   unsigned ptrreg:1;                /* this symbol assigned to a ptr reg */
   unsigned noSpilLoc:1;             /* cannot be assigned a spil location */
   bool funcDivFlagSafe:1;           // We know this function is safe to call with undocumented stm8 flag bit 6 set
-  bool funcUsesVolatile:1;          // The function potentially accesses a volatile variable
   bool funcRestartAtomicSupport:1;  /* The function uses (directly or indirectly) restartable atomic support routines. */
   bool funcPure:1;                  // The function is pure (i.e. it has no side-effects, and the return value only depends on the parameters) - roughly equivalent to GCC __attribute__((const)) and Keil __pure.
   unsigned isstrlit;                /* is a string literal and it's usage count  */

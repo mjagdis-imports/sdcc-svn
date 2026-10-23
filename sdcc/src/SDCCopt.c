@@ -3744,7 +3744,6 @@ checkPurity (const iCode *ic)
 
   if (currFunc)
     {
-      currFunc->funcUsesVolatile = uses_volatile;
       currFunc->funcPure = pure;
     }
 }

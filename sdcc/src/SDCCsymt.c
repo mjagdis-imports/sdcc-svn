@@ -358,7 +358,6 @@ newSymbol (const char *name, long scope)
 
   // Err on the safe side, when in doubt disabling optimizations.
   sym->funcDivFlagSafe = false;
-  sym->funcUsesVolatile = true;
   sym->funcRestartAtomicSupport = true;
   sym->funcPure = false;
 

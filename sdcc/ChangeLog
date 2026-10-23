@@ -1,5 +1,19 @@
 2026-10-23 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
+	* src/SDCCpeeph.c (notVolatileRange, directOperandSymbol,
+	  notVolatileSymbol, notVolatileVariable, notVolatile):
+	  Check preserved volatile-access flags over the matched lines instead
+	  of using the function-wide fallback. Share direct-symbol lookup,
+	  including byte offsets and assembly-name verification, across ports.
+	  Include MOS65C02 and HuC6280 in numeric-address checks.
+	* src/SDCCsymt.h (symbol): Remove funcUsesVolatile.
+	* src/SDCCsymt.c (newSymbol), src/SDCCopt.c (checkPurity):
+	  Remove assignments to funcUsesVolatile. Retain volatility checking
+	  when determining funcPure.
+	* src/SDCCast.c: Remove the obsolete comment about funcUsesVolatile.
+
+2026-10-23 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
 	* src/SDCCopt.c (optimizeFinalCast): Retain pointer casts that change
 	  the volatility of the pointed-to type. Replacing the cast pointer
 	  with its source otherwise loses the qualification before register

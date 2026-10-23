@@ -987,6 +987,73 @@ FBYNAME (newLabel)
   return true;
 }
 
+/* A peephole replacement inherits this information from every replaced line,
+   independently of the replacement's current iCode associations. */
+static bool
+notVolatileRange (const lineNode *first, const lineNode *last)
+{
+  for (const lineNode *line = first; line != last->next; line = line->next)
+    if (line->mightBeVolatileAccess)
+      return false;
+  return true;
+}
+
+/* Resolve a direct symbol operand, optionally parenthesised and followed
+   by a decimal byte offset. Indirect and indexed operands do not match. */
+static const symbol *
+directOperandSymbol (const char *operand)
+{
+  char name[SDCC_NAME_MAX + 1];
+  const bool parenthesised = *operand == '(';
+  if (parenthesised)
+    operand++;
+  while (ISCHARSPACE (*operand))
+    operand++;
+  if (*operand != '_')
+    return NULL;
+  size_t len = 0;
+  while (ISCHARALNUM (operand[len]) || operand[len] == '_')
+    len++;
+  if (len > SDCC_NAME_MAX)
+    return NULL;
+  const char *suffix = operand + len;
+  while (ISCHARSPACE (*suffix))
+    suffix++;
+  if (*suffix == '+')
+    {
+      suffix++;
+      while (ISCHARSPACE (*suffix))
+        suffix++;
+      if (!ISCHARDIGIT (*suffix))
+        return NULL;
+      while (ISCHARDIGIT (*suffix))
+        suffix++;
+      while (ISCHARSPACE (*suffix))
+        suffix++;
+    }
+  if (parenthesised)
+    {
+      if (*suffix != ')')
+        return NULL;
+      suffix++;
+    }
+  if (*suffix)
+    return NULL;
+  memcpy (name, operand, len);
+  name[len] = '\0';
+  const symbol *sym = findSym (SymbolTab, NULL, name + 1);
+  return sym && !strcmp (sym->rname, name) ? sym : NULL;
+}
+
+static bool
+notVolatileSymbol (const symbol *sym, const lineNode *first, const lineNode *last)
+{
+  if (isVolatile (sym->type))
+    return false;
+  /* A volatile lvalue can access an ordinarily declared object. */
+  return notVolatileRange (first, last);
+}
+
 /* Conservatively identify volatile accesses before peephole replacements
    can lose the original iCode association. */
 static bool
@@ -1022,61 +1089,36 @@ notVolatileVariable(const char *var, lineNode *currPl, lineNode *endPl)
   operand *op;
   iCode *last_ic;
 
-  const bool global_not_volatile = currFunc ? !currFunc->funcUsesVolatile : false;
+  const bool rangeNotVolatile = notVolatileRange (currPl, endPl);
+  const symbol *direct_sym = directOperandSymbol (var);
 
-  /* Can't tell if indirect accesses are volatile or not, so
-  ** assume they are (if there is a volatile access in the function at all), just to be safe.
-  */
+  /* For indirect or unresolved operands, use the preserved access information
+     for this matched range rather than unrelated accesses in the function. */
   if (TARGET_IS_MCS51 || TARGET_IS_DS390 || TARGET_IS_DS400)
     {
       if (*var=='@')
-        return global_not_volatile;
+        return rangeNotVolatile;
     }
   if (TARGET_Z80_LIKE)
     {
       if (var[0] == '#')
         return true;
       if (var[0] == '(')
-        {
-          for (const lineNode *line = currPl; line != endPl->next; line = line->next)
-            if (line->mightBeVolatileAccess)
-              return false;
-          /* Resolve only an exact direct symbol operand. Register-indirect
-             accesses and address expressions still need the fallback. */
-          const char *name = var + 1;
-          size_t len = 0;
-          if (*name != '_')
-            return global_not_volatile;
-          while (ISCHARALNUM (name[len]) || name[len] == '_')
-            len++;
-          if (len > SDCC_NAME_MAX || name[len] != ')' || name[len + 1])
-            return global_not_volatile;
-          memcpy (symname, name, len);
-          symname[len] = '\0';
-
-          /* As for direct calls, look up the C name without its leading
-             underscore. Verify the assembly name to reject shadowed or
-             renamed symbols. Instruction iCode associations need not survive
-             peephole rewrites. */
-          const symbol *sym = findSym (SymbolTab, NULL, symname + 1);
-          if (sym && !strcmp (sym->rname, symname))
-            return !isVolatile (sym->type);
-          return global_not_volatile;
-        }
+        return direct_sym ? notVolatileSymbol (direct_sym, currPl, endPl) : rangeNotVolatile;
       if (strstr (var, "(bc)"))
-        return global_not_volatile;
+        return rangeNotVolatile;
       if (strstr (var, "(de)"))
-        return global_not_volatile;
+        return rangeNotVolatile;
       if (strstr (var, "(hl"))
-        return global_not_volatile;
+        return rangeNotVolatile;
       if (strstr (var, "(ix"))
-        return global_not_volatile;
+        return rangeNotVolatile;
       if (strstr (var, "(iy"))
-        return global_not_volatile;
+        return rangeNotVolatile;
       // sm83-specific ldh can be volatile
       // but HRAM doesn't have to be volatile
       if (TARGET_ID_SM83 && strstr (var, "(c)"))
-        return global_not_volatile;
+        return rangeNotVolatile;
     }
 
   if (TARGET_IS_STM8)
@@ -1084,21 +1126,21 @@ notVolatileVariable(const char *var, lineNode *currPl, lineNode *endPl)
       if (var[0] == '#')
         return true;
       if (var[0] == '(')
-        return global_not_volatile;
+        return rangeNotVolatile;
       if (strstr (var, "(x)"))
-        return global_not_volatile;
+        return rangeNotVolatile;
       if (strstr (var, "(y)"))
-        return global_not_volatile;
+        return rangeNotVolatile;
       if (strstr (var, ", x)"))
-        return global_not_volatile;
+        return rangeNotVolatile;
       if (strstr (var, ", y)"))
-        return global_not_volatile;
+        return rangeNotVolatile;
       if (strstr (var, ", sp)"))
-        return global_not_volatile;
+        return rangeNotVolatile;
       if (strchr (var, '[') && strchr (var, ']'))
-        return global_not_volatile;
+        return rangeNotVolatile;
       if (strstr(var, "0x") || strstr(var, "0X") || isdigit(var[0]))
-        return global_not_volatile;
+        return rangeNotVolatile;
     }
 
   if (TARGET_PDK_LIKE)
@@ -1109,13 +1151,16 @@ notVolatileVariable(const char *var, lineNode *currPl, lineNode *endPl)
         return true;
     }
 
-  if (TARGET_HC08_LIKE || TARGET_IS_MOS6502)
+  if (TARGET_HC08_LIKE || TARGET_MOS6502_LIKE)
     {
       if (var[0] == '#')
         return true;
       if (strstr(var, "0x") || strstr(var, "0X") || isdigit(var[0]))
-        return global_not_volatile;
+        return rangeNotVolatile;
     }
+
+  if (direct_sym)
+    return notVolatileSymbol (direct_sym, currPl, endPl);
 
   /* Extract a symbol name from the variable */
   while (*vp && (*vp!='_'))
@@ -1134,9 +1179,8 @@ notVolatileVariable(const char *var, lineNode *currPl, lineNode *endPl)
 
   /* Keep volatile accesses protected even when a replacement has lost
      or changed its iCode association. */
-  for (const lineNode *line = currPl; line != endPl->next; line = line->next)
-    if (line->mightBeVolatileAccess)
-      return false;
+  if (!rangeNotVolatile)
+    return false;
 
   last_ic = NULL;
   for (cl = currPl; cl!=endPl->next; cl = cl->next)
@@ -1198,8 +1242,8 @@ notVolatileVariable(const char *var, lineNode *currPl, lineNode *endPl)
       }
   }
 
-  /* Couldn't find the symbol for some reason. Assume volatile if the current function touches anything volatile. */
-  return global_not_volatile;
+  /* An unresolved symbol still has the range's preserved access information. */
+  return rangeNotVolatile;
 }
 
 /*  notVolatile:
@@ -1221,16 +1265,8 @@ FBYNAME (notVolatile)
   int varNumber;
   char *var;
   char *digitend;
-  lineNode *cl;
-
   if (!cmdLine)
-    {
-      /* Use the access information captured before peephole rewriting. */
-      for (cl = currPl; cl != endPl->next; cl = cl->next)
-        if (cl->mightBeVolatileAccess)
-          return false;
-      return true;
-    }
+    return notVolatileRange (currPl, endPl);
 
   /* There were parameters; check the volatility of each */
   while (*cmdLine && ISCHARSPACE(*cmdLine))
