@@ -36,7 +36,13 @@ X X1 = {"abcdefghijklmnopqrstuvwxyzABCDEF", 'G'};
 X X2 = {"123",'9'};
 X X3 = {"return-return-return",'R'};
 
-X f (B a, char b, double c, B d)
+/* ds390 needs __reentrant for this indirect call with many arguments. */
+#if defined(__SDCC_ds390)
+#define STRUCT_RET_REENTRANT __reentrant
+#else
+#define STRUCT_RET_REENTRANT
+#endif
+X f (B a, char b, double c, B d) STRUCT_RET_REENTRANT
 {
   static X xr = {"return val", 'R'};
   X r;
@@ -47,7 +53,8 @@ X f (B a, char b, double c, B d)
   return r;
 }
 
-X (*fp) (B, char, double, B) = &f;
+X (*fp) (B, char, double, B) STRUCT_RET_REENTRANT = &f;
+#undef STRUCT_RET_REENTRANT
 #endif
 #endif
 
@@ -60,9 +67,13 @@ testTortureExecute (void)
   char tmp[100];
 
   Xr = f (B1, c2, d3, B2);
+  ASSERT (strcmp (Xr.c, "return val") == 0);
+  ASSERT (Xr.c1 == c2);
   strcpy (tmp, out);
   Xr.c[0] = Xr.c1 = '\0';
   Xr = (*fp) (B1, c2, d3, B2);
+  ASSERT (strcmp (Xr.c, "return val") == 0);
+  ASSERT (Xr.c1 == c2);
   if (strcmp (tmp, out))
     ASSERT (0);
 

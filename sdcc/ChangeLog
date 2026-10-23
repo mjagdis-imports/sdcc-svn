@@ -1,5 +1,17 @@
 2026-10-23 Lishin <lishin1008@gmail.com>
 
+	* support/regression/MakeList,
+	  support/regression/tests/bigreturn-remat.c.in,
+	  support/regression/tests/dynamiccstructret.c.in,
+	  support/regression/tests/funptrsstructreturn.c.in,
+	  support/regression/tests/gcc-torture-execute-struct-ret-1.c,
+	  support/regression/tests/largeoddstruct.c.in,
+	  support/regression/tests/structreturn.c.in:
+	  Run DS390 struct return tests for direct and indirect calls, and
+	  check returned data.
+
+2026-10-23 Lishin <lishin1008@gmail.com>
+
 	* device/include/stdlib.h,
 	  device/lib/div.c,
 	  device/lib/ldiv.c,
