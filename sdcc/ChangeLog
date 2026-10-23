@@ -1,3 +1,15 @@
+2026-10-23 Lishin <lishin1008@gmail.com>
+
+	* src/SDCCast.c,
+	  src/SDCCsymt.c,
+	  src/ds390/gen.c,
+	  src/ds390/main.c:
+	  Add struct and union return support for the DS390 flat24 model.
+	  Pass the result pointer in parameter registers and save it in the
+	  callee. Keep other parameters on the stack.
+	* support/regression/tests/ds390-structreturn-static.c:
+	  Add a test for returning a static struct.
+
 2026-10-22 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
 	* src/SDCCgen.h (lineElem_t, lineNode): Record possible volatile accesses.

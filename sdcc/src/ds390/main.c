@@ -108,13 +108,27 @@ _ds390_reset_regparm (struct sym_link *funcType)
 {
   regParmFlg = 0;
   regParmFuncType = funcType;
+  while (regParmFuncType && !IS_FUNC (regParmFuncType))
+    regParmFuncType = regParmFuncType->next;
 }
 
 static int
 _ds390_regparm (sym_link * l, bool reentrant)
 {
+  wassert (regParmFuncType);
+
   if (IFFUNC_HASVARARGS (regParmFuncType))
     return 0;
+
+  /* Keep parameter registers for the struct return pointer. */
+  if (IS_STRUCT (getSpec (regParmFuncType->next)))
+    {
+      sym_link *etype = getSpec (l);
+
+      SPEC_REGPARM (etype) = 0;
+      SPEC_ARGREG (etype) = 0;
+      return 0;
+    }
 
   if (IS_STRUCT (l))
     return 0;

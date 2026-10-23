@@ -6387,6 +6387,27 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           else
             functype = LTYPE (tree);
 
+          /* Check calls through function pointers too. */
+          if (TARGET_IS_DS390 && options.model != MODEL_FLAT24 && IS_AGGREGATE (functype->next))
+            {
+              werrorfl (tree->filename, tree->lineno, E_FUNC_AGGR);
+              goto errorTreeReturn;
+            }
+
+          if (TARGET_IS_DS390 && !options.stack10bit && IS_AGGREGATE (functype->next))
+            {
+              werrorfl (tree->filename, tree->lineno, E_NOT_ALLOWED,
+                        "ds390 struct/union return requires --stack-10bit");
+              goto errorTreeReturn;
+            }
+
+          if (TARGET_IS_DS390 && options.useXstack && IS_AGGREGATE (functype->next))
+            {
+              werrorfl (tree->filename, tree->lineno, E_NOT_ALLOWED,
+                        "ds390 struct/union return with --xstack");
+              goto errorTreeReturn;
+            }
+
           if (tree->right && tree->right->reversed)
             reverseParms (tree->right, 0);
 

@@ -4000,11 +4000,25 @@ checkFunction (symbol * sym, symbol * csym)
   if (incompleteParameter)
     return 0;
 
-  /* function cannot return aggregate */
-  if ((TARGET_IS_DS390)  && IS_AGGREGATE (sym->type->next))
+  /* Struct returns need a four-byte pointer on ds390. */
+  if (TARGET_IS_DS390 && options.model != MODEL_FLAT24 && IS_AGGREGATE (sym->type->next))
     {
       werrorfl (sym->fileDef, sym->lineDef, E_FUNC_AGGR, sym->name);
       return 0;
+    }
+
+  /* ds390 struct/union return needs the 10-bit hardware stack. */
+  if (TARGET_IS_DS390 && !options.stack10bit && IS_AGGREGATE (sym->type->next))
+    {
+      werrorfl (sym->fileDef, sym->lineDef, E_NOT_ALLOWED,
+                "ds390 struct/union return requires --stack-10bit");
+    }
+
+  /* ds390 struct/union return with xstack is not supported yet. */
+  if (TARGET_IS_DS390 && options.useXstack && IS_AGGREGATE (sym->type->next))
+    {
+      werrorfl (sym->fileDef, sym->lineDef, E_NOT_ALLOWED,
+                "ds390 struct/union return with --xstack");
     }
 
   /* check if this function is defined as calleeSaves

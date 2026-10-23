@@ -675,8 +675,14 @@ static int
 stackoffset (const symbol * sym)
 {
   int offset = sym->stack;
-  if (sym->stack < 0)
-    offset -= _G.nRegsSaved;
+
+  if (offset < 0)
+    {
+      offset -= _G.nRegsSaved;
+      if (IS_STRUCT (currFunc->type->next))
+        offset -= GPTRSIZE;
+    }
+
   return offset;
 }
 
@@ -2920,6 +2926,8 @@ genPointerPush (iCode *ic)
   wassertl (IS_OP_LITERAL (IC_RIGHT (ic)), "IPUSH_VALUE_AT_ADDRESS with non-literal right operand");
   wassertl (!operandLitValue (IC_RIGHT(ic)), "IPUSH_VALUE_AT_ADDRESS with non-zero right operand");
 
+  saveRegisters (ic);
+
   /* depending on the type of pointer we need to
      move it to the correct pointer register */
   type = operandType (left);
@@ -3354,6 +3362,100 @@ selectRegBank (short bank, bool keepFlags)
 }
 
 /*-----------------------------------------------------------------*/
+/* stackAdjust - remove bytes from the stack                       */
+/*-----------------------------------------------------------------*/
+static void
+stackAdjust (int n)
+{
+  int i;
+
+  wassert (n >= 0);
+
+  if (options.stack10bit)
+    {
+      if (n <= 10)
+        {
+          for (i = 0; i < n; i++)
+            emitpop ("acc");
+        }
+      else
+        {
+          PROTECT_SP;
+          emitcode ("clr", "c");
+          emitcode ("mov", "a,sp");
+          emitcode ("subb", "a,#!constbyte", (unsigned)(n & 0xffu));
+          emitcode ("mov", "sp,a");
+          emitcode ("mov", "a,esp");
+          adjustEsp ("a");
+          emitcode ("subb", "a,#!constbyte", (unsigned)((n >> 8) & 0xffu));
+          emitcode ("mov", "esp,a");
+          UNPROTECT_SP;
+        }
+    }
+  else if (n > 3)
+    {
+      emitcode ("mov", "a,%s", spname);
+      emitcode ("add", "a,#!constbyte", (unsigned)((-n) & 0xffu));
+      emitcode ("mov", "%s,a", spname);
+    }
+  else
+    for (i = 0; i < n; i++)
+      emitcode ("dec", "%s", spname);
+}
+
+/*-----------------------------------------------------------------*/
+/* emitPassStructReturnPointer - load the result address            */
+/*-----------------------------------------------------------------*/
+static void
+emitPassStructReturnPointer (operand * result)
+{
+  symbol *sym = OP_SYMBOL (result);
+  int spaceTag;
+  const unsigned stackPage = (unsigned)((options.stack_loc >> 16) & 0xffu);
+
+  if (sym->onStack)
+    spaceTag = GPTYPE_FAR;
+  else
+    spaceTag = pointerTypeToGPByte (pointerCode (result), NULL, NULL);
+
+  if (!sym->onStack)
+    {
+      /* Address of a static result. */
+      emitcode ("mov", "dpl,#%s", sym->rname);
+      emitcode ("mov", "dph,#(%s >> 8)", sym->rname);
+      emitcode ("mov", "dpx,#(%s >> 16)", sym->rname);
+    }
+  else
+    {
+      /* Address of a stack result. */
+      if (options.stack10bit)
+        {
+          emitcode ("mov", "dpl,_bpx");
+          emitcode ("mov", "a,dpl");
+          emitcode ("add", "a,#!constbyte", (unsigned)(sym->stack & 0xffu));
+          emitcode ("mov", "dpl,a");
+          emitcode ("mov", "dph,_bpx+1");
+          emitcode ("mov", "a,dph");
+          emitcode ("addc", "a,#!constbyte", (unsigned)((sym->stack >> 8) & 0xffu));
+          emitcode ("mov", "dph,a");
+        }
+      else
+        {
+          emitcode ("mov", "dpl,_bp");
+          if (sym->stack)
+            {
+              emitcode ("mov", "a,dpl");
+              emitcode ("add", "a,#!constbyte", (unsigned)(sym->stack & 0xffu));
+              emitcode ("mov", "dpl,a");
+            }
+          emitcode ("mov", "dph,#0");
+        }
+      emitcode ("mov", "dpx,#!constbyte", stackPage);
+    }
+  emitcode ("mov", "b,#0x%02x", spaceTag);
+}
+
+/*-----------------------------------------------------------------*/
 /* genCall - generates a call statement                            */
 /*-----------------------------------------------------------------*/
 static void
@@ -3367,6 +3469,7 @@ genCall (iCode * ic)
   bool accPushed = FALSE;
   bool resultInF0 = FALSE;
   bool assignResultGenerated = FALSE;
+  bool returnsStruct;
 
   D (emitcode (";", "genCall"));
 
@@ -3374,6 +3477,7 @@ genCall (iCode * ic)
      the same register bank then we need to save the
      destination registers on the stack */
   dtype = operandType (IC_LEFT (ic));
+  returnsStruct = IS_STRUCT (dtype->next);
   etype = getSpec (dtype);
   if (currFunc && dtype && (!IFFUNC_ISNAKED (dtype) || TARGET_IS_DS400) &&
       (FUNC_REGBANK (currFunc->type) != FUNC_REGBANK (dtype)) && IFFUNC_ISISR (currFunc->type))
@@ -3413,6 +3517,12 @@ genCall (iCode * ic)
       _G.sendSet = NULL;
     }
 
+  if (returnsStruct)
+    {
+      emitPassStructReturnPointer (IC_RESULT (ic));
+      assignResultGenerated = TRUE;
+    }
+
   if (swapBanks)
     {
       emitcode ("mov", "psw,#!constbyte", (unsigned)(((FUNC_REGBANK (dtype)) << 3) & 0xffu));
@@ -3438,10 +3548,10 @@ genCall (iCode * ic)
     }
 
   /* if we need assign a result value */
-  if ((IS_ITEMP (IC_RESULT (ic)) &&
+  if (!assignResultGenerated && ((IS_ITEMP (IC_RESULT (ic)) &&
        !IS_BIT (OP_SYM_ETYPE (IC_RESULT (ic))) &&
        (OP_SYMBOL (IC_RESULT (ic))->nRegs ||
-        OP_SYMBOL (IC_RESULT (ic))->accuse || OP_SYMBOL (IC_RESULT (ic))->spildir)) || IS_TRUE_SYMOP (IC_RESULT (ic)))
+        OP_SYMBOL (IC_RESULT (ic))->accuse || OP_SYMBOL (IC_RESULT (ic))->spildir)) || IS_TRUE_SYMOP (IC_RESULT (ic))))
     {
       if (isOperandInFarSpace (IC_RESULT (ic)) && getSize (operandType (IC_RESULT (ic))) <= 2)
         {
@@ -3483,64 +3593,28 @@ genCall (iCode * ic)
         }
     }
 
-  /* adjust the stack for parameters if required */
+  /* Remove stack parameters. */
   if (ic->parmBytes)
     {
-      int i;
-      if (options.stack10bit)
+      if (accuse && !options.stack10bit && ic->parmBytes > 3)
         {
-          if (ic->parmBytes <= 10)
-            {
-              emitcode (";", "stack adjustment for parms");
-              for (i = 0; i < ic->parmBytes; i++)
-                {
-                  emitpop ("acc");
-                }
-            }
-          else
-            {
-              PROTECT_SP;
-              emitcode ("clr", "c");
-              emitcode ("mov", "a,sp");
-              emitcode ("subb", "a,#!constbyte", (unsigned)(ic->parmBytes & 0xffu));
-              emitcode ("mov", "sp,a");
-              emitcode ("mov", "a,esp");
-              adjustEsp ("a");
-              emitcode ("subb", "a,#!constbyte", (unsigned)((ic->parmBytes >> 8) & 0xffu));
-              emitcode ("mov", "esp,a");
-              UNPROTECT_SP;
-            }
+          emitpush ("acc");
+          accPushed = TRUE;
         }
-      else
+      if (IS_BIT (OP_SYM_ETYPE (IC_LEFT (ic))) && IS_BIT (OP_SYM_ETYPE (IC_RESULT (ic))) &&
+          !assignResultGenerated && !options.stack10bit && ic->parmBytes > 3)
         {
-          if (ic->parmBytes > 3)
-            {
-              if (accuse)
-                {
-                  emitcode ("push", "acc");
-                  accPushed = TRUE;
-                }
-              if (IS_BIT (OP_SYM_ETYPE (IC_LEFT (ic))) && IS_BIT (OP_SYM_ETYPE (IC_RESULT (ic))) && !assignResultGenerated)
-                {
-                  emitcode ("mov", "F0,c");
-                  resultInF0 = TRUE;
-                }
+          emitcode ("mov", "F0,c");
+          resultInF0 = TRUE;
+        }
 
-              emitcode ("mov", "a,%s", spname);
-              emitcode ("add", "a,#!constbyte", (unsigned)((-ic->parmBytes) & 0xffu));
-              emitcode ("mov", "%s,a", spname);
+      stackAdjust (ic->parmBytes);
 
-              /* unsaveRegisters from xstack needs acc, but */
-              /* unsaveRegisters from stack needs this popped */
-              if (accPushed && !options.useXstack)
-                {
-                  emitpop ("acc");
-                  accPushed = FALSE;
-                }
-            }
-          else
-            for (i = 0; i < ic->parmBytes; i++)
-              emitcode ("dec", "%s", spname);
+      /* The accumulator save is on the same stack only without xstack. */
+      if (accPushed && !options.useXstack)
+        {
+          emitpop ("acc");
+          accPushed = FALSE;
         }
     }
 
@@ -3584,10 +3658,12 @@ genPcall (iCode * ic)
   symbol *rlbl = newiTempLabel (NULL);
   bool restoreBank = FALSE;
   bool resultInF0 = FALSE;
+  bool returnsStruct;
 
   D (emitcode (";", "genPcall"));
 
   dtype = operandType (IC_LEFT (ic))->next;
+  returnsStruct = IS_STRUCT (dtype->next);
   /* if caller saves & we have not saved then */
   if (!ic->regsSaved)
     saveRegisters (ic);
@@ -3624,14 +3700,17 @@ genPcall (iCode * ic)
       _G.sendSet = NULL;
     }
 
+  if (returnsStruct)
+    emitPassStructReturnPointer (IC_RESULT (ic));
+
   /* make the call */
   emitcode ("ret", "");
   emitLabel (rlbl);
 
   /* if we need assign a result value */
-  if ((IS_ITEMP (IC_RESULT (ic)) &&
+  if (!returnsStruct && ((IS_ITEMP (IC_RESULT (ic)) &&
        !IS_BIT (OP_SYM_ETYPE (IC_RESULT (ic))) &&
-       (OP_SYMBOL (IC_RESULT (ic))->nRegs || OP_SYMBOL (IC_RESULT (ic))->spildir)) || IS_TRUE_SYMOP (IC_RESULT (ic)))
+       (OP_SYMBOL (IC_RESULT (ic))->nRegs || OP_SYMBOL (IC_RESULT (ic))->spildir)) || IS_TRUE_SYMOP (IC_RESULT (ic))))
     {
       _G.accInUse++;
       aopOp (IC_RESULT (ic), ic, FALSE, TRUE);
@@ -3642,58 +3721,17 @@ genPcall (iCode * ic)
       freeAsmop (IC_RESULT (ic), NULL, ic, TRUE);
     }
 
-  /* adjust the stack for parameters if required */
+  /* Remove stack parameters. */
   if (ic->parmBytes)
     {
-      int i;
-      if (options.stack10bit)
+      if (IS_BIT (OP_SYM_ETYPE (IC_LEFT (ic))) && IS_BIT (OP_SYM_ETYPE (IC_RESULT (ic))) &&
+          ((options.stack10bit && ic->parmBytes > 10) || (!options.stack10bit && ic->parmBytes > 3)))
         {
-          if (ic->parmBytes <= 10)
-            {
-              emitcode (";", "stack adjustment for parms");
-              for (i = 0; i < ic->parmBytes; i++)
-                {
-                  emitpop ("acc");
-                }
-            }
-          else
-            {
-              if (IS_BIT (OP_SYM_ETYPE (IC_LEFT (ic))) && IS_BIT (OP_SYM_ETYPE (IC_RESULT (ic))))
-                {
-                  emitcode ("mov", "F0,c");
-                  resultInF0 = TRUE;
-                }
-
-              PROTECT_SP;
-              emitcode ("clr", "c");
-              emitcode ("mov", "a,sp");
-              emitcode ("subb", "a,#!constbyte", (unsigned)(ic->parmBytes & 0xffu));
-              emitcode ("mov", "sp,a");
-              emitcode ("mov", "a,esp");
-              adjustEsp ("a");
-              emitcode ("subb", "a,#!constbyte", (unsigned)((ic->parmBytes >> 8) & 0xffu));
-              emitcode ("mov", "esp,a");
-              UNPROTECT_SP;
-            }
+          emitcode ("mov", "F0,c");
+          resultInF0 = TRUE;
         }
-      else
-        {
-          if (ic->parmBytes > 3)
-            {
-              if (IS_BIT (OP_SYM_ETYPE (IC_LEFT (ic))) && IS_BIT (OP_SYM_ETYPE (IC_RESULT (ic))))
-                {
-                  emitcode ("mov", "F0,c");
-                  resultInF0 = TRUE;
-                }
 
-              emitcode ("mov", "a,%s", spname);
-              emitcode ("add", "a,#!constbyte", (unsigned)((-ic->parmBytes) & 0xffu));
-              emitcode ("mov", "%s,a", spname);
-            }
-          else
-            for (i = 0; i < ic->parmBytes; i++)
-              emitcode ("dec", "%s", spname);
-        }
+      stackAdjust (ic->parmBytes);
     }
   /* if register bank was saved then unsave them */
   if (restoreBank)
@@ -3780,6 +3818,15 @@ genFunction (iCode * ic)
     {
       emitcode (";", "naked function: no prologue.");
       return;
+    }
+
+  if (IS_STRUCT (ftype->next))
+    {
+      /* Save the hidden struct return address. */
+      emitpush ("dpl");
+      emitpush ("dph");
+      emitpush ("dpx");
+      emitpush ("b");
     }
 
   if (options.stack_probe)
@@ -4283,6 +4330,9 @@ genEndFunction (iCode * ic)
       if (!inExcludeList ("acc"))
         emitpop ("acc");
 
+      if (IS_STRUCT (ftype->next))
+        stackAdjust (GPTRSIZE);
+
       /* if debug then send end of function */
       if (options.debug && currFunc)
         {
@@ -4312,6 +4362,9 @@ genEndFunction (iCode * ic)
                 }
             }
         }
+
+      if (IS_STRUCT (ftype->next))
+        stackAdjust (GPTRSIZE);
 
       /* if debug then send end of function */
       if (options.debug && currFunc)
@@ -4460,6 +4513,130 @@ genJavaNativeRet (iCode * ic)
 }
 
 /*-----------------------------------------------------------------*/
+/* emitLoadStructReturnPointer - read return pointer from stack     */
+/*-----------------------------------------------------------------*/
+static void
+emitLoadStructReturnPointer (int pointerOffset)
+{
+  int i;
+
+  /* SP includes saved _bpx and local variables. */
+  emitcode ("mov", "dpx,#!constbyte", (unsigned)((options.stack_loc >> 16) & 0xffu));
+  emitcode ("mov", "a,sp");
+  emitcode ("add", "a,#0x%02x", pointerOffset & 0xffu);
+  emitcode ("mov", "dpl,a");
+  emitcode ("mov", "a,esp");
+  adjustEsp ("a");
+  emitcode ("addc", "a,#!constbyte", (unsigned)(((unsigned)pointerOffset >> 8) & 0xffu));
+  emitcode ("mov", "dph,a");
+  for (i = 0; i < GPTRSIZE; i++)
+    {
+      emitcode ("movx", "a,@dptr");
+      emitpush ("acc");
+      if (i + 1 < GPTRSIZE)
+        emitcode ("inc", "dptr");
+    }
+  emitpop ("b");
+  emitpop ("dpx");
+  emitpop ("dph");
+  emitpop ("dpl");
+}
+
+/*-----------------------------------------------------------------*/
+/* emitStructReturnFromDptr - copy struct from DPTR                  */
+/*-----------------------------------------------------------------*/
+static void
+emitStructReturnFromDptr (iCode * ic, int size, int pointerOffset)
+{
+  operand *source = IC_LEFT (ic);
+  const bool usesPrimaryDptr = AOP_TYPE (source) == AOP_DPTR;
+  const int savedSourceBytes = usesPrimaryDptr ? 4 : 0;
+  int i, j;
+
+  /* __gptrput uses DPTR. Save the source DPTR before each write. */
+  for (i = 0; i < size; i++)
+    {
+      MOVA (aopGet (source, i, FALSE, FALSE, NULL));
+
+      if (usesPrimaryDptr)
+        {
+          /* Save the new DPTR position set by aopGet. */
+          emitpush ("dpl");
+          emitpush ("dph");
+          emitpush ("dpx");
+          emitpush ("acc");
+        }
+      else
+        emitcode ("mov", "acc1,a");
+
+      emitLoadStructReturnPointer (pointerOffset - savedSourceBytes);
+      for (j = 0; j < i; j++)
+        emitcode ("inc", "dptr");
+
+      if (usesPrimaryDptr)
+        emitpop ("acc");
+      else
+        emitcode ("mov", "a,acc1");
+      emitcode ("lcall", "__gptrput");
+
+      if (usesPrimaryDptr)
+        {
+          emitpop ("dpx");
+          emitpop ("dph");
+          emitpop ("dpl");
+        }
+    }
+}
+
+/*-----------------------------------------------------------------*/
+/* genStructReturn - write struct to the return address             */
+/*-----------------------------------------------------------------*/
+static void
+genStructReturn (iCode * ic, int size)
+{
+  const bool usesFramePointer =
+    (IFFUNC_ISREENT (currFunc->type) || options.stackAuto) &&
+    (currFunc->stack || FUNC_HASSTACKPARM (currFunc->type));
+  /* SP points to the last used byte. */
+  int pointerOffset;
+  int i;
+
+  pointerOffset = -(GPTRSIZE - 1);
+
+  /* Count saved registers and PSW when finding the return pointer. */
+  pointerOffset -= _G.nRegsSaved;
+  if (FUNC_REGBANK (currFunc->type))
+    pointerOffset--;
+
+  /* Critical functions save PSW after the frame. Count it for SP. */
+  if (IFFUNC_ISCRITICAL (currFunc->type))
+    pointerOffset--;
+
+  /* Count both _bpx bytes and local variables. */
+  if (usesFramePointer)
+    pointerOffset -= 2;
+  pointerOffset -= currFunc->stack;
+
+  if (AOP_TYPE (IC_LEFT (ic)) == AOP_DPTR ||
+      AOP_TYPE (IC_LEFT (ic)) == AOP_DPTRn ||
+      AOP_TYPE (IC_LEFT (ic)) == AOP_DPTR2 ||
+      AOP_TYPE (IC_LEFT (ic)) == AOP_STR)
+    emitStructReturnFromDptr (ic, size, pointerOffset);
+  else
+    {
+      emitLoadStructReturnPointer (pointerOffset);
+      for (i = 0; i < size; i++)
+        {
+          MOVA (aopGet (IC_LEFT (ic), i, FALSE, FALSE, NULL));
+          emitcode ("lcall", "__gptrput");
+          if (i + 1 < size)
+            emitcode ("inc", "dptr");
+        }
+    }
+
+  freeAsmop (IC_LEFT (ic), NULL, ic, TRUE);
+}
+
 /* genRet - generate code for return statement                     */
 /*-----------------------------------------------------------------*/
 static void
@@ -4486,6 +4663,11 @@ genRet (iCode * ic)
      move the return value into place */
   aopOp (IC_LEFT (ic), ic, FALSE, (IS_OP_RUONLY (IC_LEFT (ic)) ? FALSE : TRUE));
   size = AOP_SIZE (IC_LEFT (ic));
+  if (IS_STRUCT (operandType (IC_LEFT (ic))))
+    {
+      genStructReturn (ic, size);
+      goto jumpret;
+    }
 
   _startLazyDPSEvaluation ();
 
@@ -11966,14 +12148,14 @@ genAddrOf (iCode * ic)
 
           dbuf_init (&dbuf, 128);
           dbuf_tprintf (&dbuf, "#!constbyte", (unsigned)((options.stack_loc >> 16) & 0xffu));
-          /* if it has an offset then we need to compute it */
           if (stack_offset)
             {
               emitcode ("mov", "a,_bpx");
-              emitcode ("add", "a,#!constbyte", (unsigned)(stack_offset & 0xff));
+              emitcode ("add", "a,#!constbyte", (unsigned)(stack_offset & 0xffu));
               emitcode ("mov", "b,a");
               emitcode ("mov", "a,_bpx+1");
               emitcode ("addc", "a,#!constbyte", (unsigned)((stack_offset >> 8) & 0xff));
+
               if (aopPutUsesAcc (IC_RESULT (ic), "b", 0))
                 {
                   emitpush ("acc");
@@ -11997,7 +12179,7 @@ genAddrOf (iCode * ic)
       else
         {
           /* if it has an offset then we need to compute it */
-          if (sym->stack)
+          if (stack_offset)
             {
               emitcode ("mov", "a,_bp");
               emitcode ("add", "a,#!constbyte", (unsigned)(stack_offset & 0xff));
