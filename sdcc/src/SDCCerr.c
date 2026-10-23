@@ -807,6 +807,8 @@ struct
      "parameter %d of function '%s' has incomplete type", 0},
   {E_DUPLICATE_GENERIC_TYPE, ERROR_LEVEL_ERROR,
      "generic association type is compatible with previous association at %s:%d", 0},
+  {W_COMPARE_POINTERS, ERROR_LEVEL_WARNING,
+     "comparison of %s", 0},
 };
 
 /* -------------------------------------------------------------------------------

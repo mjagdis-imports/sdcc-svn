@@ -3801,17 +3801,30 @@ inCalleeSaveList (char *s)
   return isinSetWith (options.calleeSavesSet, s, calleeCmp);
 }
 
-/* Return true if two pointers reference similar types.
-   Outermost access qualifiers on the referenced types may differ here;
-   atomicity and nested qualification must match. Loss of those
-   outermost access qualifiers is checked elsewhere by
-   checkPtrTargetQualifiers; pointer-kind conversions are checked
-   elsewhere by compareType and checkPtrCast. */
-static bool
-similarPtrTargetTypes (sym_link *dest, sym_link *src)
+/* Return the referenced type after array-to-pointer or function-to-pointer
+   conversion, without constructing a temporary pointer type. */
+sym_link *
+pointerTargetType (sym_link *type)
 {
-  wassert (IS_PTR (dest) && IS_PTR (src));
-  return similarTypes (dest->next, src->next);
+  if (IS_PTR (type) || IS_ARRAY (type))
+    return type->next;
+  return IS_FUNC (type) ? type : NULL;
+}
+
+/* Return true when two pointer operands need a referenced-type warning.
+   Ignore void targets here, allowing the void-pointer exceptions for equality,
+   conditional expressions and implicit conversions. Mixed function/object
+   pointer cases are checked separately. */
+bool
+needsPtrTargetTypeWarning (sym_link *left, sym_link *right)
+{
+  sym_link *leftTarget = pointerTargetType (left),
+           *rightTarget = pointerTargetType (right);
+
+  return leftTarget && rightTarget &&
+    IS_FUNC (leftTarget) == IS_FUNC (rightTarget) &&
+    !IS_VOID (leftTarget) && !IS_VOID (rightTarget) &&
+    !similarTypes (leftTarget, rightTarget);
 }
 
 /* Diagnose dissimilar referenced types in an implicit conversion.
@@ -3828,9 +3841,7 @@ diagnoseDissimilarPtrTargetTypes (sym_link *dest, sym_link *src, const char *fil
   value *converted;
 
   src = argumentTypeAfterDecay (src, &converted);
-  bool dissimilar = IS_FUNCPTR (dest) == IS_FUNCPTR (src) && IS_PTR (dest) && IS_PTR (src) &&
-    !IS_VOID (dest->next) && !IS_VOID (src->next) &&
-    !similarPtrTargetTypes (dest, src);
+  bool dissimilar = IS_PTR (dest) && IS_PTR (src) && needsPtrTargetTypeWarning (dest, src);
   if (dissimilar)
     {
       if (werrorfl (filename, lineno, W_INCOMPAT_PTYPES))

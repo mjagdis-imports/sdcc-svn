@@ -5592,6 +5592,27 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
     case EQ_OP:
     case NE_OP:
       {
+        sym_link *leftTarget = pointerTargetType (LTYPE (tree)),
+                 *rightTarget = pointerTargetType (RTYPE (tree));
+        bool equality = tree->opval.op == EQ_OP || tree->opval.op == NE_OP;
+        const char *reason = NULL;
+
+        /* Check source types before optimisation or common-type conversion.
+           Equality shares the referenced-type constraint used by conditional
+           expressions and implicit conversions. Relational operators also
+           require object types. */
+        if (leftTarget && rightTarget)
+          {
+            if (!equality && (IS_FUNC (leftTarget) || IS_FUNC (rightTarget)))
+              reason = "pointers to non-object types";
+            else if (equality ? needsPtrTargetTypeWarning (LTYPE (tree), RTYPE (tree)) :
+                !similarTypes (leftTarget, rightTarget))
+              reason = "pointers to incompatible types";
+
+            if (reason && werrorfl (tree->filename, tree->lineno, W_COMPARE_POINTERS, reason))
+              printWithTypes (LTYPE (tree), RTYPE (tree));
+          }
+
         ast *lt = optimizeCompare (tree);
 
         if (tree != lt)
@@ -5608,22 +5629,21 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           goto errorTreeReturn;
         }
 
-      /* if they are pointers they must be castable */
-      else if (IS_PTR (LTYPE (tree)) && IS_PTR (RTYPE (tree)))
+      /* Compatible referenced types do not guarantee compatible pointer
+         representations across address spaces. */
+      else if (IS_PTR (LTYPE (tree)) && IS_PTR (RTYPE (tree)) &&
+          similarTypes (LTYPE (tree)->next, RTYPE (tree)->next) &&
+          compareType (LTYPE (tree), RTYPE (tree), false) == 0 &&
+          compareType (RTYPE (tree), LTYPE (tree), false) == 0)
         {
-          if (compareType (LTYPE (tree), RTYPE (tree), false) == 0 && compareType (RTYPE (tree), LTYPE (tree), false) == 0) // Compare both ways, just cast to the one that is more generic.
-            {
-              werrorfl (tree->filename, tree->lineno, E_INCOMPAT_TYPES);
-              fprintf (stderr, "comparing type ");
-              printTypeChain (LTYPE (tree), stderr);
-              fprintf (stderr, " to type ");
-              printTypeChain (RTYPE (tree), stderr);
-              fprintf (stderr, "\n");
-              goto errorTreeReturn;
-            }
+          werrorfl (tree->filename, tree->lineno, E_INCOMPAT_TYPES);
+          printWithTypes (LTYPE (tree), RTYPE (tree));
+          goto errorTreeReturn;
         }
-      /* else they should be promotable to one another */
-      else
+
+      /* Pointer comparisons were checked above, including array and function
+         conversions. Other operands must be promotable to one another. */
+      else if (!pointerTargetType (LTYPE (tree)) || !pointerTargetType (RTYPE (tree)))
         {
           if (!((IS_PTR (LTYPE (tree)) && IS_LITERAL (RTYPE (tree)))
                 || (IS_PTR (RTYPE (tree)) && IS_LITERAL (LTYPE (tree)))
@@ -6096,32 +6116,13 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
       return tree;
 
     case ':':
-      {
-        value *convertedL, *convertedR;
-        sym_link *leftType = argumentTypeAfterDecay (LTYPE (tree), &convertedL),
-                 *rightType = argumentTypeAfterDecay (RTYPE (tree), &convertedR);
-
-        /* Castability alone does not satisfy the conditional operator's
-           requirement for compatible referenced types */
-        if (IS_FUNCPTR (leftType) == IS_FUNCPTR (rightType) &&
-            IS_PTR (leftType) && IS_PTR (rightType) &&
-            !IS_VOID (leftType->next) && !IS_VOID (rightType->next) &&
-            !similarTypes (leftType->next, rightType->next))
-          {
-            werrorfl (tree->filename, tree->lineno, W_INCOMPAT_PTYPES);
-            printWithTypes (leftType, rightType);
-          }
-        if (convertedL)
-          {
-            Safe_free (convertedL->type);
-            Safe_free (convertedL);
-          }
-        if (convertedR)
-          {
-            Safe_free (convertedR->type);
-            Safe_free (convertedR);
-          }
-      }
+      /* Castability alone does not satisfy the conditional operator's
+         requirement for compatible referenced types. */
+      if (needsPtrTargetTypeWarning (LTYPE (tree), RTYPE (tree)))
+        {
+          werrorfl (tree->filename, tree->lineno, W_INCOMPAT_PTYPES);
+          printWithTypes (LTYPE (tree), RTYPE (tree));
+        }
       if ((compareType (LTYPE (tree), RTYPE (tree), false) == 0) && (compareType (RTYPE (tree), LTYPE (tree), false) == 0))
         {
           if (IS_PTR (LTYPE (tree)) && !IS_GENPTR (LTYPE (tree)))

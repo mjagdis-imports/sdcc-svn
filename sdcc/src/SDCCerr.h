@@ -400,6 +400,8 @@ enum {
   E_INCOMPLETE_PARAMETER        = 370, // function definition has an incomplete parameter type
   E_DUPLICATE_GENERIC_TYPE      = 371, // generic association type is compatible with previous association at %s:%d
 
+  W_COMPARE_POINTERS           = 372, // invalid pointer comparison
+
   // If you get a merge conflict here, some #pragma disable_warning in support/valdiag and support/regression will likely need to be adapted to the resolution. Check there!
 
   // don't touch this!

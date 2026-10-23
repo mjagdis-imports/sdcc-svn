@@ -750,6 +750,8 @@ sym_link *newVoidLink ();
 int compareType (sym_link *, sym_link *, bool ignoreimplicitintrinsic);
 bool compatibleTypes (sym_link *, sym_link *);
 bool similarTypes (sym_link *, sym_link *);
+sym_link *pointerTargetType (sym_link *);
+bool needsPtrTargetTypeWarning (sym_link *, sym_link *);
 bool diagnoseDissimilarPtrTargetTypes (sym_link *, sym_link *, const char *, int);
 int compareTypeExact (sym_link *, sym_link *, long level, bool check_top_std_qual);
 int compareTypeInexact (sym_link *, sym_link *);

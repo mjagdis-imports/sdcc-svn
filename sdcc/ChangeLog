@@ -1,3 +1,23 @@
+2026-10-23 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
+	* src/SDCCast.c (decorateType): Diagnose incompatible referenced
+	  types in pointer comparisons and non-object pointer operands of
+	  relational operators before optimisation. Apply array and function
+	  conversions when checking the operands. Retain the equality exceptions
+	  for object/void pointers and null pointer constants (bug #4174).
+	* src/SDCCsymt.c, src/SDCCsymt.h: Share pointerTargetType and
+	  needsPtrTargetTypeWarning between comparison, conditional-expression
+	  and implicit-conversion constraint checks. Use similarTypes to compare
+	  referenced types. Check array and function operands without constructing
+	  temporary pointer types in comparisons and conditional expressions.
+	* src/SDCCerr.c, src/SDCCerr.h: Add W_COMPARE_POINTERS as a warning.
+	* support/valdiag/tests/bug-4174.c: Test all six operators, reversed
+	  operands, function pointers, arrays, constant folding and valid
+	  comparisons, including void and other incomplete object types,
+	  qualifiers, null pointers and address spaces.
+	* support/regression/tests/bug-2710.c: Suppress the warning for the
+	  comparison of pointers to incompatible types.
+
 2026-10-23 Lishin <lishin1008@gmail.com>
 
 	* support/regression/MakeList,
