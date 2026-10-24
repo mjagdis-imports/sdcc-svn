@@ -1,3 +1,9 @@
+2026-10-24 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/MakeList,
+	  support/regression/tests/bug-4153.c:
+	  Disable test for low-memory pdk via MakeList rather than #ifdef.
+
 2026-10-23 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
 	* src/SDCCpeeph.c (notVolatileRange, directOperandSymbol,
