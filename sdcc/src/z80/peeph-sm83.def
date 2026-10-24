@@ -146,7 +146,7 @@ replace restart {
 } by {
 	; sm83 peephole 10d combined ld and dec.
 	ldhl	sp,#%2
-} if immdInRange(-128 127 '-' %1 1 %2)
+} if immdInRange(-128 127 '-' %1 1 %2), notUsed('hf' 'cf')
 
 replace restart {
 	ldhl	sp,#%1
@@ -154,7 +154,7 @@ replace restart {
 } by {
 	; sm83 peephole 10e combined ld and inc.
 	ldhl	sp,#%2
-} if immdInRange(-128 127 '+' %1 1 %2)
+} if immdInRange(-128 127 '+' %1 1 %2), notUsed('hf' 'cf')
 
 replace restart {
 	and	a, #%1
