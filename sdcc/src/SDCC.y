@@ -324,10 +324,7 @@ unary_expression
              if (isOptional (type->next))
                {
                  type = copyLinkChain (type);
-                 if (IS_DECL (type->next))
-                   DCL_PTR_OPTIONAL (type->next) = false;
-                 else
-                   SPEC_OPTIONAL (type->next) = false;
+                 removeOptionalQualifier (type->next);
                  $$ = newNode (CAST, newAst_LINK(type), $$);
                  $$->values.cast.semDeref = true;
                }

@@ -797,6 +797,7 @@ bool isVolatile (sym_link *type);
 bool isRestrict (sym_link *type);
 bool isAtomic (sym_link *type);
 bool isOptional (sym_link *type);
+void removeOptionalQualifier (sym_link *type);
 value *aggregateToPointer (value *);
 void convertArrayToPointerType (sym_link *);
 void leaveBlockScope (int block);

@@ -3345,10 +3345,7 @@ ptrTypeFromType (sym_link *type)
     }
 
   p->next = copyLinkChain (type);
-  if (IS_DECL (p->next))
-    DCL_PTR_OPTIONAL (p->next) = false;
-  else
-    SPEC_OPTIONAL (p->next) = false; // _Optional qualifier is not preserved across &.
+  removeOptionalQualifier (p->next);
   return p;
 }
 
@@ -4421,10 +4418,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
         }
 
       p->next = copyLinkChain (LTYPE (tree));
-      if (IS_DECL (p->next))
-        DCL_PTR_OPTIONAL (p->next) = false;
-      else
-        SPEC_OPTIONAL (p->next) = false; // _Optional qualifier is not preserved across &.
+      removeOptionalQualifier (p->next);
       TTYPE (tree) = p;
       TETYPE (tree) = getSpec (TTYPE (tree));
       LLVAL (tree) = 1;

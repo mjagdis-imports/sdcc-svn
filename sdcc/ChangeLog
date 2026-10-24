@@ -1,5 +1,16 @@
 2026-10-24 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
+	* src/SDCCsymt.c (removeOptionalQualifier), src/SDCCsymt.h:
+	  Add a helper to remove outer _Optional qualification, looking
+	  through arrays to their element type.
+	* src/SDCC.y, src/SDCCast.c: Use the helper when forming address
+	  types and folding &* expressions (bug #4162).
+	* support/valdiag/tests/bug-4162.c: Test guarded array addresses,
+	  multiple dimensions, unsafe uses and preservation of const,
+	  volatile and deeper _Optional qualification.
+
+2026-10-24 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
 	* src/SDCCicode.c (geniCodeStruct): Apply inherited qualifiers to
 	  members and array elements, including pointer types (bug #4165).
 	  Keep qualification of referenced types intact.

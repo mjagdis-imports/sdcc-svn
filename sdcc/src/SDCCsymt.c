@@ -5988,6 +5988,28 @@ isAtomic (sym_link *type)
     return DCL_PTR_ATOMIC (type);
 }
 
+/*-----------------------------------------------------------------*/
+/* removeOptionalQualifier - clear outer, not nested qualification */
+/*-----------------------------------------------------------------*/
+void
+removeOptionalQualifier (sym_link *type)
+{
+  /* Find the element type that carries an array's qualification. */
+  while (IS_ARRAY (type))
+    {
+      type = type->next;
+    }
+
+  if (IS_SPEC (type))
+    {
+      SPEC_OPTIONAL (type) = false;
+    }
+  else
+    {
+      DCL_PTR_OPTIONAL (type) = false;
+    }
+}
+
 /*-------------------------------------------------------------------*/
 /* isOptional - check if the type is optional                        */
 /*-------------------------------------------------------------------*/
