@@ -262,6 +262,7 @@ void test156e(void)
   ASSERT(G1 == 8);
 }
 
+#if !(defined (__SDCC_pdk15) && defined(__SDCC_STACK_AUTO)) // Lack of code memory - narrow - we might be able to enable this with a bit more optimization.
 unsigned long G32;
 
 void f194_2(void) // rule 194-2
@@ -272,12 +273,15 @@ void f194_2(void) // rule 194-2
     G1 = 1;
   G1 = w;
 }
+#endif
 
 void test194_2(void)
 {
+#if !(defined (__SDCC_pdk15) && defined(__SDCC_STACK_AUTO)) // Lack of code memory - narrow - we might be able to enable this with a bit more optimization.
   G2 = 3;
   G32 = 0x1234;
   f194_2();
   ASSERT(G1 == 3);
+#endif
 }
 

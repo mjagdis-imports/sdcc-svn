@@ -6,6 +6,8 @@
 	* device/include/stdbit.h,
 	  src/SDCCsymt.c:
 	  Fixes for signed _BitInt(1).
+	* support/regression/tests/bug-4123-2.c:
+	  Disable part of a test for pdk15, to make the test fit into pdk15 code memory.
 
 2026-10-23 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
