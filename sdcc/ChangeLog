@@ -1,5 +1,56 @@
 2026-10-24 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
+	* support/valdiag/tests/c2y-array-expression-constraints.c:
+	  Test invalid array initialisers using array and pointer expressions,
+	  and valid list and string initialisers.
+	* support/valdiag/tests/c2y-auto-storage-constraints.c:
+	  Test an explicitly typed file-scope static auto declaration.
+	* support/valdiag/tests/c2y-declaration-diagnostic-coverage.c:
+	  Test compound-literal storage classes and initialisers, file-scope
+	  variably modified typedefs, static VLAs and initialised VLAs. Keep
+	  C99 declaration checks enabled on the host and qualify expectations
+	  for language-specific cases skipped by the host.
+	* support/valdiag/tests/c2y-declarator-diagnostic-coverage.c:
+	  Test typedef-based array return types, bit-precise width limits,
+	  implicit pointer/integer conversions, constexpr floating
+	  initialisers and arithmetic on pointers to incomplete types.
+	  Include corresponding valid cases. Qualify expectations for skipped
+	  constexpr and bit-precise cases.
+	* support/valdiag/tests/c2y-expression-constraints.c:
+	  Test member access through incomplete and complete structure types.
+	  Use a void expression statement to avoid unrelated return warnings.
+	* support/valdiag/tests/c2y-lexical-preprocessor-diagnostics.c:
+	  Test malformed tokens, feature-query operands, preprocessing
+	  controlling expressions and missing includes, with valid cases. Run
+	  these checks on the host and use a source-directory-relative header
+	  name for __has_include, including in out-of-tree builds.
+	* support/valdiag/tests/c2y-macro-constraints.c:
+	  Test macro redefinitions, argument counts, __VA_OPT__, stringising
+	  and token-pasting constraints, and valid identical redefinitions.
+	* support/valdiag/tests/c2y-operand-diagnostic-coverage.c:
+	  Test undeclared identifiers in evaluated expressions, sizeof and
+	  unselected generic associations. Test excess initialisers in array
+	  and structure compound literals, with valid cases. Use void expression
+	  statements for invalid identifiers to avoid unrelated return warnings.
+	* support/valdiag/tests/c2y-type-specifier-constraints.c:
+	  Test missing type specifiers and invalid type-specifier combinations,
+	  and a valid unsigned long long declaration. Make implicit-int diagnostics
+	  errors on GCC for consistent expectations across compiler versions.
+	* support/valdiag/tests/c2y-ucn-basic-character.c:
+	  Test a basic letter written as a universal character name in an
+	  identifier.
+	* support/valdiag/tests/c2y-ucn-initial-character.c:
+	  Test a combining character at the start of an identifier.
+	* support/valdiag/tests/c2y-ucn-out-of-range.c:
+	  Test a universal character name above U+10FFFF in an identifier.
+	* support/valdiag/tests/c2y-unsupported-type-diagnostics.c:
+	  Test diagnostics for unsupported complex and decimal floating types
+	  and an atomic constexpr object, with valid non-atomic cases. Qualify
+	  skipped constexpr expectations and allow language-mode-dependent
+	  GCC diagnostics for decimal types.
+
+2026-10-24 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
 	* src/SDCCsymt.c (removeOptionalQualifier), src/SDCCsymt.h:
 	  Add a helper to remove outer _Optional qualification, looking
 	  through arrays to their element type.
