@@ -8,6 +8,8 @@
 	  Fixes for signed _BitInt(1).
 	* support/regression/tests/bug-4123-2.c:
 	  Disable part of a test for pdk15, to make the test fit into pdk15 code memory.
+	* src/z80/peeph-sm83.def:
+	  Remove some sm83 peephole optimizer rules, for which no tests were found; towards fixing bug #4171.
 
 2026-10-23 Christopher Bazley <chris.bazley.wg14@gmail.com>
 

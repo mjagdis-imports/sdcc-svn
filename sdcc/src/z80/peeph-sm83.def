@@ -20,33 +20,11 @@
 
 replace{
 	ld	hl, #%1
-	ld	a, (hl)
-} by {
-	; sm83 peephole 0 used ldh instead of ld a, (hl).
-	ldh	a, (#%1)
-} if operandsLiteral(%1), immdInRange(0xff00 0xffff '|' %1 0 %2), notUsed('hl')
-
-replace{
-	ld	a, (#%1)
-} by {
-	; sm83 peephole 0b used ldh instead of ld.
-	ldh	a, (#%1)
-} if operandsLiteral(%1), immdInRange(0xff00 0xffff '|' %1 0 %2)
-
-replace{
-	ld	hl, #%1
 	ld	(hl), a
 } by {
 	; sm83 peephole 1 used ldh instead of ld (hl), a.
 	ldh	(#%1), a
 } if operandsLiteral(%1), immdInRange(0xff00 0xffff '|' %1 0 %2), notUsed('hl')
-
-replace{
-	ld	(#%1), a
-} by {
-	; sm83 peephole 1b used ldh instead of ld.
-	ldh	(#%1), a
-} if operandsLiteral(%1), immdInRange(0xff00 0xffff '|' %1 0 %2)
 
 replace {
 	ld	a, (hl)
