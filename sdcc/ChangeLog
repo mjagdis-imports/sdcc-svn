@@ -1,3 +1,13 @@
+2026-10-24 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
+	* src/SDCCicode.c (geniCodeStruct): Apply inherited qualifiers to
+	  members and array elements, including pointer types (bug #4165).
+	  Keep qualification of referenced types intact.
+	* support/valdiag/tests/bug-4165.c: Test array and non-array members,
+	  nested arrays, pointer depth and combined qualifiers. Retain
+	  warnings for unchecked structure pointers and unchecked pointers
+	  to _Optional int.
+
 2026-10-24 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/z80/peeph.def,

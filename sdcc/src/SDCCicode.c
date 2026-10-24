@@ -2774,30 +2774,29 @@ geniCodeStruct (operand * left, operand * right, bool islval)
   /* Apply artificial union volatility after the C type checks. */
   SPEC_VOLATILE (retype) |= SPEC_STRUCT (etype)->type == UNION;
 
-  if (IS_PTR (element->type))
+  /* Apply inherited qualifiers to the member, or its array element type. */
+  sym_link *qualified_type = rtype;
+  while (IS_ARRAY (qualified_type))
+    qualified_type = qualified_type->next;
+  if (IS_PTR (qualified_type))
     {
-      DCL_PTR_CONST (rtype) |= DCL_PTR_CONST (element->type);
-      DCL_PTR_VOLATILE (rtype) |= SPEC_VOLATILE (etype);
-      DCL_PTR_RESTRICT (rtype) |= DCL_PTR_RESTRICT (element->type);
-      DCL_PTR_OPTIONAL (rtype) |= DCL_PTR_OPTIONAL(element->type);
-      setOperandType (IC_RESULT (ic), aggrToPtr (operandType (IC_RESULT (ic)), true));
+      DCL_PTR_CONST (qualified_type) |= SPEC_CONST (etype);
+      DCL_PTR_VOLATILE (qualified_type) |= SPEC_VOLATILE (etype);
+      DCL_PTR_RESTRICT (qualified_type) |= SPEC_RESTRICT (etype);
+      DCL_PTR_ATOMIC (qualified_type) |= SPEC_ATOMIC (etype);
+      DCL_PTR_OPTIONAL (qualified_type) |= SPEC_OPTIONAL (etype);
     }
   else
     {
-      sym_link *qualified_type = rtype;
-
-      /* An array member inherits volatile on its element type. */
-      while (IS_ARRAY (qualified_type))
-        qualified_type = qualified_type->next;
-      if (IS_PTR (qualified_type))
-        DCL_PTR_VOLATILE (qualified_type) |= SPEC_VOLATILE (etype);
-      else
-        SPEC_VOLATILE (qualified_type) |= SPEC_VOLATILE (etype);
-
-      SPEC_CONST (retype) |= SPEC_CONST (etype);
-      SPEC_RESTRICT (retype) |= SPEC_RESTRICT (etype);
-      SPEC_OPTIONAL (retype) |= SPEC_OPTIONAL (etype);
+      SPEC_CONST (qualified_type) |= SPEC_CONST (etype);
+      SPEC_VOLATILE (qualified_type) |= SPEC_VOLATILE (etype);
+      SPEC_RESTRICT (qualified_type) |= SPEC_RESTRICT (etype);
+      SPEC_ATOMIC (qualified_type) |= SPEC_ATOMIC (etype);
+      SPEC_OPTIONAL (qualified_type) |= SPEC_OPTIONAL (etype);
     }
+
+  if (IS_PTR (element->type))
+    setOperandType (IC_RESULT (ic), aggrToPtr (operandType (IC_RESULT (ic)), true));
 
   IC_RESULT (ic)->isaddr = (!IS_AGGREGATE (element->type));
 
