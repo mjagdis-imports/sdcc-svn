@@ -92,7 +92,7 @@ typedef unsigned long long int  uint_fast64_t;
 #endif
 
 #if __SDCC_BITINT_MAXWIDTH >= 64
-#define __typewidth(x) _Generic((x), \
+#define __typewidth1(x) _Generic((x), \
 /* C2y, triggers warning 315: signed _BitInt(1) : 1, */ \
 unsigned _BitInt(1) : 1, \
 signed _BitInt(2) : 2, \
@@ -220,6 +220,11 @@ unsigned _BitInt(62) : 62, \
 signed _BitInt(63) : 63, \
 unsigned _BitInt(63) : 63, \
 default: (sizeof(x) * CHAR_BIT))
+#if __STDC_VERSION__ > 202311L
+#define __typewidth(x) _Generic((x), signed _BitInt(1): 1, default: __typewidth1(x))
+#else
+#define __typewidth(x) __typewidth1(x)
+#endif
 #else
 #define __typewidth(x) (sizeof(x) * CHAR_BIT)
 #endif

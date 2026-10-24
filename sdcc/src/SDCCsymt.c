@@ -699,7 +699,7 @@ checkTypeSanity (sym_link *etype, const char *name)
     {
       if (SPEC_BITINTWIDTH (etype) > port->s.bitint_maxwidth || SPEC_BITINTWIDTH (etype) < 1) // Check that port supports bit-precise integers this wide.
         werror (E_INVALID_BITINTWIDTH);
-      if (SPEC_BITINTWIDTH (etype) == 1 && !SPEC_USIGN (etype) && !options.std_sdcc) // In ISO C23, signed _BitInt needs to have width at least 2.
+      if (SPEC_BITINTWIDTH (etype) == 1 && !SPEC_USIGN (etype) && !options.std_c2y && !options.std_sdcc) // In ISO C23, signed _BitInt needs to have width at least 2.
         werror (W_BITINTWIDTH_1_C2Y);
     }
 }
