@@ -3485,6 +3485,15 @@ getNelements (sym_link * type, initList * ilist)
   if (IS_ARRAY (type) && (IS_CHAR (type->next) || IS_INT (type->next) && IS_UNSIGNED (type->next)) && !ilist->next)
     {
       ast *iast = ilist->init.node;
+
+      /* Generic replacement can expose a string before its array bound is inferred.
+         Inspect a copy without allocating strings or changing the initialiser. */
+      if (options.std_c2y && IS_AST_OP (iast) && iast->opval.op == GENERIC)
+        {
+          ++noAlloc;
+          iast = decorateType (resolveSymbols (copyAst (iast)), RESULT_TYPE_NONE, false);
+          --noAlloc;
+        }
       value *v = (iast->type == EX_VALUE ? iast->opval.val : NULL);
 
       if (v && IS_ARRAY (v->type) && (IS_CHAR (v->etype) || IS_INT (v->etype) && IS_UNSIGNED (v->etype) && IS_LONG (type->next) == IS_LONG (v->etype)))

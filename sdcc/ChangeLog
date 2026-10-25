@@ -1,5 +1,14 @@
 2026-10-25 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
+	* src/SDCCval.c (getNelements): In C2Y mode, resolve generic selections
+	  when inferring the bound of an array initialised by a string. Inspect a
+	  copy without allocating strings or changing the initialiser (bug #4208).
+	* support/regression/tests/bug-4208.c: Check inferred lengths,
+	  characters and terminators for selected and default associations,
+	  nested selections, braces, empty strings and local arrays.
+
+2026-10-25 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
 	* src/SDCCast.c (createCase, createCaseRange): Require literal value
 	  nodes before reading case values. Check that range endpoints have
 	  integer type (bug #4211).
