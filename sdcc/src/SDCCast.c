@@ -5564,6 +5564,19 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
       propagateConstExpr (&tree->left, resultType, reduceTypeAllowed);
       propagateConstExpr (&tree->right, resultType, reduceTypeAllowed);
 
+      /* A decisive constant left operand leaves the right operand unevaluated.
+         Require a value node so an evaluated comma expression keeps its effects. */
+      if (IS_AST_LIT_VALUE (tree->left) &&
+          (tree->opval.op == AND_OP && isEqualVal (tree->left->opval.val, 0) ||
+           tree->opval.op == OR_OP && !isEqualVal (tree->left->opval.val, 0)))
+        {
+          /* The rewrite helper must not rejoin this unevaluated side effect. */
+          tree->right = NULL;
+          rewriteAstNodeVal (tree, valLogicAndOr (tree->left->opval.val, tree->left->opval.val,
+                                                tree->opval.op, reduceTypeAllowed));
+          return decorateType (tree, resultType, reduceTypeAllowed);
+        }
+
       /* if they are both literal then */
       /* rewrite the tree */
       if (IS_LITERAL (RTYPE (tree)) && IS_LITERAL (LTYPE (tree)))

@@ -1,5 +1,18 @@
 2026-10-25 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
+	* src/SDCCast.c (decorateType): Fold short-circuited logical
+	  expressions with a decisive literal left operand. Discard the
+	  unevaluated right operand before rewriting so its side effects are
+	  not rejoined (bug #4207).
+	* support/regression/tests/bug-4207.c: Check static initialiser
+	  values and call counts, including local statics and evaluated left
+	  operands. Use separate failing functions for the short-circuited
+	  local static initialisers to identify an unexpected call.
+	* support/valdiag/tests/bug-4207.c: Retain diagnostics for evaluated
+	  calls in static initialisers.
+
+2026-10-25 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
 	* src/SDCCval.c (getNelements): In C2Y mode, resolve generic selections
 	  when inferring the bound of an array initialised by a string. Inspect a
 	  copy without allocating strings or changing the initialiser (bug #4208).
