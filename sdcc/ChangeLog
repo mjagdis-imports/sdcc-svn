@@ -1,3 +1,13 @@
+2026-10-25 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
+	* src/SDCCast.c (createCase, createCaseRange): Require literal value
+	  nodes before reading case values. Check that range endpoints have
+	  integer type (bug #4211).
+	* support/valdiag/tests/bug-4211.c: Diagnose evaluated comma
+	  expressions and invalid range endpoints. Accept integer cases and
+	  comma expressions confined to unevaluated conditional operands.
+	  Skip range tests for compilers without C2Y support.
+
 2026-10-24 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
 	* support/valdiag/tests/c2y-array-expression-constraints.c:

@@ -6857,7 +6857,7 @@ createCase (ast * swStat, ast * caseVal, ast * stmnt)
 
   caseVal = decorateType (resolveSymbols (caseVal), RESULT_TYPE_NONE, true);
   /* if not a constant then error  */
-  if (!IS_LITERAL (caseVal->ftype))
+  if (!IS_AST_LIT_VALUE (caseVal))
     {
       werrorfl (caseVal->filename, caseVal->lineno, E_CASE_CONSTANT);
       return NULL;
@@ -6933,24 +6933,24 @@ createCaseRange (ast * swStat, ast * caseValLow, ast * caseValHigh, ast * stmnt)
   caseValLow = decorateType (resolveSymbols (caseValLow), RESULT_TYPE_NONE, true);
   caseValHigh = decorateType (resolveSymbols (caseValHigh), RESULT_TYPE_NONE, true);
   /* if not a constant then error  */
-  if (!IS_LITERAL (caseValLow->ftype))
+  if (!IS_AST_LIT_VALUE (caseValLow))
     {
       werrorfl (caseValLow->filename, caseValLow->lineno, E_CASE_CONSTANT);
       return NULL;
     }
-  if (!IS_LITERAL (caseValHigh->ftype))
+  if (!IS_AST_LIT_VALUE (caseValHigh))
     {
       werrorfl (caseValHigh->filename, caseValLow->lineno, E_CASE_CONSTANT);
       return NULL;
     }
 
   /* if not a integer than error */
-  if (!IS_LITERAL (caseValLow->ftype))
+  if (!IS_INTEGRAL (caseValLow->ftype))
     {
       werrorfl (caseValLow->filename, caseValLow->lineno, E_CASE_CONSTANT);
       return NULL;
     }
-  if (!IS_LITERAL (caseValHigh->ftype))
+  if (!IS_INTEGRAL (caseValHigh->ftype))
     {
       werrorfl (caseValHigh->filename, caseValHigh->lineno, E_CASE_CONSTANT);
       return NULL;
