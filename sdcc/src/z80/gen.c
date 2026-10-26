@@ -10569,7 +10569,7 @@ genPlus (iCode * ic)
           i += 2;
         }
       else
-        {emit2 (";else");
+        {
           if (!HAS_IYL_INST && (aopInReg (rightop, i, IYL_IDX) || aopInReg (rightop, i, IYH_IDX)))
             if (!premoved && !aopInReg (leftop, i, IYL_IDX) && !aopInReg (leftop, i, IYL_IDX))
               {
@@ -16558,7 +16558,7 @@ genUnpackBits (operand *result, int offset, int blen, int bstr)
 static void
 _moveFrom_tpair_ (asmop * aop, int offset, PAIR_ID pair)
 {
-  emitDebug ("; _moveFrom_tpair_()");
+  // emitDebug ("; _moveFrom_tpair_()");
   if (pair == PAIR_HL && aop->type == AOP_REG)
     {
       if (!regalloc_dry_run)

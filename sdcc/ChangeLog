@@ -1,5 +1,10 @@
 2026-10-26 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/z80/gen.c:
+	  Make --fverbose-asm a bit less verbose.
+
+2026-10-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/z80/gen.c,
 	  support/regression/tests/bug-4229.c:
 	  Fix bug #4229.
