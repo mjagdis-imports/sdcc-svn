@@ -480,7 +480,7 @@ stm8instructionSize(lineNode *pl)
       }
     if(!strcmp(op2start, "a"))
       return(3);
-    if(readint(op2start) <= 0xFF)
+    if(isInt (op2start) && readint(op2start) <= 0xFF)
       return(2+i);
     else
       return(3+i);

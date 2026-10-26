@@ -2,6 +2,9 @@
 
 	* src/z80/gen.c:
 	  Make --fverbose-asm a bit less verbose.
+	* src/stm8/peep.c,
+	  support/regression/tests/bug-4231.c:
+	  Fix bug #4231.
 
 2026-10-26 Philipp Klaus Krause <philipp@colecovision.eu>
 
