@@ -64,7 +64,7 @@ __mmap_init = 0x1f00
 	.dw	__sdcc_gs_init_startup ; NMI
 	.dw	__mmap_init|0xe000     ; RESET
  
-    .area MMAP_INIT (ABS)
+	.area MMAP_INIT (ABS)
 	.org __mmap_init
 	lda	#0xff
 	tam0		; 0x0000-0x1fff <- 0x1fe000-0x1fffff
@@ -81,8 +81,8 @@ __mmap_init = 0x1f00
 	inc a
 	tam6		; 0xc000-0xdfff <- 0x00c000-0x00dfff
 ; MSR7 is set to 0 at reset
-				; 0xe000-0xffff <- 0x000000-0x001fff
-    jmp __sdcc_gs_init_startup
+			; 0xe000-0xffff <- 0x000000-0x001fff
+	jmp __sdcc_gs_init_startup
 
 ;--------------------------------------------------------
 ;  Startup Code
@@ -115,10 +115,10 @@ ZPloop:
 skipZP:
 
 ; initialize DATA
-	lda	# (<l_XINIT)
-	ora # (>l_XINIT)
+	lda	#<l_XINIT
+	ora	#>l_XINIT
 	beq	skip
-	tii s_XINIT, s_DATA, l_XINIT
+	tii	s_XINIT, s_DATA, l_XINIT
 skip:
 
 ; clear BSS

@@ -27,7 +27,7 @@
 ;-------------------------------------------------------------------------
 
 	.module _memcpy
-	.huc6280
+	.include "config.inc"
 
 ;--------------------------------------------------------
 ; exported symbols
@@ -40,13 +40,8 @@
 	.globl _memcpy
 
 ;--------------------------------------------------------
-; local aliases
+; function parameters inside instruction stream
 ;--------------------------------------------------------
-;	.define dst   "DPTR"
-	.define src   "___memcpy_PARM_2"
-	.define count "___memcpy_PARM_3"
-
-
 	.area DATA
 TII_memcpy:
 	.db	0x73	; TII
@@ -61,6 +56,12 @@ ___memcpy_PARM_3:
 	.dw	0x60	; RTS
 
 ;--------------------------------------------------------
+; local aliases
+;--------------------------------------------------------
+	.define src   "___memcpy_PARM_2"
+	.define count "___memcpy_PARM_3"
+
+;--------------------------------------------------------
 ; code
 ;--------------------------------------------------------
 	.area CODE
@@ -68,12 +69,11 @@ ___memcpy_PARM_3:
 _memcpy:
 ___memcpy:
 	sta	dst+0
-	lda count+0
-	ora count+1
-	beq end		; len == 0
-	stx dst+1
-	jsr TII_memcpy
-
+	lda	count+0
+	ora	count+1
+	beq	end		; len == 0
+	stx	dst+1
+	jsr	TII_memcpy
 end:
 	lda	dst+0
 	rts

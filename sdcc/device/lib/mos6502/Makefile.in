@@ -1,6 +1,6 @@
 # libc/mos6502 Makefile
 
-VPATH  = @srcdir@
+VPATH  = @srcdir@:../mos-common
 srcdir = @srcdir@
 top_builddir = @top_builddir@
 abs_top_builddir = @abs_top_builddir@
@@ -14,10 +14,7 @@ SAS = $(top_builddir)/bin/sdas6500
 override PORTDIR = ../build/mos6502
 
 %.rel: %.s
-	@# TODO: sdas should place it\'s output in the current dir
-	test $(srcdir) = . || cp $< .
-	-$(AS) $(ASFLAGS) $(notdir $<)
-	test $(srcdir) = . || rm $(notdir $<)
+	$(AS) $(ASFLAGS) $@ $<
 
 include $(srcdir)/../incl.mk
 

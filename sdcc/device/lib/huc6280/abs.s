@@ -27,7 +27,7 @@
 ;-------------------------------------------------------------------------
 
 	.module abs
-	.huc6280
+	.include "config.inc"
 
 ;--------------------------------------------------------
 ; exported symbols
@@ -44,15 +44,13 @@ _abs:
 	cpx #0x00
 	bpl skip
 ___negax:
-  	sec
+	sax
 	eor #0xff
-	adc #0x00
-	tay		; sax
-	txa		; nothing
+	sax
 	eor #0xff
-	adc #0x00
-	tax		; sax
-	tya		; nothing
+	inc a
+	bne skip
+	inx
 skip:
 	rts
 
