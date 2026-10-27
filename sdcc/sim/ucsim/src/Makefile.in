@@ -16,7 +16,9 @@ top_srcdir	= @top_srcdir@
 
 # Compiling entire program or any subproject
 # ------------------------------------------
+# These steps will run in order and not in parallel
 all:
+	$(MAKE) preps
 	$(MAKE) libs
 	$(MAKE) pkgs apps
 
@@ -25,9 +27,18 @@ pkgs: $(PKGS)
 .PHONY: sims
 sims: pkgs
 
+preps: utils_prep
+
+prep: preps
+
 apps: $(APPS)
 
 libs: utils_lib cmd_lib sim_lib gui_lib motorola_lib
+
+utils_prep: $(srcdir)/core/utils.src/version.h
+
+$(srcdir)/core/utils.src/version.h: $(top_srcdir)/.version
+	$(SED) 's/^/#define VERSIONSTR "/' $?|$(SED) 's/$$/"/' >$@
 
 utils_lib:
 	$(MAKE) -C core/utils.src libs

@@ -32,15 +32,12 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include <errno.h>
 #include <ctype.h>
 #include <string.h>
-//#include "i_string.h"
 
 // prj
 #include "globals.h"
 #include "utils.h"
 
 // cmd.src
-//#include "newcmdcl.h"
-//#include "cmdutil.h"
 #include "cmd_uccl.h"
 #include "cmd_bpcl.h"
 #include "cmd_getcl.h"
@@ -54,9 +51,6 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 // local, sim.src
 #include "uccl.h"
-//#include "hwcl.h"
-//#include "memcl.h"
-//#include "simcl.h"
 #include "itsrccl.h"
 #include "simifcl.h"
 #include "vcdcl.h"
@@ -150,39 +144,6 @@ cl_stop_selfjump_option::option_changed(void)
   uc->stop_selfjump= b;
 }
 
-
-cl_analyzer_opt::cl_analyzer_opt(class cl_uc *Iuc):
-  cl_bool_option(Iuc, "analyzer", "Analyze and label code")
-{
-  uc= Iuc;
-}
-
-void
-cl_analyzer_opt::set_value(const char *s)
-{
-  bool b;
-  cl_bool_option::set_value(s);
-  get_value(&b);
-  uc->set_analyzer(b);
-  if (uc->analyser_opt) uc->analyser_opt->set_raw(b);
-}
-
-
-cl_analyser_opt::cl_analyser_opt(class cl_uc *Iuc):
-  cl_bool_option(Iuc, "analyser", "Analyse and label code")
-{
-  uc= Iuc;
-}
-
-void
-cl_analyser_opt::set_value(const char *s)
-{
-  bool b;
-  cl_bool_option::set_value(s);
-  get_value(&b);
-  uc->set_analyzer(b);
-  if (uc->analyzer_opt) uc->analyzer_opt->set_raw(b);
-}
 
 /* Time measurer */
 
@@ -534,6 +495,25 @@ cl_inspec::cl_inspec(chars aspec, class cl_uc *auc)
   uc= auc;
   use_min= 0;
   use_max= 0xffffffff;
+  mem= uc->default_load_mem();
+  show_on= 0;
+}
+
+void
+cl_inspec::set(chars aspec)
+{
+  ispec= aspec;
+  inited= false;
+  file_name= "";
+  mem_name= "";
+  range_name= "";
+  min_name= "";
+  max_name= "";
+  offset_name= "0";
+  offset= 0;
+  use_min= 0;
+  use_max= 0xffffffff;
+  mem= uc->default_load_mem();
 }
 
 int
@@ -542,7 +522,8 @@ cl_inspec::init(void)
   if (inited)
     return 0;
   if (ispec.empty())
-    {      
+    {
+      inited= 1;
       return 0;
     }
   file_name= "";
@@ -639,21 +620,15 @@ cl_uc::cl_uc(class cl_sim *asim):
   type= NULL;
   //int i;
   sim = asim;
-  //mems= new cl_list(MEM_TYPES, 1);
   memchips= new cl_memory_list(this, "memchips");
   address_spaces= new cl_memory_list(this, "address_spaces");
-  //address_decoders= new cl_list(2, 2);
   rom= 0;
 
   hws = new cl_hws();
-  //options= new cl_list(2, 2);
-  //for (i= MEM_ROM; i < MEM_TYPES; i++) mems->add(0);
   xtal_option= new cl_xtal_option(this);
   xtal_option->init();
   stop_selfjump_option= new cl_stop_selfjump_option(this);
   stop_selfjump_option->init();
-  analyzer_opt= NULL;
-  analyser_opt= NULL;
   counters= new cl_list(2, 2, "counters");
   ticks= new cl_ticker(+1, TICK_ANY, "time", false);
   add_counter(ticks, ticks->get_name());
@@ -671,18 +646,18 @@ cl_uc::cl_uc(class cl_sim *asim):
   errors= new cl_list(2, 2, "errors in uc");
   events= new cl_list(2, 2, "events in uc");
   sp_most= 0;
-  //sp_avg= 0;
   inst_exec= false;
   hist= new cl_exec_hist(this);
   skip_cmdset= false;
+
+  // virtual memory for messages between hws
+  hw8msg= create_memory(chars("hw8msg"), hwmsg_size, 8, 0);
 }
 
 
 cl_uc::~cl_uc(void)
 {
-  //delete mems;
   delete hws;
-  //delete options;
   delete ticks;
   delete isr_ticks;
   delete idle_ticks;
@@ -701,7 +676,6 @@ cl_uc::~cl_uc(void)
   delete xtal_option;
   delete address_spaces;
   delete memchips;
-  //delete address_decoders;
   delete hist;
 }
 
@@ -721,15 +695,6 @@ cl_uc::init(void)
   set_xtal(x);
   stop_selfjump= false;
   stop_selfjump_option->option->set_value(stop_selfjump);
-  analyzer= false;
-  analyzer_opt= new cl_analyzer_opt(this);
-  analyzer_opt->init();
-  analyzer_opt->set_raw(analyzer);
-  analyser_opt= new cl_analyser_opt(this);
-  analyser_opt->init();
-  analyser_opt->set_raw(analyzer);
-  application->options->add(analyzer_opt);
-  application->options->add(analyser_opt);
   vars= new cl_var_list();
   make_variables();
   // Some app level vars:
@@ -745,7 +710,7 @@ cl_uc::init(void)
   // Memories
   make_memories();
   if (rom == NULL)
-    rom= address_space("rom"/*MEM_ROM_ID*/);
+    rom= address_space("rom");
   ebrk= new brk_coll(2, 2, rom);
   fbrk= new brk_coll(2, 2, rom);
   displays= new cl_display_list(2, 2, "displays");
@@ -759,7 +724,6 @@ cl_uc::init(void)
     build_cmdset(cs);
   irq= false;
   vcd_break= false;
-  //reset();
 
   return 0;
 }
@@ -793,7 +757,6 @@ cl_uc::reset(void)
       il= (class it_level *)(it_levels->top());
     }
   sp_most= 0;
-  //sp_avg= 0;
 
   stack_ops->free_all();
 
@@ -890,20 +853,6 @@ cl_uc::make_variables(void)
     }
 }
 
-/*t_addr
-cl_uc::get_mem_size(char *id)
-{
-  class cl_memory *m= memory(id);
-  return(m?(m->get_size()):0);
-}
-
-int
-cl_uc::get_mem_width(char *id)
-{
-  class cl_memory *m= memory(id);
-  return(m?(m->width):8);
-}
-*/
 void
 cl_uc::make_cpu_hw(void)
 {
@@ -1010,8 +959,6 @@ cl_uc::build_cmdset(class cl_cmdset *cmdset)
     }
     cset->add(cmd= new cl_get_sfr_cmd("sfr", 0));
     cmd->init();
-    /*cset->add(cmd= new cl_get_option_cmd("option", 0));
-      cmd->init();*/
     if (!super_cmd)
       {
 	cmdset->add(cmd= new cl_super_cmd("get", 0, cset));
@@ -1059,12 +1006,6 @@ cl_uc::build_cmdset(class cl_cmdset *cmdset)
     cmd->add_name("hw");
     cmd->add_name("h");
     cmd->init();
-    /*
-    cset->add(cmd= new cl_info_stack_cmd("stack", 0,
-    "info stack         Status of stack of the CPU",
-    "long help of info stack"));
-    cmd->init();
-    */
     cset->add(cmd= new cl_info_memory_cmd("memory", 0));
     cmd->init();
     cset->add(cmd= new cl_info_var_cmd("variables", 0));
@@ -1250,6 +1191,7 @@ cl_uc::build_cmdset(class cl_cmdset *cmdset)
   cmdset->add(cmd= new cl_rmvar_cmd("rmvar", 0));
   cmd->init();
 
+  // just print out "removed command"
   cmdset->add(cmd= new cl_analyze_cmd("analyse", 0));
   cmd->add_name("analyze");
   cmd->init();
@@ -1424,7 +1366,7 @@ cl_uc::remove_chip(class cl_memory *chip)
 
 
 static long
-ReadInt(cl_f *f, bool *ok, int bytes)
+ReadInt(class cl_inspec *is, cl_f *f, bool *ok, int bytes)
 {
   char s2[3];
   long l= 0;
@@ -1441,6 +1383,7 @@ ReadInt(cl_f *f, bool *ok, int bytes)
 	  (c > 0xff))
 	return 0;
       s2[0]= c;
+      if (is->show_on) is->show_on->dd_printf("%c", c);
       if (f->eof())
 	return(0);
       c= f->get_c();
@@ -1448,6 +1391,7 @@ ReadInt(cl_f *f, bool *ok, int bytes)
 	  (c == 0) ||
 	  (c > 0xff))
 	return 0;
+      if (is->show_on) is->show_on->dd_printf("%c", c);
       s2[1]= c;
       s2[2]= '\0';
       l= l*256 + strtol(s2, NULL, 16);
@@ -1501,13 +1445,13 @@ cl_uc::set_rom(class cl_inspec *is, t_addr addr, t_mem val, bool check)
     {
       if (check)
 	{
-	  v= rom->read(addr);
+	  v= mem->read(addr);
 	  if (!(eq= val == v))
 	    application->dd_printf("Diff at %08x, FILE=%08x MEM=%08x\n",
 				   AU32(addr), MU32(val), MU32(v));
 	}
       else
-	rom->download(addr, val);
+	mem->download(addr, val);
       return eq;
     }
   t_addr bank, caddr;
@@ -1521,7 +1465,7 @@ cl_uc::set_rom(class cl_inspec *is, t_addr addr, t_mem val, bool check)
 	  return true;
 	}
       d->switch_to(bank, NULL);
-      rom->download(caddr, val);
+      mem->download(caddr, val);
       d->activate(NULL);
     }
   else
@@ -1559,7 +1503,7 @@ cl_uc::read_hex_file(const char *nam, bool check)
 }
 
 long
-cl_uc::read_hex_file(cl_console_base *con)
+cl_uc::read_hex_file(cl_console_base *con, chars *in_spec_str)
 {
   cl_f *f;
   if (con == NULL)
@@ -1568,7 +1512,11 @@ cl_uc::read_hex_file(cl_console_base *con)
   if (f == NULL)
     return -1;
   class cl_inspec is("", this);
+  if ((in_spec_str != 0) && (in_spec_str->nempty()))
+    is.set(*in_spec_str);
+  is.show_on= con;
   long l= read_hex_file(&is, f, false);
+  con->dd_printf("\n");
   return l;
 }
 
@@ -1603,28 +1551,32 @@ cl_uc::read_hex_file(class cl_inspec *is, cl_f *f, bool check)
 	 rtyp != 1)
     {
       while (((c= /*getc(f)*/f->get_c()) != ':') &&
-	     (/*c != EOF*/!f->eof()));
+	     (/*c != EOF*/!f->eof()))
+	{
+	  if (is->show_on) is->show_on->dd_printf("%c",c);
+	}
       if (c != ':')
 	{
 	  fprintf(stderr, ": not found\n");
 	  break;
 	}
+      if (is->show_on) is->show_on->dd_printf("%c",c);
       recnum++;
-      dnum= ReadInt(f, &ok, 1);
+      dnum= ReadInt(is, f, &ok, 1);
       chk = dnum;
-      addr= ReadInt(f, &ok, 2);
+      addr= ReadInt(is, f, &ok, 2);
       chk+= (addr & 0xff);
       chk+= ((addr >> 8) & 0xff);
-      rtyp= ReadInt(f, &ok, 1);
+      rtyp= ReadInt(is, f, &ok, 1);
       chk+= rtyp;
       for (i= 0; ok && (i < dnum); i++)
 	{
-	  rec[i]= ReadInt(f, &ok, 1);
+	  rec[i]= ReadInt(is, f, &ok, 1);
 	  chk+= rec[i];
 	}
       if (ok)
 	{
-	  sum= ReadInt(f, &ok, 1);
+	  sum= ReadInt(is, f, &ok, 1);
 	  if (ok)
 	    {
 	      if (((sum + chk) & 0xff) == 0)
@@ -2347,44 +2299,11 @@ cl_uc::read_file(chars nam, class cl_console_base *con, bool check)
 }
 
 
-void
-cl_uc::set_analyzer(bool val)
-{
-  analyzer= val;
-}
-
-
 /*
  * Manipulating HW elements of the CPU
  *****************************************************************************
  */
 
-/* Register callback hw objects for mem read/write */
-
-/*void
-cl_uc::register_hw_read(enum mem_class type, t_addr addr, class cl_hw *hw)
-{
-  class cl_m *m;
-  class cl_memloc *l;
-
-  if ((m= (class cl_m*)mems->at(type)))
-    {
-      if ((l= m->read_locs->get_loc(addr)) == 0)
-	{
-	  l= new cl_memloc(addr);
-	  l->init();
-	  m->read_locs->add(l);
-	}
-      l->hws->add(hw);
-    }
-  else
-    printf("cl_uc::register_hw_read TROUBLE\n");
-}*/
-
-/*void
-cl_uc::register_hw_write(enum mem_class type, t_addr addr, class cl_hw *hw)
-{
-}*/
 
 void
 cl_uc::add_hw(class cl_hw *hw)
@@ -2934,34 +2853,10 @@ cl_uc::handle_event(class cl_event &event)
   return(false);
 }
 
-/*
-void
-cl_uc::mem_cell_changed(class cl_address_space *mem, t_addr addr)
-{
-  if (hws)
-    hws->mem_cell_changed(mem, addr);
-  else
-    printf("JAJ uc\n");//FIXME
-  if (mems &&
-      mems->count)
-    {
-      int i;
-      for (i= 0; i < mems->count; i++)
-	{
-	}
-    }
-}
-*/
 
 void
 cl_uc::address_space_added(class cl_address_space *as)
 {
-  /*
-  if (hws)
-    hws->address_space_added(as);
-  else
-    printf("JAJ uc\n");//FIXME
-  */
 }
 
 
@@ -3047,8 +2942,7 @@ cl_uc::tick_hw(int cycles)
       for (i= 0; i < hc; i++)
         {
           hw= (class cl_hw *)(hws->at(i));
-          if ((hw->flags & HWF_INSIDE) &&
-              (hw->on))
+          if (hw->on)
 	    {
 	      hw->tick(1);
 	    }
@@ -3719,11 +3613,6 @@ cl_uc::ebrk_at(t_addr addr, char *id)
   return(0);
 }
 
-/*void
-cl_uc::rm_fbrk(long addr)
-{
-  fbrk->del_bp(addr);
-}*/
 
 /* Get a breakpoint specified by its number */
 

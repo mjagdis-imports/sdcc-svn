@@ -208,6 +208,7 @@ public:
   //virtual t_mem get16(t_addr addr)=0;
   virtual t_mem write(t_addr addr, t_mem val)=0;
   virtual void set(t_addr addr, t_mem val)=0;
+  virtual void download(t_addr, t_mem val)=0;
 
   virtual void print_info(const char *pre, class cl_console_base *con);
 };
@@ -379,10 +380,9 @@ class cl_memory_cell: public cl_cell_data
   virtual void print_operators(const char *pre, class cl_console_base *con);
 
   virtual class cl_memory_cell &operator=(t_mem v);
+  virtual operator t_mem() { return read(); }
 };
 
-typedef class cl_memory_cell MCELL;
-typedef class cl_memory_cell *MCELLP;
 
 /*
 class cl_bit_cell: public cl_memory_cell
@@ -406,9 +406,6 @@ class cl_cell8: public cl_memory_cell
   virtual void dl(t_mem v);
 };
 
-typedef class cl_cell8 C8;
-typedef class cl_cell8 *CP8;
-
 class cl_bit_cell8: public cl_memory_cell
 {
  public:
@@ -431,9 +428,6 @@ class cl_cell16: public cl_memory_cell
   virtual void dl(t_mem v);
 };
 
-typedef class cl_cell16 C16;
-typedef class cl_cell16 *CP16;
-
 class cl_bit_cell16: public cl_memory_cell
 {
  public:
@@ -454,9 +448,6 @@ class cl_cell32: public cl_memory_cell
   virtual void d(t_mem v);
   virtual void dl(t_mem v);
 };
-
-typedef class cl_cell32 C32;
-typedef class cl_cell32 *CP32;
 
 class cl_mc32: public cl_cell32
 {
@@ -529,6 +520,7 @@ class cl_address_space: public cl_memory
   virtual void download(t_addr, t_mem val);
   
   virtual class cl_memory_cell *get_cell(t_addr addr);
+  virtual class cl_memory_cell &operator[](t_addr addr);
   virtual int get_cell_flag(t_addr addr);
   virtual bool get_cell_flag(t_addr addr, enum cell_flag flag);
   virtual void set_cell_flag(t_addr addr, bool set_to, enum cell_flag flag);
@@ -581,6 +573,7 @@ public:
   cl_chip_data(const char *id, t_addr asize, int awidth);
   virtual t_mem d(t_addr addr)= 0;
   virtual void d(t_addr addr, t_mem v)= 0;
+  virtual void download(t_addr, t_mem val)= 0;
 };
 
 class cl_memory_chip: public cl_chip_data
@@ -607,6 +600,7 @@ public:
   virtual t_mem get(t_addr addr) { return d(addr); }
   virtual t_mem write(t_addr addr, t_mem val) { d(addr, val); return(val); }
   virtual void set(t_addr addr, t_mem val) { d(addr, val); }
+  virtual void download(t_addr addr, t_mem val) { d(addr, val); }
 
   virtual void print_info(const char *pre, class cl_console_base *con);
 };
@@ -794,7 +788,7 @@ public:
  * Errors in memory handling
  */
 
-#include "errorcl.h"
+#include "serrcl.h"
 
 class cl_error_mem: public cl_error
 {
@@ -826,6 +820,15 @@ class cl_mem_error_registry: public cl_error_registry
 public:
   cl_mem_error_registry(void);
 };
+
+
+extern class cl_address_space *
+create_memory(chars name, t_addr size, int width, int initial=-1);
+
+typedef class cl_memory_cell MCELL;
+typedef class cl_cell8 C8;
+typedef class cl_cell16 C16;
+typedef class cl_cell32 C32;
 
 
 #endif

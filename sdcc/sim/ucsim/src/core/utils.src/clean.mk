@@ -6,6 +6,7 @@ local_clean:
 	rm -f  ucsim$(EXEEXT) relay$(EXEEXT) ucsim.exe relay.exe
 	rm -f .[a-z]*~ ptt
 
+
 sub_clean:
 
 distclean: local_distclean sub_distclean
@@ -15,5 +16,6 @@ local_distclean: local_clean
 	rm -f ddconfig.h main.mk Makefile *.dep packages.mk
 	rm -rf autom4te.cache
 	rm -f GPATH GRTAGS GSYMS GTAGS
+	rm -f version.h
 
 sub_distclean:
