@@ -1,3 +1,15 @@
+2026-10-28 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
+	* src/SDCCmain.c: Add --enable-warning to enable a numbered warning,
+	  including one disabled by default or by an earlier option.
+	* src/SDCC.lex: Add #pragma enable_warning, sharing argument parsing
+	  with #pragma disable_warning.
+	* doc/sdccman.lyx: Document warning enabling, option ordering and
+	  interaction with source-file pragmas.
+	* support/valdiag/tests/enable-warning.c: Test disabling and
+	  re-enabling warning 244, which is enabled by default. Warning 212
+	  is disabled by default but has no remaining emission sites.
+
 2026-10-27 Gabriele Gorla <gorlik@yahoo.com>
 
 	* device/lib/mos-common,

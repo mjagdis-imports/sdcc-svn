@@ -714,6 +714,7 @@ enum {
    P_NOIV,
    P_LOOPREV,
    P_DISABLEWARN,
+   P_ENABLEWARN,
    P_OPTCODESPEED,
    P_OPTCODESIZE,
    P_OPTCODEBALANCED,
@@ -1021,6 +1022,7 @@ doPragma (int id, const char *name, const char *cp)
       break;
 
     case P_DISABLEWARN:
+    case P_ENABLEWARN:
       {
         int warn;
 
@@ -1039,7 +1041,7 @@ doPragma (int id, const char *name, const char *cp)
             break;
           }
 
-        setWarningDisabled(warn);
+        setWarningDisabledState (warn, id == P_DISABLEWARN);
       }
       break;
 
@@ -1292,6 +1294,7 @@ static struct pragma_s pragma_tbl[] = {
   { "noiv",                P_NOIV,                0, doPragma },
   { "less_pedantic",       P_LESSPEDANTIC,        0, doPragma },
   { "disable_warning",     P_DISABLEWARN,         0, doPragma },
+  { "enable_warning",      P_ENABLEWARN,          0, doPragma },
   { "opt_code_speed",      P_OPTCODESPEED,        0, doPragma },
   { "opt_code_size",       P_OPTCODESIZE,         0, doPragma },
   { "opt_code_balanced",   P_OPTCODEBALANCED,     0, doPragma },

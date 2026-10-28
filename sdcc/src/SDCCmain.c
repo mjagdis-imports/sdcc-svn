@@ -125,6 +125,7 @@ char buffer[PATH_MAX * 2];
 #define OPTION_NO_LOOP_IND          "--noinduction"
 #define OPTION_LESS_PEDANTIC        "--less-pedantic"
 #define OPTION_DISABLE_WARNING      "--disable-warning"
+#define OPTION_ENABLE_WARNING       "--enable-warning"
 #define OPTION_WERROR               "--Werror"
 #define OPTION_DEBUG                "--debug"
 #define OPTION_NO_GCSE              "--nogcse"
@@ -195,6 +196,7 @@ static const OPTION optionsTable[] = {
   {0,   "--norestartseqatomics", &options.norestartseqatomics, "Omit restartable sequence support routines for atomics"},
   {0,   OPTION_LESS_PEDANTIC, NULL, "Disable some of the more pedantic warnings"},
   {0,   OPTION_DISABLE_WARNING, NULL, "<nnnn> Disable specific warning"},
+  {0,   OPTION_ENABLE_WARNING, NULL, "<nnnn> Enable specific warning"},
   {0,   OPTION_WERROR, NULL, "Treat the warnings as errors"},
   {0,   OPTION_DEBUG, NULL, "Enable debugging symbol output"},
   {0,   "--cyclomatic", &options.cyclomatic, "Display complexity of compiled functions"},
@@ -1285,6 +1287,13 @@ parseCmdLine (int argc, char **argv)
             {
               int w = getIntArgEx (OPTION_DISABLE_WARNING, charsConsumed, argv, &i, argc);
               setWarningDisabled (w);
+              continue;
+            }
+
+          if (optstrcmp (argv[i], OPTION_ENABLE_WARNING, "=", false, &charsConsumed) == 0)
+            {
+              int w = getIntArgEx (OPTION_ENABLE_WARNING, charsConsumed, argv, &i, argc);
+              setWarningDisabledState (w, 0);
               continue;
             }
 

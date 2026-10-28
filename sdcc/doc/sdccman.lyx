@@ -17646,6 +17646,17 @@ status collapsed
 \labelwidthstring 00.00.0000
 
 \series bold
+--enable-warning <nnnn>
+\series default
+ Enable specific warning with number <nnnn>, including warnings disabled by default.
+ Later command-line options override earlier options for the same warning.
+ A source-file pragma can subsequently override the command-line setting.
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
 -
 \begin_inset ERT
 status collapsed
@@ -40395,6 +40406,16 @@ warning
 \end_inset
 
  - the compiler will not warn you anymore about warning number <nnnn>.
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+enable_warning
+\series default
+ <nnnn> - enable warning number <nnnn>, including warnings disabled by default.
+ For example, #pragma disable_warning 244 followed by #pragma enable_warning 244 re-enables diagnostics for incompatible pointer types.
+ As with disable_warning, this does not enable or suppress errors, and invalid warning numbers are ignored.
 \end_layout
 
 \begin_layout Itemize
