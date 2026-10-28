@@ -6514,6 +6514,11 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
       /* ifx Statement              */
       /*----------------------------*/
     case IFX:
+      if (IS_STRUCT (LTYPE (tree)))
+        {
+          werrorfl (tree->left->filename, tree->left->lineno, E_INVALID_OP, "controlling expression");
+          goto errorTreeReturn;
+        }
       tree->left = backPatchLabels (tree->left, tree->trueLabel, tree->falseLabel);
       TTYPE (tree) = TETYPE (tree) = NULL;
       return tree;
@@ -7031,16 +7036,6 @@ createIf (ast * condAst, ast * ifBody, ast * elseBody)
   ast *ifTree;
   symbol *ifTrue, *ifFalse, *ifEnd;
   struct dbuf_s dbuf;
-
-  /* if neither exists */
-  if (!elseBody && !ifBody)
-    {
-      // if there are no side effects (i++, j() etc)
-      if (!hasSEFcalls (condAst))
-        {
-          return condAst;
-        }
-    }
 
   /* create the labels */
   dbuf_init (&dbuf, 128);

@@ -1,3 +1,12 @@
+2026-10-28 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
+	* src/SDCCast.c (decorateType): Diagnose struct and union controlling
+	  expressions in IFX nodes (bug #4083).
+	  (createIf): Remove the early elimination of empty if statements so
+	  that their controlling expressions are checked before optimisation.
+	* support/valdiag/tests/bug-4083.c: Add diagnostic tests for struct and
+	  union controlling expressions in if, while, for and do statements.
+
 2026-10-28 Maarten Brock <sourceforge.brock AT dse.nl>
 
 	* device/lib/free.c,
