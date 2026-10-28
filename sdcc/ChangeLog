@@ -1,3 +1,8 @@
+2026-10-28 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/bug-4229.c:
+	  Fix test header for parsing by test infrastructure.
+
 2026-10-28 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
 	* src/SDCCmain.c: Add --enable-warning to enable a numbered warning,

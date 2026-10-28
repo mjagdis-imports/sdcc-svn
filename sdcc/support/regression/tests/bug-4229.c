@@ -1,4 +1,4 @@
-// bug-4229.c an issue in z80 handling of iy (regalloc vs. codegen)
+/* bug-4229.c an issue in z80 handling of iy (regalloc vs. codegen) */
 
 #include <testfwk.h>
 
@@ -24,7 +24,6 @@ void reproduce(void)
 
 void testBug(void)
 {
-    
     reproduce ();
     ASSERT (checksum == 0);
 }
