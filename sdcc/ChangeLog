@@ -1,3 +1,9 @@
+2026-10-28 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* device/lib/free.c,
+	* device/lib/realloc.c: fixed warnings
+	* support/regression/tests/bug-4153.c: added test for bug #3706
+
 2026-10-28 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* support/regression/tests/bug-4229.c:
@@ -71,7 +77,7 @@
 	  device/lib/huc6280/config.inc,
 	  device/lib/huc6280/crt0.s,
 	  device/lib/huc6280/memcpy.s:
-	  Move all mos6502 common library files into mos-common. 
+	  Move all mos6502 common library files into mos-common.
 
 2026-10-26 Philipp Klaus Krause <philipp@colecovision.eu>
 

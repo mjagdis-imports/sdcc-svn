@@ -13,7 +13,7 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License 
+   You should have received a copy of the GNU General Public License
    along with this library; see the file COPYING. If not, write to the
    Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA.
@@ -49,14 +49,14 @@ extern header_t *HEAPSPACE __sdcc_heap_free;
 
 void free(void *ptr)
 {
-	header_t *h, *next_free, *prev_free;
+	header_t *h, *next_free, *prev_free, *p = ptr;
 	header_t *HEAPSPACE *f;
 
-	if(!ptr)
+	if (!ptr)
 		return;
 
 	prev_free = 0;
-	for(h = __sdcc_heap_free, f = &__sdcc_heap_free; h && h < ptr; prev_free = h, f = &(h->next_free), h = h->next_free); // Find adjacent blocks in free list
+	for (h = __sdcc_heap_free, f = &__sdcc_heap_free; h && h < p; prev_free = h, f = &(h->next_free), h = h->next_free); // Find adjacent blocks in free list
 	next_free = h;
 
 	h = (void HEAPSPACE *)((char HEAPSPACE *)(ptr) - offsetof(struct header, next_free));
@@ -65,7 +65,7 @@ void free(void *ptr)
 	h->next_free = next_free;
 	*f = h;
 
-	if(next_free == h->next) // Merge with next block
+	if (next_free == h->next) // Merge with next block
 	{
 		h->next_free = h->next->next_free;
 		h->next = h->next->next;
