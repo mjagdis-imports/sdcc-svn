@@ -809,6 +809,8 @@ struct
      "generic association type is compatible with previous association at %s:%d", 0},
   {W_COMPARE_POINTERS, ERROR_LEVEL_WARNING,
      "comparison of %s", 0},
+  {E_CAST_PTR_TO_FLOAT, ERROR_LEVEL_ERROR,
+     "pointer cannot be cast to floating type", 0},
 };
 
 /* -------------------------------------------------------------------------------

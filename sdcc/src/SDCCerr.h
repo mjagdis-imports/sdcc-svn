@@ -401,6 +401,7 @@ enum {
   E_DUPLICATE_GENERIC_TYPE      = 371, // generic association type is compatible with previous association at %s:%d
 
   W_COMPARE_POINTERS           = 372, // invalid pointer comparison
+  E_CAST_PTR_TO_FLOAT          = 373, // pointer cannot be cast to floating type
 
   // If you get a merge conflict here, some #pragma disable_warning in support/valdiag and support/regression will likely need to be adapted to the resolution. Check there!
 

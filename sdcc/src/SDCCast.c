@@ -5330,6 +5330,12 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           goto errorTreeReturn;
         }
 
+      if (IS_PTR (RTYPE (tree)) && IS_FLOAT (LTYPE (tree)))
+        {
+          werrorfl (tree->filename, tree->lineno, E_CAST_PTR_TO_FLOAT);
+          goto errorTreeReturn;
+        }
+
       /* make sure the type is complete and sane */
       if ((resultType == RESULT_TYPE_GPTR) && IS_FUNCPTR (LTYPE (tree)))
         changePointer (LTYPE (tree)->next);

@@ -1,4 +1,12 @@
-2026-10-28 Christopher Bazley <chris.bazley.wg14@gmail.com>
+2026-10-29 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
+	* src/SDCCast.c (decorateType): Diagnose casts from pointer to
+	  floating-point type (bug #4088).
+	* src/SDCCerr.c, src/SDCCerr.h: Add E_CAST_PTR_TO_FLOAT as an error.
+	* support/valdiag/tests/bug-4088.c: Add a test that expects an error
+	  when an expression of type int * is cast to type float.
+
+2026-10-29 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
 	* src/SDCCval.h, src/SDCCval.c (stringInitializerTypesMatch): Compare
 	  string and destination element type compatibility, allowing ordinary
