@@ -5336,6 +5336,13 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           goto errorTreeReturn;
         }
 
+      /* Except for a cast to void, the operand must have scalar type. */
+      if (IS_STRUCT (RTYPE (tree)) && !IS_VOID (LTYPE (tree)))
+        {
+          werrorfl (tree->filename, tree->lineno, E_CAST_NONSCALAR);
+          goto errorTreeReturn;
+        }
+
       /* make sure the type is complete and sane */
       if ((resultType == RESULT_TYPE_GPTR) && IS_FUNCPTR (LTYPE (tree)))
         changePointer (LTYPE (tree)->next);

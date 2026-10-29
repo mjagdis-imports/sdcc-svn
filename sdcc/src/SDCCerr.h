@@ -402,6 +402,7 @@ enum {
 
   W_COMPARE_POINTERS           = 372, // invalid pointer comparison
   E_CAST_PTR_TO_FLOAT          = 373, // pointer cannot be cast to floating type
+  E_CAST_NONSCALAR             = 374, // non-scalar operand of cast to non-void type
 
   // If you get a merge conflict here, some #pragma disable_warning in support/valdiag and support/regression will likely need to be adapted to the resolution. Check there!
 

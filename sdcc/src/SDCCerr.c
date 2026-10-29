@@ -132,7 +132,7 @@ struct
   { E_ILLEGAL_ADDR, ERROR_LEVEL_ERROR,
      "'&' illegal operand, %s", 0 },
   { E_CAST_ILLEGAL, ERROR_LEVEL_ERROR,
-     "illegal cast (cast cannot be aggregate)", 0 },
+     "cast destination type must be scalar or void", 0 },
   { E_MULT_INTEGRAL, ERROR_LEVEL_ERROR,
      "'*' bad operand", 0 },
   { E_ARG_ERROR, ERROR_LEVEL_ERROR,
@@ -811,6 +811,8 @@ struct
      "comparison of %s", 0},
   {E_CAST_PTR_TO_FLOAT, ERROR_LEVEL_ERROR,
      "pointer cannot be cast to floating type", 0},
+  {E_CAST_NONSCALAR, ERROR_LEVEL_ERROR,
+     "operand of cast to non-void type must be scalar", 0},
 };
 
 /* -------------------------------------------------------------------------------

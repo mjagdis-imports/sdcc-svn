@@ -1,5 +1,14 @@
 2026-10-29 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
+	* src/SDCCast.c (decorateType): Diagnose structure and union operands
+	  of casts to non-void types (bug #4089).
+	* src/SDCCerr.c, src/SDCCerr.h: Add E_CAST_NONSCALAR. Clarify that
+	  E_CAST_ILLEGAL concerns the destination type, avoiding "aggregate".
+	* support/valdiag/tests/bug-4089.c: Test structure and union operands,
+	  casts to void, and array and function decay.
+
+2026-10-29 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
 	* src/SDCCast.c (decorateType): Diagnose casts from pointer to
 	  floating-point type (bug #4088).
 	* src/SDCCerr.c, src/SDCCerr.h: Add E_CAST_PTR_TO_FLOAT as an error.

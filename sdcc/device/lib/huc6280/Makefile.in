@@ -1,6 +1,6 @@
 # libc/huc6280 Makefile
 
-VPATH  = @srcdir@:../mos-common
+VPATH  = @srcdir@:$(srcdir)/../mos-common
 srcdir = @srcdir@
 top_builddir = @top_builddir@
 abs_top_builddir = @abs_top_builddir@
