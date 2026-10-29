@@ -3806,3 +3806,13 @@ checkParameterTypeList (value *forward_declaration, value *parameters)
     }
 }
 
+
+/* Character strings allow all character element types. Wide strings require
+   compatibility with their element type; spelling of compatible prefixes is immaterial. */
+bool
+stringInitializerTypesMatch (sym_link *array, sym_link *string)
+{
+  return IS_ARRAY (array) && IS_ARRAY (string) &&
+    (IS_CHAR (array->next) && IS_CHAR (string->next) ||
+     similarTypes (array->next, string->next));
+}

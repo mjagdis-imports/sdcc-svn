@@ -1,5 +1,26 @@
 2026-10-28 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
+	* src/SDCCval.h, src/SDCCval.c (stringInitializerTypesMatch): Compare
+	  string and destination element type compatibility, allowing ordinary
+	  character arrays and compatible wide types (bug #4189).
+	* src/SDCCast.c (createIvalCharPtr), src/SDCCglue.c (printIvalArray):
+	  Diagnose incompatible string initialisers before reading their elements.
+	  Limit the direct-array check to scalar character and integer elements;
+	  preserve pointer-element and nested-array initialisation.
+	* support/valdiag/tests/bug-4189.c: Check mismatched types, braces,
+	  qualifiers, typedefs and local arrays. Exercise ordinary and wide
+	  initialisers on the host, and preserve aggregate string initialisation.
+	  Select tests by language features and select compatible element types
+	  with _Generic instead of assuming compiler-specific wchar_t types.
+	  Cover incompatible L/u initialisation in both directions, at file and
+	  block scope, with and without braces, and matching wide strings.
+	* support/regression/tests/bug-4189.c: Check element values and NUL
+	  termination in ordinary, wide, pointer and nested arrays.
+	  Use the native wide prefix and check compatible cross-prefix data
+	  where type queries are available.
+
+2026-10-28 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
 	* src/SDCCast.c (decorateType): Diagnose struct and union controlling
 	  expressions in IFX nodes (bug #4083).
 	  (createIf): Remove the early elimination of empty if statements so

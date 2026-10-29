@@ -1436,6 +1436,18 @@ printIvalArray (symbol * sym, sym_link * type, initList * ilist, struct dbuf_s *
   initList *iloop;
   unsigned int size = 0;
 
+  initList *string = ilist && ilist->type == INIT_DEEP ? ilist->init.deep : ilist;
+  if ((IS_CHAR (type->next) || IS_INT (type->next)) &&
+      string && string->type == INIT_NODE && !string->next)
+    {
+      value *val = list2val (string, false);
+      if (val && IS_ARRAY (val->type) && !stringInitializerTypesMatch (type, val->type))
+        {
+          werrorfl (string->filename, string->lineno, E_TYPE_MISMATCH, "initialisation", "");
+          return;
+        }
+    }
+
   if (ilist)
     {
       /* take care of the special   case  */
