@@ -113,6 +113,7 @@ static const ASM_MAPPING _asxxxx_r2k_mapping[] = {
     { "enters",
       "call\t___sdcc_enter_ix\n" },
     { "adjustsp", "lda sp,-%d(sp)" },
+    { "here", "." },
     { "optsdcc", ".optsdcc" },
     { NULL, NULL }
 };
