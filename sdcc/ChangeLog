@@ -1,3 +1,21 @@
+2026-10-30 Christopher Bazley <chris.bazley.wg14@gmail.com>
+	* support/valdiag/tests/c2y-control-flow-constraints.c:
+	* support/valdiag/tests/c2y-function-definition-constraints.c:
+	* support/valdiag/tests/c2y-static-assertion-constraints.c:
+	* support/valdiag/tests/c2y-structure-member-constraints.c:
+	* support/valdiag/tests/c2y-case-range-constraints.c:
+	* support/valdiag/tests/c2y-operator-constraints.c:
+	* support/valdiag/tests/c2y-arithmetic-constraints.c:
+	* support/valdiag/tests/c2y-logical-constraints.c:
+	* support/valdiag/tests/c2y-initialiser-constraints.c:
+	* support/valdiag/tests/c2y-ucn-surrogate.c:
+	* support/valdiag/tests/c2y-ucn-control-character.c:
+	  Add passing N3886 audit test cases for expression operands,
+	  declarations, labels, jumps, returns, function definitions,
+	  structure members, case ranges, static assertions and universal
+	  character names. Include corresponding valid cases and account
+	  for host diagnostic differences.
+
 2026-10-29 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
 	* src/SDCCast.c (decorateType): Diagnose structure and union operands
