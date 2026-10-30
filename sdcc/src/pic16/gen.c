@@ -4813,11 +4813,11 @@ genSkipc (resolvedIfx * rifx)
 /*                  aop is a literal)                              */
 /*-----------------------------------------------------------------*/
 void
-mov2w_regOrLit (asmop * aop, unsigned long lit, int offset)
+mov2w_regOrLit (asmop * aop, unsigned long long lit, int offset)
 {
   if (aop->type == AOP_LIT)
     {
-      pic16_emitpcode (POC_MOVLW, pic16_popGetLit (lit >> (offset * 8)));
+      pic16_emitpcode (POC_MOVLW, pic16_popGetLit ((lit >> (offset * 8)) & 0xff));
     }
   else
     {
@@ -4845,8 +4845,8 @@ genCmp (operand * left, operand * right, operand * result, iCode * ifx, int sign
   int offs;
   symbol *templbl;
   operand *dummy;
-  unsigned long lit;
-  unsigned long mask;
+  unsigned long long lit;
+  unsigned long long mask;
   int performedLt;
 
   FENTRY;
@@ -4855,7 +4855,7 @@ genCmp (operand * left, operand * right, operand * result, iCode * ifx, int sign
   assert (AOP_SIZE (left) == AOP_SIZE (right));
 
   size = AOP_SIZE (right) - 1;
-  mask = (0x100UL << (size * 8)) - 1;
+  mask = (0x100ULL << (size * 8)) - 1;
   // in the end CARRY holds "left < right" (performedLt == 1) or "left >= right" (performedLt == 0)
   performedLt = 1;
   templbl = NULL;
@@ -4900,7 +4900,7 @@ genCmp (operand * left, operand * right, operand * result, iCode * ifx, int sign
       assert (isAOP_REGlike (right));
       // swap left and right
       // left < right <==> right > left <==> (right >= left + 1)
-      lit = ulFromVal (AOP (left)->aopu.aop_lit);
+      lit = ullFromVal (AOP (left)->aopu.aop_lit);
 
       if ((!sign && (lit & mask) == mask) || (sign && (lit & mask) == (mask >> 1)))
         {
@@ -4924,7 +4924,7 @@ genCmp (operand * left, operand * right, operand * result, iCode * ifx, int sign
     }
   else if (isAOP_LIT (right))
     {
-      lit = ulFromVal (AOP (right)->aopu.aop_lit);
+      lit = ullFromVal (AOP (right)->aopu.aop_lit);
     }                           // if
 
   assert (isAOP_REGlike (left));        // left must be register or the like
@@ -4939,7 +4939,7 @@ genCmp (operand * left, operand * right, operand * result, iCode * ifx, int sign
       if (!sign)
         {
           // unsigned comparison to a literal
-          DEBUGpc ("unsigned compare: left %s lit(0x%X=%lu), size=%d", performedLt ? "<" : ">=", lit, lit, size + 1);
+          DEBUGpc ("unsigned compare: left %s lit(0x%llX=%llu), size=%d", performedLt ? "<" : ">=", lit, lit, size + 1);
           if (lit == 0)
             {
               // unsigned left < 0? always false
@@ -4953,9 +4953,10 @@ genCmp (operand * left, operand * right, operand * result, iCode * ifx, int sign
       else
         {
           // signed comparison to a literal
-          DEBUGpc ("signed compare: left %s lit(0x%X=%ld), size=%d, mask=%x", performedLt ? "<" : ">=", lit, lit, size + 1,
+          DEBUGpc ("signed compare: left %s lit(0x%llX=%lld), size=%d, mask=%llx",
+                   performedLt ? "<" : ">=", lit, (long long)lit, size + 1,
                    mask);
-          if ((lit & mask) == ((0x80 << (size * 8)) & mask))
+          if ((lit & mask) == ((0x80ULL << (size * 8)) & mask))
             {
               // signed left < 0x80000000? always false
               if (performedLt)
@@ -5232,7 +5233,7 @@ genCmpEq (iCode * ic, iCode * ifx)
   int preserve_result = 0;
   int generate_result = 0;
   int i = 0;
-  unsigned long lit = -1;
+  unsigned long long lit = -1ULL;
 
   FENTRY;
 
@@ -5259,7 +5260,7 @@ genCmpEq (iCode * ic, iCode * ifx)
 
   if (AOP_TYPE (right) == AOP_LIT)
     {
-      lit = ulFromVal (AOP (right)->aopu.aop_lit);
+      lit = ullFromVal (AOP (right)->aopu.aop_lit);
     }
 
   if (regsInCommon (left, result) || regsInCommon (right, result))
@@ -5898,7 +5899,7 @@ genAnd (iCode * ic, iCode * ifx)
 {
   operand *left, *right, *result;
   int size, offset = 0;
-  unsigned long lit = 0L;
+  unsigned long long lit = 0ULL;
   resolvedIfx rIfx;
 
   // This becomes true if we need to emit a jump to ifx based on the zero flag
@@ -5938,7 +5939,7 @@ genAnd (iCode * ic, iCode * ifx)
     }
 
   if (AOP_TYPE (right) == AOP_LIT)
-    lit = ulFromVal (AOP (right)->aopu.aop_lit);
+    lit = ullFromVal (AOP (right)->aopu.aop_lit);
 
   size = AOP_SIZE (result);
 
@@ -6244,7 +6245,7 @@ genOr (iCode * ic, iCode * ifx)
 {
   operand *left, *right, *result;
   int size, offset = 0;
-  unsigned long lit = 0L;
+  unsigned long long lit = 0ULL;
   resolvedIfx rIfx;
 
   FENTRY;
@@ -6282,7 +6283,7 @@ genOr (iCode * ic, iCode * ifx)
   DEBUGpic16_pic16_AopType (__LINE__, left, right, result);
 
   if (AOP_TYPE (right) == AOP_LIT)
-    lit = ulFromVal (AOP (right)->aopu.aop_lit);
+    lit = ullFromVal (AOP (right)->aopu.aop_lit);
 
   size = AOP_SIZE (result);
 
@@ -6577,7 +6578,7 @@ genXor (iCode * ic, iCode * ifx)
 {
   operand *left, *right, *result;
   int size, offset = 0;
-  unsigned long lit = 0L;
+  unsigned long long lit = 0ULL;
   resolvedIfx rIfx;
 
   FENTRY;
@@ -6614,7 +6615,7 @@ genXor (iCode * ic, iCode * ifx)
     }
 
   if (AOP_TYPE (right) == AOP_LIT)
-    lit = ulFromVal (AOP (right)->aopu.aop_lit);
+    lit = ullFromVal (AOP (right)->aopu.aop_lit);
 
   size = AOP_SIZE (result);
 
@@ -10226,7 +10227,7 @@ genAssign (iCode * ic)
   operand *result, *right;
   sym_link *restype, *rtype;
   int size, offset, know_W;
-  unsigned long lit = 0L;
+  unsigned long long lit = 0ULL;
 
   result = IC_RESULT (ic);
   right = IC_RIGHT (ic);
@@ -10302,7 +10303,7 @@ genAssign (iCode * ic)
     {
       if (!(IS_FLOAT (operandType (right)) || IS_FIXED (operandType (right))))
         {
-          lit = ulFromVal (AOP (right)->aopu.aop_lit);
+          lit = ullFromVal (AOP (right)->aopu.aop_lit);
 
           /* patch tag for literals that are cast to pointers */
           if (IS_CODEPTR (restype))

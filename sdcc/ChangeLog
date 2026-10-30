@@ -1,4 +1,11 @@
+2026-10-30 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/pic16/gen.c,
+	  src/pic16/glue.c:
+	  pic16 long long fixes, bug #4323 via patch by zeynelsagcan.
+
 2026-10-30 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
 	* support/valdiag/tests/c2y-control-flow-constraints.c:
 	* support/valdiag/tests/c2y-function-definition-constraints.c:
 	* support/valdiag/tests/c2y-static-assertion-constraints.c:

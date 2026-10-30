@@ -78,7 +78,7 @@ unsigned int pic16aopLiteral (value *val, int offset)
   /* if it is a float then it gets tricky */
   /* otherwise it is fairly simple */
   if (!(IS_FLOAT(val->type) || IS_FIXED(val->type))) {
-    unsigned long v = ulFromVal (val);
+    unsigned long long v = ullFromVal (val);
 
     return ( (v >> (offset * 8)) & 0xff);
   }
