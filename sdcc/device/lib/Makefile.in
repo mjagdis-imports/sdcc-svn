@@ -330,35 +330,55 @@ endif
 
 objects:
 	$(MAKE) build-dir
+	$(MAKE) port-specific-objects
+	$(MAKE) clean_intermediate
+
+objects-mcs51:
+	$(MAKE) build-dir
 	$(MAKE) $(OBJECTS)
 	$(MAKE) port-specific-objects
 	$(MAKE) $(LIB_FILES)
 	$(MAKE) clean_intermediate
 
+objects-xa51:
+	$(MAKE) build-dir
+	$(MAKE) $(XA51OBJECTS)
+	$(MAKE) port-specific-objects
+
+objects-pic14:
+	$(MAKE) build-dir
+	$(MAKE) port-specific-objects-pic14
+	$(MAKE) clean_intermediate-pic
+
+objects-pic16:
+	$(MAKE) build-dir
+	$(MAKE) port-specific-objects-pic16
+	$(MAKE) clean_intermediate-pic
+
 models:
 	if grep '^mcs51$$' $(top_builddir)/ports.build > /dev/null; then \
 	  for model in $(MODELS); do \
-	    $(MAKE) MODELFLAGS="--model-$$model" PORT=$$model PORTINCDIR=$(INCDIR)/mcs51 objects || exit 1; \
+	    $(MAKE) MODELFLAGS="--model-$$model" PORT=$$model PORTINCDIR=$(INCDIR)/mcs51 objects-mcs51 || exit 1; \
 	  done \
 	fi
 
 small-mcs51-stack-auto:
 	if grep '^mcs51$$' $(top_builddir)/ports.build > /dev/null; then \
 	  mkdir -p small-stack-auto; cp small/Makefile small-stack-auto; \
-	  $(MAKE) MODELFLAGS="--model-small --stack-auto" PORT=small-stack-auto PORTDIR=$(BUILDDIR)/small-stack-auto PORTINCDIR=$(INCDIR)/mcs51 objects || exit 1; \
+	  $(MAKE) MODELFLAGS="--model-small --stack-auto" PORT=small-stack-auto PORTDIR=$(BUILDDIR)/small-stack-auto PORTINCDIR=$(INCDIR)/mcs51 objects-mcs51 || exit 1; \
 	fi
 
 large-mcs51-stack-auto:
 	if grep '^mcs51$$' $(top_builddir)/ports.build > /dev/null; then \
 	  mkdir -p large-stack-auto; cp small/Makefile large-stack-auto; \
-	  $(MAKE) MODELFLAGS="--model-large --stack-auto" PORT=large-stack-auto PORTDIR=$(BUILDDIR)/large-stack-auto PORTINCDIR=$(INCDIR)/mcs51 objects || exit 1; \
+	  $(MAKE) MODELFLAGS="--model-large --stack-auto" PORT=large-stack-auto PORTDIR=$(BUILDDIR)/large-stack-auto PORTINCDIR=$(INCDIR)/mcs51 objects-mcs51 || exit 1; \
 	fi
 
 model-mcs51-stack-auto:
 	if grep '^mcs51$$' $(top_builddir)/ports.build > /dev/null; then \
 	  for model in $(MODELS); do \
 	    mkdir -p $${model}-stack-auto; cp $${model}/Makefile $${model}-stack-auto; \
-	    $(MAKE) MODELFLAGS="--model-$$model --stack-auto" PORT=$${model}-stack-auto PORTDIR=$(BUILDDIR)/$${model}-stack-auto PORTINCDIR=$(INCDIR)/mcs51 objects || exit 1; \
+	    $(MAKE) MODELFLAGS="--model-$$model --stack-auto" PORT=$${model}-stack-auto PORTDIR=$(BUILDDIR)/$${model}-stack-auto PORTINCDIR=$(INCDIR)/mcs51 objects-mcs51 || exit 1; \
 	  done \
 	fi
 
@@ -366,29 +386,24 @@ model-mcs51-xstack-auto:
 	if grep '^mcs51$$' $(top_builddir)/ports.build > /dev/null; then \
 	  for model in $(MODELS); do \
 	    mkdir -p $${model}-xstack-auto; cp $${model}/Makefile $${model}-xstack-auto; \
-	    $(MAKE) MODELFLAGS="--model-$$model --stack-auto --xstack" PORT=$${model}-xstack-auto PORTDIR=$(BUILDDIR)/$${model}-xstack-auto PORTINCDIR=$(INCDIR)/mcs51 objects || exit 1; \
+	    $(MAKE) MODELFLAGS="--model-$$model --stack-auto --xstack" PORT=$${model}-xstack-auto PORTDIR=$(BUILDDIR)/$${model}-xstack-auto PORTINCDIR=$(INCDIR)/mcs51-mcs51 objects || exit 1; \
 	  done \
 	fi
 
 model-ds390:
 	if grep '^ds390$$' $(top_builddir)/ports.build > /dev/null; then \
-	  $(MAKE) MODELFLAGS="-mds390" PORT=ds390 PORTINCDIR=$(INCDIR)/mcs51 objects || exit 1; \
+	  $(MAKE) MODELFLAGS="-mds390" PORT=ds390 PORTINCDIR=$(INCDIR)/mcs51 objects-mcs51 || exit 1; \
 	fi
 
 model-ds400:
 	if grep '^ds390$$' $(top_builddir)/ports.build > /dev/null; then \
-	  $(MAKE) MODELFLAGS="-mds400" PORT=ds400 PORTINCDIR=$(INCDIR)/mcs51 objects || exit 1; \
+	  $(MAKE) MODELFLAGS="-mds400" PORT=ds400 PORTINCDIR=$(INCDIR)/mcs51 objects-mcs51 || exit 1; \
 	fi
 
 model-xa51:
 	if grep '^xa51$$' $(top_builddir)/ports.build > /dev/null; then \
 	  $(MAKE) MODELFLAGS="-mxa51" PORT=xa51 objects-xa51 || exit 1; \
 	fi
-
-objects-xa51:
-	$(MAKE) build-dir
-	$(MAKE) $(XA51OBJECTS)
-	$(MAKE) port-specific-objects
 
 $(PORTDIR)/lib$(PORT).lib: $(XA51OBJECTS)
 	rm -f $(PORTDIR)/lib$(PORT).lib
@@ -410,213 +425,158 @@ endif
 
 model-z80:
 	if grep '^z80$$' $(top_builddir)/ports.build > /dev/null; then \
-	  $(MAKE) MODELFLAGS="-mz80" PORT=z80 objects-z80 OEXT=.o || exit 1; \
+	  $(MAKE) MODELFLAGS="-mz80" PORT=z80 objects OEXT=.o || exit 1; \
 	fi
 
 model-z180:
 	if grep '^z80$$' $(top_builddir)/ports.build > /dev/null; then \
-	  $(MAKE) MODELFLAGS="-mz180" PORT=z180 objects-z80 OEXT=.o || exit 1; \
+	  $(MAKE) MODELFLAGS="-mz180" PORT=z180 objects OEXT=.o || exit 1; \
 	fi
 
 model-ez80:
 	if grep '^z80$$' $(top_builddir)/ports.build > /dev/null; then \
-	  $(MAKE) MODELFLAGS="-mez80" PORT=ez80 objects-z80 OEXT=.o || exit 1; \
+	  $(MAKE) MODELFLAGS="-mez80" PORT=ez80 objects OEXT=.o || exit 1; \
 	fi
 
 model-z80n:
 	if grep '^z80$$' $(top_builddir)/ports.build > /dev/null; then \
-	  $(MAKE) MODELFLAGS="-mz80n" PORT=z80n objects-z80 OEXT=.o || exit 1; \
+	  $(MAKE) MODELFLAGS="-mz80n" PORT=z80n objects OEXT=.o || exit 1; \
 	fi
 
 model-r2k:
 	if grep '^z80$$' $(top_builddir)/ports.build > /dev/null; then \
-	  $(MAKE) MODELFLAGS="-mr2k" PORT=r2k objects-z80 OEXT=.o || exit 1; \
+	  $(MAKE) MODELFLAGS="-mr2k" PORT=r2k objects OEXT=.o || exit 1; \
 	fi
 
 model-r2ka:
 	if grep '^z80$$' $(top_builddir)/ports.build > /dev/null; then \
-	  $(MAKE) MODELFLAGS="-mr2ka" PORT=r2ka objects-z80 OEXT=.o || exit 1; \
+	  $(MAKE) MODELFLAGS="-mr2ka" PORT=r2ka objects OEXT=.o || exit 1; \
 	fi
 
 model-r3ka:
 	if grep '^z80$$' $(top_builddir)/ports.build > /dev/null; then \
-	  $(MAKE) MODELFLAGS="-mr3ka" PORT=r3ka objects-z80 OEXT=.o || exit 1; \
+	  $(MAKE) MODELFLAGS="-mr3ka" PORT=r3ka objects OEXT=.o || exit 1; \
 	fi
 
 model-r4k:
 	if grep '^z80$$' $(top_builddir)/ports.build > /dev/null; then \
-	  $(MAKE) MODELFLAGS="-mr4k" PORT=r4k objects-z80 OEXT=.o || exit 1; \
+	  $(MAKE) MODELFLAGS="-mr4k" PORT=r4k objects OEXT=.o || exit 1; \
 	fi
 
 model-r5k:
 	if grep '^z80$$' $(top_builddir)/ports.build > /dev/null; then \
-	  $(MAKE) MODELFLAGS="-mr5k" PORT=r5k objects-z80 OEXT=.o || exit 1; \
+	  $(MAKE) MODELFLAGS="-mr5k" PORT=r5k objects OEXT=.o || exit 1; \
 	fi
 
 model-r6k:
 	if grep '^z80$$' $(top_builddir)/ports.build > /dev/null; then \
-	  $(MAKE) MODELFLAGS="-mr6k" PORT=r6k objects-z80 OEXT=.o || exit 1; \
+	  $(MAKE) MODELFLAGS="-mr6k" PORT=r6k objects OEXT=.o || exit 1; \
 	fi
 
 model-tlcs90:
 	if grep '^z80$$' $(top_builddir)/ports.build > /dev/null; then \
-	  $(MAKE) MODELFLAGS="-mtlcs90" PORT=tlcs90 objects-z80 OEXT=.o || exit 1; \
+	  $(MAKE) MODELFLAGS="-mtlcs90" PORT=tlcs90 objects OEXT=.o || exit 1; \
 	fi
 
 model-sm83:
 	if grep '^z80$$' $(top_builddir)/ports.build > /dev/null; then \
-	  $(MAKE) MODELFLAGS="-msm83" PORT=sm83 objects-z80 OEXT=.o || exit 1; \
+	  $(MAKE) MODELFLAGS="-msm83" PORT=sm83 objects OEXT=.o || exit 1; \
 	fi
 
 model-r800:
 	if grep '^z80$$' $(top_builddir)/ports.build > /dev/null; then \
-	  $(MAKE) MODELFLAGS="-mr800" PORT=r800 objects-z80 OEXT=.o || exit 1; \
+	  $(MAKE) MODELFLAGS="-mr800" PORT=r800 objects OEXT=.o || exit 1; \
 	fi
-
-objects-z80:
-	$(MAKE) build-dir
-	$(MAKE) port-specific-objects
-	$(MAKE) clean_intermediate
 
 model-hc08:
 	if grep '^hc08$$' $(top_builddir)/ports.build > /dev/null; then \
-	  $(MAKE) MODELFLAGS="-mhc08" PORT=hc08 objects-hc08 || exit 1; \
+	  $(MAKE) MODELFLAGS="-mhc08" PORT=hc08 objects || exit 1; \
 	fi
 
 model-s08:
 	if grep '^hc08$$' $(top_builddir)/ports.build > /dev/null; then \
-	  $(MAKE) MODELFLAGS="-ms08" PORT=s08 objects-hc08 || exit 1; \
+	  $(MAKE) MODELFLAGS="-ms08" PORT=s08 objects || exit 1; \
 	fi
 
 model-s08-stack-auto:
 	if grep '^hc08$$' $(top_builddir)/ports.build > /dev/null; then \
-	  $(MAKE) MODELFLAGS="-ms08 --stack-auto" PORT=s08-stack-auto objects-hc08 || exit 1; \
+	  $(MAKE) MODELFLAGS="-ms08 --stack-auto" PORT=s08-stack-auto objects || exit 1; \
 	fi
-
-objects-hc08:
-	$(MAKE) build-dir
-	$(MAKE) port-specific-objects
-	$(MAKE) clean_intermediate
 
 model-mos6502:
 	if grep '^mos6502$$' $(top_builddir)/ports.build > /dev/null; then \
-	  $(MAKE) MODELFLAGS="-mmos6502" PORT=mos6502 objects-mos6502 || exit 1; \
+	  $(MAKE) MODELFLAGS="-mmos6502" PORT=mos6502 objects || exit 1; \
 	fi
 
 model-mos6502-stack-auto:
 	if grep '^mos6502$$' $(top_builddir)/ports.build > /dev/null; then \
-	  $(MAKE) MODELFLAGS="-mmos6502 --stack-auto" PORT=mos6502-stack-auto objects-mos6502 || exit 1; \
+	  $(MAKE) MODELFLAGS="-mmos6502 --stack-auto" PORT=mos6502-stack-auto objects || exit 1; \
 	fi
 
 model-mos65c02:
 	if grep '^mos6502$$' $(top_builddir)/ports.build > /dev/null; then \
-	  $(MAKE) MODELFLAGS="-mmos65c02" PORT=mos65c02 objects-mos6502 || exit 1; \
+	  $(MAKE) MODELFLAGS="-mmos65c02" PORT=mos65c02 objects || exit 1; \
 	fi
 
 model-mos65c02-stack-auto:
 	if grep '^mos6502$$' $(top_builddir)/ports.build > /dev/null; then \
-	  $(MAKE) MODELFLAGS="-mmos65c02 --stack-auto" PORT=mos65c02-stack-auto objects-mos6502 || exit 1; \
+	  $(MAKE) MODELFLAGS="-mmos65c02 --stack-auto" PORT=mos65c02-stack-auto objects || exit 1; \
 	fi
 
 model-huc6280:
 	if grep '^mos6502$$' $(top_builddir)/ports.build > /dev/null; then \
-	  $(MAKE) MODELFLAGS="-mhuc6280" PORT=huc6280 objects-mos6502 || exit 1; \
+	  $(MAKE) MODELFLAGS="-mhuc6280" PORT=huc6280 objects || exit 1; \
 	fi
-
-objects-mos6502:
-	$(MAKE) build-dir
-	$(MAKE) port-specific-objects
-	$(MAKE) clean_intermediate
 
 model-stm8:
 	if grep '^stm8$$' $(top_builddir)/ports.build > /dev/null; then \
-	  $(MAKE) MODELFLAGS="-mstm8" PORT=stm8 objects-stm8 || exit 1; \
+	  $(MAKE) MODELFLAGS="-mstm8" PORT=stm8 objects || exit 1; \
 	fi
-
-objects-stm8:
-	$(MAKE) build-dir
-	$(MAKE) port-specific-objects
-	$(MAKE) clean_intermediate
 
 model-stm8-large:
 	if grep '^stm8$$' $(top_builddir)/ports.build > /dev/null; then \
-	  $(MAKE) MODELFLAGS="-mstm8 --model-large" PORT=stm8-large objects-stm8 || exit 1; \
+	  $(MAKE) MODELFLAGS="-mstm8 --model-large" PORT=stm8-large objects || exit 1; \
 	fi
 
 model-pdk13:
 	if grep '^pdk$$' $(top_builddir)/ports.build > /dev/null; then \
-	  $(MAKE) MODELFLAGS="-mpdk13" PORT=pdk13 objects-pdk13 || exit 1; \
+	  $(MAKE) MODELFLAGS="-mpdk13" PORT=pdk13 objects || exit 1; \
 	fi
-
-objects-pdk13:
-	$(MAKE) build-dir
-	$(MAKE) port-specific-objects
-	$(MAKE) clean_intermediate
 
 model-pdk14:
 	if grep '^pdk$$' $(top_builddir)/ports.build > /dev/null; then \
-	  $(MAKE) MODELFLAGS="-mpdk14" PORT=pdk14 objects-pdk14 || exit 1; \
+	  $(MAKE) MODELFLAGS="-mpdk14" PORT=pdk14 objects || exit 1; \
 	fi
-
-objects-pdk14:
-	$(MAKE) build-dir
-	$(MAKE) port-specific-objects
-	$(MAKE) clean_intermediate
 
 model-pdk15:
 	if grep '^pdk$$' $(top_builddir)/ports.build > /dev/null; then \
-	  $(MAKE) MODELFLAGS="-mpdk15" PORT=pdk15 objects-pdk15 || exit 1; \
+	  $(MAKE) MODELFLAGS="-mpdk15" PORT=pdk15 objects || exit 1; \
 	fi
-
-objects-pdk15:
-	$(MAKE) build-dir
-	$(MAKE) port-specific-objects
-	$(MAKE) clean_intermediate
 
 model-pdk15-stack-auto:
 	if grep '^pdk$$' $(top_builddir)/ports.build > /dev/null; then \
-	  $(MAKE) MODELFLAGS="-mpdk15 --stack-auto" PORT=pdk15-stack-auto objects-pdk15 || exit 1; \
+	  $(MAKE) MODELFLAGS="-mpdk15 --stack-auto" PORT=pdk15-stack-auto objects || exit 1; \
 	fi
 
 model-f8:
 	if grep '^f8$$' $(top_builddir)/ports.build > /dev/null; then \
-	  $(MAKE) MODELFLAGS="-mf8" PORT=f8 objects-f8; \
+	  $(MAKE) MODELFLAGS="-mf8" PORT=f8 objects; \
 	fi
-
-objects-f8:
-	$(MAKE) build-dir
-	$(MAKE) port-specific-objects
-	$(MAKE) clean_intermediate
 
 model-f8l:
 	if grep '^f8$$' $(top_builddir)/ports.build > /dev/null; then \
-	  $(MAKE) MODELFLAGS="-mf8l" PORT=f8l objects-f8l; \
+	  $(MAKE) MODELFLAGS="-mf8l" PORT=f8l objects; \
 	fi
-
-objects-f8l:
-	$(MAKE) build-dir
-	$(MAKE) port-specific-objects
-	$(MAKE) clean_intermediate
 
 model-pic16:
 	if grep '^pic16$$' $(top_builddir)/ports.build > /dev/null; then \
 	  $(MAKE) PORT=pic16 objects-pic16; \
 	fi
 
-objects-pic16:
-	$(MAKE) build-dir
-	$(MAKE) port-specific-objects-pic16
-	$(MAKE) clean_intermediate-pic16
-
 model-pic14:
 	if grep '^pic14$$' $(top_builddir)/ports.build > /dev/null; then \
 	  $(MAKE) PORT=pic14 objects-pic14; \
 	fi
-
-objects-pic14:
-	$(MAKE) build-dir
-	$(MAKE) port-specific-objects-pic14
-	$(MAKE) clean_intermediate-pic14
 
 build-dir:
 	$(MAKE) $(PORTDIR)
@@ -736,10 +696,7 @@ endif
 clean_intermediate:
 	rm -f $(PORTDIR)/*.lst $(PORTDIR)/*.sym
 
-clean_intermediate-pic16:
-	$(MAKE) -C $(PORT) clean-intermediate
-
-clean_intermediate-pic14:
+clean_intermediate-pic:
 	$(MAKE) -C $(PORT) clean-intermediate
 
 # Compiling and installing everything and running test
