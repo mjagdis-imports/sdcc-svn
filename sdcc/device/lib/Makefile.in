@@ -67,7 +67,6 @@ OPT_DISABLE_S08      = @OPT_DISABLE_S08@
 OPT_DISABLE_MCS51    = @OPT_DISABLE_MCS51@
 OPT_DISABLE_PIC14    = @OPT_DISABLE_PIC14@
 OPT_DISABLE_PIC16    = @OPT_DISABLE_PIC16@
-OPT_DISABLE_XA51     = @OPT_DISABLE_XA51@
 OPT_DISABLE_Z80      = @OPT_DISABLE_Z80@
 OPT_DISABLE_Z180     = @OPT_DISABLE_Z180@
 OPT_DISABLE_EZ80     = @OPT_DISABLE_EZ80@
@@ -167,31 +166,6 @@ OBJECTS_LONGLONG = $(SOURCES_LONGLONG:%.c=$(PORT)/%.rel)
 OBJECTS_SDCC = $(SOURCES_SDCC:%.c=$(PORT)/%.rel)
 
 OBJECTS = $(OBJECTS_FLOAT) $(OBJECTS_INT) $(OBJECTS_LONG) $(OBJECTS_LONGLONG) $(OBJECTS_SDCC)
-
-XA51_FLOAT = $(COMMON_FLOAT)
-
-XA51_INT = $(COMMON_INT) \
-  _divsint.c \
-  _divuint.c \
-  _modsint.c \
-  _moduint.c \
-  _mulint.c
-
-XA51_LONG = $(COMMON_LONG) \
-  _divulong.c \
-  _mullong.c
-
-XA51_SDCC = $(COMMON_SDCC) \
-  _memmove.c \
-  strlen.c \
-  strnlen.c \
-  _heap.c \
-  div.c \
-  ldiv.c \
-  lldiv.rel
-
-XA51SOURCES = $(XA51_FLOAT) $(XA51_INT) $(XA51_LONG) $(XA51_SDCC)
-XA51OBJECTS = $(XA51SOURCES:%.c=$(PORT)/%.rel)
 
 LIB_FILES = $(PORTDIR)/libfloat.lib $(PORTDIR)/libint.lib $(PORTDIR)/liblong.lib $(PORTDIR)/liblonglong.lib $(PORTDIR)/libsdcc.lib
 
@@ -340,11 +314,6 @@ objects-mcs51:
 	$(MAKE) $(LIB_FILES)
 	$(MAKE) clean_intermediate
 
-objects-xa51:
-	$(MAKE) build-dir
-	$(MAKE) $(XA51OBJECTS)
-	$(MAKE) port-specific-objects
-
 objects-pic14:
 	$(MAKE) build-dir
 	$(MAKE) port-specific-objects-pic14
@@ -399,29 +368,6 @@ model-ds400:
 	if grep '^ds390$$' $(top_builddir)/ports.build > /dev/null; then \
 	  $(MAKE) MODELFLAGS="-mds400" PORT=ds400 PORTINCDIR=$(INCDIR)/mcs51 objects-mcs51 || exit 1; \
 	fi
-
-model-xa51:
-	if grep '^xa51$$' $(top_builddir)/ports.build > /dev/null; then \
-	  $(MAKE) MODELFLAGS="-mxa51" PORT=xa51 objects-xa51 || exit 1; \
-	fi
-
-$(PORTDIR)/lib$(PORT).lib: $(XA51OBJECTS)
-	rm -f $(PORTDIR)/lib$(PORT).lib
-ifeq ($(LIB_TYPE), SDCCLIB)
-	$(top_builddir)/bin/sdcclib -a $(PORTDIR)/lib$(PORT).lib $(XA51OBJECTS)
-else
-  ifeq ($(LIB_TYPE), AR)
-	${SDAR} -rcSD $(PORTDIR)/lib$(PORT).lib $(XA51OBJECTS)
-  else
-    ifeq ($(LIB_TYPE), RANLIB)
-	${SDAR} -rcD $(PORTDIR)/lib$(PORT).lib $(XA51OBJECTS)
-    else
-	rm -f $(PORTDIR)/lib$(PORT).lib
-	for i in $(notdir $(basename $(XA51OBJECTS))); do echo $$i >> $(PORTDIR)/lib$(PORT).lib; done
-	cp $(XA51OBJECTS) $(PORTDIR)
-    endif
-  endif
-endif
 
 model-z80:
 	if grep '^z80$$' $(top_builddir)/ports.build > /dev/null; then \

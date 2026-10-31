@@ -2,6 +2,11 @@
 
 	* device/lib/Makefile.in:
 	  Remove redundant code.
+	* Makefile.common.in,
+	  device/lib/Makefile.in,
+	  device/non-free/lib/Makefile.in,
+	  sdcc_vc.h.in:
+	  Remove obsolete XA51 makefiles.
 
 2026-10-30 Philipp Klaus Krause <philipp@colecovision.eu>
 

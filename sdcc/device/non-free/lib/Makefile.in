@@ -65,7 +65,6 @@ OPT_DISABLE_HC08  = @OPT_DISABLE_HC08@
 OPT_DISABLE_MCS51 = @OPT_DISABLE_MCS51@
 OPT_DISABLE_PIC14 = @OPT_DISABLE_PIC14@
 OPT_DISABLE_PIC16 = @OPT_DISABLE_PIC16@
-OPT_DISABLE_XA51  = @OPT_DISABLE_XA51@
 OPT_DISABLE_Z80   = @OPT_DISABLE_Z80@
 
 OBJECTS_FLOAT = $(SOURCES_FLOAT:%.c=$(PORT)/%.rel)
@@ -74,27 +73,6 @@ OBJECTS_LONG = $(SOURCES_LONG:%.c=$(PORT)/%.rel)
 OBJECTS_SDCC = $(SOURCES_SDCC:%.c=$(PORT)/%.rel)
 
 OBJECTS = $(OBJECTS_FLOAT) $(OBJECTS_INT) $(OBJECTS_LONG) $(OBJECTS_SDCC)
-
-XA51_FLOAT = $(COMMON_FLOAT)
-
-XA51_INT = $(COMMON_INT) \
-  _divsint.c \
-  _divuint.c \
-  _modsint.c \
-  _moduint.c \
-  _mulint.c
-
-XA51_LONG = $(COMMON_LONG) \
-  _divulong.c \
-  _mullong.c
-
-XA51_SDCC = $(COMMON_SDCC) \
-  _memmove.c \
-  _strlen.c \
-  _heap.c
-
-XA51SOURCES = $(XA51_FLOAT) $(XA51_INT) $(XA51_LONG) $(XA51_SDCC)
-XA51OBJECTS = $(XA51SOURCES:%.c=$(PORT)/%.rel)
 
 LIB_FILES = $(PORTDIR)/libfloat.lib $(PORTDIR)/libint.lib $(PORTDIR)/liblong.lib $(PORTDIR)/libsdcc.lib
 
@@ -165,34 +143,6 @@ model-ds400:
 	if grep '^ds400\>' $(top_builddir)/ports.build > /dev/null; then \
 	  $(MAKE) MODELFLAGS="-mds400" PORT=ds400 PORTINCDIR=$(INCDIR)/mcs51 objects; \
 	fi
-
-model-xa51:
-	if grep '^xa51\>' $(top_builddir)/ports.build > /dev/null; then \
-	  $(MAKE) MODELFLAGS="-mxa51" PORT=xa51 objects-xa51; \
-	fi
-
-objects-xa51:
-	$(MAKE) build-dir
-	$(MAKE) $(XA51OBJECTS)
-	$(MAKE) port-specific-objects
-
-$(PORTDIR)/lib$(PORT).lib: $(XA51OBJECTS)
-ifeq ($(LIB_TYPE), SDCCLIB)
-	../../bin/sdcclib -a $(PORTDIR)/lib$(PORT).lib $(XA51OBJECTS)
-else
-  ifeq ($(LIB_TYPE), AR)
-	$(AR_S) -q $(PORTDIR)/lib$(PORT).lib $(XA51OBJECTS)
-  else
-    ifeq ($(LIB_TYPE), RANLIB)
-	$(AR_S) -q $(PORTDIR)/lib$(PORT).lib $(XA51OBJECTS)
-	$(top_builddir)/bin/sdranlib $(PORTDIR)/lib$(PORT).lib
-    else
-	rm -f $(PORTDIR)/lib$(PORT).lib
-	for i in $(notdir $(basename $(XA51OBJECTS))); do echo $$i >> $(PORTDIR)/lib$(PORT).lib; done
-	cp $(XA51OBJECTS) $(PORTDIR)
-    endif
-  endif
-endif
 
 model-z80:
 	if grep '^z80\>' $(top_builddir)/ports.build > /dev/null; then \
