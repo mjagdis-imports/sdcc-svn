@@ -33,6 +33,8 @@
 	  device/non-free/lib/pic16/processors.ac,
 	  device/non-free/lib/pic16/supported-devices.ac:
 	  Update to automake 1.17 and fix bug #2677
+	* clean.mk:
+	  Fix bug #4067
 
 2026-10-30 Gabriele Gorla <gorlik@yahoo.com>
 
