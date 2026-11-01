@@ -4,6 +4,8 @@
 	  device/lib/mos65c02/Makefile.in,
 	  device/lib/huc6280/Makefile.in:
 	  Fix bug #4237
+	* device/non-free/lib/pic16/missing:
+	  Update missing script to fix configure warning.
 
 2026-10-30 Gabriele Gorla <gorlik@yahoo.com>
 
