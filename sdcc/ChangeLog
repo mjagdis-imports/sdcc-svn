@@ -1,3 +1,10 @@
+2026-11-01 Gabriele Gorla <gorlik@yahoo.com>
+
+	* device/lib/mos6502/Makefile.in,
+	  device/lib/mos65c02/Makefile.in,
+	  device/lib/huc6280/Makefile.in:
+	  Fix bug #4237
+
 2026-10-30 Gabriele Gorla <gorlik@yahoo.com>
 
 	* device/lib/Makefile.in:

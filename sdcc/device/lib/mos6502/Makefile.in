@@ -1,9 +1,10 @@
 # libc/mos6502 Makefile
 
-VPATH  = @srcdir@:$(srcdir)/../mos-common
 srcdir = @srcdir@
 top_builddir = @top_builddir@
 abs_top_builddir = @abs_top_builddir@
+
+VPATH  = $(srcdir):$(srcdir)/../mos-common
 
 LIB_TYPE     = @LIB_TYPE@
 
@@ -73,7 +74,7 @@ OBJ = __sdcc_regs.rel __sdcc_indirect_jsr.rel\
 
 LIB = mos6502.lib
 AS = $(SAS)
-ASFLAGS = -plosgff
+ASFLAGS = -plosgff -I$(srcdir)
 
 CFLAGS = -I$(srcdir)/../../include -I. --std-c23
 
