@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
   <head>
     <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
-    <meta name="keywords" content="68hc08 8032 8051 ansi c compiler assembler CPU DS390 embedded development Floating Point Arithmetic free Freescale GPL HC08 inline Intel ISO/IEC 9899:1990 Linux MAC OS X OSX manual Maxim mcs51 Microchip microcontroller open source PIC Unix Windows XP Z80 Zilog TLCS-90 STMicroelectronics STM8" />
+    <meta name="keywords" content="68hc08 8032 8051 ansi c compiler assembler CPU DS390 embedded development Floating Point Arithmetic free Freescale GPL HC08 inline Intel ISO/IEC 9899:1990 Linux MAC OS X OSX manual Maxim mcs51 Microchip microcontroller open source PIC Unix Windows XP Z80 Zilog TLCS-90 STMicroelectronics STM8 6502 65c02 huc6280" />
     <title>SDCC - Small Device C Compiler</title>
     <link type="text/css" href="styles/style.css" rel="stylesheet" />
     <link rel="icon" type="image/svg+xml" href="/images/sdcc.svg">
@@ -25,7 +25,7 @@
               <b><i>Freescale</i></b> (formerly <b><i>Motorola</i></b>) <b><i>HC08</i></b> based <b><i>(hc08, s08)</i></b>,
               <b><i>Zilog Z80</i></b> based MCUs <b><i>(Z80, Z80N, Z180, SM83, Rabbit 2000, 2000A, 3000A, 4000, SM83, TLCS-90, eZ80, R800)</i></b>,
               <b><i>Padauk (pdk14, pdk15)</b></i>,
-              <b><i>STMicroelectronics STM8</i></b>, <b><i>MOS 6502</b></i> and <b><i>WDC 65C02</b></i>.
+              <b><i>STMicroelectronics STM8</i></b>, <b><i>MOS 6502</b></i>, <b><i>WDC 65C02</b></i> and <b><i>HuC6280</b></i>.
               Work is in progress on supporting the <b><i>Rabbit 5000, 6000</b></i>, <b><i>Padauk pdk13</i></b> and the <b><i>f8</i></b> and <b><i>f8l</i></b> targets;
               <b><i>Microchip PIC16</i></b> and <b><i>PIC18</i></b> targets are unmaintained.
               SDCC can be retargeted for other microprocessors.</p>
@@ -267,6 +267,8 @@ SDCC developers have been applying for funding for SDCC projects, and we are hap
               <li>Molnár Károly &lt;molnarkaroly.AT.users.sf.net&gt; - adding pic devices, developing and maintaining pic device files
                 generation scripts</li>
               <li>Ben Shi &lt;powerstudio1st.AT.163.com&gt; - the front-end, the STM8 back-end, and the MCS-51 back-end maintain</li>
+              <li>Gabriele Gorla &lt;gorlik.AT.yahoo.com&gt; - the 6502, 65C02 and HuC6280 back-ends </li>
+
             </ul>
             <p>SDCC has had help from a number of external sources, including:</p>
             <ul>

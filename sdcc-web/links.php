@@ -25,7 +25,9 @@
       <a href="http://turbo51.com/">Turbo51 - Pascal compiler for 8051 microcontrollers</a> - If C is not your preferred language<br />
       <a href="http://www.pjrc.com/tech/8051/index.html">Paul Stoffregen's Home Page</a> - Home of PAULMON and other code snippets.<br />
       <a href="http://www.systronix.com">Systronix</a> - Makers of the STEP and STEP+ for the DallasTINI board (a must see for embedded ethernet and Dallas 390's)<br />
-      <a href="http://www.soudez.be/">www.soudez.be</a> -DS89C450 system over USB port in a standard DIL40 package<br />
+      <a href="http://www.soudez.be/">www.soudez.be</a> - DS89C450 system over USB port in a standard DIL40 package<br />
+      <a href="https://github.com/gorlik/gboot51">gboot51</a> - USB HID bootloader for the Silicon Labs C8051F3xx microcontrollers<br />
+
       </p>
 
       <h2>Links - STM8</h2>
@@ -42,6 +44,12 @@
       <a href="http://www.colecovision.eu/ColecoVision/development/">ColecoVision</a> - Tutorials and tools for ColecoVision development using SDCC<br />  
       <a href="http://www.rabbitsemiconductor.com">Rabbit Semiconductor</a> - Z-World based boards, very small and lots of I/O. Kits available.<br />    
       <a href="http://palmmicro.com/ar1688/">AR1688</a> - Z80 based VoIP processor and module using SDCC compiler<br />
+      </p>
+
+      <h2>Links - MOS6502/WDC65C02/HuC6280</h2>
+
+      <p>
+      <a href="https://github.com/gorlik/sdcc-6502-sdk/">sdcc-6502-sdk</a> - SDCC runtime for Commodore 8-bit computers<br />  
       </p>
 
       <h2>Links - PIC</h2>
