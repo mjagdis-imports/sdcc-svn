@@ -1,5 +1,6 @@
 ## Makefile.am -- Process this file with automake to produce Makefile.in
 
+AUTOMAKE_OPTIONS = subdir-objects
 lib_LIBRARIES = libc18f.a
 
 libc18f_a_SOURCES =

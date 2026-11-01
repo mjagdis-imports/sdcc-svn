@@ -13,6 +13,7 @@ cat <<HEREDOC
 ## Makefile.am -- Process this file with automake to produce Makefile.in
 ## This file was automatically generated using $0.
 
+AUTOMAKE_OPTIONS = subdir-objects
 lib_LIBRARIES = 
 
 HEREDOC

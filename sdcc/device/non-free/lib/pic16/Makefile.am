@@ -1,5 +1,6 @@
 ## Makefile.am -- Process this file with automake to produce Makefile.in
 
+AUTOMAKE_OPTIONS = subdir-objects
 SUBDIRS = libdev
 
 include $(top_srcdir)/Makefile.common

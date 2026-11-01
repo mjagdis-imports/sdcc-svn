@@ -1,6 +1,7 @@
 ## Makefile.am -- Process this file with automake to produce Makefile.in
 ## This file was automatically generated using ./mkmk.sh.
 
+AUTOMAKE_OPTIONS = subdir-objects
 lib_LIBRARIES = 
 
 if ENABLE_18F1220
@@ -226,6 +227,23 @@ libio18f2410_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
 libio18f2410_a_SOURCES += usart/usartd.c
 libio18f2410_a_CFLAGS = -p18f2410 $(AM_CFLAGS)
 
+if ENABLE_18F242
+lib_LIBRARIES += libio18f242.a
+endif ENABLE_18F242
+libio18f242_a_SOURCES = dummy.c
+libio18f242_a_SOURCES += adc/adcbusy.c adc/adcclose.c adc/adcconv.c
+libio18f242_a_SOURCES += adc/adcopen.c adc/adcread.c adc/adcsetch.c
+libio18f242_a_SOURCES += i2c/i2cack.c i2c/i2cclose.c i2c/i2cdrdy.c
+libio18f242_a_SOURCES += i2c/i2cidle.c i2c/i2cnack.c i2c/i2copen.c
+libio18f242_a_SOURCES += i2c/i2creadc.c i2c/i2creads.c i2c/i2crestart.c
+libio18f242_a_SOURCES += i2c/i2cstart.c i2c/i2cstop.c i2c/i2cwritec.c
+libio18f242_a_SOURCES += i2c/i2cwrites.c
+libio18f242_a_SOURCES += usart/ubaud.c usart/ubusy.c usart/uclose.c
+libio18f242_a_SOURCES += usart/udrdy.c usart/ugetc.c usart/ugets.c
+libio18f242_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
+libio18f242_a_SOURCES += usart/usartd.c
+libio18f242_a_CFLAGS = -p18f242 $(AM_CFLAGS)
+
 if ENABLE_18F2420
 lib_LIBRARIES += libio18f2420.a
 endif ENABLE_18F2420
@@ -259,23 +277,6 @@ libio18f2423_a_SOURCES += usart/udrdy.c usart/ugetc.c usart/ugets.c
 libio18f2423_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
 libio18f2423_a_SOURCES += usart/usartd.c
 libio18f2423_a_CFLAGS = -p18f2423 $(AM_CFLAGS)
-
-if ENABLE_18F242
-lib_LIBRARIES += libio18f242.a
-endif ENABLE_18F242
-libio18f242_a_SOURCES = dummy.c
-libio18f242_a_SOURCES += adc/adcbusy.c adc/adcclose.c adc/adcconv.c
-libio18f242_a_SOURCES += adc/adcopen.c adc/adcread.c adc/adcsetch.c
-libio18f242_a_SOURCES += i2c/i2cack.c i2c/i2cclose.c i2c/i2cdrdy.c
-libio18f242_a_SOURCES += i2c/i2cidle.c i2c/i2cnack.c i2c/i2copen.c
-libio18f242_a_SOURCES += i2c/i2creadc.c i2c/i2creads.c i2c/i2crestart.c
-libio18f242_a_SOURCES += i2c/i2cstart.c i2c/i2cstop.c i2c/i2cwritec.c
-libio18f242_a_SOURCES += i2c/i2cwrites.c
-libio18f242_a_SOURCES += usart/ubaud.c usart/ubusy.c usart/uclose.c
-libio18f242_a_SOURCES += usart/udrdy.c usart/ugetc.c usart/ugets.c
-libio18f242_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
-libio18f242_a_SOURCES += usart/usartd.c
-libio18f242_a_CFLAGS = -p18f242 $(AM_CFLAGS)
 
 if ENABLE_18F2431
 lib_LIBRARIES += libio18f2431.a
@@ -323,23 +324,6 @@ endif ENABLE_18F2458
 libio18f2458_a_SOURCES = dummy.c
 libio18f2458_a_CFLAGS = -p18f2458 $(AM_CFLAGS)
 
-if ENABLE_18F2480
-lib_LIBRARIES += libio18f2480.a
-endif ENABLE_18F2480
-libio18f2480_a_SOURCES = dummy.c
-libio18f2480_a_SOURCES += adc/adcbusy.c adc/adcclose.c adc/adcconv.c
-libio18f2480_a_SOURCES += adc/adcopen.c adc/adcread.c adc/adcsetch.c
-libio18f2480_a_SOURCES += i2c/i2cack.c i2c/i2cclose.c i2c/i2cdrdy.c
-libio18f2480_a_SOURCES += i2c/i2cidle.c i2c/i2cnack.c i2c/i2copen.c
-libio18f2480_a_SOURCES += i2c/i2creadc.c i2c/i2creads.c i2c/i2crestart.c
-libio18f2480_a_SOURCES += i2c/i2cstart.c i2c/i2cstop.c i2c/i2cwritec.c
-libio18f2480_a_SOURCES += i2c/i2cwrites.c
-libio18f2480_a_SOURCES += usart/ubaud.c usart/ubusy.c usart/uclose.c
-libio18f2480_a_SOURCES += usart/udrdy.c usart/ugetc.c usart/ugets.c
-libio18f2480_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
-libio18f2480_a_SOURCES += usart/usartd.c
-libio18f2480_a_CFLAGS = -p18f2480 $(AM_CFLAGS)
-
 if ENABLE_18F248
 lib_LIBRARIES += libio18f248.a
 endif ENABLE_18F248
@@ -356,6 +340,23 @@ libio18f248_a_SOURCES += usart/udrdy.c usart/ugetc.c usart/ugets.c
 libio18f248_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
 libio18f248_a_SOURCES += usart/usartd.c
 libio18f248_a_CFLAGS = -p18f248 $(AM_CFLAGS)
+
+if ENABLE_18F2480
+lib_LIBRARIES += libio18f2480.a
+endif ENABLE_18F2480
+libio18f2480_a_SOURCES = dummy.c
+libio18f2480_a_SOURCES += adc/adcbusy.c adc/adcclose.c adc/adcconv.c
+libio18f2480_a_SOURCES += adc/adcopen.c adc/adcread.c adc/adcsetch.c
+libio18f2480_a_SOURCES += i2c/i2cack.c i2c/i2cclose.c i2c/i2cdrdy.c
+libio18f2480_a_SOURCES += i2c/i2cidle.c i2c/i2cnack.c i2c/i2copen.c
+libio18f2480_a_SOURCES += i2c/i2creadc.c i2c/i2creads.c i2c/i2crestart.c
+libio18f2480_a_SOURCES += i2c/i2cstart.c i2c/i2cstop.c i2c/i2cwritec.c
+libio18f2480_a_SOURCES += i2c/i2cwrites.c
+libio18f2480_a_SOURCES += usart/ubaud.c usart/ubusy.c usart/uclose.c
+libio18f2480_a_SOURCES += usart/udrdy.c usart/ugetc.c usart/ugets.c
+libio18f2480_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
+libio18f2480_a_SOURCES += usart/usartd.c
+libio18f2480_a_CFLAGS = -p18f2480 $(AM_CFLAGS)
 
 if ENABLE_18F24J10
 lib_LIBRARIES += libio18f24j10.a
@@ -466,6 +467,23 @@ libio18f2515_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
 libio18f2515_a_SOURCES += usart/usartd.c
 libio18f2515_a_CFLAGS = -p18f2515 $(AM_CFLAGS)
 
+if ENABLE_18F252
+lib_LIBRARIES += libio18f252.a
+endif ENABLE_18F252
+libio18f252_a_SOURCES = dummy.c
+libio18f252_a_SOURCES += adc/adcbusy.c adc/adcclose.c adc/adcconv.c
+libio18f252_a_SOURCES += adc/adcopen.c adc/adcread.c adc/adcsetch.c
+libio18f252_a_SOURCES += i2c/i2cack.c i2c/i2cclose.c i2c/i2cdrdy.c
+libio18f252_a_SOURCES += i2c/i2cidle.c i2c/i2cnack.c i2c/i2copen.c
+libio18f252_a_SOURCES += i2c/i2creadc.c i2c/i2creads.c i2c/i2crestart.c
+libio18f252_a_SOURCES += i2c/i2cstart.c i2c/i2cstop.c i2c/i2cwritec.c
+libio18f252_a_SOURCES += i2c/i2cwrites.c
+libio18f252_a_SOURCES += usart/ubaud.c usart/ubusy.c usart/uclose.c
+libio18f252_a_SOURCES += usart/udrdy.c usart/ugetc.c usart/ugets.c
+libio18f252_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
+libio18f252_a_SOURCES += usart/usartd.c
+libio18f252_a_CFLAGS = -p18f252 $(AM_CFLAGS)
+
 if ENABLE_18F2520
 lib_LIBRARIES += libio18f2520.a
 endif ENABLE_18F2520
@@ -517,23 +535,6 @@ libio18f2525_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
 libio18f2525_a_SOURCES += usart/usartd.c
 libio18f2525_a_CFLAGS = -p18f2525 $(AM_CFLAGS)
 
-if ENABLE_18F252
-lib_LIBRARIES += libio18f252.a
-endif ENABLE_18F252
-libio18f252_a_SOURCES = dummy.c
-libio18f252_a_SOURCES += adc/adcbusy.c adc/adcclose.c adc/adcconv.c
-libio18f252_a_SOURCES += adc/adcopen.c adc/adcread.c adc/adcsetch.c
-libio18f252_a_SOURCES += i2c/i2cack.c i2c/i2cclose.c i2c/i2cdrdy.c
-libio18f252_a_SOURCES += i2c/i2cidle.c i2c/i2cnack.c i2c/i2copen.c
-libio18f252_a_SOURCES += i2c/i2creadc.c i2c/i2creads.c i2c/i2crestart.c
-libio18f252_a_SOURCES += i2c/i2cstart.c i2c/i2cstop.c i2c/i2cwritec.c
-libio18f252_a_SOURCES += i2c/i2cwrites.c
-libio18f252_a_SOURCES += usart/ubaud.c usart/ubusy.c usart/uclose.c
-libio18f252_a_SOURCES += usart/udrdy.c usart/ugetc.c usart/ugets.c
-libio18f252_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
-libio18f252_a_SOURCES += usart/usartd.c
-libio18f252_a_CFLAGS = -p18f252 $(AM_CFLAGS)
-
 if ENABLE_18F2539
 lib_LIBRARIES += libio18f2539.a
 endif ENABLE_18F2539
@@ -557,6 +558,23 @@ lib_LIBRARIES += libio18f2553.a
 endif ENABLE_18F2553
 libio18f2553_a_SOURCES = dummy.c
 libio18f2553_a_CFLAGS = -p18f2553 $(AM_CFLAGS)
+
+if ENABLE_18F258
+lib_LIBRARIES += libio18f258.a
+endif ENABLE_18F258
+libio18f258_a_SOURCES = dummy.c
+libio18f258_a_SOURCES += adc/adcbusy.c adc/adcclose.c adc/adcconv.c
+libio18f258_a_SOURCES += adc/adcopen.c adc/adcread.c adc/adcsetch.c
+libio18f258_a_SOURCES += i2c/i2cack.c i2c/i2cclose.c i2c/i2cdrdy.c
+libio18f258_a_SOURCES += i2c/i2cidle.c i2c/i2cnack.c i2c/i2copen.c
+libio18f258_a_SOURCES += i2c/i2creadc.c i2c/i2creads.c i2c/i2crestart.c
+libio18f258_a_SOURCES += i2c/i2cstart.c i2c/i2cstop.c i2c/i2cwritec.c
+libio18f258_a_SOURCES += i2c/i2cwrites.c
+libio18f258_a_SOURCES += usart/ubaud.c usart/ubusy.c usart/uclose.c
+libio18f258_a_SOURCES += usart/udrdy.c usart/ugetc.c usart/ugets.c
+libio18f258_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
+libio18f258_a_SOURCES += usart/usartd.c
+libio18f258_a_CFLAGS = -p18f258 $(AM_CFLAGS)
 
 if ENABLE_18F2580
 lib_LIBRARIES += libio18f2580.a
@@ -591,23 +609,6 @@ libio18f2585_a_SOURCES += usart/udrdy.c usart/ugetc.c usart/ugets.c
 libio18f2585_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
 libio18f2585_a_SOURCES += usart/usartd.c
 libio18f2585_a_CFLAGS = -p18f2585 $(AM_CFLAGS)
-
-if ENABLE_18F258
-lib_LIBRARIES += libio18f258.a
-endif ENABLE_18F258
-libio18f258_a_SOURCES = dummy.c
-libio18f258_a_SOURCES += adc/adcbusy.c adc/adcclose.c adc/adcconv.c
-libio18f258_a_SOURCES += adc/adcopen.c adc/adcread.c adc/adcsetch.c
-libio18f258_a_SOURCES += i2c/i2cack.c i2c/i2cclose.c i2c/i2cdrdy.c
-libio18f258_a_SOURCES += i2c/i2cidle.c i2c/i2cnack.c i2c/i2copen.c
-libio18f258_a_SOURCES += i2c/i2creadc.c i2c/i2creads.c i2c/i2crestart.c
-libio18f258_a_SOURCES += i2c/i2cstart.c i2c/i2cstop.c i2c/i2cwritec.c
-libio18f258_a_SOURCES += i2c/i2cwrites.c
-libio18f258_a_SOURCES += usart/ubaud.c usart/ubusy.c usart/uclose.c
-libio18f258_a_SOURCES += usart/udrdy.c usart/ugetc.c usart/ugets.c
-libio18f258_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
-libio18f258_a_SOURCES += usart/usartd.c
-libio18f258_a_CFLAGS = -p18f258 $(AM_CFLAGS)
 
 if ENABLE_18F25J10
 lib_LIBRARIES += libio18f25j10.a
@@ -986,6 +987,23 @@ libio18f4410_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
 libio18f4410_a_SOURCES += usart/usartd.c
 libio18f4410_a_CFLAGS = -p18f4410 $(AM_CFLAGS)
 
+if ENABLE_18F442
+lib_LIBRARIES += libio18f442.a
+endif ENABLE_18F442
+libio18f442_a_SOURCES = dummy.c
+libio18f442_a_SOURCES += adc/adcbusy.c adc/adcclose.c adc/adcconv.c
+libio18f442_a_SOURCES += adc/adcopen.c adc/adcread.c adc/adcsetch.c
+libio18f442_a_SOURCES += i2c/i2cack.c i2c/i2cclose.c i2c/i2cdrdy.c
+libio18f442_a_SOURCES += i2c/i2cidle.c i2c/i2cnack.c i2c/i2copen.c
+libio18f442_a_SOURCES += i2c/i2creadc.c i2c/i2creads.c i2c/i2crestart.c
+libio18f442_a_SOURCES += i2c/i2cstart.c i2c/i2cstop.c i2c/i2cwritec.c
+libio18f442_a_SOURCES += i2c/i2cwrites.c
+libio18f442_a_SOURCES += usart/ubaud.c usart/ubusy.c usart/uclose.c
+libio18f442_a_SOURCES += usart/udrdy.c usart/ugetc.c usart/ugets.c
+libio18f442_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
+libio18f442_a_SOURCES += usart/usartd.c
+libio18f442_a_CFLAGS = -p18f442 $(AM_CFLAGS)
+
 if ENABLE_18F4420
 lib_LIBRARIES += libio18f4420.a
 endif ENABLE_18F4420
@@ -1019,23 +1037,6 @@ libio18f4423_a_SOURCES += usart/udrdy.c usart/ugetc.c usart/ugets.c
 libio18f4423_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
 libio18f4423_a_SOURCES += usart/usartd.c
 libio18f4423_a_CFLAGS = -p18f4423 $(AM_CFLAGS)
-
-if ENABLE_18F442
-lib_LIBRARIES += libio18f442.a
-endif ENABLE_18F442
-libio18f442_a_SOURCES = dummy.c
-libio18f442_a_SOURCES += adc/adcbusy.c adc/adcclose.c adc/adcconv.c
-libio18f442_a_SOURCES += adc/adcopen.c adc/adcread.c adc/adcsetch.c
-libio18f442_a_SOURCES += i2c/i2cack.c i2c/i2cclose.c i2c/i2cdrdy.c
-libio18f442_a_SOURCES += i2c/i2cidle.c i2c/i2cnack.c i2c/i2copen.c
-libio18f442_a_SOURCES += i2c/i2creadc.c i2c/i2creads.c i2c/i2crestart.c
-libio18f442_a_SOURCES += i2c/i2cstart.c i2c/i2cstop.c i2c/i2cwritec.c
-libio18f442_a_SOURCES += i2c/i2cwrites.c
-libio18f442_a_SOURCES += usart/ubaud.c usart/ubusy.c usart/uclose.c
-libio18f442_a_SOURCES += usart/udrdy.c usart/ugetc.c usart/ugets.c
-libio18f442_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
-libio18f442_a_SOURCES += usart/usartd.c
-libio18f442_a_CFLAGS = -p18f442 $(AM_CFLAGS)
 
 if ENABLE_18F4431
 lib_LIBRARIES += libio18f4431.a
@@ -1083,23 +1084,6 @@ endif ENABLE_18F4458
 libio18f4458_a_SOURCES = dummy.c
 libio18f4458_a_CFLAGS = -p18f4458 $(AM_CFLAGS)
 
-if ENABLE_18F4480
-lib_LIBRARIES += libio18f4480.a
-endif ENABLE_18F4480
-libio18f4480_a_SOURCES = dummy.c
-libio18f4480_a_SOURCES += adc/adcbusy.c adc/adcclose.c adc/adcconv.c
-libio18f4480_a_SOURCES += adc/adcopen.c adc/adcread.c adc/adcsetch.c
-libio18f4480_a_SOURCES += i2c/i2cack.c i2c/i2cclose.c i2c/i2cdrdy.c
-libio18f4480_a_SOURCES += i2c/i2cidle.c i2c/i2cnack.c i2c/i2copen.c
-libio18f4480_a_SOURCES += i2c/i2creadc.c i2c/i2creads.c i2c/i2crestart.c
-libio18f4480_a_SOURCES += i2c/i2cstart.c i2c/i2cstop.c i2c/i2cwritec.c
-libio18f4480_a_SOURCES += i2c/i2cwrites.c
-libio18f4480_a_SOURCES += usart/ubaud.c usart/ubusy.c usart/uclose.c
-libio18f4480_a_SOURCES += usart/udrdy.c usart/ugetc.c usart/ugets.c
-libio18f4480_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
-libio18f4480_a_SOURCES += usart/usartd.c
-libio18f4480_a_CFLAGS = -p18f4480 $(AM_CFLAGS)
-
 if ENABLE_18F448
 lib_LIBRARIES += libio18f448.a
 endif ENABLE_18F448
@@ -1116,6 +1100,23 @@ libio18f448_a_SOURCES += usart/udrdy.c usart/ugetc.c usart/ugets.c
 libio18f448_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
 libio18f448_a_SOURCES += usart/usartd.c
 libio18f448_a_CFLAGS = -p18f448 $(AM_CFLAGS)
+
+if ENABLE_18F4480
+lib_LIBRARIES += libio18f4480.a
+endif ENABLE_18F4480
+libio18f4480_a_SOURCES = dummy.c
+libio18f4480_a_SOURCES += adc/adcbusy.c adc/adcclose.c adc/adcconv.c
+libio18f4480_a_SOURCES += adc/adcopen.c adc/adcread.c adc/adcsetch.c
+libio18f4480_a_SOURCES += i2c/i2cack.c i2c/i2cclose.c i2c/i2cdrdy.c
+libio18f4480_a_SOURCES += i2c/i2cidle.c i2c/i2cnack.c i2c/i2copen.c
+libio18f4480_a_SOURCES += i2c/i2creadc.c i2c/i2creads.c i2c/i2crestart.c
+libio18f4480_a_SOURCES += i2c/i2cstart.c i2c/i2cstop.c i2c/i2cwritec.c
+libio18f4480_a_SOURCES += i2c/i2cwrites.c
+libio18f4480_a_SOURCES += usart/ubaud.c usart/ubusy.c usart/uclose.c
+libio18f4480_a_SOURCES += usart/udrdy.c usart/ugetc.c usart/ugets.c
+libio18f4480_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
+libio18f4480_a_SOURCES += usart/usartd.c
+libio18f4480_a_CFLAGS = -p18f4480 $(AM_CFLAGS)
 
 if ENABLE_18F44J10
 lib_LIBRARIES += libio18f44j10.a
@@ -1220,6 +1221,23 @@ libio18f4515_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
 libio18f4515_a_SOURCES += usart/usartd.c
 libio18f4515_a_CFLAGS = -p18f4515 $(AM_CFLAGS)
 
+if ENABLE_18F452
+lib_LIBRARIES += libio18f452.a
+endif ENABLE_18F452
+libio18f452_a_SOURCES = dummy.c
+libio18f452_a_SOURCES += adc/adcbusy.c adc/adcclose.c adc/adcconv.c
+libio18f452_a_SOURCES += adc/adcopen.c adc/adcread.c adc/adcsetch.c
+libio18f452_a_SOURCES += i2c/i2cack.c i2c/i2cclose.c i2c/i2cdrdy.c
+libio18f452_a_SOURCES += i2c/i2cidle.c i2c/i2cnack.c i2c/i2copen.c
+libio18f452_a_SOURCES += i2c/i2creadc.c i2c/i2creads.c i2c/i2crestart.c
+libio18f452_a_SOURCES += i2c/i2cstart.c i2c/i2cstop.c i2c/i2cwritec.c
+libio18f452_a_SOURCES += i2c/i2cwrites.c
+libio18f452_a_SOURCES += usart/ubaud.c usart/ubusy.c usart/uclose.c
+libio18f452_a_SOURCES += usart/udrdy.c usart/ugetc.c usart/ugets.c
+libio18f452_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
+libio18f452_a_SOURCES += usart/usartd.c
+libio18f452_a_CFLAGS = -p18f452 $(AM_CFLAGS)
+
 if ENABLE_18F4520
 lib_LIBRARIES += libio18f4520.a
 endif ENABLE_18F4520
@@ -1271,23 +1289,6 @@ libio18f4525_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
 libio18f4525_a_SOURCES += usart/usartd.c
 libio18f4525_a_CFLAGS = -p18f4525 $(AM_CFLAGS)
 
-if ENABLE_18F452
-lib_LIBRARIES += libio18f452.a
-endif ENABLE_18F452
-libio18f452_a_SOURCES = dummy.c
-libio18f452_a_SOURCES += adc/adcbusy.c adc/adcclose.c adc/adcconv.c
-libio18f452_a_SOURCES += adc/adcopen.c adc/adcread.c adc/adcsetch.c
-libio18f452_a_SOURCES += i2c/i2cack.c i2c/i2cclose.c i2c/i2cdrdy.c
-libio18f452_a_SOURCES += i2c/i2cidle.c i2c/i2cnack.c i2c/i2copen.c
-libio18f452_a_SOURCES += i2c/i2creadc.c i2c/i2creads.c i2c/i2crestart.c
-libio18f452_a_SOURCES += i2c/i2cstart.c i2c/i2cstop.c i2c/i2cwritec.c
-libio18f452_a_SOURCES += i2c/i2cwrites.c
-libio18f452_a_SOURCES += usart/ubaud.c usart/ubusy.c usart/uclose.c
-libio18f452_a_SOURCES += usart/udrdy.c usart/ugetc.c usart/ugets.c
-libio18f452_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
-libio18f452_a_SOURCES += usart/usartd.c
-libio18f452_a_CFLAGS = -p18f452 $(AM_CFLAGS)
-
 if ENABLE_18F4539
 lib_LIBRARIES += libio18f4539.a
 endif ENABLE_18F4539
@@ -1311,6 +1312,23 @@ lib_LIBRARIES += libio18f4553.a
 endif ENABLE_18F4553
 libio18f4553_a_SOURCES = dummy.c
 libio18f4553_a_CFLAGS = -p18f4553 $(AM_CFLAGS)
+
+if ENABLE_18F458
+lib_LIBRARIES += libio18f458.a
+endif ENABLE_18F458
+libio18f458_a_SOURCES = dummy.c
+libio18f458_a_SOURCES += adc/adcbusy.c adc/adcclose.c adc/adcconv.c
+libio18f458_a_SOURCES += adc/adcopen.c adc/adcread.c adc/adcsetch.c
+libio18f458_a_SOURCES += i2c/i2cack.c i2c/i2cclose.c i2c/i2cdrdy.c
+libio18f458_a_SOURCES += i2c/i2cidle.c i2c/i2cnack.c i2c/i2copen.c
+libio18f458_a_SOURCES += i2c/i2creadc.c i2c/i2creads.c i2c/i2crestart.c
+libio18f458_a_SOURCES += i2c/i2cstart.c i2c/i2cstop.c i2c/i2cwritec.c
+libio18f458_a_SOURCES += i2c/i2cwrites.c
+libio18f458_a_SOURCES += usart/ubaud.c usart/ubusy.c usart/uclose.c
+libio18f458_a_SOURCES += usart/udrdy.c usart/ugetc.c usart/ugets.c
+libio18f458_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
+libio18f458_a_SOURCES += usart/usartd.c
+libio18f458_a_CFLAGS = -p18f458 $(AM_CFLAGS)
 
 if ENABLE_18F4580
 lib_LIBRARIES += libio18f4580.a
@@ -1345,23 +1363,6 @@ libio18f4585_a_SOURCES += usart/udrdy.c usart/ugetc.c usart/ugets.c
 libio18f4585_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
 libio18f4585_a_SOURCES += usart/usartd.c
 libio18f4585_a_CFLAGS = -p18f4585 $(AM_CFLAGS)
-
-if ENABLE_18F458
-lib_LIBRARIES += libio18f458.a
-endif ENABLE_18F458
-libio18f458_a_SOURCES = dummy.c
-libio18f458_a_SOURCES += adc/adcbusy.c adc/adcclose.c adc/adcconv.c
-libio18f458_a_SOURCES += adc/adcopen.c adc/adcread.c adc/adcsetch.c
-libio18f458_a_SOURCES += i2c/i2cack.c i2c/i2cclose.c i2c/i2cdrdy.c
-libio18f458_a_SOURCES += i2c/i2cidle.c i2c/i2cnack.c i2c/i2copen.c
-libio18f458_a_SOURCES += i2c/i2creadc.c i2c/i2creads.c i2c/i2crestart.c
-libio18f458_a_SOURCES += i2c/i2cstart.c i2c/i2cstop.c i2c/i2cwritec.c
-libio18f458_a_SOURCES += i2c/i2cwrites.c
-libio18f458_a_SOURCES += usart/ubaud.c usart/ubusy.c usart/uclose.c
-libio18f458_a_SOURCES += usart/udrdy.c usart/ugetc.c usart/ugets.c
-libio18f458_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
-libio18f458_a_SOURCES += usart/usartd.c
-libio18f458_a_CFLAGS = -p18f458 $(AM_CFLAGS)
 
 if ENABLE_18F45J10
 lib_LIBRARIES += libio18f45j10.a
@@ -2892,6 +2893,21 @@ libio18lf2410_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
 libio18lf2410_a_SOURCES += usart/usartd.c
 libio18lf2410_a_CFLAGS = -p18lf2410 $(AM_CFLAGS)
 
+if ENABLE_18LF242
+lib_LIBRARIES += libio18lf242.a
+endif ENABLE_18LF242
+libio18lf242_a_SOURCES = dummy.c
+libio18lf242_a_SOURCES += i2c/i2cack.c i2c/i2cclose.c i2c/i2cdrdy.c
+libio18lf242_a_SOURCES += i2c/i2cidle.c i2c/i2cnack.c i2c/i2copen.c
+libio18lf242_a_SOURCES += i2c/i2creadc.c i2c/i2creads.c i2c/i2crestart.c
+libio18lf242_a_SOURCES += i2c/i2cstart.c i2c/i2cstop.c i2c/i2cwritec.c
+libio18lf242_a_SOURCES += i2c/i2cwrites.c
+libio18lf242_a_SOURCES += usart/ubaud.c usart/ubusy.c usart/uclose.c
+libio18lf242_a_SOURCES += usart/udrdy.c usart/ugetc.c usart/ugets.c
+libio18lf242_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
+libio18lf242_a_SOURCES += usart/usartd.c
+libio18lf242_a_CFLAGS = -p18lf242 $(AM_CFLAGS)
+
 if ENABLE_18LF2420
 lib_LIBRARIES += libio18lf2420.a
 endif ENABLE_18LF2420
@@ -2921,21 +2937,6 @@ libio18lf2423_a_SOURCES += usart/udrdy.c usart/ugetc.c usart/ugets.c
 libio18lf2423_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
 libio18lf2423_a_SOURCES += usart/usartd.c
 libio18lf2423_a_CFLAGS = -p18lf2423 $(AM_CFLAGS)
-
-if ENABLE_18LF242
-lib_LIBRARIES += libio18lf242.a
-endif ENABLE_18LF242
-libio18lf242_a_SOURCES = dummy.c
-libio18lf242_a_SOURCES += i2c/i2cack.c i2c/i2cclose.c i2c/i2cdrdy.c
-libio18lf242_a_SOURCES += i2c/i2cidle.c i2c/i2cnack.c i2c/i2copen.c
-libio18lf242_a_SOURCES += i2c/i2creadc.c i2c/i2creads.c i2c/i2crestart.c
-libio18lf242_a_SOURCES += i2c/i2cstart.c i2c/i2cstop.c i2c/i2cwritec.c
-libio18lf242_a_SOURCES += i2c/i2cwrites.c
-libio18lf242_a_SOURCES += usart/ubaud.c usart/ubusy.c usart/uclose.c
-libio18lf242_a_SOURCES += usart/udrdy.c usart/ugetc.c usart/ugets.c
-libio18lf242_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
-libio18lf242_a_SOURCES += usart/usartd.c
-libio18lf242_a_CFLAGS = -p18lf242 $(AM_CFLAGS)
 
 if ENABLE_18LF2431
 lib_LIBRARIES += libio18lf2431.a
@@ -2979,21 +2980,6 @@ endif ENABLE_18LF2458
 libio18lf2458_a_SOURCES = dummy.c
 libio18lf2458_a_CFLAGS = -p18lf2458 $(AM_CFLAGS)
 
-if ENABLE_18LF2480
-lib_LIBRARIES += libio18lf2480.a
-endif ENABLE_18LF2480
-libio18lf2480_a_SOURCES = dummy.c
-libio18lf2480_a_SOURCES += i2c/i2cack.c i2c/i2cclose.c i2c/i2cdrdy.c
-libio18lf2480_a_SOURCES += i2c/i2cidle.c i2c/i2cnack.c i2c/i2copen.c
-libio18lf2480_a_SOURCES += i2c/i2creadc.c i2c/i2creads.c i2c/i2crestart.c
-libio18lf2480_a_SOURCES += i2c/i2cstart.c i2c/i2cstop.c i2c/i2cwritec.c
-libio18lf2480_a_SOURCES += i2c/i2cwrites.c
-libio18lf2480_a_SOURCES += usart/ubaud.c usart/ubusy.c usart/uclose.c
-libio18lf2480_a_SOURCES += usart/udrdy.c usart/ugetc.c usart/ugets.c
-libio18lf2480_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
-libio18lf2480_a_SOURCES += usart/usartd.c
-libio18lf2480_a_CFLAGS = -p18lf2480 $(AM_CFLAGS)
-
 if ENABLE_18LF248
 lib_LIBRARIES += libio18lf248.a
 endif ENABLE_18LF248
@@ -3008,6 +2994,21 @@ libio18lf248_a_SOURCES += usart/udrdy.c usart/ugetc.c usart/ugets.c
 libio18lf248_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
 libio18lf248_a_SOURCES += usart/usartd.c
 libio18lf248_a_CFLAGS = -p18lf248 $(AM_CFLAGS)
+
+if ENABLE_18LF2480
+lib_LIBRARIES += libio18lf2480.a
+endif ENABLE_18LF2480
+libio18lf2480_a_SOURCES = dummy.c
+libio18lf2480_a_SOURCES += i2c/i2cack.c i2c/i2cclose.c i2c/i2cdrdy.c
+libio18lf2480_a_SOURCES += i2c/i2cidle.c i2c/i2cnack.c i2c/i2copen.c
+libio18lf2480_a_SOURCES += i2c/i2creadc.c i2c/i2creads.c i2c/i2crestart.c
+libio18lf2480_a_SOURCES += i2c/i2cstart.c i2c/i2cstop.c i2c/i2cwritec.c
+libio18lf2480_a_SOURCES += i2c/i2cwrites.c
+libio18lf2480_a_SOURCES += usart/ubaud.c usart/ubusy.c usart/uclose.c
+libio18lf2480_a_SOURCES += usart/udrdy.c usart/ugetc.c usart/ugets.c
+libio18lf2480_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
+libio18lf2480_a_SOURCES += usart/usartd.c
+libio18lf2480_a_CFLAGS = -p18lf2480 $(AM_CFLAGS)
 
 if ENABLE_18LF24J10
 lib_LIBRARIES += libio18lf24j10.a
@@ -3091,6 +3092,21 @@ libio18lf2515_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
 libio18lf2515_a_SOURCES += usart/usartd.c
 libio18lf2515_a_CFLAGS = -p18lf2515 $(AM_CFLAGS)
 
+if ENABLE_18LF252
+lib_LIBRARIES += libio18lf252.a
+endif ENABLE_18LF252
+libio18lf252_a_SOURCES = dummy.c
+libio18lf252_a_SOURCES += i2c/i2cack.c i2c/i2cclose.c i2c/i2cdrdy.c
+libio18lf252_a_SOURCES += i2c/i2cidle.c i2c/i2cnack.c i2c/i2copen.c
+libio18lf252_a_SOURCES += i2c/i2creadc.c i2c/i2creads.c i2c/i2crestart.c
+libio18lf252_a_SOURCES += i2c/i2cstart.c i2c/i2cstop.c i2c/i2cwritec.c
+libio18lf252_a_SOURCES += i2c/i2cwrites.c
+libio18lf252_a_SOURCES += usart/ubaud.c usart/ubusy.c usart/uclose.c
+libio18lf252_a_SOURCES += usart/udrdy.c usart/ugetc.c usart/ugets.c
+libio18lf252_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
+libio18lf252_a_SOURCES += usart/usartd.c
+libio18lf252_a_CFLAGS = -p18lf252 $(AM_CFLAGS)
+
 if ENABLE_18LF2520
 lib_LIBRARIES += libio18lf2520.a
 endif ENABLE_18LF2520
@@ -3136,21 +3152,6 @@ libio18lf2525_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
 libio18lf2525_a_SOURCES += usart/usartd.c
 libio18lf2525_a_CFLAGS = -p18lf2525 $(AM_CFLAGS)
 
-if ENABLE_18LF252
-lib_LIBRARIES += libio18lf252.a
-endif ENABLE_18LF252
-libio18lf252_a_SOURCES = dummy.c
-libio18lf252_a_SOURCES += i2c/i2cack.c i2c/i2cclose.c i2c/i2cdrdy.c
-libio18lf252_a_SOURCES += i2c/i2cidle.c i2c/i2cnack.c i2c/i2copen.c
-libio18lf252_a_SOURCES += i2c/i2creadc.c i2c/i2creads.c i2c/i2crestart.c
-libio18lf252_a_SOURCES += i2c/i2cstart.c i2c/i2cstop.c i2c/i2cwritec.c
-libio18lf252_a_SOURCES += i2c/i2cwrites.c
-libio18lf252_a_SOURCES += usart/ubaud.c usart/ubusy.c usart/uclose.c
-libio18lf252_a_SOURCES += usart/udrdy.c usart/ugetc.c usart/ugets.c
-libio18lf252_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
-libio18lf252_a_SOURCES += usart/usartd.c
-libio18lf252_a_CFLAGS = -p18lf252 $(AM_CFLAGS)
-
 if ENABLE_18LF2539
 lib_LIBRARIES += libio18lf2539.a
 endif ENABLE_18LF2539
@@ -3172,6 +3173,21 @@ lib_LIBRARIES += libio18lf2553.a
 endif ENABLE_18LF2553
 libio18lf2553_a_SOURCES = dummy.c
 libio18lf2553_a_CFLAGS = -p18lf2553 $(AM_CFLAGS)
+
+if ENABLE_18LF258
+lib_LIBRARIES += libio18lf258.a
+endif ENABLE_18LF258
+libio18lf258_a_SOURCES = dummy.c
+libio18lf258_a_SOURCES += i2c/i2cack.c i2c/i2cclose.c i2c/i2cdrdy.c
+libio18lf258_a_SOURCES += i2c/i2cidle.c i2c/i2cnack.c i2c/i2copen.c
+libio18lf258_a_SOURCES += i2c/i2creadc.c i2c/i2creads.c i2c/i2crestart.c
+libio18lf258_a_SOURCES += i2c/i2cstart.c i2c/i2cstop.c i2c/i2cwritec.c
+libio18lf258_a_SOURCES += i2c/i2cwrites.c
+libio18lf258_a_SOURCES += usart/ubaud.c usart/ubusy.c usart/uclose.c
+libio18lf258_a_SOURCES += usart/udrdy.c usart/ugetc.c usart/ugets.c
+libio18lf258_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
+libio18lf258_a_SOURCES += usart/usartd.c
+libio18lf258_a_CFLAGS = -p18lf258 $(AM_CFLAGS)
 
 if ENABLE_18LF2580
 lib_LIBRARIES += libio18lf2580.a
@@ -3202,21 +3218,6 @@ libio18lf2585_a_SOURCES += usart/udrdy.c usart/ugetc.c usart/ugets.c
 libio18lf2585_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
 libio18lf2585_a_SOURCES += usart/usartd.c
 libio18lf2585_a_CFLAGS = -p18lf2585 $(AM_CFLAGS)
-
-if ENABLE_18LF258
-lib_LIBRARIES += libio18lf258.a
-endif ENABLE_18LF258
-libio18lf258_a_SOURCES = dummy.c
-libio18lf258_a_SOURCES += i2c/i2cack.c i2c/i2cclose.c i2c/i2cdrdy.c
-libio18lf258_a_SOURCES += i2c/i2cidle.c i2c/i2cnack.c i2c/i2copen.c
-libio18lf258_a_SOURCES += i2c/i2creadc.c i2c/i2creads.c i2c/i2crestart.c
-libio18lf258_a_SOURCES += i2c/i2cstart.c i2c/i2cstop.c i2c/i2cwritec.c
-libio18lf258_a_SOURCES += i2c/i2cwrites.c
-libio18lf258_a_SOURCES += usart/ubaud.c usart/ubusy.c usart/uclose.c
-libio18lf258_a_SOURCES += usart/udrdy.c usart/ugetc.c usart/ugets.c
-libio18lf258_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
-libio18lf258_a_SOURCES += usart/usartd.c
-libio18lf258_a_CFLAGS = -p18lf258 $(AM_CFLAGS)
 
 if ENABLE_18LF25J10
 lib_LIBRARIES += libio18lf25j10.a
@@ -3512,6 +3513,21 @@ libio18lf4410_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
 libio18lf4410_a_SOURCES += usart/usartd.c
 libio18lf4410_a_CFLAGS = -p18lf4410 $(AM_CFLAGS)
 
+if ENABLE_18LF442
+lib_LIBRARIES += libio18lf442.a
+endif ENABLE_18LF442
+libio18lf442_a_SOURCES = dummy.c
+libio18lf442_a_SOURCES += i2c/i2cack.c i2c/i2cclose.c i2c/i2cdrdy.c
+libio18lf442_a_SOURCES += i2c/i2cidle.c i2c/i2cnack.c i2c/i2copen.c
+libio18lf442_a_SOURCES += i2c/i2creadc.c i2c/i2creads.c i2c/i2crestart.c
+libio18lf442_a_SOURCES += i2c/i2cstart.c i2c/i2cstop.c i2c/i2cwritec.c
+libio18lf442_a_SOURCES += i2c/i2cwrites.c
+libio18lf442_a_SOURCES += usart/ubaud.c usart/ubusy.c usart/uclose.c
+libio18lf442_a_SOURCES += usart/udrdy.c usart/ugetc.c usart/ugets.c
+libio18lf442_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
+libio18lf442_a_SOURCES += usart/usartd.c
+libio18lf442_a_CFLAGS = -p18lf442 $(AM_CFLAGS)
+
 if ENABLE_18LF4420
 lib_LIBRARIES += libio18lf4420.a
 endif ENABLE_18LF4420
@@ -3541,21 +3557,6 @@ libio18lf4423_a_SOURCES += usart/udrdy.c usart/ugetc.c usart/ugets.c
 libio18lf4423_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
 libio18lf4423_a_SOURCES += usart/usartd.c
 libio18lf4423_a_CFLAGS = -p18lf4423 $(AM_CFLAGS)
-
-if ENABLE_18LF442
-lib_LIBRARIES += libio18lf442.a
-endif ENABLE_18LF442
-libio18lf442_a_SOURCES = dummy.c
-libio18lf442_a_SOURCES += i2c/i2cack.c i2c/i2cclose.c i2c/i2cdrdy.c
-libio18lf442_a_SOURCES += i2c/i2cidle.c i2c/i2cnack.c i2c/i2copen.c
-libio18lf442_a_SOURCES += i2c/i2creadc.c i2c/i2creads.c i2c/i2crestart.c
-libio18lf442_a_SOURCES += i2c/i2cstart.c i2c/i2cstop.c i2c/i2cwritec.c
-libio18lf442_a_SOURCES += i2c/i2cwrites.c
-libio18lf442_a_SOURCES += usart/ubaud.c usart/ubusy.c usart/uclose.c
-libio18lf442_a_SOURCES += usart/udrdy.c usart/ugetc.c usart/ugets.c
-libio18lf442_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
-libio18lf442_a_SOURCES += usart/usartd.c
-libio18lf442_a_CFLAGS = -p18lf442 $(AM_CFLAGS)
 
 if ENABLE_18LF4431
 lib_LIBRARIES += libio18lf4431.a
@@ -3599,21 +3600,6 @@ endif ENABLE_18LF4458
 libio18lf4458_a_SOURCES = dummy.c
 libio18lf4458_a_CFLAGS = -p18lf4458 $(AM_CFLAGS)
 
-if ENABLE_18LF4480
-lib_LIBRARIES += libio18lf4480.a
-endif ENABLE_18LF4480
-libio18lf4480_a_SOURCES = dummy.c
-libio18lf4480_a_SOURCES += i2c/i2cack.c i2c/i2cclose.c i2c/i2cdrdy.c
-libio18lf4480_a_SOURCES += i2c/i2cidle.c i2c/i2cnack.c i2c/i2copen.c
-libio18lf4480_a_SOURCES += i2c/i2creadc.c i2c/i2creads.c i2c/i2crestart.c
-libio18lf4480_a_SOURCES += i2c/i2cstart.c i2c/i2cstop.c i2c/i2cwritec.c
-libio18lf4480_a_SOURCES += i2c/i2cwrites.c
-libio18lf4480_a_SOURCES += usart/ubaud.c usart/ubusy.c usart/uclose.c
-libio18lf4480_a_SOURCES += usart/udrdy.c usart/ugetc.c usart/ugets.c
-libio18lf4480_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
-libio18lf4480_a_SOURCES += usart/usartd.c
-libio18lf4480_a_CFLAGS = -p18lf4480 $(AM_CFLAGS)
-
 if ENABLE_18LF448
 lib_LIBRARIES += libio18lf448.a
 endif ENABLE_18LF448
@@ -3628,6 +3614,21 @@ libio18lf448_a_SOURCES += usart/udrdy.c usart/ugetc.c usart/ugets.c
 libio18lf448_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
 libio18lf448_a_SOURCES += usart/usartd.c
 libio18lf448_a_CFLAGS = -p18lf448 $(AM_CFLAGS)
+
+if ENABLE_18LF4480
+lib_LIBRARIES += libio18lf4480.a
+endif ENABLE_18LF4480
+libio18lf4480_a_SOURCES = dummy.c
+libio18lf4480_a_SOURCES += i2c/i2cack.c i2c/i2cclose.c i2c/i2cdrdy.c
+libio18lf4480_a_SOURCES += i2c/i2cidle.c i2c/i2cnack.c i2c/i2copen.c
+libio18lf4480_a_SOURCES += i2c/i2creadc.c i2c/i2creads.c i2c/i2crestart.c
+libio18lf4480_a_SOURCES += i2c/i2cstart.c i2c/i2cstop.c i2c/i2cwritec.c
+libio18lf4480_a_SOURCES += i2c/i2cwrites.c
+libio18lf4480_a_SOURCES += usart/ubaud.c usart/ubusy.c usart/uclose.c
+libio18lf4480_a_SOURCES += usart/udrdy.c usart/ugetc.c usart/ugets.c
+libio18lf4480_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
+libio18lf4480_a_SOURCES += usart/usartd.c
+libio18lf4480_a_CFLAGS = -p18lf4480 $(AM_CFLAGS)
 
 if ENABLE_18LF44J10
 lib_LIBRARIES += libio18lf44j10.a
@@ -3705,6 +3706,21 @@ libio18lf4515_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
 libio18lf4515_a_SOURCES += usart/usartd.c
 libio18lf4515_a_CFLAGS = -p18lf4515 $(AM_CFLAGS)
 
+if ENABLE_18LF452
+lib_LIBRARIES += libio18lf452.a
+endif ENABLE_18LF452
+libio18lf452_a_SOURCES = dummy.c
+libio18lf452_a_SOURCES += i2c/i2cack.c i2c/i2cclose.c i2c/i2cdrdy.c
+libio18lf452_a_SOURCES += i2c/i2cidle.c i2c/i2cnack.c i2c/i2copen.c
+libio18lf452_a_SOURCES += i2c/i2creadc.c i2c/i2creads.c i2c/i2crestart.c
+libio18lf452_a_SOURCES += i2c/i2cstart.c i2c/i2cstop.c i2c/i2cwritec.c
+libio18lf452_a_SOURCES += i2c/i2cwrites.c
+libio18lf452_a_SOURCES += usart/ubaud.c usart/ubusy.c usart/uclose.c
+libio18lf452_a_SOURCES += usart/udrdy.c usart/ugetc.c usart/ugets.c
+libio18lf452_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
+libio18lf452_a_SOURCES += usart/usartd.c
+libio18lf452_a_CFLAGS = -p18lf452 $(AM_CFLAGS)
+
 if ENABLE_18LF4520
 lib_LIBRARIES += libio18lf4520.a
 endif ENABLE_18LF4520
@@ -3750,21 +3766,6 @@ libio18lf4525_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
 libio18lf4525_a_SOURCES += usart/usartd.c
 libio18lf4525_a_CFLAGS = -p18lf4525 $(AM_CFLAGS)
 
-if ENABLE_18LF452
-lib_LIBRARIES += libio18lf452.a
-endif ENABLE_18LF452
-libio18lf452_a_SOURCES = dummy.c
-libio18lf452_a_SOURCES += i2c/i2cack.c i2c/i2cclose.c i2c/i2cdrdy.c
-libio18lf452_a_SOURCES += i2c/i2cidle.c i2c/i2cnack.c i2c/i2copen.c
-libio18lf452_a_SOURCES += i2c/i2creadc.c i2c/i2creads.c i2c/i2crestart.c
-libio18lf452_a_SOURCES += i2c/i2cstart.c i2c/i2cstop.c i2c/i2cwritec.c
-libio18lf452_a_SOURCES += i2c/i2cwrites.c
-libio18lf452_a_SOURCES += usart/ubaud.c usart/ubusy.c usart/uclose.c
-libio18lf452_a_SOURCES += usart/udrdy.c usart/ugetc.c usart/ugets.c
-libio18lf452_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
-libio18lf452_a_SOURCES += usart/usartd.c
-libio18lf452_a_CFLAGS = -p18lf452 $(AM_CFLAGS)
-
 if ENABLE_18LF4539
 lib_LIBRARIES += libio18lf4539.a
 endif ENABLE_18LF4539
@@ -3786,6 +3787,21 @@ lib_LIBRARIES += libio18lf4553.a
 endif ENABLE_18LF4553
 libio18lf4553_a_SOURCES = dummy.c
 libio18lf4553_a_CFLAGS = -p18lf4553 $(AM_CFLAGS)
+
+if ENABLE_18LF458
+lib_LIBRARIES += libio18lf458.a
+endif ENABLE_18LF458
+libio18lf458_a_SOURCES = dummy.c
+libio18lf458_a_SOURCES += i2c/i2cack.c i2c/i2cclose.c i2c/i2cdrdy.c
+libio18lf458_a_SOURCES += i2c/i2cidle.c i2c/i2cnack.c i2c/i2copen.c
+libio18lf458_a_SOURCES += i2c/i2creadc.c i2c/i2creads.c i2c/i2crestart.c
+libio18lf458_a_SOURCES += i2c/i2cstart.c i2c/i2cstop.c i2c/i2cwritec.c
+libio18lf458_a_SOURCES += i2c/i2cwrites.c
+libio18lf458_a_SOURCES += usart/ubaud.c usart/ubusy.c usart/uclose.c
+libio18lf458_a_SOURCES += usart/udrdy.c usart/ugetc.c usart/ugets.c
+libio18lf458_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
+libio18lf458_a_SOURCES += usart/usartd.c
+libio18lf458_a_CFLAGS = -p18lf458 $(AM_CFLAGS)
 
 if ENABLE_18LF4580
 lib_LIBRARIES += libio18lf4580.a
@@ -3816,21 +3832,6 @@ libio18lf4585_a_SOURCES += usart/udrdy.c usart/ugetc.c usart/ugets.c
 libio18lf4585_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
 libio18lf4585_a_SOURCES += usart/usartd.c
 libio18lf4585_a_CFLAGS = -p18lf4585 $(AM_CFLAGS)
-
-if ENABLE_18LF458
-lib_LIBRARIES += libio18lf458.a
-endif ENABLE_18LF458
-libio18lf458_a_SOURCES = dummy.c
-libio18lf458_a_SOURCES += i2c/i2cack.c i2c/i2cclose.c i2c/i2cdrdy.c
-libio18lf458_a_SOURCES += i2c/i2cidle.c i2c/i2cnack.c i2c/i2copen.c
-libio18lf458_a_SOURCES += i2c/i2creadc.c i2c/i2creads.c i2c/i2crestart.c
-libio18lf458_a_SOURCES += i2c/i2cstart.c i2c/i2cstop.c i2c/i2cwritec.c
-libio18lf458_a_SOURCES += i2c/i2cwrites.c
-libio18lf458_a_SOURCES += usart/ubaud.c usart/ubusy.c usart/uclose.c
-libio18lf458_a_SOURCES += usart/udrdy.c usart/ugetc.c usart/ugets.c
-libio18lf458_a_SOURCES += usart/uopen.c usart/uputc.c usart/uputs.c
-libio18lf458_a_SOURCES += usart/usartd.c
-libio18lf458_a_CFLAGS = -p18lf458 $(AM_CFLAGS)
 
 if ENABLE_18LF45J10
 lib_LIBRARIES += libio18lf45j10.a

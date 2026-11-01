@@ -1,5 +1,6 @@
 ## Makefile.am -- Process this file with automake to produce Makefile.in
 
+AUTOMAKE_OPTIONS = subdir-objects
 lib_LIBRARIES = libsdcc.a
 
 libsdcc_a_SOURCES = 

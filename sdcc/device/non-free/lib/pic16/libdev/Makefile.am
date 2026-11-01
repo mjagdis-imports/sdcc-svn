@@ -1,6 +1,7 @@
 ## Makefile.am -- Process this file with automake to produce Makefile.in
 ## This file has been automatically generated using ./mkmk.sh.
 
+AUTOMAKE_OPTIONS = subdir-objects
 lib_LIBRARIES =
 
 if ENABLE_18F1220
@@ -224,6 +225,20 @@ libdev18f2410_a_SOURCES = pic18f2410.c
 libdev18f2410_a_SOURCES += gptr/dispatch.S
 libdev18f2410_a_CFLAGS = -p18f2410 $(AM_CFLAGS)
 
+if ENABLE_18F242
+lib_LIBRARIES += libdev18f242.a
+endif ENABLE_18F242
+libdev18f242_a_SOURCES = pic18f242.c
+libdev18f242_a_SOURCES += gptr/eeprom8_gptrget1_dispatch.S
+libdev18f242_a_SOURCES += gptr/eeprom8_gptrget2_dispatch.S
+libdev18f242_a_SOURCES += gptr/eeprom8_gptrget3_dispatch.S
+libdev18f242_a_SOURCES += gptr/eeprom8_gptrget4_dispatch.S
+libdev18f242_a_SOURCES += gptr/eeprom8_gptrput1_dispatch.S
+libdev18f242_a_SOURCES += gptr/eeprom8_gptrput2_dispatch.S
+libdev18f242_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
+libdev18f242_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
+libdev18f242_a_CFLAGS = -p18f242 $(AM_CFLAGS)
+
 if ENABLE_18F2420
 lib_LIBRARIES += libdev18f2420.a
 endif ENABLE_18F2420
@@ -251,20 +266,6 @@ libdev18f2423_a_SOURCES += gptr/eeprom8_gptrput2_dispatch.S
 libdev18f2423_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
 libdev18f2423_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
 libdev18f2423_a_CFLAGS = -p18f2423 $(AM_CFLAGS)
-
-if ENABLE_18F242
-lib_LIBRARIES += libdev18f242.a
-endif ENABLE_18F242
-libdev18f242_a_SOURCES = pic18f242.c
-libdev18f242_a_SOURCES += gptr/eeprom8_gptrget1_dispatch.S
-libdev18f242_a_SOURCES += gptr/eeprom8_gptrget2_dispatch.S
-libdev18f242_a_SOURCES += gptr/eeprom8_gptrget3_dispatch.S
-libdev18f242_a_SOURCES += gptr/eeprom8_gptrget4_dispatch.S
-libdev18f242_a_SOURCES += gptr/eeprom8_gptrput1_dispatch.S
-libdev18f242_a_SOURCES += gptr/eeprom8_gptrput2_dispatch.S
-libdev18f242_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
-libdev18f242_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
-libdev18f242_a_CFLAGS = -p18f242 $(AM_CFLAGS)
 
 if ENABLE_18F2431
 lib_LIBRARIES += libdev18f2431.a
@@ -330,20 +331,6 @@ libdev18f2458_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
 libdev18f2458_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
 libdev18f2458_a_CFLAGS = -p18f2458 $(AM_CFLAGS)
 
-if ENABLE_18F2480
-lib_LIBRARIES += libdev18f2480.a
-endif ENABLE_18F2480
-libdev18f2480_a_SOURCES = pic18f2480.c
-libdev18f2480_a_SOURCES += gptr/eeprom8_gptrget1_dispatch.S
-libdev18f2480_a_SOURCES += gptr/eeprom8_gptrget2_dispatch.S
-libdev18f2480_a_SOURCES += gptr/eeprom8_gptrget3_dispatch.S
-libdev18f2480_a_SOURCES += gptr/eeprom8_gptrget4_dispatch.S
-libdev18f2480_a_SOURCES += gptr/eeprom8_gptrput1_dispatch.S
-libdev18f2480_a_SOURCES += gptr/eeprom8_gptrput2_dispatch.S
-libdev18f2480_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
-libdev18f2480_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
-libdev18f2480_a_CFLAGS = -p18f2480 $(AM_CFLAGS)
-
 if ENABLE_18F248
 lib_LIBRARIES += libdev18f248.a
 endif ENABLE_18F248
@@ -357,6 +344,20 @@ libdev18f248_a_SOURCES += gptr/eeprom8_gptrput2_dispatch.S
 libdev18f248_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
 libdev18f248_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
 libdev18f248_a_CFLAGS = -p18f248 $(AM_CFLAGS)
+
+if ENABLE_18F2480
+lib_LIBRARIES += libdev18f2480.a
+endif ENABLE_18F2480
+libdev18f2480_a_SOURCES = pic18f2480.c
+libdev18f2480_a_SOURCES += gptr/eeprom8_gptrget1_dispatch.S
+libdev18f2480_a_SOURCES += gptr/eeprom8_gptrget2_dispatch.S
+libdev18f2480_a_SOURCES += gptr/eeprom8_gptrget3_dispatch.S
+libdev18f2480_a_SOURCES += gptr/eeprom8_gptrget4_dispatch.S
+libdev18f2480_a_SOURCES += gptr/eeprom8_gptrput1_dispatch.S
+libdev18f2480_a_SOURCES += gptr/eeprom8_gptrput2_dispatch.S
+libdev18f2480_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
+libdev18f2480_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
+libdev18f2480_a_CFLAGS = -p18f2480 $(AM_CFLAGS)
 
 if ENABLE_18F24J10
 lib_LIBRARIES += libdev18f24j10.a
@@ -435,6 +436,20 @@ libdev18f2515_a_SOURCES = pic18f2515.c
 libdev18f2515_a_SOURCES += gptr/dispatch.S
 libdev18f2515_a_CFLAGS = -p18f2515 $(AM_CFLAGS)
 
+if ENABLE_18F252
+lib_LIBRARIES += libdev18f252.a
+endif ENABLE_18F252
+libdev18f252_a_SOURCES = pic18f252.c
+libdev18f252_a_SOURCES += gptr/eeprom8_gptrget1_dispatch.S
+libdev18f252_a_SOURCES += gptr/eeprom8_gptrget2_dispatch.S
+libdev18f252_a_SOURCES += gptr/eeprom8_gptrget3_dispatch.S
+libdev18f252_a_SOURCES += gptr/eeprom8_gptrget4_dispatch.S
+libdev18f252_a_SOURCES += gptr/eeprom8_gptrput1_dispatch.S
+libdev18f252_a_SOURCES += gptr/eeprom8_gptrput2_dispatch.S
+libdev18f252_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
+libdev18f252_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
+libdev18f252_a_CFLAGS = -p18f252 $(AM_CFLAGS)
+
 if ENABLE_18F2520
 lib_LIBRARIES += libdev18f2520.a
 endif ENABLE_18F2520
@@ -476,20 +491,6 @@ libdev18f2525_a_SOURCES += gptr/eeprom16_gptrput2_dispatch.S
 libdev18f2525_a_SOURCES += gptr/eeprom16_gptrput3_dispatch.S
 libdev18f2525_a_SOURCES += gptr/eeprom16_gptrput4_dispatch.S
 libdev18f2525_a_CFLAGS = -p18f2525 $(AM_CFLAGS)
-
-if ENABLE_18F252
-lib_LIBRARIES += libdev18f252.a
-endif ENABLE_18F252
-libdev18f252_a_SOURCES = pic18f252.c
-libdev18f252_a_SOURCES += gptr/eeprom8_gptrget1_dispatch.S
-libdev18f252_a_SOURCES += gptr/eeprom8_gptrget2_dispatch.S
-libdev18f252_a_SOURCES += gptr/eeprom8_gptrget3_dispatch.S
-libdev18f252_a_SOURCES += gptr/eeprom8_gptrget4_dispatch.S
-libdev18f252_a_SOURCES += gptr/eeprom8_gptrput1_dispatch.S
-libdev18f252_a_SOURCES += gptr/eeprom8_gptrput2_dispatch.S
-libdev18f252_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
-libdev18f252_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
-libdev18f252_a_CFLAGS = -p18f252 $(AM_CFLAGS)
 
 if ENABLE_18F2539
 lib_LIBRARIES += libdev18f2539.a
@@ -533,6 +534,20 @@ libdev18f2553_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
 libdev18f2553_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
 libdev18f2553_a_CFLAGS = -p18f2553 $(AM_CFLAGS)
 
+if ENABLE_18F258
+lib_LIBRARIES += libdev18f258.a
+endif ENABLE_18F258
+libdev18f258_a_SOURCES = pic18f258.c
+libdev18f258_a_SOURCES += gptr/eeprom8_gptrget1_dispatch.S
+libdev18f258_a_SOURCES += gptr/eeprom8_gptrget2_dispatch.S
+libdev18f258_a_SOURCES += gptr/eeprom8_gptrget3_dispatch.S
+libdev18f258_a_SOURCES += gptr/eeprom8_gptrget4_dispatch.S
+libdev18f258_a_SOURCES += gptr/eeprom8_gptrput1_dispatch.S
+libdev18f258_a_SOURCES += gptr/eeprom8_gptrput2_dispatch.S
+libdev18f258_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
+libdev18f258_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
+libdev18f258_a_CFLAGS = -p18f258 $(AM_CFLAGS)
+
 if ENABLE_18F2580
 lib_LIBRARIES += libdev18f2580.a
 endif ENABLE_18F2580
@@ -560,20 +575,6 @@ libdev18f2585_a_SOURCES += gptr/eeprom16_gptrput2_dispatch.S
 libdev18f2585_a_SOURCES += gptr/eeprom16_gptrput3_dispatch.S
 libdev18f2585_a_SOURCES += gptr/eeprom16_gptrput4_dispatch.S
 libdev18f2585_a_CFLAGS = -p18f2585 $(AM_CFLAGS)
-
-if ENABLE_18F258
-lib_LIBRARIES += libdev18f258.a
-endif ENABLE_18F258
-libdev18f258_a_SOURCES = pic18f258.c
-libdev18f258_a_SOURCES += gptr/eeprom8_gptrget1_dispatch.S
-libdev18f258_a_SOURCES += gptr/eeprom8_gptrget2_dispatch.S
-libdev18f258_a_SOURCES += gptr/eeprom8_gptrget3_dispatch.S
-libdev18f258_a_SOURCES += gptr/eeprom8_gptrget4_dispatch.S
-libdev18f258_a_SOURCES += gptr/eeprom8_gptrput1_dispatch.S
-libdev18f258_a_SOURCES += gptr/eeprom8_gptrput2_dispatch.S
-libdev18f258_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
-libdev18f258_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
-libdev18f258_a_CFLAGS = -p18f258 $(AM_CFLAGS)
 
 if ENABLE_18F25J10
 lib_LIBRARIES += libdev18f25j10.a
@@ -904,6 +905,20 @@ libdev18f4410_a_SOURCES = pic18f4410.c
 libdev18f4410_a_SOURCES += gptr/dispatch.S
 libdev18f4410_a_CFLAGS = -p18f4410 $(AM_CFLAGS)
 
+if ENABLE_18F442
+lib_LIBRARIES += libdev18f442.a
+endif ENABLE_18F442
+libdev18f442_a_SOURCES = pic18f442.c
+libdev18f442_a_SOURCES += gptr/eeprom8_gptrget1_dispatch.S
+libdev18f442_a_SOURCES += gptr/eeprom8_gptrget2_dispatch.S
+libdev18f442_a_SOURCES += gptr/eeprom8_gptrget3_dispatch.S
+libdev18f442_a_SOURCES += gptr/eeprom8_gptrget4_dispatch.S
+libdev18f442_a_SOURCES += gptr/eeprom8_gptrput1_dispatch.S
+libdev18f442_a_SOURCES += gptr/eeprom8_gptrput2_dispatch.S
+libdev18f442_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
+libdev18f442_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
+libdev18f442_a_CFLAGS = -p18f442 $(AM_CFLAGS)
+
 if ENABLE_18F4420
 lib_LIBRARIES += libdev18f4420.a
 endif ENABLE_18F4420
@@ -931,20 +946,6 @@ libdev18f4423_a_SOURCES += gptr/eeprom8_gptrput2_dispatch.S
 libdev18f4423_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
 libdev18f4423_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
 libdev18f4423_a_CFLAGS = -p18f4423 $(AM_CFLAGS)
-
-if ENABLE_18F442
-lib_LIBRARIES += libdev18f442.a
-endif ENABLE_18F442
-libdev18f442_a_SOURCES = pic18f442.c
-libdev18f442_a_SOURCES += gptr/eeprom8_gptrget1_dispatch.S
-libdev18f442_a_SOURCES += gptr/eeprom8_gptrget2_dispatch.S
-libdev18f442_a_SOURCES += gptr/eeprom8_gptrget3_dispatch.S
-libdev18f442_a_SOURCES += gptr/eeprom8_gptrget4_dispatch.S
-libdev18f442_a_SOURCES += gptr/eeprom8_gptrput1_dispatch.S
-libdev18f442_a_SOURCES += gptr/eeprom8_gptrput2_dispatch.S
-libdev18f442_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
-libdev18f442_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
-libdev18f442_a_CFLAGS = -p18f442 $(AM_CFLAGS)
 
 if ENABLE_18F4431
 lib_LIBRARIES += libdev18f4431.a
@@ -1010,20 +1011,6 @@ libdev18f4458_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
 libdev18f4458_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
 libdev18f4458_a_CFLAGS = -p18f4458 $(AM_CFLAGS)
 
-if ENABLE_18F4480
-lib_LIBRARIES += libdev18f4480.a
-endif ENABLE_18F4480
-libdev18f4480_a_SOURCES = pic18f4480.c
-libdev18f4480_a_SOURCES += gptr/eeprom8_gptrget1_dispatch.S
-libdev18f4480_a_SOURCES += gptr/eeprom8_gptrget2_dispatch.S
-libdev18f4480_a_SOURCES += gptr/eeprom8_gptrget3_dispatch.S
-libdev18f4480_a_SOURCES += gptr/eeprom8_gptrget4_dispatch.S
-libdev18f4480_a_SOURCES += gptr/eeprom8_gptrput1_dispatch.S
-libdev18f4480_a_SOURCES += gptr/eeprom8_gptrput2_dispatch.S
-libdev18f4480_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
-libdev18f4480_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
-libdev18f4480_a_CFLAGS = -p18f4480 $(AM_CFLAGS)
-
 if ENABLE_18F448
 lib_LIBRARIES += libdev18f448.a
 endif ENABLE_18F448
@@ -1037,6 +1024,20 @@ libdev18f448_a_SOURCES += gptr/eeprom8_gptrput2_dispatch.S
 libdev18f448_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
 libdev18f448_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
 libdev18f448_a_CFLAGS = -p18f448 $(AM_CFLAGS)
+
+if ENABLE_18F4480
+lib_LIBRARIES += libdev18f4480.a
+endif ENABLE_18F4480
+libdev18f4480_a_SOURCES = pic18f4480.c
+libdev18f4480_a_SOURCES += gptr/eeprom8_gptrget1_dispatch.S
+libdev18f4480_a_SOURCES += gptr/eeprom8_gptrget2_dispatch.S
+libdev18f4480_a_SOURCES += gptr/eeprom8_gptrget3_dispatch.S
+libdev18f4480_a_SOURCES += gptr/eeprom8_gptrget4_dispatch.S
+libdev18f4480_a_SOURCES += gptr/eeprom8_gptrput1_dispatch.S
+libdev18f4480_a_SOURCES += gptr/eeprom8_gptrput2_dispatch.S
+libdev18f4480_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
+libdev18f4480_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
+libdev18f4480_a_CFLAGS = -p18f4480 $(AM_CFLAGS)
 
 if ENABLE_18F44J10
 lib_LIBRARIES += libdev18f44j10.a
@@ -1101,6 +1102,20 @@ libdev18f4515_a_SOURCES = pic18f4515.c
 libdev18f4515_a_SOURCES += gptr/dispatch.S
 libdev18f4515_a_CFLAGS = -p18f4515 $(AM_CFLAGS)
 
+if ENABLE_18F452
+lib_LIBRARIES += libdev18f452.a
+endif ENABLE_18F452
+libdev18f452_a_SOURCES = pic18f452.c
+libdev18f452_a_SOURCES += gptr/eeprom8_gptrget1_dispatch.S
+libdev18f452_a_SOURCES += gptr/eeprom8_gptrget2_dispatch.S
+libdev18f452_a_SOURCES += gptr/eeprom8_gptrget3_dispatch.S
+libdev18f452_a_SOURCES += gptr/eeprom8_gptrget4_dispatch.S
+libdev18f452_a_SOURCES += gptr/eeprom8_gptrput1_dispatch.S
+libdev18f452_a_SOURCES += gptr/eeprom8_gptrput2_dispatch.S
+libdev18f452_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
+libdev18f452_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
+libdev18f452_a_CFLAGS = -p18f452 $(AM_CFLAGS)
+
 if ENABLE_18F4520
 lib_LIBRARIES += libdev18f4520.a
 endif ENABLE_18F4520
@@ -1142,20 +1157,6 @@ libdev18f4525_a_SOURCES += gptr/eeprom16_gptrput2_dispatch.S
 libdev18f4525_a_SOURCES += gptr/eeprom16_gptrput3_dispatch.S
 libdev18f4525_a_SOURCES += gptr/eeprom16_gptrput4_dispatch.S
 libdev18f4525_a_CFLAGS = -p18f4525 $(AM_CFLAGS)
-
-if ENABLE_18F452
-lib_LIBRARIES += libdev18f452.a
-endif ENABLE_18F452
-libdev18f452_a_SOURCES = pic18f452.c
-libdev18f452_a_SOURCES += gptr/eeprom8_gptrget1_dispatch.S
-libdev18f452_a_SOURCES += gptr/eeprom8_gptrget2_dispatch.S
-libdev18f452_a_SOURCES += gptr/eeprom8_gptrget3_dispatch.S
-libdev18f452_a_SOURCES += gptr/eeprom8_gptrget4_dispatch.S
-libdev18f452_a_SOURCES += gptr/eeprom8_gptrput1_dispatch.S
-libdev18f452_a_SOURCES += gptr/eeprom8_gptrput2_dispatch.S
-libdev18f452_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
-libdev18f452_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
-libdev18f452_a_CFLAGS = -p18f452 $(AM_CFLAGS)
 
 if ENABLE_18F4539
 lib_LIBRARIES += libdev18f4539.a
@@ -1199,6 +1200,20 @@ libdev18f4553_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
 libdev18f4553_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
 libdev18f4553_a_CFLAGS = -p18f4553 $(AM_CFLAGS)
 
+if ENABLE_18F458
+lib_LIBRARIES += libdev18f458.a
+endif ENABLE_18F458
+libdev18f458_a_SOURCES = pic18f458.c
+libdev18f458_a_SOURCES += gptr/eeprom8_gptrget1_dispatch.S
+libdev18f458_a_SOURCES += gptr/eeprom8_gptrget2_dispatch.S
+libdev18f458_a_SOURCES += gptr/eeprom8_gptrget3_dispatch.S
+libdev18f458_a_SOURCES += gptr/eeprom8_gptrget4_dispatch.S
+libdev18f458_a_SOURCES += gptr/eeprom8_gptrput1_dispatch.S
+libdev18f458_a_SOURCES += gptr/eeprom8_gptrput2_dispatch.S
+libdev18f458_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
+libdev18f458_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
+libdev18f458_a_CFLAGS = -p18f458 $(AM_CFLAGS)
+
 if ENABLE_18F4580
 lib_LIBRARIES += libdev18f4580.a
 endif ENABLE_18F4580
@@ -1226,20 +1241,6 @@ libdev18f4585_a_SOURCES += gptr/eeprom16_gptrput2_dispatch.S
 libdev18f4585_a_SOURCES += gptr/eeprom16_gptrput3_dispatch.S
 libdev18f4585_a_SOURCES += gptr/eeprom16_gptrput4_dispatch.S
 libdev18f4585_a_CFLAGS = -p18f4585 $(AM_CFLAGS)
-
-if ENABLE_18F458
-lib_LIBRARIES += libdev18f458.a
-endif ENABLE_18F458
-libdev18f458_a_SOURCES = pic18f458.c
-libdev18f458_a_SOURCES += gptr/eeprom8_gptrget1_dispatch.S
-libdev18f458_a_SOURCES += gptr/eeprom8_gptrget2_dispatch.S
-libdev18f458_a_SOURCES += gptr/eeprom8_gptrget3_dispatch.S
-libdev18f458_a_SOURCES += gptr/eeprom8_gptrget4_dispatch.S
-libdev18f458_a_SOURCES += gptr/eeprom8_gptrput1_dispatch.S
-libdev18f458_a_SOURCES += gptr/eeprom8_gptrput2_dispatch.S
-libdev18f458_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
-libdev18f458_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
-libdev18f458_a_CFLAGS = -p18f458 $(AM_CFLAGS)
 
 if ENABLE_18F45J10
 lib_LIBRARIES += libdev18f45j10.a
@@ -2797,6 +2798,20 @@ libdev18lf2410_a_SOURCES = pic18lf2410.c
 libdev18lf2410_a_SOURCES += gptr/dispatch.S
 libdev18lf2410_a_CFLAGS = -p18lf2410 $(AM_CFLAGS)
 
+if ENABLE_18LF242
+lib_LIBRARIES += libdev18lf242.a
+endif ENABLE_18LF242
+libdev18lf242_a_SOURCES = pic18lf242.c
+libdev18lf242_a_SOURCES += gptr/eeprom8_gptrget1_dispatch.S
+libdev18lf242_a_SOURCES += gptr/eeprom8_gptrget2_dispatch.S
+libdev18lf242_a_SOURCES += gptr/eeprom8_gptrget3_dispatch.S
+libdev18lf242_a_SOURCES += gptr/eeprom8_gptrget4_dispatch.S
+libdev18lf242_a_SOURCES += gptr/eeprom8_gptrput1_dispatch.S
+libdev18lf242_a_SOURCES += gptr/eeprom8_gptrput2_dispatch.S
+libdev18lf242_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
+libdev18lf242_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
+libdev18lf242_a_CFLAGS = -p18lf242 $(AM_CFLAGS)
+
 if ENABLE_18LF2420
 lib_LIBRARIES += libdev18lf2420.a
 endif ENABLE_18LF2420
@@ -2824,20 +2839,6 @@ libdev18lf2423_a_SOURCES += gptr/eeprom8_gptrput2_dispatch.S
 libdev18lf2423_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
 libdev18lf2423_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
 libdev18lf2423_a_CFLAGS = -p18lf2423 $(AM_CFLAGS)
-
-if ENABLE_18LF242
-lib_LIBRARIES += libdev18lf242.a
-endif ENABLE_18LF242
-libdev18lf242_a_SOURCES = pic18lf242.c
-libdev18lf242_a_SOURCES += gptr/eeprom8_gptrget1_dispatch.S
-libdev18lf242_a_SOURCES += gptr/eeprom8_gptrget2_dispatch.S
-libdev18lf242_a_SOURCES += gptr/eeprom8_gptrget3_dispatch.S
-libdev18lf242_a_SOURCES += gptr/eeprom8_gptrget4_dispatch.S
-libdev18lf242_a_SOURCES += gptr/eeprom8_gptrput1_dispatch.S
-libdev18lf242_a_SOURCES += gptr/eeprom8_gptrput2_dispatch.S
-libdev18lf242_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
-libdev18lf242_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
-libdev18lf242_a_CFLAGS = -p18lf242 $(AM_CFLAGS)
 
 if ENABLE_18LF2431
 lib_LIBRARIES += libdev18lf2431.a
@@ -2903,20 +2904,6 @@ libdev18lf2458_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
 libdev18lf2458_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
 libdev18lf2458_a_CFLAGS = -p18lf2458 $(AM_CFLAGS)
 
-if ENABLE_18LF2480
-lib_LIBRARIES += libdev18lf2480.a
-endif ENABLE_18LF2480
-libdev18lf2480_a_SOURCES = pic18lf2480.c
-libdev18lf2480_a_SOURCES += gptr/eeprom8_gptrget1_dispatch.S
-libdev18lf2480_a_SOURCES += gptr/eeprom8_gptrget2_dispatch.S
-libdev18lf2480_a_SOURCES += gptr/eeprom8_gptrget3_dispatch.S
-libdev18lf2480_a_SOURCES += gptr/eeprom8_gptrget4_dispatch.S
-libdev18lf2480_a_SOURCES += gptr/eeprom8_gptrput1_dispatch.S
-libdev18lf2480_a_SOURCES += gptr/eeprom8_gptrput2_dispatch.S
-libdev18lf2480_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
-libdev18lf2480_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
-libdev18lf2480_a_CFLAGS = -p18lf2480 $(AM_CFLAGS)
-
 if ENABLE_18LF248
 lib_LIBRARIES += libdev18lf248.a
 endif ENABLE_18LF248
@@ -2930,6 +2917,20 @@ libdev18lf248_a_SOURCES += gptr/eeprom8_gptrput2_dispatch.S
 libdev18lf248_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
 libdev18lf248_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
 libdev18lf248_a_CFLAGS = -p18lf248 $(AM_CFLAGS)
+
+if ENABLE_18LF2480
+lib_LIBRARIES += libdev18lf2480.a
+endif ENABLE_18LF2480
+libdev18lf2480_a_SOURCES = pic18lf2480.c
+libdev18lf2480_a_SOURCES += gptr/eeprom8_gptrget1_dispatch.S
+libdev18lf2480_a_SOURCES += gptr/eeprom8_gptrget2_dispatch.S
+libdev18lf2480_a_SOURCES += gptr/eeprom8_gptrget3_dispatch.S
+libdev18lf2480_a_SOURCES += gptr/eeprom8_gptrget4_dispatch.S
+libdev18lf2480_a_SOURCES += gptr/eeprom8_gptrput1_dispatch.S
+libdev18lf2480_a_SOURCES += gptr/eeprom8_gptrput2_dispatch.S
+libdev18lf2480_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
+libdev18lf2480_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
+libdev18lf2480_a_CFLAGS = -p18lf2480 $(AM_CFLAGS)
 
 if ENABLE_18LF24J10
 lib_LIBRARIES += libdev18lf24j10.a
@@ -2994,6 +2995,20 @@ libdev18lf2515_a_SOURCES = pic18lf2515.c
 libdev18lf2515_a_SOURCES += gptr/dispatch.S
 libdev18lf2515_a_CFLAGS = -p18lf2515 $(AM_CFLAGS)
 
+if ENABLE_18LF252
+lib_LIBRARIES += libdev18lf252.a
+endif ENABLE_18LF252
+libdev18lf252_a_SOURCES = pic18lf252.c
+libdev18lf252_a_SOURCES += gptr/eeprom8_gptrget1_dispatch.S
+libdev18lf252_a_SOURCES += gptr/eeprom8_gptrget2_dispatch.S
+libdev18lf252_a_SOURCES += gptr/eeprom8_gptrget3_dispatch.S
+libdev18lf252_a_SOURCES += gptr/eeprom8_gptrget4_dispatch.S
+libdev18lf252_a_SOURCES += gptr/eeprom8_gptrput1_dispatch.S
+libdev18lf252_a_SOURCES += gptr/eeprom8_gptrput2_dispatch.S
+libdev18lf252_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
+libdev18lf252_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
+libdev18lf252_a_CFLAGS = -p18lf252 $(AM_CFLAGS)
+
 if ENABLE_18LF2520
 lib_LIBRARIES += libdev18lf2520.a
 endif ENABLE_18LF2520
@@ -3035,20 +3050,6 @@ libdev18lf2525_a_SOURCES += gptr/eeprom16_gptrput2_dispatch.S
 libdev18lf2525_a_SOURCES += gptr/eeprom16_gptrput3_dispatch.S
 libdev18lf2525_a_SOURCES += gptr/eeprom16_gptrput4_dispatch.S
 libdev18lf2525_a_CFLAGS = -p18lf2525 $(AM_CFLAGS)
-
-if ENABLE_18LF252
-lib_LIBRARIES += libdev18lf252.a
-endif ENABLE_18LF252
-libdev18lf252_a_SOURCES = pic18lf252.c
-libdev18lf252_a_SOURCES += gptr/eeprom8_gptrget1_dispatch.S
-libdev18lf252_a_SOURCES += gptr/eeprom8_gptrget2_dispatch.S
-libdev18lf252_a_SOURCES += gptr/eeprom8_gptrget3_dispatch.S
-libdev18lf252_a_SOURCES += gptr/eeprom8_gptrget4_dispatch.S
-libdev18lf252_a_SOURCES += gptr/eeprom8_gptrput1_dispatch.S
-libdev18lf252_a_SOURCES += gptr/eeprom8_gptrput2_dispatch.S
-libdev18lf252_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
-libdev18lf252_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
-libdev18lf252_a_CFLAGS = -p18lf252 $(AM_CFLAGS)
 
 if ENABLE_18LF2539
 lib_LIBRARIES += libdev18lf2539.a
@@ -3092,6 +3093,20 @@ libdev18lf2553_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
 libdev18lf2553_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
 libdev18lf2553_a_CFLAGS = -p18lf2553 $(AM_CFLAGS)
 
+if ENABLE_18LF258
+lib_LIBRARIES += libdev18lf258.a
+endif ENABLE_18LF258
+libdev18lf258_a_SOURCES = pic18lf258.c
+libdev18lf258_a_SOURCES += gptr/eeprom8_gptrget1_dispatch.S
+libdev18lf258_a_SOURCES += gptr/eeprom8_gptrget2_dispatch.S
+libdev18lf258_a_SOURCES += gptr/eeprom8_gptrget3_dispatch.S
+libdev18lf258_a_SOURCES += gptr/eeprom8_gptrget4_dispatch.S
+libdev18lf258_a_SOURCES += gptr/eeprom8_gptrput1_dispatch.S
+libdev18lf258_a_SOURCES += gptr/eeprom8_gptrput2_dispatch.S
+libdev18lf258_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
+libdev18lf258_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
+libdev18lf258_a_CFLAGS = -p18lf258 $(AM_CFLAGS)
+
 if ENABLE_18LF2580
 lib_LIBRARIES += libdev18lf2580.a
 endif ENABLE_18LF2580
@@ -3119,20 +3134,6 @@ libdev18lf2585_a_SOURCES += gptr/eeprom16_gptrput2_dispatch.S
 libdev18lf2585_a_SOURCES += gptr/eeprom16_gptrput3_dispatch.S
 libdev18lf2585_a_SOURCES += gptr/eeprom16_gptrput4_dispatch.S
 libdev18lf2585_a_CFLAGS = -p18lf2585 $(AM_CFLAGS)
-
-if ENABLE_18LF258
-lib_LIBRARIES += libdev18lf258.a
-endif ENABLE_18LF258
-libdev18lf258_a_SOURCES = pic18lf258.c
-libdev18lf258_a_SOURCES += gptr/eeprom8_gptrget1_dispatch.S
-libdev18lf258_a_SOURCES += gptr/eeprom8_gptrget2_dispatch.S
-libdev18lf258_a_SOURCES += gptr/eeprom8_gptrget3_dispatch.S
-libdev18lf258_a_SOURCES += gptr/eeprom8_gptrget4_dispatch.S
-libdev18lf258_a_SOURCES += gptr/eeprom8_gptrput1_dispatch.S
-libdev18lf258_a_SOURCES += gptr/eeprom8_gptrput2_dispatch.S
-libdev18lf258_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
-libdev18lf258_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
-libdev18lf258_a_CFLAGS = -p18lf258 $(AM_CFLAGS)
 
 if ENABLE_18LF25J10
 lib_LIBRARIES += libdev18lf25j10.a
@@ -3421,6 +3422,20 @@ libdev18lf4410_a_SOURCES = pic18lf4410.c
 libdev18lf4410_a_SOURCES += gptr/dispatch.S
 libdev18lf4410_a_CFLAGS = -p18lf4410 $(AM_CFLAGS)
 
+if ENABLE_18LF442
+lib_LIBRARIES += libdev18lf442.a
+endif ENABLE_18LF442
+libdev18lf442_a_SOURCES = pic18lf442.c
+libdev18lf442_a_SOURCES += gptr/eeprom8_gptrget1_dispatch.S
+libdev18lf442_a_SOURCES += gptr/eeprom8_gptrget2_dispatch.S
+libdev18lf442_a_SOURCES += gptr/eeprom8_gptrget3_dispatch.S
+libdev18lf442_a_SOURCES += gptr/eeprom8_gptrget4_dispatch.S
+libdev18lf442_a_SOURCES += gptr/eeprom8_gptrput1_dispatch.S
+libdev18lf442_a_SOURCES += gptr/eeprom8_gptrput2_dispatch.S
+libdev18lf442_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
+libdev18lf442_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
+libdev18lf442_a_CFLAGS = -p18lf442 $(AM_CFLAGS)
+
 if ENABLE_18LF4420
 lib_LIBRARIES += libdev18lf4420.a
 endif ENABLE_18LF4420
@@ -3448,20 +3463,6 @@ libdev18lf4423_a_SOURCES += gptr/eeprom8_gptrput2_dispatch.S
 libdev18lf4423_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
 libdev18lf4423_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
 libdev18lf4423_a_CFLAGS = -p18lf4423 $(AM_CFLAGS)
-
-if ENABLE_18LF442
-lib_LIBRARIES += libdev18lf442.a
-endif ENABLE_18LF442
-libdev18lf442_a_SOURCES = pic18lf442.c
-libdev18lf442_a_SOURCES += gptr/eeprom8_gptrget1_dispatch.S
-libdev18lf442_a_SOURCES += gptr/eeprom8_gptrget2_dispatch.S
-libdev18lf442_a_SOURCES += gptr/eeprom8_gptrget3_dispatch.S
-libdev18lf442_a_SOURCES += gptr/eeprom8_gptrget4_dispatch.S
-libdev18lf442_a_SOURCES += gptr/eeprom8_gptrput1_dispatch.S
-libdev18lf442_a_SOURCES += gptr/eeprom8_gptrput2_dispatch.S
-libdev18lf442_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
-libdev18lf442_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
-libdev18lf442_a_CFLAGS = -p18lf442 $(AM_CFLAGS)
 
 if ENABLE_18LF4431
 lib_LIBRARIES += libdev18lf4431.a
@@ -3527,20 +3528,6 @@ libdev18lf4458_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
 libdev18lf4458_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
 libdev18lf4458_a_CFLAGS = -p18lf4458 $(AM_CFLAGS)
 
-if ENABLE_18LF4480
-lib_LIBRARIES += libdev18lf4480.a
-endif ENABLE_18LF4480
-libdev18lf4480_a_SOURCES = pic18lf4480.c
-libdev18lf4480_a_SOURCES += gptr/eeprom8_gptrget1_dispatch.S
-libdev18lf4480_a_SOURCES += gptr/eeprom8_gptrget2_dispatch.S
-libdev18lf4480_a_SOURCES += gptr/eeprom8_gptrget3_dispatch.S
-libdev18lf4480_a_SOURCES += gptr/eeprom8_gptrget4_dispatch.S
-libdev18lf4480_a_SOURCES += gptr/eeprom8_gptrput1_dispatch.S
-libdev18lf4480_a_SOURCES += gptr/eeprom8_gptrput2_dispatch.S
-libdev18lf4480_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
-libdev18lf4480_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
-libdev18lf4480_a_CFLAGS = -p18lf4480 $(AM_CFLAGS)
-
 if ENABLE_18LF448
 lib_LIBRARIES += libdev18lf448.a
 endif ENABLE_18LF448
@@ -3554,6 +3541,20 @@ libdev18lf448_a_SOURCES += gptr/eeprom8_gptrput2_dispatch.S
 libdev18lf448_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
 libdev18lf448_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
 libdev18lf448_a_CFLAGS = -p18lf448 $(AM_CFLAGS)
+
+if ENABLE_18LF4480
+lib_LIBRARIES += libdev18lf4480.a
+endif ENABLE_18LF4480
+libdev18lf4480_a_SOURCES = pic18lf4480.c
+libdev18lf4480_a_SOURCES += gptr/eeprom8_gptrget1_dispatch.S
+libdev18lf4480_a_SOURCES += gptr/eeprom8_gptrget2_dispatch.S
+libdev18lf4480_a_SOURCES += gptr/eeprom8_gptrget3_dispatch.S
+libdev18lf4480_a_SOURCES += gptr/eeprom8_gptrget4_dispatch.S
+libdev18lf4480_a_SOURCES += gptr/eeprom8_gptrput1_dispatch.S
+libdev18lf4480_a_SOURCES += gptr/eeprom8_gptrput2_dispatch.S
+libdev18lf4480_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
+libdev18lf4480_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
+libdev18lf4480_a_CFLAGS = -p18lf4480 $(AM_CFLAGS)
 
 if ENABLE_18LF44J10
 lib_LIBRARIES += libdev18lf44j10.a
@@ -3604,6 +3605,20 @@ libdev18lf4515_a_SOURCES = pic18lf4515.c
 libdev18lf4515_a_SOURCES += gptr/dispatch.S
 libdev18lf4515_a_CFLAGS = -p18lf4515 $(AM_CFLAGS)
 
+if ENABLE_18LF452
+lib_LIBRARIES += libdev18lf452.a
+endif ENABLE_18LF452
+libdev18lf452_a_SOURCES = pic18lf452.c
+libdev18lf452_a_SOURCES += gptr/eeprom8_gptrget1_dispatch.S
+libdev18lf452_a_SOURCES += gptr/eeprom8_gptrget2_dispatch.S
+libdev18lf452_a_SOURCES += gptr/eeprom8_gptrget3_dispatch.S
+libdev18lf452_a_SOURCES += gptr/eeprom8_gptrget4_dispatch.S
+libdev18lf452_a_SOURCES += gptr/eeprom8_gptrput1_dispatch.S
+libdev18lf452_a_SOURCES += gptr/eeprom8_gptrput2_dispatch.S
+libdev18lf452_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
+libdev18lf452_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
+libdev18lf452_a_CFLAGS = -p18lf452 $(AM_CFLAGS)
+
 if ENABLE_18LF4520
 lib_LIBRARIES += libdev18lf4520.a
 endif ENABLE_18LF4520
@@ -3645,20 +3660,6 @@ libdev18lf4525_a_SOURCES += gptr/eeprom16_gptrput2_dispatch.S
 libdev18lf4525_a_SOURCES += gptr/eeprom16_gptrput3_dispatch.S
 libdev18lf4525_a_SOURCES += gptr/eeprom16_gptrput4_dispatch.S
 libdev18lf4525_a_CFLAGS = -p18lf4525 $(AM_CFLAGS)
-
-if ENABLE_18LF452
-lib_LIBRARIES += libdev18lf452.a
-endif ENABLE_18LF452
-libdev18lf452_a_SOURCES = pic18lf452.c
-libdev18lf452_a_SOURCES += gptr/eeprom8_gptrget1_dispatch.S
-libdev18lf452_a_SOURCES += gptr/eeprom8_gptrget2_dispatch.S
-libdev18lf452_a_SOURCES += gptr/eeprom8_gptrget3_dispatch.S
-libdev18lf452_a_SOURCES += gptr/eeprom8_gptrget4_dispatch.S
-libdev18lf452_a_SOURCES += gptr/eeprom8_gptrput1_dispatch.S
-libdev18lf452_a_SOURCES += gptr/eeprom8_gptrput2_dispatch.S
-libdev18lf452_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
-libdev18lf452_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
-libdev18lf452_a_CFLAGS = -p18lf452 $(AM_CFLAGS)
 
 if ENABLE_18LF4539
 lib_LIBRARIES += libdev18lf4539.a
@@ -3702,6 +3703,20 @@ libdev18lf4553_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
 libdev18lf4553_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
 libdev18lf4553_a_CFLAGS = -p18lf4553 $(AM_CFLAGS)
 
+if ENABLE_18LF458
+lib_LIBRARIES += libdev18lf458.a
+endif ENABLE_18LF458
+libdev18lf458_a_SOURCES = pic18lf458.c
+libdev18lf458_a_SOURCES += gptr/eeprom8_gptrget1_dispatch.S
+libdev18lf458_a_SOURCES += gptr/eeprom8_gptrget2_dispatch.S
+libdev18lf458_a_SOURCES += gptr/eeprom8_gptrget3_dispatch.S
+libdev18lf458_a_SOURCES += gptr/eeprom8_gptrget4_dispatch.S
+libdev18lf458_a_SOURCES += gptr/eeprom8_gptrput1_dispatch.S
+libdev18lf458_a_SOURCES += gptr/eeprom8_gptrput2_dispatch.S
+libdev18lf458_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
+libdev18lf458_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
+libdev18lf458_a_CFLAGS = -p18lf458 $(AM_CFLAGS)
+
 if ENABLE_18LF4580
 lib_LIBRARIES += libdev18lf4580.a
 endif ENABLE_18LF4580
@@ -3729,20 +3744,6 @@ libdev18lf4585_a_SOURCES += gptr/eeprom16_gptrput2_dispatch.S
 libdev18lf4585_a_SOURCES += gptr/eeprom16_gptrput3_dispatch.S
 libdev18lf4585_a_SOURCES += gptr/eeprom16_gptrput4_dispatch.S
 libdev18lf4585_a_CFLAGS = -p18lf4585 $(AM_CFLAGS)
-
-if ENABLE_18LF458
-lib_LIBRARIES += libdev18lf458.a
-endif ENABLE_18LF458
-libdev18lf458_a_SOURCES = pic18lf458.c
-libdev18lf458_a_SOURCES += gptr/eeprom8_gptrget1_dispatch.S
-libdev18lf458_a_SOURCES += gptr/eeprom8_gptrget2_dispatch.S
-libdev18lf458_a_SOURCES += gptr/eeprom8_gptrget3_dispatch.S
-libdev18lf458_a_SOURCES += gptr/eeprom8_gptrget4_dispatch.S
-libdev18lf458_a_SOURCES += gptr/eeprom8_gptrput1_dispatch.S
-libdev18lf458_a_SOURCES += gptr/eeprom8_gptrput2_dispatch.S
-libdev18lf458_a_SOURCES += gptr/eeprom8_gptrput3_dispatch.S
-libdev18lf458_a_SOURCES += gptr/eeprom8_gptrput4_dispatch.S
-libdev18lf458_a_CFLAGS = -p18lf458 $(AM_CFLAGS)
 
 if ENABLE_18LF45J10
 lib_LIBRARIES += libdev18lf45j10.a

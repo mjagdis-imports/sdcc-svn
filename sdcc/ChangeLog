@@ -6,6 +6,33 @@
 	  Fix bug #4237
 	* device/non-free/lib/pic16/missing:
 	  Update missing script to fix configure warning.
+	* device/lib/pic16/Makefile.in,
+	  device/lib/pic16/aclocal.m4,
+	  device/lib/pic16/configure,
+	  device/lib/pic16/debug/Makefile.am,
+	  device/lib/pic16/debug/Makefile.in,
+	  device/lib/pic16/libc/Makefile.am,
+	  device/lib/pic16/libc/Makefile.in,
+	  device/lib/pic16/libio/Makefile.am,
+	  device/lib/pic16/libio/Makefile.in,
+	  device/lib/pic16/libio/mkmk.sh,
+	  device/lib/pic16/libm/Makefile.am,
+	  device/lib/pic16/libm/Makefile.in,
+	  device/lib/pic16/libsdcc/Makefile.am,
+	  device/lib/pic16/libsdcc/Makefile.in,
+	  device/lib/pic16/startup/Makefile.in,
+	  device/non-free/lib/pic14/configure,
+	  device/non-free/lib/pic14/configure.ac,
+	  device/non-free/lib/pic16/Makefile.am,
+	  device/non-free/lib/pic16/Makefile.in,
+	  device/non-free/lib/pic16/aclocal.m4,
+	  device/non-free/lib/pic16/configure,
+	  device/non-free/lib/pic16/libdev/Makefile.am,
+	  device/non-free/lib/pic16/libdev/Makefile.in,
+	  device/non-free/lib/pic16/libdev/mkmk.sh,
+	  device/non-free/lib/pic16/processors.ac,
+	  device/non-free/lib/pic16/supported-devices.ac:
+	  Update to automake 1.17 and fix bug #2677
 
 2026-10-30 Gabriele Gorla <gorlik@yahoo.com>
 

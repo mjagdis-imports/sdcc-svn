@@ -97,10 +97,6 @@ $BAD_PICS
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 ]])
-  for d in 3 2 1; do
-    echo "Continuing in $d seconds ...";
-    sleep 1;
-  done;
 fi;
 
 # Checks for libraries.
