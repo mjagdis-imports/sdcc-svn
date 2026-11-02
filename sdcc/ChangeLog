@@ -1,5 +1,21 @@
 2026-11-02 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
+	* src/SDCCsymt.h, src/SDCCsymt.c (newEnumType, mergeSpec): Preserve
+	  whether an enumeration has a fixed underlying type.
+	* src/SDCC.y (simple_typed_enum_decl): Establish the tagged
+	  enumeration type in declarations without an enumerator list.
+	  (enum_specifier, simple_typed_enum_decl): Diagnose incompatible
+	  underlying types and changes of fixedness in the same scope
+	  (bug #4176).
+	* src/SDCCerr.h, src/SDCCerr.c: Add E_ENUM_REDECL.
+	* support/valdiag/tests/bug-4176.c: Check incompatible declarations,
+	  compatible typedefs, definitions, inner-scope shadowing and sibling
+	  blocks at equal nesting levels, including later redeclarations.
+	* support/regression/tests/bug-4176.c: Check object widths, compatible
+	  underlying type and values before and after the enum definition.
+
+2026-11-02 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
 	* src/SDCCast.c (hasConstMember, decorateType): Diagnose aggregate
 	  assignments with const-qualified members, recursively including
 	  nested aggregates and array elements. Stop at pointer members and

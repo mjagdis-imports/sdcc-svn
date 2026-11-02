@@ -1133,9 +1133,12 @@ enum_specifier
           $2->type = enumtype;
 
           csym = findSymWithLevel(enumTab, $2);
-          if ((csym && csym->level == $2->level))
+          if (csym && csym->block == $2->block && csym->level == $2->level)
             {
-              if (!options.std_c23 || compareType (csym->type, $2->type, true) <= 0)
+              if (SPEC_ENUM_FIXED (csym->type) != SPEC_ENUM_FIXED (enumtype) ||
+                  SPEC_ENUM_FIXED (enumtype) && !compatibleTypes (csym->type, enumtype))
+                werrorfl ($2->fileDef, $2->lineDef, E_ENUM_REDECL, $2->name);
+              else if (!options.std_c23 || compareType (csym->type, $2->type, true) <= 0)
                 {
                   werrorfl($2->fileDef, $2->lineDef, E_DUPLICATE_TYPEDEF, csym->name);
                   werrorfl(csym->fileDef, csym->lineDef, E_PREVIOUS_DEF);
@@ -1143,7 +1146,7 @@ enum_specifier
             }
 
           /* add this to the enumerator table */
-          if (!csym)
+          if (!csym || csym->block != $2->block || csym->level != $2->level)
               addSym (enumTab, $2, $2->name, $2->level, $2->block, false);
           $$ = copyLinkChain(enumtype);
         }
@@ -1157,9 +1160,12 @@ enum_specifier
           $2->type = enumtype;
 
           csym = findSymWithLevel(enumTab, $2);
-          if ((csym && csym->level == $2->level))
+          if (csym && csym->block == $2->block && csym->level == $2->level)
             {
-              if (!options.std_c23 || compareType (csym->type, $2->type, true) <= 0)
+              if (SPEC_ENUM_FIXED (csym->type) != SPEC_ENUM_FIXED (enumtype) ||
+                  SPEC_ENUM_FIXED (enumtype) && !compatibleTypes (csym->type, enumtype))
+                werrorfl ($2->fileDef, $2->lineDef, E_ENUM_REDECL, $2->name);
+              else if (!options.std_c23 || compareType (csym->type, $2->type, true) <= 0)
                 {
                   werrorfl($2->fileDef, $2->lineDef, E_DUPLICATE_TYPEDEF, csym->name);
                   werrorfl(csym->fileDef, csym->lineDef, E_PREVIOUS_DEF);
@@ -1167,7 +1173,7 @@ enum_specifier
             }
 
           /* add this to the enumerator table */
-          if (!csym)
+          if (!csym || csym->block != $2->block || csym->level != $2->level)
               addSym (enumTab, $2, $2->name, $2->level, $2->block, false);
           $$ = copyLinkChain(enumtype);
         }
@@ -1195,17 +1201,22 @@ simple_typed_enum_decl
         {
           symbol *csym;
 
-          /* let newEnumType check the enum-type-specifier and discard the returned type */
-          newEnumType (NULL, $3);
+          sym_link *enumtype = newEnumType (NULL, $3);
 
-          /* check the enumerator table */
-          if ((csym = findSymWithLevel(enumTab, $2)))
-              $$ = copyLinkChain(csym->type);
+          /* A fixed-underlying declaration establishes a complete tagged type. */
+          csym = findSymWithLevel (enumTab, $2);
+          if (csym && csym->block == $2->block && csym->level == $2->level)
+            {
+              if (!SPEC_ENUM_FIXED (csym->type) || !compatibleTypes (csym->type, enumtype))
+                werrorfl ($2->fileDef, $2->lineDef, E_ENUM_REDECL, $2->name);
+              enumtype = csym->type;
+            }
           else
             {
-              $$ = newLink(SPECIFIER);
-              SPEC_NOUN($$) = V_INT;
+              $2->type = enumtype;
+              addSym (enumTab, $2, $2->name, $2->level, $2->block, false);
             }
+          $$ = copyLinkChain (enumtype);
         }
    ;
 

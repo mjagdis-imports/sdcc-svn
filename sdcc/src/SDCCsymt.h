@@ -158,6 +158,7 @@ typedef struct specifier
   struct symbol *addrspace;             // is in named address space
   unsigned b_typedef:1;             /* is typedefed               */
   unsigned b_isregparm:1;           /* is the first parameter     */
+  unsigned b_enum_fixed:1;          /* has a fixed underlying type */
   unsigned b_isenum:1;              /* is an enumerated type      */
   unsigned b_bitUnnamed:1;          /* is an unnamed bit-field    */
   unsigned b_needspar:1;            /* has to be a parameter      */
@@ -518,6 +519,7 @@ extern sym_link *validateLink (sym_link * l,
 #define SPEC_IMPLICIT_SIGN(x) validateLink(x, "SPEC_IMPLICIT_SIGN", #x, SPECIFIER, __FILE__, __LINE__)->select.s.b_implicit_sign
 #define SPEC_SCLS(x) validateLink(x, "SPEC_SCLS", #x, SPECIFIER, __FILE__, __LINE__)->select.s.sclass
 #define SPEC_SCLS_IMPLICITINTRINSIC(x) validateLink(x, "SPEC_SCLS", #x, SPECIFIER, __FILE__, __LINE__)->select.s.sclass_implicitintrinsic
+#define SPEC_ENUM_FIXED(x) ((x)->select.s.b_enum_fixed)
 #define SPEC_ENUM(x) validateLink(x, "SPEC_ENUM", #x, SPECIFIER, __FILE__, __LINE__)->select.s.b_isenum
 #define SPEC_OCLS(x) validateLink(x, "SPEC_OCLS", #x, SPECIFIER, __FILE__, __LINE__)->select.s.oclass
 #define SPEC_STAT(x) validateLink(x, "SPEC_STAT", #x, SPECIFIER, __FILE__, __LINE__)->select.s.b_static

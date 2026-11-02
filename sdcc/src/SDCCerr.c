@@ -813,6 +813,8 @@ struct
      "pointer cannot be cast to floating type", 0},
   {E_CAST_NONSCALAR, ERROR_LEVEL_ERROR,
      "operand of cast to non-void type must be scalar", 0},
+  {E_ENUM_REDECL, ERROR_LEVEL_ERROR,
+     "enumeration %s redeclared with incompatible underlying type or fixedness", 0},
 };
 
 /* -------------------------------------------------------------------------------

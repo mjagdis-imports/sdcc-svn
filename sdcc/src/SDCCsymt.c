@@ -861,6 +861,7 @@ mergeSpec (sym_link * dest, sym_link * src, const char *name)
   SPEC_BSTR (dest) |= SPEC_BSTR (src);
   SPEC_TYPEDEF (dest) |= SPEC_TYPEDEF (src);
   SPEC_ENUM (dest) |= SPEC_ENUM (src);
+  SPEC_ENUM_FIXED (dest) |= SPEC_ENUM_FIXED (src);
   if (SPEC_ARGREG (src) && !SPEC_ARGREG (dest))
     SPEC_ARGREG (dest) = SPEC_ARGREG (src);
 
@@ -5688,6 +5689,7 @@ newEnumType (symbol *enumlist, sym_link *userRequestedType)
   symbol *sym;
   sym_link *type = newLink (SPECIFIER);
   SPEC_ENUM (type) = 1;
+  SPEC_ENUM_FIXED (type) = userRequestedType != NULL;
 
   /* Catch user-requested types that make no sense for an enum; provide fallback if none specified */
   if (userRequestedType)
