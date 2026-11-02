@@ -4894,7 +4894,13 @@ char *pic16_get_op(pCodeOp *pcop, char *buffer, size_t size)
 
             case PO_IMMEDIATE:
                 s = buffer;
-                if(PCOI(pcop)->offset && PCOI(pcop)->offset<4) {
+                /* Only LOW, HIGH and UPPER are valid immediate modifiers. */
+                if (PCOI(pcop)->offset < 0 || PCOI(pcop)->offset >= 3) {
+                    fprintf(stderr, "pic16_get_op: invalid PO_IMMEDIATE offset %d\n",
+                            PCOI(pcop)->offset);
+                    exit(1);
+                }
+                if (PCOI(pcop)->offset > 0) {
                     if(PCOI(pcop)->index) {
                         SNPRINTF(s,size, "%s(%s + %d)",
                                 immdmod[ PCOI(pcop)->offset ],
