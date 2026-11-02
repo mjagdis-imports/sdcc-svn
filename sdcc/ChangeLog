@@ -27,6 +27,9 @@
 	  device/lib/stm8/Makefile.in,
 	  device/lib/stm8-large/Makefile.in:
 	  Cleanup library makefiles.
+	* device/include/xa51,
+	  device/lib/ds390/examples:
+	  Remove obsolete files.
 
 2026-11-02 Philipp Klaus Krause <philipp@colecovision.eu>
 
