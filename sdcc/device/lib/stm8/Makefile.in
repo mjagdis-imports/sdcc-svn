@@ -1,36 +1,33 @@
 # libc/stm8 Makefile
 
-VPATH  = @srcdir@
 srcdir = @srcdir@
+top_srcdir      = @top_srcdir@
 top_builddir = @top_builddir@
 abs_top_builddir = @abs_top_builddir@
 
+VPATH  		= $(srcdir)
+INCDIR          = $(top_srcdir)/device/include
+PORTINCDIR      = $(INCDIR)/$(PORT)
+
 LIB_TYPE     = @LIB_TYPE@
 
-CC = export PATH=$(top_builddir)/bin; sdcc
-EXTRA_CFLAGS = -mstm8 --max-allocs-per-node 25000
+EXTRA_CFLAGS = $(MODELFLAGS) --max-allocs-per-node 25000
 SAS = $(top_builddir)/bin/sdasstm8
 
 # override PORTDIR defined by super (parent) makefile
-override PORTDIR = ../build/stm8
-
-%.rel: %.s
-	@# TODO: sdas should place it\'s output in the current dir
-	test $(srcdir) = . || cp $< .
-	-$(AS) $(ASFLAGS) $(notdir $<)
-	test $(srcdir) = . || rm $(notdir $<)
+override PORTDIR = ../build/$(PORT)
 
 include $(srcdir)/../incl.mk
 
-STM8_FLOAT = $(COMMON_FLOAT)
+PORT_FLOAT = $(COMMON_FLOAT)
 
-STM8_INT = _mulschar.c _divschar.c _modschar.c
+PORT_INT = _mulschar.c _divschar.c _modschar.c
 
-STM8_LONG = \
+PORT_LONG = \
   _divulong.c \
   _modulong.c
 
-STM8_LONGLONG = $(COMMON_LONGLONG) \
+PORT_LONGLONG = $(COMMON_LONGLONG) \
   _srulonglong.c \
   _srslonglong.c \
   _slulonglong.c \
@@ -41,7 +38,7 @@ STM8_LONGLONG = $(COMMON_LONGLONG) \
   _modslonglong.c \
   _modulonglong.c
 
-STM8_SDCC = $(COMMON_SDCC) \
+PORT_SDCC = $(COMMON_SDCC) \
   __itoa.c \
   __ltoa.c \
   _startup.c \
@@ -55,33 +52,35 @@ STM8_SDCC = $(COMMON_SDCC) \
   vprintf.c \
   atomic_flag_clear.c
 
-STM8SOURCES = $(addprefix ../,$(STM8_FLOAT) $(STM8_INT) $(STM8_LONG) $(STM8_LONGLONG) $(STM8_SDCC))
-STM8OBJECTS = $(patsubst %.c,%.rel,$(STM8_FLOAT) $(STM8_INT) $(STM8_LONG) $(STM8_LONGLONG) $(STM8_SDCC))
+PORT_SOURCES = $(addprefix ../,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))
+PORT_OBJECTS = $(patsubst %.c,%.rel,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))
 
-OBJ = setjmp.rel _mulint.rel __mulsint2slong.rel __mululonguchar2ulonglong.rel _divsint.rel _modsint.rel _mullong.rel _divslong.rel _modslong.rel _fast_long_neg.rel heap.rel strcpy.rel strcmp.rel memcpy.rel atomic_flag_test_and_set.rel
+OBJ = setjmp.rel _mulint.rel __mulsint2slong.rel __mululonguchar2ulonglong.rel \
+      _divsint.rel _modsint.rel _mullong.rel _divslong.rel _modslong.rel _fast_long_neg.rel \
+      heap.rel strcpy.rel strcmp.rel memcpy.rel atomic_flag_test_and_set.rel
 
 LIB = stm8.lib
 AS = $(SAS)
 ASFLAGS = -plosgff
 
-CFLAGS = -I$(srcdir)/../../include -I. --std-c23
+CFLAGS = -I$(INCDIR) -I$(PORTINCDIR) -I. --std-c23
 
 all: $(PORTDIR)/$(LIB)
 
-$(PORTDIR)/$(LIB): $(OBJ) $(STM8OBJECTS) Makefile
+$(PORTDIR)/$(LIB): $(OBJ) $(PORT_OBJECTS) Makefile
 ifeq ($(LIB_TYPE), SDCCLIB)
 	rm -f $@; \
-	$(top_builddir)/bin/sdcclib -a $@ $(OBJ) $(STM8OBJECTS)
+	$(top_builddir)/bin/sdcclib -a $@ $(OBJ) $(PORT_OBJECTS)
 else
   ifeq ($(LIB_TYPE), AR)
-	$(SDAR) -rcSD $@ $(OBJ) $(STM8OBJECTS)
+	$(SDAR) -rcSD $@ $(OBJ) $(PORT_OBJECTS)
   else
     ifeq ($(LIB_TYPE), RANLIB)
-	$(SDAR) -rcD $@ $(OBJ) $(STM8OBJECTS)
+	$(SDAR) -rcD $@ $(OBJ) $(PORT_OBJECTS)
     else
 	rm -f $@
-	for i in $(basename $(OBJ) $(STM8OBJECTS)); do echo $$i >>$@; done
-	cp $(OBJ) $(STM8OBJECTS) $(PORTDIR)
+	for i in $(basename $(OBJ) $(PORT_OBJECTS)); do echo $$i >>$@; done
+	cp $(OBJ) $(PORT_OBJECTS) $(PORTDIR)
     endif
   endif
 endif
@@ -93,4 +92,5 @@ distclean: clean
 	rm -f Makefile
 
 Makefile: $(srcdir)/Makefile.in
-	cd $(top_builddir); ./config.status device/lib/stm8/Makefile
+	cd $(top_builddir); ./config.status device/lib/$(PORT)/Makefile
+

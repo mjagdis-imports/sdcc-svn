@@ -1,29 +1,27 @@
 # libc/pdk15 Makefile
 
-VPATH  = @srcdir@
-srcdir = @srcdir@
-top_builddir = @top_builddir@
+srcdir 		= @srcdir@
+top_srcdir      = @top_srcdir@
+top_builddir 	= @top_builddir@
 abs_top_builddir = @abs_top_builddir@
+
+VPATH  		= $(srcdir)
+INCDIR          = $(top_srcdir)/device/include
+PORTINCDIR      = $(INCDIR)/$(PORT)
 
 LIB_TYPE     = @LIB_TYPE@
 
-EXTRA_CFLAGS = -mpdk15 --max-allocs-per-node 25000
+EXTRA_CFLAGS = $(MODELFLAGS) --max-allocs-per-node 25000
 SAS = $(top_builddir)/bin/sdaspdk15
 
 # override PORTDIR defined by super (parent) makefile
-override PORTDIR = ../build/pdk15
-
-%.rel: %.s
-	@# TODO: sdas should place it\'s output in the current dir
-	test $(srcdir) = . || cp $< .
-	-$(AS) $(ASFLAGS) $(notdir $<)
-	test $(srcdir) = . || rm $(notdir $<)
+override PORTDIR = ../build/$(PORT)
 
 include $(srcdir)/../incl.mk
 
-PDK15_FLOAT = $(COMMON_FLOAT)
+PORT_FLOAT = $(COMMON_FLOAT)
 
-PDK15_INT = $(COMMON_INT) \
+PORT_INT = $(COMMON_INT) \
   _mulschar.c \
   _mulint.c \
   _divuchar.c \
@@ -35,11 +33,11 @@ PDK15_INT = $(COMMON_INT) \
   _moduint.c \
   _modsint.c
 
-PDK15_LONG = $(COMMON_LONG) \
+PORT_LONG = $(COMMON_LONG) \
   _divulong.c \
   _mullong.c
 
-PDK15_LONGLONG = $(COMMON_LONGLONG) \
+PORT_LONGLONG = $(COMMON_LONGLONG) \
   _srulonglong.c \
   _srslonglong.c \
   _slulonglong.c \
@@ -50,7 +48,7 @@ PDK15_LONGLONG = $(COMMON_LONGLONG) \
   _modslonglong.c \
   _modulonglong.c
 
-PDK15_SDCC = $(COMMON_SDCC) \
+PORT_SDCC = $(COMMON_SDCC) \
   __itoa.c \
   _startup.c \
   _strcmp.c \
@@ -66,8 +64,8 @@ PDK15_SDCC = $(COMMON_SDCC) \
   sprintf.c \
   vprintf.c
 
-PDK15SOURCES = $(addprefix ../,$(PDK15_FLOAT) $(PDK15_INT) $(PDK15_LONG) $(PDK15_LONGLONG) $(PDK15_SDCC))
-PDK15OBJECTS = $(patsubst %.c,%.rel,$(PDK15_FLOAT) $(PDK15_INT) $(PDK15_LONG) $(PDK15_LONGLONG) $(PDK15_SDCC))
+PORT_SOURCES = $(addprefix ../,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))
+PORT_OBJECTS = $(patsubst %.c,%.rel,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))
 
 OBJ = __gptrget.rel __gptrget2.rel heap.rel __setjmp.rel _muluchar.rel
 
@@ -75,24 +73,24 @@ LIB = pdk15.lib
 AS = $(SAS)
 ASFLAGS = -plosgff
 
-CFLAGS = -I$(srcdir)/../../include -I. --std-c23
+CFLAGS = -I$(INCDIR) -I$(PORTINCDIR) -I. --std-c23
 
 all: $(PORTDIR)/$(LIB)
 
-$(PORTDIR)/$(LIB): $(OBJ) $(PDK15OBJECTS) Makefile
+$(PORTDIR)/$(LIB): $(OBJ) $(PORT_OBJECTS) Makefile
 ifeq ($(LIB_TYPE), SDCCLIB)
 	rm -f $@; \
-	$(top_builddir)/bin/sdcclib -a $@ $(OBJ) $(PDK15OBJECTS)
+	$(top_builddir)/bin/sdcclib -a $@ $(OBJ) $(PORT_OBJECTS)
 else
   ifeq ($(LIB_TYPE), AR)
-	$(SDAR) -rcSD $@ $(OBJ) $(PDK15OBJECTS)
+	$(SDAR) -rcSD $@ $(OBJ) $(PORT_OBJECTS)
   else
     ifeq ($(LIB_TYPE), RANLIB)
-	$(SDAR) -rcD $@ $(OBJ) $(PDK15OBJECTS)
+	$(SDAR) -rcD $@ $(OBJ) $(PORT_OBJECTS)
     else
 	rm -f $@
-	for i in $(basename $(OBJ) $(PDK15OBJECTS)); do echo $$i >>$@; done
-	cp $(OBJ) $(PDK15OBJECTS) $(PORTDIR)
+	for i in $(basename $(OBJ) $(PORT_OBJECTS)); do echo $$i >>$@; done
+	cp $(OBJ) $(PORT_OBJECTS) $(PORTDIR)
     endif
   endif
 endif
@@ -104,5 +102,5 @@ distclean: clean
 	rm -f Makefile
 
 Makefile: $(srcdir)/Makefile.in
-	cd $(top_builddir); ./config.status device/lib/pdk15/Makefile
+	cd $(top_builddir); ./config.status device/lib/$(PORT)/Makefile
 

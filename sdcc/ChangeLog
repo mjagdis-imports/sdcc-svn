@@ -9,6 +9,24 @@
 	  src/ds390/main.c,
 	  support/regression/ports/ds390/spec.mk:
 	  Merge the ds390 and ds400 library into one file.
+	* device/lib/f8/Makefile.in,
+	  device/lib/f8l/Makefile.in,
+	  device/lib/hc08/Makefile.in,
+	  device/lib/huc6280/Makefile.in,
+	  device/lib/mos6502/Makefile.in,
+	  device/lib/mos6502-stack-auto/Makefile.in,
+	  device/lib/mos65c02/Makefile.in,
+	  device/lib/mos65c02-stack-auto/Makefile.in,
+	  device/lib/pdk13/Makefile.in,
+	  device/lib/pdk14/Makefile.in,
+	  device/lib/pdk15/Makefile.in,
+	  device/lib/pdk15-stack-auto/Makefile.in,
+	  device/lib/s08/Makefile.in,
+	  device/lib/s08-stack-auto/Makefile.in,
+	  device/lib/sm83/Makefile.in,
+	  device/lib/stm8/Makefile.in,
+	  device/lib/stm8-large/Makefile.in:
+	  Cleanup library makefiles.
 
 2026-11-02 Philipp Klaus Krause <philipp@colecovision.eu>
 
