@@ -1,5 +1,14 @@
 2026-11-02 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
+	* src/SDCCsymt.c (mergeDeclSpec): Apply qualifiers on an array
+	  typedef to its first non-array element. Put qualifiers on pointer
+	  elements rather than their targets (bug #4164).
+	* support/regression/tests/bug-4164.c: Test const, volatile, restrict
+	  and _Optional qualification of array typedefs, multiple dimensions,
+	  pointer depth and preservation of qualified pointer targets.
+
+2026-11-02 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
 	* src/SDCCutil.c, src/SDCCutil.h (parseEscape, escapeValueInRange,
 	  copyStrWithEscapeLimit, copyStr): Share escape decoding between
 	  character and string literals. Check numeric escapes before narrowing,
