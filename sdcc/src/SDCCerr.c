@@ -335,7 +335,7 @@ struct
   { W_INT_TO_GEN_PTR_CAST, ERROR_LEVEL_WARNING,
      "converting integer type to generic pointer: assuming XDATA", 0 },
   { W_ESC_SEQ_OOR_FOR_CHAR, ERROR_LEVEL_WARNING,
-     "escape sequence out of range for char.", 0 },
+     "numeric escape sequence out of range", 0 },
   { E_INVALID_HEX, ERROR_LEVEL_ERROR,
      "\\x used without valid hexadecimal digits.", 0 },
   { W_FUNCPTR_IN_USING_ISR, ERROR_LEVEL_WARNING,

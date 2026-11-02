@@ -1,3 +1,22 @@
+2026-11-02 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
+	* src/SDCCutil.c, src/SDCCutil.h (parseEscape, escapeValueInRange,
+	  copyStrWithEscapeLimit, copyStr): Share escape decoding between
+	  character and string literals. Check numeric escapes before narrowing,
+	  including overflow in strtoul. Preserve unrestricted decoding for
+	  non-literal uses such as inline assembly (bug #4179).
+	* src/SDCCval.c (literalEscapeLimit, strVal, charVal,
+	  constCharacterVal): Apply prefix-specific numeric escape limits.
+	  Distinguish numeric byte escapes from universal character names and
+	  require a u8 character literal to end after its single code unit.
+	* src/SDCCerr.c: Reword warning 137 for numeric escapes.
+	* support/valdiag/tests/bug-4179.c: Check numeric limits, overflow,
+	  malformed delimited escapes, trailing characters and valid escapes.
+	  Select tests by language features and wide-character limits.
+	* support/regression/tests/bug-4179.c: Check stored literal values,
+	  simple escapes, delimited escapes and prefix-specific boundaries.
+	  Account for signed wchar_t when checking its unsigned escape value.
+
 2026-11-02 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/pic16/pcode.c:

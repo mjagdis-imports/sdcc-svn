@@ -22,6 +22,7 @@
    what you give them.   Help stamp out software-hoarding!
 -------------------------------------------------------------------------*/
 
+#include <errno.h>
 #include <math.h>
 #include <string.h>
 #include <ctype.h>
@@ -1027,8 +1028,97 @@ delimitedOctalEscape (const char **src)
   return value;
 }
 
+
+/* Decode one escape and leave src at the first character after it. */
+escapeValue
+parseEscape (const char **src)
+{
+  escapeValue escape = {0, ESCAPE_SIMPLE, false};
+  int saved_errno = errno;
+
+  errno = 0;
+  switch ((*src)[0])
+    {
+    case 'n':
+      escape.value = '\n';
+      break;
+    case 't':
+      escape.value = '\t';
+      break;
+    case 'v':
+      escape.value = '\v';
+      break;
+    case 'b':
+      escape.value = '\b';
+      break;
+    case 'r':
+      escape.value = '\r';
+      break;
+    case 'f':
+      escape.value = '\f';
+      break;
+    case 'a':
+      escape.value = '\a';
+      break;
+    case '0':
+    case '1':
+    case '2':
+    case '3':
+    case '4':
+    case '5':
+    case '6':
+    case '7':
+      escape.kind = ESCAPE_NUMERIC;
+      escape.value = octalEscape (src);
+      break;
+    case 'o':
+      if (options.std_c2y && (*src)[1] == '{')
+        {
+          escape.kind = ESCAPE_NUMERIC;
+          escape.value = delimitedOctalEscape (src);
+        }
+      else
+        {
+          escape.value = 'o';
+        }
+      break;
+    case 'x':
+      escape.kind = ESCAPE_NUMERIC;
+      escape.value = hexEscape (src);
+      break;
+    case 'u':
+    case 'U':
+      escape.kind = ESCAPE_UNIVERSAL;
+      escape.value = universalEscape (src, (*src)[0] == 'u' ? 4 : 8);
+      break;
+    default:
+      escape.value = (unsigned char)(*src)[0];
+      break;
+    }
+
+  if (escape.kind == ESCAPE_SIMPLE && (*src)[0])
+    {
+      ++*src;
+    }
+  escape.overflow = errno == ERANGE;
+  errno = saved_errno;
+  return escape;
+}
+
+/* Check numeric code units before narrowing; UCNs denote code points. */
+unsigned long
+escapeValueInRange (escapeValue escape, unsigned long limit)
+{
+  if (escape.kind == ESCAPE_NUMERIC && (escape.overflow || escape.value > limit))
+    {
+      werror (W_ESC_SEQ_OOR_FOR_CHAR);
+      return 0;
+    }
+  return escape.value;
+}
+
 /*!
-  /fn const char *copyStr (const char *src, size_t *size)
+  /fn const char *copyStrWithEscapeLimit (const char *src, size_t *size, unsigned long limit)
 
   Copies source string to a dynamically allocated buffer interpreting
   escape sequences and special characters
@@ -1039,7 +1129,7 @@ delimitedOctalEscape (const char **src)
 */
 
 const char *
-copyStr (const char *src, size_t *size)
+copyStrWithEscapeLimit (const char *src, size_t *size, unsigned long limit)
 {
   const char *begin = NULL;
   struct dbuf_s dbuf;
@@ -1060,95 +1150,16 @@ copyStr (const char *src, size_t *size)
         }
       else if (*src == '\\')
         {
-          unsigned long int c;
-          bool universal = false;
-
           if (begin)
             {
-              /* copy what we have until now */
               dbuf_append (&dbuf, begin, src - begin);
               begin = NULL;
             }
           ++src;
-          switch (*src)
-            {
-            case 'n':
-              c = '\n';
-              break;
+          escapeValue escape = parseEscape (&src);
+          unsigned long c = limit ? escapeValueInRange (escape, limit) : escape.value;
+          bool universal = escape.kind == ESCAPE_UNIVERSAL;
 
-            case 't':
-              c = '\t';
-              break;
-
-            case 'v':
-              c = '\v';
-              break;
-
-            case 'b':
-              c = '\b';
-              break;
-
-            case 'r':
-              c = '\r';
-              break;
-
-            case 'f':
-              c = '\f';
-              break;
-
-            case 'a':
-              c = '\a';
-              break;
-
-            case '0':
-            case '1':
-            case '2':
-            case '3':
-            case '4':
-            case '5':
-            case '6':
-            case '7':
-              c = octalEscape (&src);
-              --src;
-              break;
-
-            case 'o':
-              if (options.std_c2y && src[1] == '{')
-                {
-                  c = delimitedOctalEscape (&src);
-                  --src;
-                }
-              else
-                {
-                  c = *src;
-                }
-              break;
-
-            case 'x':
-              c = hexEscape (&src);
-              --src;
-              break;
-
-            case 'u':
-              c = universalEscape (&src, 4);
-              universal = true;
-              --src;
-              break;
-
-            case 'U':
-              c = universalEscape (&src, 8);
-              universal = true;
-              --src;
-              break;
-
-            case '\\':
-            case '\?':
-            case '\'':
-            case '\"':
-            default: // Just pass it on unmodified. This allows even non-UTF-8 extended ASCII source, which has non-ASCII chharacters in string literals, to pass here.
-              c = *src;
-              break;
-            }
           // Encode one utf-32 character to utf-8. If outside of current UTF-8 standard range (UTF-8 up to 4 bytes),
           // emit a warning, and encode according to 1993 UTF-8 standard s(UTF-8 up to 6 bytes).
           if (universal)
@@ -1201,8 +1212,6 @@ copyStr (const char *src, size_t *size)
             }
           else
             dbuf_append_char (&dbuf, (char)c);
-
-          ++src;
         }
       else
         {
@@ -1227,6 +1236,13 @@ copyStr (const char *src, size_t *size)
     }
 
   return dbuf_detach_c_str (&dbuf);
+}
+
+/* Non-literal users, including inline assembly, retain unrestricted escapes. */
+const char *
+copyStr (const char *src, size_t *size)
+{
+  return copyStrWithEscapeLimit (src, size, 0);
 }
 
 static char prefix[256] = "";

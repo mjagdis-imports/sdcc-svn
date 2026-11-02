@@ -154,6 +154,18 @@ unsigned long int hexEscape (const char **src);
 unsigned long int universalEscape (const char **src, unsigned int n);
 unsigned long int octalEscape (const char **src);
 unsigned long int delimitedOctalEscape (const char **src);
+typedef enum { ESCAPE_SIMPLE, ESCAPE_NUMERIC, ESCAPE_UNIVERSAL } escapeKind;
+typedef struct
+{
+  unsigned long value;
+  escapeKind kind;
+  bool overflow;
+} escapeValue;
+
+escapeValue parseEscape (const char **src);
+unsigned long escapeValueInRange (escapeValue escape, unsigned long limit);
+/* A zero limit preserves the unrestricted conversion used outside literals. */
+const char *copyStrWithEscapeLimit (const char *src, size_t *size, unsigned long limit);
 const char *copyStr (const char *src, size_t *size);
 
 void getPrefixSuffix(const char *);
