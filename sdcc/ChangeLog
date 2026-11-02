@@ -1,3 +1,8 @@
+2026-11-02 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCsalloc.hpp:
+	  Fix bug #4214.
+
 2026-11-01 Gabriele Gorla <gorlik@yahoo.com>
 
 	* device/lib/mos6502/Makefile.in,
