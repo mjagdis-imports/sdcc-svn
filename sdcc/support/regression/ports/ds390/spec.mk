@@ -37,8 +37,7 @@ else
 endif
 
 SDCCFLAGS += -mds390 --less-pedantic -Wl-r
-LINKFLAGS += libsdcc.lib liblong.lib liblonglong.lib libint.lib libfloat.lib
-LINKFLAGS += libds390.lib
+LINKFLAGS += ds390.lib
 
 OBJEXT = .rel
 BINEXT = .ihx

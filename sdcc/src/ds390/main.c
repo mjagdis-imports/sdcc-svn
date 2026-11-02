@@ -1178,7 +1178,7 @@ static const char *_asmCmd[] =
   "sdas390", "$l", "$3", "$2", "$1.asm", NULL
 };
 
-static const char * const _libs_ds390[] = { STD_DS390_LIB, NULL, };
+static const char * const _libs_ds390[] = { "ds390", NULL, };
 
 /* Globals */
 PORT ds390_port =
@@ -1800,7 +1800,7 @@ static void _ds400_linkRomDataArea(FILE *fp)
   fprintf(fp, "-b ROMSEG = 0x0068\n");
 }
 
-static const char * const _libs_ds400[] = { STD_DS400_LIB, NULL, };
+static const char * const _libs_ds400[] = { "ds400", NULL, };
 
 PORT ds400_port =
 {

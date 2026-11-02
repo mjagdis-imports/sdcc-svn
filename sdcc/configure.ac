@@ -591,8 +591,6 @@ AC_DEFINE_UNQUOTED(STD_LIB,       "libsdcc", [XXX])
 AC_DEFINE_UNQUOTED(STD_INT_LIB,   "libint", [XXX])
 AC_DEFINE_UNQUOTED(STD_LONG_LIB,  "liblong", [XXX])
 AC_DEFINE_UNQUOTED(STD_FP_LIB,    "libfloat", [XXX])
-AC_DEFINE_UNQUOTED(STD_DS390_LIB, "libds390", [XXX])
-AC_DEFINE_UNQUOTED(STD_DS400_LIB, "libds400", [XXX])
 
 # SDCC runtime environment variables
 sdcc_dir_name="SDCC_HOME"

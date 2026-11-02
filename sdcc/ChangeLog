@@ -1,3 +1,15 @@
+2026-11-02 Gabriele Gorla <gorlik@yahoo.com>
+
+	* configure,
+	  configure.ac,
+	  device/lib/Makefile.in,
+	  device/lib/ds390/Makefile.in,
+	  device/lib/ds400/Makefile.in,
+	  device/lib/incl.mk,
+	  src/ds390/main.c,
+	  support/regression/ports/ds390/spec.mk:
+	  Merge the ds390 and ds400 library into one file.
+
 2026-11-02 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCsalloc.hpp:

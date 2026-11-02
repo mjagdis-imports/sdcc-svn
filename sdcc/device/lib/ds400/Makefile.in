@@ -1,72 +1,122 @@
 # libc/ds400 Makefile
 
-VPATH  = @srcdir@
 srcdir = @srcdir@
+top_srcdir      = @top_srcdir@
 top_builddir = @top_builddir@
 abs_top_builddir = @abs_top_builddir@
 
+VPATH  		= $(srcdir)
+INCDIR          = $(top_srcdir)/device/include
+PORTINCDIR      = $(INCDIR)/$(PORT)
+
 LIB_TYPE     = @LIB_TYPE@
 
+EXTRA_CFLAGS = $(MODELFLAGS) --opt-code-speed
 CC = $(top_builddir)/bin/sdcc
 SDAR = $(abs_top_builddir)/bin/sdar
 
 # override PORTDIR defined by super (parent) makefile
-override PORTDIR = ../build/ds400
+override PORTDIR = ../build/$(PORT)
 
 #VERBOSE = --verbose
 
-OBJECTS = tinibios.rel memcpyx.rel ds400rom.rel
+include $(srcdir)/../incl.mk
 
-SOURCES = $(patsubst %.rel,%.c,$(OBJECTS))
+PORT_FLOAT = $(COMMON_FLOAT)
 
-CPPFLAGS = -I$(srcdir)/../../include -I$(srcdir)/../../include/ds400
-CFLAGS = -mds400 $(CPPFLAGS) $(VERBOSE) --std-c23
+PORT_INT = $(COMMON_INT) \
+  _divsint.c \
+  _divuint.c \
+  _modsint.c \
+  _moduint.c \
+  _mulint.c
 
-all: $(OBJECTS) $(PORTDIR)/libds400.lib
+PORT_LONG = $(COMMON_LONG) \
+  _divulong.c \
+  _mullong.c
 
-clean:
-	rm -f *.lst *.rel *.sym *.cdb *.asm \#* *~ *.rst *.hex 
-	rm -f *.ihx temp.lnk *.map *.lib
+PORT_LONGLONG = $(COMMON_LONGLONG) \
+  _srulonglong.c \
+  _srslonglong.c \
+  _slulonglong.c \
+  _slslonglong.c \
+  _mullonglong.c \
+  _divslonglong.c \
+  _divulonglong.c \
+  _modslonglong.c \
+  _modulonglong.c
 
-distclean: clean
-	rm -f Makefile Makefile.dep
+PORT_SDCC = $(COMMON_SDCC) \
+  _autobaud.c \
+  _bp.c \
+  _bpx.c \
+  _decdptr.c \
+  _gptrget.c \
+  _gptrgetc.c \
+  _gptrput.c \
+  _ser.c \
+  _setjmp.c \
+  serial.c \
+  __itoa.c \
+  __ltoa.c \
+  _spx.c \
+  _startup.c \
+  _strcmp.c \
+  strlen.c \
+  strnlen.c \
+  __memcpy.c \
+  memcpy.c \
+  _memmove.c \
+  _strcpy.c \
+  _heap.c \
+  div.c \
+  ldiv.c \
+  lldiv.c \
+  imaxdiv.c \
+  sprintf.c \
+  vprintf.c \
+  printf_fast.c \
+  printf_fast_f.c \
+  printf_tiny.c \
+  printfl.c
 
-$(PORTDIR)/libds400.lib: $(OBJECTS)
+PORT_SOURCES = $(addprefix ../,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))
+PORT_OBJECTS = $(patsubst %.c,%.rel,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))
+
+OBJ = tinibios.rel memcpyx.rel ds400rom.rel
+
+LIB = ds400.lib
+
+#CPPFLAGS = -I$(srcdir)/../../include
+CFLAGS = -I$(INCDIR) -I$(PORTINCDIR) -I$(INCDIR)/mcs51 -I. --std-c23
+
+all: $(PORTDIR)/$(LIB)
+
+$(PORTDIR)/$(LIB): $(OBJ) $(PORT_OBJECTS) Makefile
 ifeq ($(LIB_TYPE), SDCCLIB)
 	rm -f $@; \
-	$(top_builddir)/bin/sdcclib -a $@ $(OBJECTS)
+	$(top_builddir)/bin/sdcclib -a $@ $(OBJ) $(PORT_OBJECTS)
 else
   ifeq ($(LIB_TYPE), AR)
-	$(SDAR) -rcSD $@ $(OBJECTS)
+	$(SDAR) -rcSD $@ $(OBJ) $(PORT_OBJECTS)
   else
     ifeq ($(LIB_TYPE), RANLIB)
-	$(SDAR) -rcD $@ $(OBJECTS)
+	$(SDAR) -rcD $@ $(OBJ) $(PORT_OBJECTS)
     else
-	rm -f $@;
-	for libfile in $(basename $(OBJECTS)); do echo $$libfile >>$@; done
-	cp $(OBJECTS) $(PORTDIR)
+	rm -f $@
+	for i in $(basename $(OBJ) $(PORT_OBJECTS)); do echo $$i >>$@; done
+	cp $(OBJ) $(PORT_OBJECTS) $(PORTDIR)
     endif
   endif
 endif
 
-%.rel: %.c
-	$(CC) -c $(CFLAGS) $<
+clean:
+	rm -f *.lst *.rel *.sym *.cdb *.asm \#* *~ *.rst *.hex
+	rm -f *.ihx temp.lnk *.map *.lib
 
-# Creating dependencies
-# ---------------------
-depend: Makefile.dep
-
-Makefile.dep: $(SOURCES)
-	rm -f Makefile.dep
-	for i in $^; do \
-	  $(CC) -M $(CPPFLAGS) $$i >$${i}.dep; \
-	  cat $${i}.dep >>Makefile.dep; \
-	  rm $${i}.dep; \
-	done
-
-ifeq "$(findstring $(MAKECMDGOALS),clean distclean)" ""
-  -include Makefile.dep
-endif
+distclean: clean
+	rm -f Makefile
 
 Makefile: $(srcdir)/Makefile.in
-	cd $(top_builddir); ./config.status device/lib/ds400/Makefile
+	cd $(top_builddir); ./config.status device/lib/$(PORT)/Makefile
+

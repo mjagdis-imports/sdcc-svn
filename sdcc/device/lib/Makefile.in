@@ -361,12 +361,12 @@ model-mcs51-xstack-auto:
 
 model-ds390:
 	if grep '^ds390$$' $(top_builddir)/ports.build > /dev/null; then \
-	  $(MAKE) MODELFLAGS="-mds390" PORT=ds390 PORTINCDIR=$(INCDIR)/mcs51 objects-mcs51 || exit 1; \
+	  $(MAKE) MODELFLAGS="-mds390" PORT=ds390 objects || exit 1; \
 	fi
 
 model-ds400:
 	if grep '^ds390$$' $(top_builddir)/ports.build > /dev/null; then \
-	  $(MAKE) MODELFLAGS="-mds400" PORT=ds400 PORTINCDIR=$(INCDIR)/mcs51 objects-mcs51 || exit 1; \
+	  $(MAKE) MODELFLAGS="-mds400" PORT=ds400 objects || exit 1; \
 	fi
 
 model-z80:
