@@ -2,6 +2,9 @@
 
 	* src/pic16/pcode.c:
 	  Fix bug #4236 via patch by zeynelsagcan.
+	* src/z80/gen.c,
+	  support/regression/tests/bug-4206.c:
+	  Fix bug #4206.
 
 2026-11-02 Gabriele Gorla <gorlik@yahoo.com>
 

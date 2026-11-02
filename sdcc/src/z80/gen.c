@@ -10664,10 +10664,11 @@ genPlus (iCode * ic)
       {
         if (ic->result->aop->regs[A_IDX] >= 0 && ic->result->aop->regs[A_IDX] != size) // Don't overwrite still-needed a.
           {
-            if (aopInReg (ic->result->aop, cached[size], H_IDX) && isRegDead (L_IDX, ic) && ic->result->aop->regs[L_IDX] < 0)
+            if ((aopInReg (ic->result->aop, cached[size], H_IDX) || isRegDead (H_IDX, ic) && ic->result->aop->regs[H_IDX] < 0) &&
+              isRegDead (L_IDX, ic) && ic->result->aop->regs[L_IDX] < 0)
               {
                 _pop (PAIR_HL);
-                _push (PAIR_HL);
+                cheapMove (ic->result->aop, cached[size], ASMOP_H, 0, false);
               }
             else if (IS_SM83 || IS_TLCS870 || // These don't have ex (sp), hl
               aopInReg (ic->result->aop, cached[size], L_IDX) || aopInReg (ic->result->aop, cached[size], H_IDX))
@@ -10679,6 +10680,9 @@ genPlus (iCode * ic)
                 cheapMove (ic->result->aop, cached[size], ASMOP_H, 0, false);
                 emit2 ("ex (sp), hl");
                 cost2 (1, 2, -1, 3, 19, 16, 15, 15, -1, 14, -1, 8, 8, 5, 5);
+                adjustStack (2, false,
+                  isRegDead (BC_IDX, ic) && ic->result->aop->regs[B_IDX] < 0 && ic->result->aop->regs[C_IDX] < 0,
+                  isRegDead (DE_IDX, ic) && ic->result->aop->regs[D_IDX] < 0 && ic->result->aop->regs[E_IDX] < 0, false, false);
               }
           }
         else
