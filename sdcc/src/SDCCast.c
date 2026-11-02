@@ -3862,6 +3862,25 @@ propagateConstExpr (ast **ptree, RESULT_TYPE resultType, bool reduceTypeAllowed)
     }
 }
 
+/* A modifiable aggregate must not contain const-qualified members, including
+   members reached through arrays and nested aggregates. Stop at pointers. */
+static bool
+hasConstMember (sym_link *type)
+{
+  if (isConst (type))
+    return true;
+
+  while (IS_ARRAY (type))
+    type = type->next;
+
+  if (IS_STRUCT (type))
+    for (symbol *member = SPEC_STRUCT (type)->fields; member; member = member->next)
+      if (hasConstMember (member->type))
+        return true;
+
+  return false;
+}
+
 /*--------------------------------------------------------------------*/
 /* decorateType - compute type for this tree, also does type checking.*/
 /* This is done bottom up, since type has to flow upwards.            */
@@ -6341,6 +6360,11 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
         }
 
       TETYPE (tree) = getSpec (TTYPE (tree) = LTYPE (tree));
+      if (!tree->initMode && IS_STRUCT (LTYPE (tree)) && hasConstMember (LTYPE (tree)))
+        {
+          werrorfl (tree->filename, tree->lineno, E_CODE_WRITE, "=");
+          goto errorTreeReturn;
+        }
       if (IS_STRUCT (LTYPE (tree)))
         tree = rewriteStructAssignment (tree);
       else

@@ -1,5 +1,15 @@
 2026-11-02 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
+	* src/SDCCast.c (hasConstMember, decorateType): Diagnose aggregate
+	  assignments with const-qualified members, recursively including
+	  nested aggregates and array elements. Stop at pointer members and
+	  allow initialisation (bug #4210).
+	* support/valdiag/tests/bug-4210.c: Test nested structures, unions,
+	  arrays, const pointer members, pointers to const and valid
+	  initialisation and member assignments.
+
+2026-11-02 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
 	* src/SDCCsymt.c (mergeDeclSpec): Apply qualifiers on an array
 	  typedef to its first non-array element. Put qualifiers on pointer
 	  elements rather than their targets (bug #4164).
