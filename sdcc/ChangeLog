@@ -1,4 +1,5 @@
 2026-11-02 Gabriele Gorla <gorlik@yahoo.com>
+
 	* configure,
 	  configure.ac,
 	  device/lib/Makefile.in,
@@ -41,6 +42,41 @@
 	  device/lib/mcs51-small-xstack-auto,
 	  device/lib/mcs51-small-xstack-auto/Makefile.in:
 	  Merge mcs51 libraries into single file. First step of RFE #327
+	* mos6502/Makefile.in,
+	  r800/Makefile.in,
+	  z180/Makefile.in,
+	  z80/Makefile.in,
+	  z80n/Makefile.in,
+	  r800/config.inc,
+	  z180/config.inc,
+	  z80/config.inc,
+	  z80n/config.inc,
+	  z80-common,
+	  z80-common/README,
+	  z80-common/__itoa.s,
+	  z80-common/__ltoa.s,
+	  z80-common/__sdcc_bcall.s,
+	  z80-common/__sdcc_call_hl.s,
+	  z80-common/__sdcc_call_iy.s,
+	  z80-common/__strreverse.s,
+	  z80-common/__uitobcd.s,
+	  z80-common/__ultobcd.s,
+	  z80-common/abs.s,
+	  z80-common/atomic_flag_test_and_set.s,
+	  z80-common/crtenter.s,
+	  z80-common/divmixed.s,
+	  z80-common/divsigned.s,
+	  z80-common/divunsigned.s,
+	  z80-common/heap.s,
+	  z80-common/memcpy.s,
+	  z80-common/memmove.s,
+	  z80-common/modmixed.s,
+	  z80-common/modsigned.s,
+	  z80-common/modunsigned.s,
+	  z80-common/setjmp.s,
+	  z80-common/strcpy.s,
+	  z80-common/strlen.s:
+	  Move all z80 common library files into z80-common. Step 2 of RFE #327
 
 2026-11-02 Christopher Bazley <chris.bazley.wg14@gmail.com>
 

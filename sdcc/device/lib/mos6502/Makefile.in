@@ -76,7 +76,6 @@ OBJ = __sdcc_regs.rel __sdcc_indirect_jsr.rel\
 PORT_SOURCES = $(addprefix ../,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))
 PORT_OBJECTS = $(patsubst %.c,%.rel,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))
 
-
 all: $(PORTDIR)/$(LIB) $(PORTDIR)/crt0.rel
 
 $(PORTDIR)/crt0.rel: crt0.rel
