@@ -67,7 +67,7 @@ PORT_SDCC = $(COMMON_SDCC) \
   _gptrgetc.c \
   _gptrput.c \
   _ser.c \
-  _setjmp.c \
+  setjmp.c \
   serial.c \
   __itoa.c \
   __ltoa.c \

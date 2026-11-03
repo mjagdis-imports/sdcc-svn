@@ -5,15 +5,19 @@ top_srcdir      = @top_srcdir@
 top_builddir = @top_builddir@
 abs_top_builddir = @abs_top_builddir@
 
-VPATH  		= $(srcdir)
+VPATH  		= $(srcdir):$(srcdir)/../mcs51-common
 INCDIR          = $(top_srcdir)/device/include
 PORTINCDIR      = $(INCDIR)/$(PORT)
 
-LIB_TYPE     = @LIB_TYPE@
+LIB_TYPE	= @LIB_TYPE@
+LIB		= ds400.lib
 
+AS = $(top_builddir)/bin/sdas8051
+
+#CPPFLAGS = -I$(srcdir)/../../include
+ASFLAGS = -plosgff -I$(srcdir)
+CFLAGS = -I$(INCDIR) -I$(PORTINCDIR) -I$(INCDIR)/mcs51 -I. --std-c23
 EXTRA_CFLAGS = $(MODELFLAGS) --opt-code-speed
-CC = $(top_builddir)/bin/sdcc
-SDAR = $(abs_top_builddir)/bin/sdar
 
 # override PORTDIR defined by super (parent) makefile
 override PORTDIR = ../build/$(PORT)
@@ -55,7 +59,7 @@ PORT_SDCC = $(COMMON_SDCC) \
   _gptrgetc.c \
   _gptrput.c \
   _ser.c \
-  _setjmp.c \
+  setjmp.c \
   serial.c \
   __itoa.c \
   __ltoa.c \
@@ -80,15 +84,10 @@ PORT_SDCC = $(COMMON_SDCC) \
   printf_tiny.c \
   printfl.c
 
-PORT_SOURCES = $(addprefix ../,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))
-PORT_OBJECTS = $(patsubst %.c,%.rel,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))
-
 OBJ = tinibios.rel memcpyx.rel ds400rom.rel
 
-LIB = ds400.lib
-
-#CPPFLAGS = -I$(srcdir)/../../include
-CFLAGS = -I$(INCDIR) -I$(PORTINCDIR) -I$(INCDIR)/mcs51 -I. --std-c23
+PORT_SOURCES = $(addprefix ../,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))
+PORT_OBJECTS = $(patsubst %.c,%.rel,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))
 
 all: $(PORTDIR)/$(LIB)
 

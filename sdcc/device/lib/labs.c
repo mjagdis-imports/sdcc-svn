@@ -28,43 +28,8 @@
 
 #include <stdlib.h>
 
-#if defined (__SDCC_mcs51)
-
-#if defined(__SDCC)
- #include <sdcc-lib.h>
-#endif
-
-static void dummy(void) __naked
-{
-	__asm
-	.globl	_labs
-_labs:
-	jnb	acc.7, 00001$
-	mov	r2,a
-	clr	c
-	clr	a
-	subb	a,dpl
-	mov	dpl,a
-	clr	a
-	subb	a,dph
-	mov	dph,a
-	clr	a
-	subb	a,b
-	mov	b,a
-	clr	a
-	subb	a,r2
-00001$:
-	_RETURN
-	__endasm;
-}
-
-#else
-
 long int labs(long int j)
 {
 	return (j < 0) ? -j : j;
 }
 
-#endif
-
-//END OF MODULE

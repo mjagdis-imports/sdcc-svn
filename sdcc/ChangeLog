@@ -77,6 +77,41 @@
 	  z80-common/strcpy.s,
 	  z80-common/strlen.s:
 	  Move all z80 common library files into z80-common. Step 2 of RFE #327
+	* mcs51-common/_autobaud.c,
+	  mcs51-common/_bp.c,
+	  mcs51-common/_bpx.c,
+	  mcs51-common/_decdptr.c,
+	  mcs51-common/_gptrget.c,
+	  mcs51-common/_gptrgetc.c,
+	  mcs51-common/_gptrput.c,
+	  mcs51-common/_ser.c,
+	  mcs51-common/_spx.c,
+	  mcs51-common/serial.c,
+	  mcs51-huge/Makefile.in,
+	  mcs51-large/Makefile.in,
+	  mcs51-large-stack-auto/Makefile.in,
+	  mcs51-medium/Makefile.in,
+	  mcs51-small/Makefile.in,
+	  mcs51-small-stack-auto/Makefile.in:
+	  Move more files to mcs51-common.
+	* Makefile.in,
+	  _modsint.c,
+	  abs.c,
+	  labs.c,
+	  strlen.c,
+	  mcs51-common/abs.s,
+	  mcs51-common/labs.s,
+	  mcs51-common/strlen.s,
+	  mcs51-small/_modsint.s,
+	  mcs51-small-stack-auto/_modsint.s,
+	  mcs51-huge/config.inc,
+	  mcs51-large/config.inc,
+	  mcs51-large-stack-auto/config.inc,
+	  mcs51-medium/config.inc,
+	  mcs51-small/config.inc,
+	  mcs51-small-stack-auto/config.inc,
+	  mcs51-small-xstack-auto/config.inc:
+	  Remove inline assembly from abs, labs, strlen and _modsint.
 
 2026-11-02 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
