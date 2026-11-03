@@ -3,7 +3,7 @@
 # simulation timeout in cycles
 SIM_CYCLES = 1000000000
 
-EMU_PORT_FLAG=-t6280
+EMU_PORT_FLAG=-t6280 -i@rom_chip
 
 # path to uCsim
 ifdef SDCC_BIN_PATH
