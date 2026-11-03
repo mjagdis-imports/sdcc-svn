@@ -63,7 +63,7 @@ PORT_SDCC = $(COMMON_SDCC) \
 PORT_SOURCES = $(addprefix ../,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))
 PORT_OBJECTS = $(patsubst %.c,%.rel,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))
 
-OBJ = _ret.rel _mulint.rel _setjmp.rel atomic_flag_test_and_set.rel
+OBJ = _ret.rel _mulint.rel setjmp.rel atomic_flag_test_and_set.rel
 
 LIB = hc08.lib
 AS = $(SAS)

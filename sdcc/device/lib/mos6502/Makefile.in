@@ -70,7 +70,7 @@ PORT_SDCC = $(COMMON_SDCC) \
   atomic_flag_test_and_set.c
 
 OBJ = __sdcc_regs.rel __sdcc_indirect_jsr.rel\
-      _setjmp.rel  \
+      setjmp.rel  \
       _floatlib.rel
 
 PORT_SOURCES = $(addprefix ../,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))

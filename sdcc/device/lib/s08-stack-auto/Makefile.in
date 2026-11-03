@@ -1,15 +1,15 @@
 # libc/s08 Makefile
 
-srcdir = @srcdir@
+srcdir 		= @srcdir@
 top_srcdir      = @top_srcdir@
-top_builddir = @top_builddir@
+top_builddir 	= @top_builddir@
 abs_top_builddir = @abs_top_builddir@
 
 VPATH  		= $(srcdir)
 INCDIR          = $(top_srcdir)/device/include
 PORTINCDIR      = $(INCDIR)/$(PORT)
 
-LIB_TYPE     = @LIB_TYPE@
+LIB_TYPE	= @LIB_TYPE@
 
 EXTRA_CFLAGS = $(MODELFLAGS) --max-allocs-per-node 25000
 SAS = $(top_builddir)/bin/sdas6808
@@ -49,7 +49,6 @@ PORT_SDCC = $(COMMON_SDCC) \
   __memcpy.c \
   _heap.c \
   _memmove.c \
-  _spx.c \
   _startup.c \
   _strcmp.c \
   _strcpy.c \
@@ -65,7 +64,7 @@ PORT_SDCC = $(COMMON_SDCC) \
 PORT_SOURCES = $(addprefix ../,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))
 PORT_OBJECTS = $(patsubst %.c,%.rel,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))
 
-OBJ = _ret.rel _setjmp.rel atomic_flag_test_and_set.rel
+OBJ = _ret.rel setjmp.rel atomic_flag_test_and_set.rel
 
 LIB = s08.lib
 AS = $(SAS)

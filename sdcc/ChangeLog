@@ -112,6 +112,24 @@
 	  mcs51-small-stack-auto/config.inc,
 	  mcs51-small-xstack-auto/config.inc:
 	  Remove inline assembly from abs, labs, strlen and _modsint.
+	* ds390/Makefile.in,
+	  ds400/Makefile.in,
+	  hc08/Makefile.in,
+	  huc6280/Makefile.in,
+	  mos6502/Makefile.in,
+	  mos6502-stack-auto/Makefile.in,
+	  mos65c02/Makefile.in,
+	  mos65c02-stack-auto/Makefile.in,
+	  s08/Makefile.in,
+	  s08-stack-auto/Makefile.in,
+	  hc08/setjmp.c,
+	  mcs51-common/setjmp.c,
+	  mos-common/setjmp.s,
+	  mos6502-stack-auto/setjmp.s,
+	  mos65c02-stack-auto/setjmp.s,
+	  s08/setjmp.c,
+	  s08-stack-auto/setjmp.c:
+	  Cleanup setjmp naming across ports.
 
 2026-11-02 Christopher Bazley <chris.bazley.wg14@gmail.com>
 

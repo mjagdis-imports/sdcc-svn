@@ -69,7 +69,7 @@ PORT_SOURCES = $(addprefix ../,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LON
 PORT_OBJECTS = $(patsubst %.c,%.rel,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))
 
 OBJ = __sdcc_regs.rel __sdcc_indirect_jsr.rel\
-      _setjmp.rel
+      setjmp.rel
 
 LIB = mos6502.lib
 AS = $(SAS)
