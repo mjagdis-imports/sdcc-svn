@@ -6,4 +6,4 @@ SDCCFLAGS +=--model-medium
 
 include $(PORTS_DIR)/mcs51-common/spec.mk
 
-LIBDIR = $(top_builddir)/device/lib/build/medium
+LIBDIR = $(top_builddir)/device/lib/build/mcs51-medium

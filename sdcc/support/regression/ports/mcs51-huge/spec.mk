@@ -6,4 +6,4 @@ SDCCFLAGS += --model-huge
 
 include $(PORTS_DIR)/mcs51-common/spec.mk
 
-LIBDIR = $(top_builddir)/device/lib/build/huge
+LIBDIR = $(top_builddir)/device/lib/build/mcs51-huge

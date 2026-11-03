@@ -6,4 +6,4 @@ SDCCFLAGS +=--model-large --stack-auto
 
 include $(PORTS_DIR)/mcs51-common/spec.mk
 
-LIBDIR = $(top_builddir)/device/lib/build/large-stack-auto
+LIBDIR = $(top_builddir)/device/lib/build/mcs51-large-stack-auto

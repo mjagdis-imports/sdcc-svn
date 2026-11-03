@@ -9,10 +9,14 @@ VPATH  		= $(srcdir):$(srcdir)/../mos-common
 INCDIR          = $(top_srcdir)/device/include
 PORTINCDIR      = $(INCDIR)/$(PORT)
 
-LIB_TYPE     = @LIB_TYPE@
+LIB_TYPE	= @LIB_TYPE@
+LIB		= mos6502.lib
 
+AS = $(top_builddir)/bin/sdas6500
+
+ASFLAGS = -plosgff -I$(srcdir)
+CFLAGS = -I$(INCDIR) -I$(PORTINCDIR) -I. --std-c23
 EXTRA_CFLAGS = $(MODELFLAGS) --max-allocs-per-node 25000 --opt-code-speed
-SAS = $(top_builddir)/bin/sdas6500
 
 # override PORTDIR defined by super (parent) makefile
 override PORTDIR = ../build/$(PORT)
@@ -65,18 +69,13 @@ PORT_SDCC = $(COMMON_SDCC) \
   atomic_flag_clear.c \
   atomic_flag_test_and_set.c
 
-PORT_SOURCES = $(addprefix ../,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))
-PORT_OBJECTS = $(patsubst %.c,%.rel,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))
-
 OBJ = __sdcc_regs.rel __sdcc_indirect_jsr.rel\
       _setjmp.rel  \
       _floatlib.rel
 
-LIB = mos6502.lib
-AS = $(SAS)
-ASFLAGS = -plosgff -I$(srcdir)
+PORT_SOURCES = $(addprefix ../,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))
+PORT_OBJECTS = $(patsubst %.c,%.rel,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))
 
-CFLAGS = -I$(INCDIR) -I$(PORTINCDIR) -I. --std-c23
 
 all: $(PORTDIR)/$(LIB) $(PORTDIR)/crt0.rel
 

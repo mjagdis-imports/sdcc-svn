@@ -587,10 +587,10 @@ else
 fi
 
 # standard libs
-AC_DEFINE_UNQUOTED(STD_LIB,       "libsdcc", [XXX])
-AC_DEFINE_UNQUOTED(STD_INT_LIB,   "libint", [XXX])
-AC_DEFINE_UNQUOTED(STD_LONG_LIB,  "liblong", [XXX])
-AC_DEFINE_UNQUOTED(STD_FP_LIB,    "libfloat", [XXX])
+#AC_DEFINE_UNQUOTED(STD_LIB,       "libsdcc", [XXX])
+#AC_DEFINE_UNQUOTED(STD_INT_LIB,   "libint", [XXX])
+#AC_DEFINE_UNQUOTED(STD_LONG_LIB,  "liblong", [XXX])
+#AC_DEFINE_UNQUOTED(STD_FP_LIB,    "libfloat", [XXX])
 
 # SDCC runtime environment variables
 sdcc_dir_name="SDCC_HOME"
@@ -827,11 +827,13 @@ fi
 if test $OPT_DISABLE_MCS51 = 0; then
   AC_CONFIG_FILES([src/mcs51/Makefile
                    sdas/as8051/Makefile])
-  test $OPT_DISABLE_DEVICE_LIB = 0 && AC_CONFIG_FILES([device/lib/mcs51/Makefile
-                                                       device/lib/small/Makefile
-                                                       device/lib/medium/Makefile
-                                                       device/lib/large/Makefile
-                                                       device/lib/huge/Makefile])
+  test $OPT_DISABLE_DEVICE_LIB = 0 && AC_CONFIG_FILES([device/lib/mcs51-small/Makefile
+                                                       device/lib/mcs51-medium/Makefile
+                                                       device/lib/mcs51-large/Makefile
+                                                       device/lib/mcs51-huge/Makefile
+                                                       device/lib/mcs51-small-stack-auto/Makefile
+                                                       device/lib/mcs51-large-stack-auto/Makefile
+                                                       device/lib/mcs51-small-xstack-auto/Makefile])
 fi
 
 if test $OPT_DISABLE_PIC14 = 0; then

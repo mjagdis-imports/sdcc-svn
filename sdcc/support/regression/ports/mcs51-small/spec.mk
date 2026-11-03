@@ -6,4 +6,4 @@ SDCCFLAGS +=--model-small
 
 include $(PORTS_DIR)/mcs51-common/spec.mk
 
-LIBDIR = $(top_builddir)/device/lib/build/small
+LIBDIR = $(top_builddir)/device/lib/build/mcs51-small
