@@ -113,7 +113,7 @@ void Areas51 (void)
  *	or read from a command file.  The functions nxtline() and parse()
  *	are to input and evaluate the linker parameters.  The linking process
  *	proceeds by making the first pass through each .rel file in the order
- *      presented to the linker.  At the end of the first pass the setarea(),
+ *	presented to the linker.  At the end of the first pass the setbase(),
  *	lnkarea(), setgbl(), and symdef() functions are called to evaluate
  *	the base address terms, link all areas, define global variables,
  *	and look for undefined symbols.  Following these routines a linker
@@ -587,7 +587,7 @@ lkexit(int i)
 void
 link(void)
 {
-        char c;
+	char c;
 
         if ((c=endline()) == 0) { return; }
 	switch (c) {
@@ -871,7 +871,7 @@ map(void)
 			hdp = hdp->h_hp;
 			i++;
 		}
-                fprintf(mfp, " ]\n");
+		fprintf(mfp, " ]\n");
 		filep = filep->f_flp;
 	}
 	fprintf(mfp, "\n");
@@ -886,8 +886,8 @@ map(void)
                                 fprintf(mfp, "%s\n%40s  [ %-.32s ]\n",
                                         lbfh->libspc, "", lbfh->relfil);
                         else
-                                fprintf(mfp, "%-40.40s  [ %-.32s ]\n",
-                                        lbfh->libspc, lbfh->relfil);
+				fprintf(mfp, "%-40.40s  [ %-.32s ]\n",
+					lbfh->libspc, lbfh->relfil);
 		}
 		fprintf(mfp, "\n");
 	}
@@ -975,7 +975,7 @@ parse()
 {
 	int c;
 	int sv_type;
-        char fid[NINPUT];
+	char fid[NINPUT];
 
 	while ((c = getnb()) != 0) {
                 /* sdld specific */
@@ -1031,10 +1031,10 @@ parse()
 						return(0);
 					}
 					unget(getnb());
-                                        if (*ip == 0) {
-                                                usage();
-                                                exit(ER_FATAL);
-                                        }
+					if (*ip == 0) {
+						fprintf(stderr, "?ASlink-Error-Missing -f argument\n");
+						lkexit(ER_FATAL);
+					}
 					sv_type = startp->f_type;
 					startp->f_idp = strsto(ip);
 					startp->f_idx = fndidx(ip);
@@ -1170,6 +1170,7 @@ parse()
 					break;
 
 #if SDCDB
+				case 'y':
 				case 'Y':
 					yflag = 1;
 					break;
@@ -1335,7 +1336,7 @@ char *filespec(char *p)
 			outnam = strsto(p);
 			p += strlen(p);
 		} else {
-			fprintf(stderr, "?ASlink-Error-Missing [name][.ext] After -%c+", opt);
+			fprintf(stderr, "?ASlink-Error-Missing [name][.ext] After -%c+\n", opt);
 			lkexit(ER_FATAL);
 		}
 	}
@@ -1538,7 +1539,7 @@ setgbl(void)
 				sp->s_type |= S_DEF;
 			}
 		} else {
-			fprintf(stderr, "?ASlink-Error-No '=' in global expression");
+			fprintf(stderr, "?ASlink-Error-No '=' in global expression\n");
 			lkerr++;
 		}
 		gsp = gsp->g_globl;
