@@ -1117,6 +1117,85 @@ escapeValueInRange (escapeValue escape, unsigned long limit)
   return escape.value;
 }
 
+const uint32_t *utf_32_from_utf_8 (size_t *utf_32_len, const char *utf_8, size_t utf_8_len)
+{
+  size_t allocated = 0;
+  uint32_t *utf_32 = 0;
+  unsigned char first_byte;
+  uint32_t codepoint;
+  size_t seqlen;
+
+  for (*utf_32_len = 0; utf_8_len; (*utf_32_len)++)
+    {
+      if (allocated == *utf_32_len)
+        {
+          utf_32 = realloc (utf_32, sizeof(uint32_t) * (*utf_32_len + 16));
+          wassert (utf_32);
+          allocated = *utf_32_len + 16;
+        }
+
+      first_byte = *utf_8;
+      seqlen = 1;
+      if (first_byte & 0x80)
+        {
+          while (first_byte & (0x80 >> seqlen))
+            seqlen++;
+          first_byte &= (0xff >> (seqlen + 1));
+        }
+      wassert (seqlen <= 6); // seqlen 5 and 6 are deprecated in current unicode standard, but for now, allow them.
+
+      codepoint = first_byte;
+      utf_8++;
+      utf_8_len--;
+      seqlen--;
+
+      for(; seqlen; seqlen--)
+        {
+          codepoint <<= 6;
+          codepoint |= (*utf_8 & 0x3f);
+          utf_8++;
+          utf_8_len--;
+        }
+
+      utf_32[*utf_32_len] = codepoint;
+    }
+  return (utf_32);
+}
+
+const uint16_t *utf_16_from_utf_32 (size_t *utf_16_len, const uint32_t *utf_32, size_t utf_32_len)
+{
+  size_t allocated = 0;
+  uint16_t *utf_16 = 0;
+  uint32_t codepoint;
+
+  for (*utf_16_len = 0; utf_32_len; utf_32_len--, utf_32++)
+    {
+      if (allocated <= *utf_16_len + 2)
+        {
+          utf_16 = realloc (utf_16, sizeof(uint16_t) * (*utf_16_len + 16));
+          wassert (utf_16);
+          allocated = *utf_16_len + 16;
+        }
+
+      codepoint = *utf_32;
+
+      if (codepoint < 0xd7ff || codepoint >= 0xe000 && codepoint <= 0xffff) // Code in basic multilingual plane.
+        {
+          utf_16[(*utf_16_len)++] = codepoint;
+          continue;
+        }
+
+      // Code point in supplementary plane.
+      wassert (codepoint >= 0x100000 && codepoint <= 0x10ffff);
+      codepoint -= 0x100000;
+
+      utf_16[(*utf_16_len)++] = ((codepoint >> 10) & 0x3ff) + 0xd800;
+      utf_16[(*utf_16_len)++] = (codepoint & 0x3ff) + 0xdc00;
+    }
+
+  return (utf_16);
+}
+
 /*!
   /fn const char *copyStrWithEscapeLimit (const char *src, size_t *size, unsigned long limit)
 
