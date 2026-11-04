@@ -71,16 +71,13 @@ PORT_SDCC = $(COMMON_SDCC) \
   serial.c \
   __itoa.c \
   __ltoa.c \
+  __memcpy.c \
+  _heap.c \
   _spx.c \
   _startup.c \
-  _strcmp.c \
   strlen.c \
   strnlen.c \
-  __memcpy.c \
   memcpy.c \
-  _memmove.c \
-  _strcpy.c \
-  _heap.c \
   div.c \
   ldiv.c \
   lldiv.c \
@@ -96,7 +93,7 @@ OBJ = crtstart.rel crtxinit.rel crtxclear.rel crtclear.rel \
       crtpagesfr.rel crtbank.rel crtcall.rel \
       crtxstack.rel crtxpush.rel crtxpop.rel \
       gptr_cmp.rel \
-          atomic_flag_clear.rel sdcc_atomic_maybe_rollback.rel
+      atomic_flag_clear.rel sdcc_atomic_maybe_rollback.rel
 
 PORT_SOURCES = $(addprefix ../,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))
 PORT_OBJECTS = $(patsubst %.c,%.rel,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))

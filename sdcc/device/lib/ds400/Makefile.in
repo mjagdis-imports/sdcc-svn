@@ -65,13 +65,10 @@ PORT_SDCC = $(COMMON_SDCC) \
   __ltoa.c \
   _spx.c \
   _startup.c \
-  _strcmp.c \
   strlen.c \
   strnlen.c \
   __memcpy.c \
   memcpy.c \
-  _memmove.c \
-  _strcpy.c \
   _heap.c \
   div.c \
   ldiv.c \

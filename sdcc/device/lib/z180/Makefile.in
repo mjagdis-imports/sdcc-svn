@@ -2,15 +2,15 @@
 
 srcdir = @srcdir@
 top_srcdir      = @top_srcdir@
-top_builddir = @top_builddir@
+top_builddir	= @top_builddir@
 abs_top_builddir = @abs_top_builddir@
 
-VPATH  = $(srcdir):$(srcdir)/../z80-common
+VPATH  		= $(srcdir):$(srcdir)/../z80-common
 INCDIR          = $(top_srcdir)/device/include
 PORTINCDIR      = $(INCDIR)/$(PORT)
 
-LIB_TYPE     = @LIB_TYPE@
-LIB = z180.lib
+LIB_TYPE	= @LIB_TYPE@
+LIB		= z180.lib
 
 AS = $(top_builddir)/bin/sdasz80
 
@@ -44,9 +44,9 @@ PORT_SDCC = $(COMMON_SDCC) \
   ldiv.c \
   lldiv.c \
   sprintf.c \
-  vprintf.c \
+  strcmp.c \
   strnlen.c \
-  _strcmp.c \
+  vprintf.c \
   atomic_flag_clear.c
 
 OBJ = divunsigned.rel divsigned.rel divmixed.rel modunsigned.rel modsigned.rel modmixed.rel mul.rel mulchar.rel \

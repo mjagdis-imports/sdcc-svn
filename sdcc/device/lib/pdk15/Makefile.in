@@ -9,10 +9,14 @@ VPATH  		= $(srcdir)
 INCDIR          = $(top_srcdir)/device/include
 PORTINCDIR      = $(INCDIR)/$(PORT)
 
-LIB_TYPE     = @LIB_TYPE@
+LIB_TYPE	= @LIB_TYPE@
+LIB		= pdk15.lib
 
+AS = $(top_builddir)/bin/sdaspdk15
+
+ASFLAGS = -plosgff -I$(srcdir)
+CFLAGS = -I$(INCDIR) -I$(PORTINCDIR) -I. --std-c23
 EXTRA_CFLAGS = $(MODELFLAGS) --max-allocs-per-node 25000
-SAS = $(top_builddir)/bin/sdaspdk15
 
 # override PORTDIR defined by super (parent) makefile
 override PORTDIR = ../build/$(PORT)
@@ -22,6 +26,7 @@ include $(srcdir)/../incl.mk
 PORT_FLOAT = $(COMMON_FLOAT)
 
 PORT_INT = $(COMMON_INT) \
+  _muluchar.c \
   _mulschar.c \
   _mulint.c \
   _divuchar.c \
@@ -51,11 +56,9 @@ PORT_LONGLONG = $(COMMON_LONGLONG) \
 PORT_SDCC = $(COMMON_SDCC) \
   __itoa.c \
   _startup.c \
-  _strcmp.c \
-  _strcpy.c \
   strlen.c \
   strnlen.c \
-  _memmove.c \
+  memmove.c \
   __memcpy.c \
   memcpy.c \
   div.c \
@@ -64,16 +67,10 @@ PORT_SDCC = $(COMMON_SDCC) \
   sprintf.c \
   vprintf.c
 
+OBJ = __gptrget.rel __gptrget2.rel heap.rel __setjmp.rel
+
 PORT_SOURCES = $(addprefix ../,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))
 PORT_OBJECTS = $(patsubst %.c,%.rel,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))
-
-OBJ = __gptrget.rel __gptrget2.rel heap.rel __setjmp.rel _muluchar.rel
-
-LIB = pdk15.lib
-AS = $(SAS)
-ASFLAGS = -plosgff
-
-CFLAGS = -I$(INCDIR) -I$(PORTINCDIR) -I. --std-c23
 
 all: $(PORTDIR)/$(LIB)
 

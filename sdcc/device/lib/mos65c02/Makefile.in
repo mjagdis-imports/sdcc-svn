@@ -9,10 +9,14 @@ VPATH  		= $(srcdir):$(srcdir)/../mos-common
 INCDIR          = $(top_srcdir)/device/include
 PORTINCDIR      = $(INCDIR)/$(PORT)
 
-LIB_TYPE     = @LIB_TYPE@
+LIB_TYPE	= @LIB_TYPE@
+LIB		= mos65c02.lib
 
+AS = $(top_builddir)/bin/sdas6500
+
+ASFLAGS = -plosgff -I$(srcdir)
+CFLAGS = -I$(INCDIR) -I$(PORTINCDIR) -I. --std-c23
 EXTRA_CFLAGS = $(MODELFLAGS) --max-allocs-per-node 25000 --opt-code-speed
-SAS = $(top_builddir)/bin/sdas6500
 
 # override PORTDIR defined by super (parent) makefile
 override PORTDIR = ../build/$(PORT)
@@ -22,22 +26,22 @@ include $(srcdir)/../incl.mk
 PORT_FLOAT = $(COMMON_FLOAT)
 
 PORT_INT = $(COMMON_INT) \
-  _muluchar.c \
-  _mulschar.c \
-  _mulint.c \
-  _divuchar.c \
   _divschar.c \
-  _divuint.c \
   _divsint.c \
+  _divuchar.c \
+  _divuint.c \
   _moduchar.c \
   _modschar.c \
   _moduint.c \
-  _modsint.c
+  _modsint.c \
+  _mulint.c \
+  _muluchar.c \
+  _mulschar.c
 
 PORT_LONG = $(COMMON_LONG) \
-  _mullong.c \
   _divslong.c \
-  _divulong.c
+  _divulong.c \
+  _mullong.c 
 
 PORT_LONGLONG = $(COMMON_LONGLONG) \
   _mullonglong.c \
@@ -50,33 +54,24 @@ PORT_SDCC = $(COMMON_SDCC) \
   __itoa.c \
   __ltoa.c \
   _heap.c \
-  _memmove.c \
   _startup.c \
-  _strcmp.c \
-  _strcpy.c \
-  strlen.c \
-  strnlen.c \
-  memcpy.c \
   div.c \
   ldiv.c \
   lldiv.c \
+  memcpy.c \
   sprintf.c \
+  strlen.c \
+  strnlen.c \
   vprintf.c \
   atomic_flag_clear.c \
   atomic_flag_test_and_set.c
-
-PORT_SOURCES = $(addprefix ../,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))
-PORT_OBJECTS = $(patsubst %.c,%.rel,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))
 
 OBJ = __sdcc_regs.rel __sdcc_indirect_jsr.rel\
       setjmp.rel  \
       _floatlib.rel
 
-LIB = mos65c02.lib
-AS = $(SAS)
-ASFLAGS = -plosgff -I$(srcdir)
-
-CFLAGS = -I$(INCDIR) -I$(PORTINCDIR) -I. --std-c23
+PORT_SOURCES = $(addprefix ../,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))
+PORT_OBJECTS = $(patsubst %.c,%.rel,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))
 
 all: $(PORTDIR)/$(LIB) $(PORTDIR)/crt0.rel
 

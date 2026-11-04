@@ -46,11 +46,10 @@ PORT_SDCC = $(COMMON_SDCC) \
   sprintf.c \
   vprintf.c \
   strnlen.c \
-  _strcmp.c \
   atomic_flag_clear.c
 
 OBJ = divunsigned.rel divsigned.rel divmixed.rel modunsigned.rel modsigned.rel modmixed.rel mul.rel mulchar.rel \
-      heap.rel memmove.rel strcpy.rel strlen.rel abs.rel __sdcc_call_hl.rel __sdcc_call_iy.rel crtenter.rel \
+      heap.rel memmove.rel strlen.rel abs.rel __sdcc_call_hl.rel __sdcc_call_iy.rel crtenter.rel \
       setjmp.rel atomic_flag_test_and_set.rel memcpy.rel __uitobcd.rel __ultobcd.rel __itoa.rel __ltoa.rel \
       __strreverse.rel __sdcc_bcall.rel __sdcc_critical.rel __mulsint2slong.rel
 

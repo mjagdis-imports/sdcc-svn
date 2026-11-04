@@ -10,9 +10,13 @@ INCDIR          = $(top_srcdir)/device/include
 PORTINCDIR      = $(INCDIR)/$(PORT)
 
 LIB_TYPE	= @LIB_TYPE@
+LIB = s08.lib
 
+AS = $(top_builddir)/bin/sdas6808
+
+ASFLAGS = -plosgff -I$(srcdir)
+CFLAGS = -I$(INCDIR) -I$(PORTINCDIR) -I. --std-c23
 EXTRA_CFLAGS = $(MODELFLAGS) --max-allocs-per-node 25000
-SAS = $(top_builddir)/bin/sdas6808
 
 # override PORTDIR defined by super (parent) makefile
 override PORTDIR = ../build/$(PORT)
@@ -22,15 +26,15 @@ include $(srcdir)/../incl.mk
 PORT_FLOAT = $(COMMON_FLOAT)
 
 PORT_INT = $(COMMON_INT) \
-  _mulint.c \
   _divsint.c \
   _divuint.c \
   _modsint.c \
-  _moduint.c
+  _moduint.c \
+  _mulint.c
 
 PORT_LONG = $(COMMON_LONG) \
-  _mullong.c \
-  _divulong.c
+  _divulong.c \
+  _mullong.c
 
 PORT_LONGLONG = $(COMMON_LONGLONG) \
   _srulonglong.c \
@@ -48,10 +52,7 @@ PORT_SDCC = $(COMMON_SDCC) \
   __ltoa.c \
   __memcpy.c \
   _heap.c \
-  _memmove.c \
   _startup.c \
-  _strcmp.c \
-  _strcpy.c \
   strlen.c \
   strnlen.c \
   memcpy.c \
@@ -61,16 +62,10 @@ PORT_SDCC = $(COMMON_SDCC) \
   vprintf.c \
   atomic_flag_clear.c
 
-PORT_SOURCES = $(addprefix ../,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))
-PORT_OBJECTS = $(patsubst %.c,%.rel,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))
-
 OBJ = _ret.rel setjmp.rel atomic_flag_test_and_set.rel
 
-LIB = s08.lib
-AS = $(SAS)
-ASFLAGS = -plosgff
-
-CFLAGS = -I$(INCDIR) -I$(PORTINCDIR) -I. --std-c23
+PORT_SOURCES = $(addprefix ../,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))
+PORT_OBJECTS = $(patsubst %.c,%.rel,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))
 
 all: $(PORTDIR)/$(LIB)
 

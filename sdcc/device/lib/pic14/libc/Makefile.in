@@ -134,7 +134,7 @@ am_libc_a_OBJECTS = libc_a-__assert.$(OBJEXT) libc_a-isalnum.$(OBJEXT) \
 	libc_a-streams.$(OBJEXT) libc_a-strmgpsim.$(OBJEXT) \
 	libc_a-strmmssp.$(OBJEXT) libc_a-strmusart.$(OBJEXT) \
 	libc_a-vfprintf.$(OBJEXT) libc_a-vprintf.$(OBJEXT) \
-	libc_a-vsprintf.$(OBJEXT) libc_a-_atof.$(OBJEXT) \
+	libc_a-vsprintf.$(OBJEXT) libc_a-atof.$(OBJEXT) \
 	libc_a-_ftoa.$(OBJEXT) libc_a-__itoa.$(OBJEXT) \
 	libc_a-__ltoa.$(OBJEXT) libc_a-abs.$(OBJEXT) \
 	libc_a-aligned_alloc.$(OBJEXT) libc_a-atoi.$(OBJEXT) \
@@ -147,17 +147,17 @@ am_libc_a_OBJECTS = libc_a-__assert.$(OBJEXT) libc_a-isalnum.$(OBJEXT) \
 	libc_a-qsort.$(OBJEXT) libc_a-rand.$(OBJEXT) \
 	libc_a-realloc.$(OBJEXT) libc_a-strtol.$(OBJEXT) \
 	libc_a-strtoul.$(OBJEXT) libc_a-wcstombs.$(OBJEXT) \
-	libc_a-wctomb.$(OBJEXT) libc_a-_memchr.$(OBJEXT) \
-	libc_a-_memcmp.$(OBJEXT) libc_a-__memcpy.$(OBJEXT) \
-	libc_a-memcpy.$(OBJEXT) libc_a-_memmove.$(OBJEXT) \
-	libc_a-_memset.$(OBJEXT) libc_a-_strcat.$(OBJEXT) \
-	libc_a-_strchr.$(OBJEXT) libc_a-_strcmp.$(OBJEXT) \
-	libc_a-_strcpy.$(OBJEXT) libc_a-_strcspn.$(OBJEXT) \
+	libc_a-wctomb.$(OBJEXT) libc_a-memchr.$(OBJEXT) \
+	libc_a-memcmp.$(OBJEXT) libc_a-__memcpy.$(OBJEXT) \
+	libc_a-memcpy.$(OBJEXT) libc_a-memmove.$(OBJEXT) \
+	libc_a-memset.$(OBJEXT) libc_a-strcat.$(OBJEXT) \
+	libc_a-strchr.$(OBJEXT) libc_a-strcmp.$(OBJEXT) \
+	libc_a-strcpy.$(OBJEXT) libc_a-strcspn.$(OBJEXT) \
 	libc_a-strlen.$(OBJEXT) libc_a-strnlen.$(OBJEXT) \
-	libc_a-_strncat.$(OBJEXT) libc_a-_strncmp.$(OBJEXT) \
-	libc_a-_strncpy.$(OBJEXT) libc_a-_strpbrk.$(OBJEXT) \
-	libc_a-_strrchr.$(OBJEXT) libc_a-strsep.$(OBJEXT) \
-	libc_a-_strspn.$(OBJEXT) libc_a-_strstr.$(OBJEXT) \
+	libc_a-strncat.$(OBJEXT) libc_a-strncmp.$(OBJEXT) \
+	libc_a-strncpy.$(OBJEXT) libc_a-strpbrk.$(OBJEXT) \
+	libc_a-strrchr.$(OBJEXT) libc_a-strsep.$(OBJEXT) \
+	libc_a-strspn.$(OBJEXT) libc_a-strstr.$(OBJEXT) \
 	libc_a-strtok.$(OBJEXT) libc_a-strxfrm.$(OBJEXT) \
 	libc_a-c16rtomb.$(OBJEXT) libc_a-c16stombs.$(OBJEXT) \
 	libc_a-c32rtomb.$(OBJEXT) libc_a-mbrtoc16.$(OBJEXT) \
@@ -175,15 +175,15 @@ am__libce_a_SOURCES_DIST = __assert.c isalnum.c isalpha.c isblank.c \
 	isspace.c isupper.c isxdigit.c tolower.c toupper.c errno.c \
 	fprintf.c fputc.c fputs.c getchar.c gets.c printf.c printfl.c \
 	putchar.c puts.c sprintf.c streams.c strmgpsim.c strmmssp.c \
-	strmusart.c vfprintf.c vprintf.c vsprintf.c _atof.c _ftoa.c \
+	strmusart.c vfprintf.c vprintf.c vsprintf.c atof.c _ftoa.c \
 	__itoa.c __ltoa.c abs.c aligned_alloc.c atoi.c atol.c \
 	bsearch.c _calloc.c free.c labs.c malloc.c mblen.c mbstowcs.c \
 	mbtowc.c memfree.c memfreemax.c memmisc.c qsort.c rand.c \
-	realloc.c strtol.c strtoul.c wcstombs.c wctomb.c _memchr.c \
-	_memcmp.c __memcpy.c memcpy.c _memmove.c _memset.c _strcat.c \
-	_strchr.c _strcmp.c _strcpy.c _strcspn.c strlen.c strnlen.c \
-	_strncat.c _strncmp.c _strncpy.c _strpbrk.c _strrchr.c \
-	strsep.c _strspn.c _strstr.c strtok.c strxfrm.c c16rtomb.c \
+	realloc.c strtol.c strtoul.c wcstombs.c wctomb.c memchr.c \
+	memcmp.c __memcpy.c memcpy.c memmove.c memset.c strcat.c \
+	strchr.c strcmp.c strcpy.c strcspn.c strlen.c strnlen.c \
+	strncat.c strncmp.c strncpy.c strpbrk.c strrchr.c \
+	strsep.c strspn.c strstr.c strtok.c strxfrm.c c16rtomb.c \
 	c16stombs.c c32rtomb.c mbrtoc16.c mbrtoc32.c mbstoc16s.c \
 	btowc.c mbrlen.c mbrtowc.c mbsinit.c wcrtomb.c wcscmp.c \
 	wcslen.c wctob.c
@@ -203,7 +203,7 @@ am__objects_1 = libce_a-__assert.$(OBJEXT) libce_a-isalnum.$(OBJEXT) \
 	libce_a-streams.$(OBJEXT) libce_a-strmgpsim.$(OBJEXT) \
 	libce_a-strmmssp.$(OBJEXT) libce_a-strmusart.$(OBJEXT) \
 	libce_a-vfprintf.$(OBJEXT) libce_a-vprintf.$(OBJEXT) \
-	libce_a-vsprintf.$(OBJEXT) libce_a-_atof.$(OBJEXT) \
+	libce_a-vsprintf.$(OBJEXT) libce_a-atof.$(OBJEXT) \
 	libce_a-_ftoa.$(OBJEXT) libce_a-__itoa.$(OBJEXT) \
 	libce_a-__ltoa.$(OBJEXT) libce_a-abs.$(OBJEXT) \
 	libce_a-aligned_alloc.$(OBJEXT) libce_a-atoi.$(OBJEXT) \
@@ -216,17 +216,17 @@ am__objects_1 = libce_a-__assert.$(OBJEXT) libce_a-isalnum.$(OBJEXT) \
 	libce_a-qsort.$(OBJEXT) libce_a-rand.$(OBJEXT) \
 	libce_a-realloc.$(OBJEXT) libce_a-strtol.$(OBJEXT) \
 	libce_a-strtoul.$(OBJEXT) libce_a-wcstombs.$(OBJEXT) \
-	libce_a-wctomb.$(OBJEXT) libce_a-_memchr.$(OBJEXT) \
-	libce_a-_memcmp.$(OBJEXT) libce_a-__memcpy.$(OBJEXT) \
-	libce_a-memcpy.$(OBJEXT) libce_a-_memmove.$(OBJEXT) \
-	libce_a-_memset.$(OBJEXT) libce_a-_strcat.$(OBJEXT) \
-	libce_a-_strchr.$(OBJEXT) libce_a-_strcmp.$(OBJEXT) \
-	libce_a-_strcpy.$(OBJEXT) libce_a-_strcspn.$(OBJEXT) \
+	libce_a-wctomb.$(OBJEXT) libce_a-memchr.$(OBJEXT) \
+	libce_a-memcmp.$(OBJEXT) libce_a-__memcpy.$(OBJEXT) \
+	libce_a-memcpy.$(OBJEXT) libce_a-memmove.$(OBJEXT) \
+	libce_a-memset.$(OBJEXT) libce_a-strcat.$(OBJEXT) \
+	libce_a-strchr.$(OBJEXT) libce_a-strcmp.$(OBJEXT) \
+	libce_a-strcpy.$(OBJEXT) libce_a-strcspn.$(OBJEXT) \
 	libce_a-strlen.$(OBJEXT) libce_a-strnlen.$(OBJEXT) \
-	libce_a-_strncat.$(OBJEXT) libce_a-_strncmp.$(OBJEXT) \
-	libce_a-_strncpy.$(OBJEXT) libce_a-_strpbrk.$(OBJEXT) \
-	libce_a-_strrchr.$(OBJEXT) libce_a-strsep.$(OBJEXT) \
-	libce_a-_strspn.$(OBJEXT) libce_a-_strstr.$(OBJEXT) \
+	libce_a-strncat.$(OBJEXT) libce_a-strncmp.$(OBJEXT) \
+	libce_a-strncpy.$(OBJEXT) libce_a-strpbrk.$(OBJEXT) \
+	libce_a-strrchr.$(OBJEXT) libce_a-strsep.$(OBJEXT) \
+	libce_a-strspn.$(OBJEXT) libce_a-strstr.$(OBJEXT) \
 	libce_a-strtok.$(OBJEXT) libce_a-strxfrm.$(OBJEXT) \
 	libce_a-c16rtomb.$(OBJEXT) libce_a-c16stombs.$(OBJEXT) \
 	libce_a-c32rtomb.$(OBJEXT) libce_a-mbrtoc16.$(OBJEXT) \
@@ -245,15 +245,15 @@ am__libceo_a_SOURCES_DIST = __assert.c isalnum.c isalpha.c isblank.c \
 	isspace.c isupper.c isxdigit.c tolower.c toupper.c errno.c \
 	fprintf.c fputc.c fputs.c getchar.c gets.c printf.c printfl.c \
 	putchar.c puts.c sprintf.c streams.c strmgpsim.c strmmssp.c \
-	strmusart.c vfprintf.c vprintf.c vsprintf.c _atof.c _ftoa.c \
+	strmusart.c vfprintf.c vprintf.c vsprintf.c atof.c _ftoa.c \
 	__itoa.c __ltoa.c abs.c aligned_alloc.c atoi.c atol.c \
 	bsearch.c _calloc.c free.c labs.c malloc.c mblen.c mbstowcs.c \
 	mbtowc.c memfree.c memfreemax.c memmisc.c qsort.c rand.c \
-	realloc.c strtol.c strtoul.c wcstombs.c wctomb.c _memchr.c \
-	_memcmp.c __memcpy.c memcpy.c _memmove.c _memset.c _strcat.c \
-	_strchr.c _strcmp.c _strcpy.c _strcspn.c strlen.c strnlen.c \
-	_strncat.c _strncmp.c _strncpy.c _strpbrk.c _strrchr.c \
-	strsep.c _strspn.c _strstr.c strtok.c strxfrm.c c16rtomb.c \
+	realloc.c strtol.c strtoul.c wcstombs.c wctomb.c memchr.c \
+	memcmp.c __memcpy.c memcpy.c memmove.c memset.c strcat.c \
+	strchr.c strcmp.c strcpy.c strcspn.c strlen.c strnlen.c \
+	strncat.c strncmp.c strncpy.c strpbrk.c strrchr.c \
+	strsep.c strspn.c strstr.c strtok.c strxfrm.c c16rtomb.c \
 	c16stombs.c c32rtomb.c mbrtoc16.c mbrtoc32.c mbstoc16s.c \
 	btowc.c mbrlen.c mbrtowc.c mbsinit.c wcrtomb.c wcscmp.c \
 	wcslen.c wctob.c
@@ -273,7 +273,7 @@ am__objects_2 = libceo_a-__assert.$(OBJEXT) libceo_a-isalnum.$(OBJEXT) \
 	libceo_a-streams.$(OBJEXT) libceo_a-strmgpsim.$(OBJEXT) \
 	libceo_a-strmmssp.$(OBJEXT) libceo_a-strmusart.$(OBJEXT) \
 	libceo_a-vfprintf.$(OBJEXT) libceo_a-vprintf.$(OBJEXT) \
-	libceo_a-vsprintf.$(OBJEXT) libceo_a-_atof.$(OBJEXT) \
+	libceo_a-vsprintf.$(OBJEXT) libceo_a-atof.$(OBJEXT) \
 	libceo_a-_ftoa.$(OBJEXT) libceo_a-__itoa.$(OBJEXT) \
 	libceo_a-__ltoa.$(OBJEXT) libceo_a-abs.$(OBJEXT) \
 	libceo_a-aligned_alloc.$(OBJEXT) libceo_a-atoi.$(OBJEXT) \
@@ -286,17 +286,17 @@ am__objects_2 = libceo_a-__assert.$(OBJEXT) libceo_a-isalnum.$(OBJEXT) \
 	libceo_a-qsort.$(OBJEXT) libceo_a-rand.$(OBJEXT) \
 	libceo_a-realloc.$(OBJEXT) libceo_a-strtol.$(OBJEXT) \
 	libceo_a-strtoul.$(OBJEXT) libceo_a-wcstombs.$(OBJEXT) \
-	libceo_a-wctomb.$(OBJEXT) libceo_a-_memchr.$(OBJEXT) \
-	libceo_a-_memcmp.$(OBJEXT) libceo_a-__memcpy.$(OBJEXT) \
-	libceo_a-memcpy.$(OBJEXT) libceo_a-_memmove.$(OBJEXT) \
-	libceo_a-_memset.$(OBJEXT) libceo_a-_strcat.$(OBJEXT) \
-	libceo_a-_strchr.$(OBJEXT) libceo_a-_strcmp.$(OBJEXT) \
-	libceo_a-_strcpy.$(OBJEXT) libceo_a-_strcspn.$(OBJEXT) \
+	libceo_a-wctomb.$(OBJEXT) libceo_a-memchr.$(OBJEXT) \
+	libceo_a-memcmp.$(OBJEXT) libceo_a-__memcpy.$(OBJEXT) \
+	libceo_a-memcpy.$(OBJEXT) libceo_a-memmove.$(OBJEXT) \
+	libceo_a-memset.$(OBJEXT) libceo_a-strcat.$(OBJEXT) \
+	libceo_a-strchr.$(OBJEXT) libceo_a-strcmp.$(OBJEXT) \
+	libceo_a-strcpy.$(OBJEXT) libceo_a-strcspn.$(OBJEXT) \
 	libceo_a-strlen.$(OBJEXT) libceo_a-strnlen.$(OBJEXT) \
-	libceo_a-_strncat.$(OBJEXT) libceo_a-_strncmp.$(OBJEXT) \
-	libceo_a-_strncpy.$(OBJEXT) libceo_a-_strpbrk.$(OBJEXT) \
-	libceo_a-_strrchr.$(OBJEXT) libceo_a-strsep.$(OBJEXT) \
-	libceo_a-_strspn.$(OBJEXT) libceo_a-_strstr.$(OBJEXT) \
+	libceo_a-strncat.$(OBJEXT) libceo_a-strncmp.$(OBJEXT) \
+	libceo_a-strncpy.$(OBJEXT) libceo_a-strpbrk.$(OBJEXT) \
+	libceo_a-strrchr.$(OBJEXT) libceo_a-strsep.$(OBJEXT) \
+	libceo_a-strspn.$(OBJEXT) libceo_a-strstr.$(OBJEXT) \
 	libceo_a-strtok.$(OBJEXT) libceo_a-strxfrm.$(OBJEXT) \
 	libceo_a-c16rtomb.$(OBJEXT) libceo_a-c16stombs.$(OBJEXT) \
 	libceo_a-c32rtomb.$(OBJEXT) libceo_a-mbrtoc16.$(OBJEXT) \
@@ -315,15 +315,15 @@ am__libceox_a_SOURCES_DIST = __assert.c isalnum.c isalpha.c isblank.c \
 	isspace.c isupper.c isxdigit.c tolower.c toupper.c errno.c \
 	fprintf.c fputc.c fputs.c getchar.c gets.c printf.c printfl.c \
 	putchar.c puts.c sprintf.c streams.c strmgpsim.c strmmssp.c \
-	strmusart.c vfprintf.c vprintf.c vsprintf.c _atof.c _ftoa.c \
+	strmusart.c vfprintf.c vprintf.c vsprintf.c atof.c _ftoa.c \
 	__itoa.c __ltoa.c abs.c aligned_alloc.c atoi.c atol.c \
 	bsearch.c _calloc.c free.c labs.c malloc.c mblen.c mbstowcs.c \
 	mbtowc.c memfree.c memfreemax.c memmisc.c qsort.c rand.c \
-	realloc.c strtol.c strtoul.c wcstombs.c wctomb.c _memchr.c \
-	_memcmp.c __memcpy.c memcpy.c _memmove.c _memset.c _strcat.c \
-	_strchr.c _strcmp.c _strcpy.c _strcspn.c strlen.c strnlen.c \
-	_strncat.c _strncmp.c _strncpy.c _strpbrk.c _strrchr.c \
-	strsep.c _strspn.c _strstr.c strtok.c strxfrm.c c16rtomb.c \
+	realloc.c strtol.c strtoul.c wcstombs.c wctomb.c memchr.c \
+	memcmp.c __memcpy.c memcpy.c memmove.c memset.c strcat.c \
+	strchr.c strcmp.c strcpy.c strcspn.c strlen.c strnlen.c \
+	strncat.c strncmp.c strncpy.c strpbrk.c strrchr.c \
+	strsep.c strspn.c strstr.c strtok.c strxfrm.c c16rtomb.c \
 	c16stombs.c c32rtomb.c mbrtoc16.c mbrtoc32.c mbstoc16s.c \
 	btowc.c mbrlen.c mbrtowc.c mbsinit.c wcrtomb.c wcscmp.c \
 	wcslen.c wctob.c
@@ -344,7 +344,7 @@ am__objects_3 = libceox_a-__assert.$(OBJEXT) \
 	libceox_a-strmgpsim.$(OBJEXT) libceox_a-strmmssp.$(OBJEXT) \
 	libceox_a-strmusart.$(OBJEXT) libceox_a-vfprintf.$(OBJEXT) \
 	libceox_a-vprintf.$(OBJEXT) libceox_a-vsprintf.$(OBJEXT) \
-	libceox_a-_atof.$(OBJEXT) libceox_a-_ftoa.$(OBJEXT) \
+	libceox_a-atof.$(OBJEXT) libceox_a-_ftoa.$(OBJEXT) \
 	libceox_a-__itoa.$(OBJEXT) libceox_a-__ltoa.$(OBJEXT) \
 	libceox_a-abs.$(OBJEXT) libceox_a-aligned_alloc.$(OBJEXT) \
 	libceox_a-atoi.$(OBJEXT) libceox_a-atol.$(OBJEXT) \
@@ -357,17 +357,17 @@ am__objects_3 = libceox_a-__assert.$(OBJEXT) \
 	libceox_a-rand.$(OBJEXT) libceox_a-realloc.$(OBJEXT) \
 	libceox_a-strtol.$(OBJEXT) libceox_a-strtoul.$(OBJEXT) \
 	libceox_a-wcstombs.$(OBJEXT) libceox_a-wctomb.$(OBJEXT) \
-	libceox_a-_memchr.$(OBJEXT) libceox_a-_memcmp.$(OBJEXT) \
+	libceox_a-memchr.$(OBJEXT) libceox_a-memcmp.$(OBJEXT) \
 	libceox_a-__memcpy.$(OBJEXT) libceox_a-memcpy.$(OBJEXT) \
-	libceox_a-_memmove.$(OBJEXT) libceox_a-_memset.$(OBJEXT) \
-	libceox_a-_strcat.$(OBJEXT) libceox_a-_strchr.$(OBJEXT) \
-	libceox_a-_strcmp.$(OBJEXT) libceox_a-_strcpy.$(OBJEXT) \
-	libceox_a-_strcspn.$(OBJEXT) libceox_a-strlen.$(OBJEXT) \
-	libceox_a-strnlen.$(OBJEXT) libceox_a-_strncat.$(OBJEXT) \
-	libceox_a-_strncmp.$(OBJEXT) libceox_a-_strncpy.$(OBJEXT) \
-	libceox_a-_strpbrk.$(OBJEXT) libceox_a-_strrchr.$(OBJEXT) \
-	libceox_a-strsep.$(OBJEXT) libceox_a-_strspn.$(OBJEXT) \
-	libceox_a-_strstr.$(OBJEXT) libceox_a-strtok.$(OBJEXT) \
+	libceox_a-memmove.$(OBJEXT) libceox_a-memset.$(OBJEXT) \
+	libceox_a-strcat.$(OBJEXT) libceox_a-strchr.$(OBJEXT) \
+	libceox_a-strcmp.$(OBJEXT) libceox_a-strcpy.$(OBJEXT) \
+	libceox_a-strcspn.$(OBJEXT) libceox_a-strlen.$(OBJEXT) \
+	libceox_a-strnlen.$(OBJEXT) libceox_a-strncat.$(OBJEXT) \
+	libceox_a-strncmp.$(OBJEXT) libceox_a-strncpy.$(OBJEXT) \
+	libceox_a-strpbrk.$(OBJEXT) libceox_a-strrchr.$(OBJEXT) \
+	libceox_a-strsep.$(OBJEXT) libceox_a-strspn.$(OBJEXT) \
+	libceox_a-strstr.$(OBJEXT) libceox_a-strtok.$(OBJEXT) \
 	libceox_a-strxfrm.$(OBJEXT) libceox_a-c16rtomb.$(OBJEXT) \
 	libceox_a-c16stombs.$(OBJEXT) libceox_a-c32rtomb.$(OBJEXT) \
 	libceox_a-mbrtoc16.$(OBJEXT) libceox_a-mbrtoc32.$(OBJEXT) \
@@ -386,15 +386,15 @@ am__libcex_a_SOURCES_DIST = __assert.c isalnum.c isalpha.c isblank.c \
 	isspace.c isupper.c isxdigit.c tolower.c toupper.c errno.c \
 	fprintf.c fputc.c fputs.c getchar.c gets.c printf.c printfl.c \
 	putchar.c puts.c sprintf.c streams.c strmgpsim.c strmmssp.c \
-	strmusart.c vfprintf.c vprintf.c vsprintf.c _atof.c _ftoa.c \
+	strmusart.c vfprintf.c vprintf.c vsprintf.c atof.c _ftoa.c \
 	__itoa.c __ltoa.c abs.c aligned_alloc.c atoi.c atol.c \
 	bsearch.c _calloc.c free.c labs.c malloc.c mblen.c mbstowcs.c \
 	mbtowc.c memfree.c memfreemax.c memmisc.c qsort.c rand.c \
-	realloc.c strtol.c strtoul.c wcstombs.c wctomb.c _memchr.c \
-	_memcmp.c __memcpy.c memcpy.c _memmove.c _memset.c _strcat.c \
-	_strchr.c _strcmp.c _strcpy.c _strcspn.c strlen.c strnlen.c \
-	_strncat.c _strncmp.c _strncpy.c _strpbrk.c _strrchr.c \
-	strsep.c _strspn.c _strstr.c strtok.c strxfrm.c c16rtomb.c \
+	realloc.c strtol.c strtoul.c wcstombs.c wctomb.c memchr.c \
+	memcmp.c __memcpy.c memcpy.c memmove.c memset.c strcat.c \
+	strchr.c strcmp.c strcpy.c strcspn.c strlen.c strnlen.c \
+	strncat.c strncmp.c strncpy.c strpbrk.c strrchr.c \
+	strsep.c strspn.c strstr.c strtok.c strxfrm.c c16rtomb.c \
 	c16stombs.c c32rtomb.c mbrtoc16.c mbrtoc32.c mbstoc16s.c \
 	btowc.c mbrlen.c mbrtowc.c mbsinit.c wcrtomb.c wcscmp.c \
 	wcslen.c wctob.c
@@ -414,7 +414,7 @@ am__objects_4 = libcex_a-__assert.$(OBJEXT) libcex_a-isalnum.$(OBJEXT) \
 	libcex_a-streams.$(OBJEXT) libcex_a-strmgpsim.$(OBJEXT) \
 	libcex_a-strmmssp.$(OBJEXT) libcex_a-strmusart.$(OBJEXT) \
 	libcex_a-vfprintf.$(OBJEXT) libcex_a-vprintf.$(OBJEXT) \
-	libcex_a-vsprintf.$(OBJEXT) libcex_a-_atof.$(OBJEXT) \
+	libcex_a-vsprintf.$(OBJEXT) libcex_a-atof.$(OBJEXT) \
 	libcex_a-_ftoa.$(OBJEXT) libcex_a-__itoa.$(OBJEXT) \
 	libcex_a-__ltoa.$(OBJEXT) libcex_a-abs.$(OBJEXT) \
 	libcex_a-aligned_alloc.$(OBJEXT) libcex_a-atoi.$(OBJEXT) \
@@ -427,17 +427,17 @@ am__objects_4 = libcex_a-__assert.$(OBJEXT) libcex_a-isalnum.$(OBJEXT) \
 	libcex_a-qsort.$(OBJEXT) libcex_a-rand.$(OBJEXT) \
 	libcex_a-realloc.$(OBJEXT) libcex_a-strtol.$(OBJEXT) \
 	libcex_a-strtoul.$(OBJEXT) libcex_a-wcstombs.$(OBJEXT) \
-	libcex_a-wctomb.$(OBJEXT) libcex_a-_memchr.$(OBJEXT) \
-	libcex_a-_memcmp.$(OBJEXT) libcex_a-__memcpy.$(OBJEXT) \
-	libcex_a-memcpy.$(OBJEXT) libcex_a-_memmove.$(OBJEXT) \
-	libcex_a-_memset.$(OBJEXT) libcex_a-_strcat.$(OBJEXT) \
-	libcex_a-_strchr.$(OBJEXT) libcex_a-_strcmp.$(OBJEXT) \
-	libcex_a-_strcpy.$(OBJEXT) libcex_a-_strcspn.$(OBJEXT) \
+	libcex_a-wctomb.$(OBJEXT) libcex_a-memchr.$(OBJEXT) \
+	libcex_a-memcmp.$(OBJEXT) libcex_a-__memcpy.$(OBJEXT) \
+	libcex_a-memcpy.$(OBJEXT) libcex_a-memmove.$(OBJEXT) \
+	libcex_a-memset.$(OBJEXT) libcex_a-strcat.$(OBJEXT) \
+	libcex_a-strchr.$(OBJEXT) libcex_a-strcmp.$(OBJEXT) \
+	libcex_a-strcpy.$(OBJEXT) libcex_a-strcspn.$(OBJEXT) \
 	libcex_a-strlen.$(OBJEXT) libcex_a-strnlen.$(OBJEXT) \
-	libcex_a-_strncat.$(OBJEXT) libcex_a-_strncmp.$(OBJEXT) \
-	libcex_a-_strncpy.$(OBJEXT) libcex_a-_strpbrk.$(OBJEXT) \
-	libcex_a-_strrchr.$(OBJEXT) libcex_a-strsep.$(OBJEXT) \
-	libcex_a-_strspn.$(OBJEXT) libcex_a-_strstr.$(OBJEXT) \
+	libcex_a-strncat.$(OBJEXT) libcex_a-strncmp.$(OBJEXT) \
+	libcex_a-strncpy.$(OBJEXT) libcex_a-strpbrk.$(OBJEXT) \
+	libcex_a-strrchr.$(OBJEXT) libcex_a-strsep.$(OBJEXT) \
+	libcex_a-strspn.$(OBJEXT) libcex_a-strstr.$(OBJEXT) \
 	libcex_a-strtok.$(OBJEXT) libcex_a-strxfrm.$(OBJEXT) \
 	libcex_a-c16rtomb.$(OBJEXT) libcex_a-c16stombs.$(OBJEXT) \
 	libcex_a-c32rtomb.$(OBJEXT) libcex_a-mbrtoc16.$(OBJEXT) \
@@ -456,15 +456,15 @@ am__libco_a_SOURCES_DIST = __assert.c isalnum.c isalpha.c isblank.c \
 	isspace.c isupper.c isxdigit.c tolower.c toupper.c errno.c \
 	fprintf.c fputc.c fputs.c getchar.c gets.c printf.c printfl.c \
 	putchar.c puts.c sprintf.c streams.c strmgpsim.c strmmssp.c \
-	strmusart.c vfprintf.c vprintf.c vsprintf.c _atof.c _ftoa.c \
+	strmusart.c vfprintf.c vprintf.c vsprintf.c atof.c _ftoa.c \
 	__itoa.c __ltoa.c abs.c aligned_alloc.c atoi.c atol.c \
 	bsearch.c _calloc.c free.c labs.c malloc.c mblen.c mbstowcs.c \
 	mbtowc.c memfree.c memfreemax.c memmisc.c qsort.c rand.c \
-	realloc.c strtol.c strtoul.c wcstombs.c wctomb.c _memchr.c \
-	_memcmp.c __memcpy.c memcpy.c _memmove.c _memset.c _strcat.c \
-	_strchr.c _strcmp.c _strcpy.c _strcspn.c strlen.c strnlen.c \
-	_strncat.c _strncmp.c _strncpy.c _strpbrk.c _strrchr.c \
-	strsep.c _strspn.c _strstr.c strtok.c strxfrm.c c16rtomb.c \
+	realloc.c strtol.c strtoul.c wcstombs.c wctomb.c memchr.c \
+	memcmp.c __memcpy.c memcpy.c memmove.c memset.c strcat.c \
+	strchr.c strcmp.c strcpy.c strcspn.c strlen.c strnlen.c \
+	strncat.c strncmp.c strncpy.c strpbrk.c strrchr.c \
+	strsep.c strspn.c strstr.c strtok.c strxfrm.c c16rtomb.c \
 	c16stombs.c c32rtomb.c mbrtoc16.c mbrtoc32.c mbstoc16s.c \
 	btowc.c mbrlen.c mbrtowc.c mbsinit.c wcrtomb.c wcscmp.c \
 	wcslen.c wctob.c
@@ -484,7 +484,7 @@ am__objects_5 = libco_a-__assert.$(OBJEXT) libco_a-isalnum.$(OBJEXT) \
 	libco_a-streams.$(OBJEXT) libco_a-strmgpsim.$(OBJEXT) \
 	libco_a-strmmssp.$(OBJEXT) libco_a-strmusart.$(OBJEXT) \
 	libco_a-vfprintf.$(OBJEXT) libco_a-vprintf.$(OBJEXT) \
-	libco_a-vsprintf.$(OBJEXT) libco_a-_atof.$(OBJEXT) \
+	libco_a-vsprintf.$(OBJEXT) libco_a-atof.$(OBJEXT) \
 	libco_a-_ftoa.$(OBJEXT) libco_a-__itoa.$(OBJEXT) \
 	libco_a-__ltoa.$(OBJEXT) libco_a-abs.$(OBJEXT) \
 	libco_a-aligned_alloc.$(OBJEXT) libco_a-atoi.$(OBJEXT) \
@@ -497,17 +497,17 @@ am__objects_5 = libco_a-__assert.$(OBJEXT) libco_a-isalnum.$(OBJEXT) \
 	libco_a-qsort.$(OBJEXT) libco_a-rand.$(OBJEXT) \
 	libco_a-realloc.$(OBJEXT) libco_a-strtol.$(OBJEXT) \
 	libco_a-strtoul.$(OBJEXT) libco_a-wcstombs.$(OBJEXT) \
-	libco_a-wctomb.$(OBJEXT) libco_a-_memchr.$(OBJEXT) \
-	libco_a-_memcmp.$(OBJEXT) libco_a-__memcpy.$(OBJEXT) \
-	libco_a-memcpy.$(OBJEXT) libco_a-_memmove.$(OBJEXT) \
-	libco_a-_memset.$(OBJEXT) libco_a-_strcat.$(OBJEXT) \
-	libco_a-_strchr.$(OBJEXT) libco_a-_strcmp.$(OBJEXT) \
-	libco_a-_strcpy.$(OBJEXT) libco_a-_strcspn.$(OBJEXT) \
+	libco_a-wctomb.$(OBJEXT) libco_a-memchr.$(OBJEXT) \
+	libco_a-memcmp.$(OBJEXT) libco_a-__memcpy.$(OBJEXT) \
+	libco_a-memcpy.$(OBJEXT) libco_a-memmove.$(OBJEXT) \
+	libco_a-memset.$(OBJEXT) libco_a-strcat.$(OBJEXT) \
+	libco_a-strchr.$(OBJEXT) libco_a-strcmp.$(OBJEXT) \
+	libco_a-strcpy.$(OBJEXT) libco_a-strcspn.$(OBJEXT) \
 	libco_a-strlen.$(OBJEXT) libco_a-strnlen.$(OBJEXT) \
-	libco_a-_strncat.$(OBJEXT) libco_a-_strncmp.$(OBJEXT) \
-	libco_a-_strncpy.$(OBJEXT) libco_a-_strpbrk.$(OBJEXT) \
-	libco_a-_strrchr.$(OBJEXT) libco_a-strsep.$(OBJEXT) \
-	libco_a-_strspn.$(OBJEXT) libco_a-_strstr.$(OBJEXT) \
+	libco_a-strncat.$(OBJEXT) libco_a-strncmp.$(OBJEXT) \
+	libco_a-strncpy.$(OBJEXT) libco_a-strpbrk.$(OBJEXT) \
+	libco_a-strrchr.$(OBJEXT) libco_a-strsep.$(OBJEXT) \
+	libco_a-strspn.$(OBJEXT) libco_a-strstr.$(OBJEXT) \
 	libco_a-strtok.$(OBJEXT) libco_a-strxfrm.$(OBJEXT) \
 	libco_a-c16rtomb.$(OBJEXT) libco_a-c16stombs.$(OBJEXT) \
 	libco_a-c32rtomb.$(OBJEXT) libco_a-mbrtoc16.$(OBJEXT) \
@@ -526,15 +526,15 @@ am__libcox_a_SOURCES_DIST = __assert.c isalnum.c isalpha.c isblank.c \
 	isspace.c isupper.c isxdigit.c tolower.c toupper.c errno.c \
 	fprintf.c fputc.c fputs.c getchar.c gets.c printf.c printfl.c \
 	putchar.c puts.c sprintf.c streams.c strmgpsim.c strmmssp.c \
-	strmusart.c vfprintf.c vprintf.c vsprintf.c _atof.c _ftoa.c \
+	strmusart.c vfprintf.c vprintf.c vsprintf.c atof.c _ftoa.c \
 	__itoa.c __ltoa.c abs.c aligned_alloc.c atoi.c atol.c \
 	bsearch.c _calloc.c free.c labs.c malloc.c mblen.c mbstowcs.c \
 	mbtowc.c memfree.c memfreemax.c memmisc.c qsort.c rand.c \
-	realloc.c strtol.c strtoul.c wcstombs.c wctomb.c _memchr.c \
-	_memcmp.c __memcpy.c memcpy.c _memmove.c _memset.c _strcat.c \
-	_strchr.c _strcmp.c _strcpy.c _strcspn.c strlen.c strnlen.c \
-	_strncat.c _strncmp.c _strncpy.c _strpbrk.c _strrchr.c \
-	strsep.c _strspn.c _strstr.c strtok.c strxfrm.c c16rtomb.c \
+	realloc.c strtol.c strtoul.c wcstombs.c wctomb.c memchr.c \
+	memcmp.c __memcpy.c memcpy.c memmove.c memset.c strcat.c \
+	strchr.c strcmp.c strcpy.c strcspn.c strlen.c strnlen.c \
+	strncat.c strncmp.c strncpy.c strpbrk.c strrchr.c \
+	strsep.c strspn.c strstr.c strtok.c strxfrm.c c16rtomb.c \
 	c16stombs.c c32rtomb.c mbrtoc16.c mbrtoc32.c mbstoc16s.c \
 	btowc.c mbrlen.c mbrtowc.c mbsinit.c wcrtomb.c wcscmp.c \
 	wcslen.c wctob.c
@@ -554,7 +554,7 @@ am__objects_6 = libcox_a-__assert.$(OBJEXT) libcox_a-isalnum.$(OBJEXT) \
 	libcox_a-streams.$(OBJEXT) libcox_a-strmgpsim.$(OBJEXT) \
 	libcox_a-strmmssp.$(OBJEXT) libcox_a-strmusart.$(OBJEXT) \
 	libcox_a-vfprintf.$(OBJEXT) libcox_a-vprintf.$(OBJEXT) \
-	libcox_a-vsprintf.$(OBJEXT) libcox_a-_atof.$(OBJEXT) \
+	libcox_a-vsprintf.$(OBJEXT) libcox_a-atof.$(OBJEXT) \
 	libcox_a-_ftoa.$(OBJEXT) libcox_a-__itoa.$(OBJEXT) \
 	libcox_a-__ltoa.$(OBJEXT) libcox_a-abs.$(OBJEXT) \
 	libcox_a-aligned_alloc.$(OBJEXT) libcox_a-atoi.$(OBJEXT) \
@@ -567,17 +567,17 @@ am__objects_6 = libcox_a-__assert.$(OBJEXT) libcox_a-isalnum.$(OBJEXT) \
 	libcox_a-qsort.$(OBJEXT) libcox_a-rand.$(OBJEXT) \
 	libcox_a-realloc.$(OBJEXT) libcox_a-strtol.$(OBJEXT) \
 	libcox_a-strtoul.$(OBJEXT) libcox_a-wcstombs.$(OBJEXT) \
-	libcox_a-wctomb.$(OBJEXT) libcox_a-_memchr.$(OBJEXT) \
-	libcox_a-_memcmp.$(OBJEXT) libcox_a-__memcpy.$(OBJEXT) \
-	libcox_a-memcpy.$(OBJEXT) libcox_a-_memmove.$(OBJEXT) \
-	libcox_a-_memset.$(OBJEXT) libcox_a-_strcat.$(OBJEXT) \
-	libcox_a-_strchr.$(OBJEXT) libcox_a-_strcmp.$(OBJEXT) \
-	libcox_a-_strcpy.$(OBJEXT) libcox_a-_strcspn.$(OBJEXT) \
+	libcox_a-wctomb.$(OBJEXT) libcox_a-memchr.$(OBJEXT) \
+	libcox_a-memcmp.$(OBJEXT) libcox_a-__memcpy.$(OBJEXT) \
+	libcox_a-memcpy.$(OBJEXT) libcox_a-memmove.$(OBJEXT) \
+	libcox_a-memset.$(OBJEXT) libcox_a-strcat.$(OBJEXT) \
+	libcox_a-strchr.$(OBJEXT) libcox_a-strcmp.$(OBJEXT) \
+	libcox_a-strcpy.$(OBJEXT) libcox_a-strcspn.$(OBJEXT) \
 	libcox_a-strlen.$(OBJEXT) libcox_a-strnlen.$(OBJEXT) \
-	libcox_a-_strncat.$(OBJEXT) libcox_a-_strncmp.$(OBJEXT) \
-	libcox_a-_strncpy.$(OBJEXT) libcox_a-_strpbrk.$(OBJEXT) \
-	libcox_a-_strrchr.$(OBJEXT) libcox_a-strsep.$(OBJEXT) \
-	libcox_a-_strspn.$(OBJEXT) libcox_a-_strstr.$(OBJEXT) \
+	libcox_a-strncat.$(OBJEXT) libcox_a-strncmp.$(OBJEXT) \
+	libcox_a-strncpy.$(OBJEXT) libcox_a-strpbrk.$(OBJEXT) \
+	libcox_a-strrchr.$(OBJEXT) libcox_a-strsep.$(OBJEXT) \
+	libcox_a-strspn.$(OBJEXT) libcox_a-strstr.$(OBJEXT) \
 	libcox_a-strtok.$(OBJEXT) libcox_a-strxfrm.$(OBJEXT) \
 	libcox_a-c16rtomb.$(OBJEXT) libcox_a-c16stombs.$(OBJEXT) \
 	libcox_a-c32rtomb.$(OBJEXT) libcox_a-mbrtoc16.$(OBJEXT) \
@@ -596,15 +596,15 @@ am__libcx_a_SOURCES_DIST = __assert.c isalnum.c isalpha.c isblank.c \
 	isspace.c isupper.c isxdigit.c tolower.c toupper.c errno.c \
 	fprintf.c fputc.c fputs.c getchar.c gets.c printf.c printfl.c \
 	putchar.c puts.c sprintf.c streams.c strmgpsim.c strmmssp.c \
-	strmusart.c vfprintf.c vprintf.c vsprintf.c _atof.c _ftoa.c \
+	strmusart.c vfprintf.c vprintf.c vsprintf.c atof.c _ftoa.c \
 	__itoa.c __ltoa.c abs.c aligned_alloc.c atoi.c atol.c \
 	bsearch.c _calloc.c free.c labs.c malloc.c mblen.c mbstowcs.c \
 	mbtowc.c memfree.c memfreemax.c memmisc.c qsort.c rand.c \
-	realloc.c strtol.c strtoul.c wcstombs.c wctomb.c _memchr.c \
-	_memcmp.c __memcpy.c memcpy.c _memmove.c _memset.c _strcat.c \
-	_strchr.c _strcmp.c _strcpy.c _strcspn.c strlen.c strnlen.c \
-	_strncat.c _strncmp.c _strncpy.c _strpbrk.c _strrchr.c \
-	strsep.c _strspn.c _strstr.c strtok.c strxfrm.c c16rtomb.c \
+	realloc.c strtol.c strtoul.c wcstombs.c wctomb.c memchr.c \
+	memcmp.c __memcpy.c memcpy.c memmove.c memset.c strcat.c \
+	strchr.c strcmp.c strcpy.c strcspn.c strlen.c strnlen.c \
+	strncat.c strncmp.c strncpy.c strpbrk.c strrchr.c \
+	strsep.c strspn.c strstr.c strtok.c strxfrm.c c16rtomb.c \
 	c16stombs.c c32rtomb.c mbrtoc16.c mbrtoc32.c mbstoc16s.c \
 	btowc.c mbrlen.c mbrtowc.c mbsinit.c wcrtomb.c wcscmp.c \
 	wcslen.c wctob.c
@@ -624,7 +624,7 @@ am__objects_7 = libcx_a-__assert.$(OBJEXT) libcx_a-isalnum.$(OBJEXT) \
 	libcx_a-streams.$(OBJEXT) libcx_a-strmgpsim.$(OBJEXT) \
 	libcx_a-strmmssp.$(OBJEXT) libcx_a-strmusart.$(OBJEXT) \
 	libcx_a-vfprintf.$(OBJEXT) libcx_a-vprintf.$(OBJEXT) \
-	libcx_a-vsprintf.$(OBJEXT) libcx_a-_atof.$(OBJEXT) \
+	libcx_a-vsprintf.$(OBJEXT) libcx_a-atof.$(OBJEXT) \
 	libcx_a-_ftoa.$(OBJEXT) libcx_a-__itoa.$(OBJEXT) \
 	libcx_a-__ltoa.$(OBJEXT) libcx_a-abs.$(OBJEXT) \
 	libcx_a-aligned_alloc.$(OBJEXT) libcx_a-atoi.$(OBJEXT) \
@@ -637,17 +637,17 @@ am__objects_7 = libcx_a-__assert.$(OBJEXT) libcx_a-isalnum.$(OBJEXT) \
 	libcx_a-qsort.$(OBJEXT) libcx_a-rand.$(OBJEXT) \
 	libcx_a-realloc.$(OBJEXT) libcx_a-strtol.$(OBJEXT) \
 	libcx_a-strtoul.$(OBJEXT) libcx_a-wcstombs.$(OBJEXT) \
-	libcx_a-wctomb.$(OBJEXT) libcx_a-_memchr.$(OBJEXT) \
-	libcx_a-_memcmp.$(OBJEXT) libcx_a-__memcpy.$(OBJEXT) \
-	libcx_a-memcpy.$(OBJEXT) libcx_a-_memmove.$(OBJEXT) \
-	libcx_a-_memset.$(OBJEXT) libcx_a-_strcat.$(OBJEXT) \
-	libcx_a-_strchr.$(OBJEXT) libcx_a-_strcmp.$(OBJEXT) \
-	libcx_a-_strcpy.$(OBJEXT) libcx_a-_strcspn.$(OBJEXT) \
+	libcx_a-wctomb.$(OBJEXT) libcx_a-memchr.$(OBJEXT) \
+	libcx_a-memcmp.$(OBJEXT) libcx_a-__memcpy.$(OBJEXT) \
+	libcx_a-memcpy.$(OBJEXT) libcx_a-memmove.$(OBJEXT) \
+	libcx_a-memset.$(OBJEXT) libcx_a-strcat.$(OBJEXT) \
+	libcx_a-strchr.$(OBJEXT) libcx_a-strcmp.$(OBJEXT) \
+	libcx_a-strcpy.$(OBJEXT) libcx_a-strcspn.$(OBJEXT) \
 	libcx_a-strlen.$(OBJEXT) libcx_a-strnlen.$(OBJEXT) \
-	libcx_a-_strncat.$(OBJEXT) libcx_a-_strncmp.$(OBJEXT) \
-	libcx_a-_strncpy.$(OBJEXT) libcx_a-_strpbrk.$(OBJEXT) \
-	libcx_a-_strrchr.$(OBJEXT) libcx_a-strsep.$(OBJEXT) \
-	libcx_a-_strspn.$(OBJEXT) libcx_a-_strstr.$(OBJEXT) \
+	libcx_a-strncat.$(OBJEXT) libcx_a-strncmp.$(OBJEXT) \
+	libcx_a-strncpy.$(OBJEXT) libcx_a-strpbrk.$(OBJEXT) \
+	libcx_a-strrchr.$(OBJEXT) libcx_a-strsep.$(OBJEXT) \
+	libcx_a-strspn.$(OBJEXT) libcx_a-strstr.$(OBJEXT) \
 	libcx_a-strtok.$(OBJEXT) libcx_a-strxfrm.$(OBJEXT) \
 	libcx_a-c16rtomb.$(OBJEXT) libcx_a-c16stombs.$(OBJEXT) \
 	libcx_a-c32rtomb.$(OBJEXT) libcx_a-mbrtoc16.$(OBJEXT) \
@@ -847,15 +847,15 @@ libc_a_SOURCES = __assert.c isalnum.c isalpha.c isblank.c iscntrl.c \
 	isupper.c isxdigit.c tolower.c toupper.c errno.c fprintf.c \
 	fputc.c fputs.c getchar.c gets.c printf.c printfl.c putchar.c \
 	puts.c sprintf.c streams.c strmgpsim.c strmmssp.c strmusart.c \
-	vfprintf.c vprintf.c vsprintf.c _atof.c _ftoa.c __itoa.c \
+	vfprintf.c vprintf.c vsprintf.c atof.c _ftoa.c __itoa.c \
 	__ltoa.c abs.c aligned_alloc.c atoi.c atol.c bsearch.c \
 	_calloc.c free.c labs.c malloc.c mblen.c mbstowcs.c mbtowc.c \
 	memfree.c memfreemax.c memmisc.c qsort.c rand.c realloc.c \
-	strtol.c strtoul.c wcstombs.c wctomb.c _memchr.c _memcmp.c \
-	__memcpy.c memcpy.c _memmove.c _memset.c _strcat.c _strchr.c \
-	_strcmp.c _strcpy.c _strcspn.c strlen.c strnlen.c _strncat.c \
-	_strncmp.c _strncpy.c _strpbrk.c _strrchr.c strsep.c _strspn.c \
-	_strstr.c strtok.c strxfrm.c c16rtomb.c c16stombs.c c32rtomb.c \
+	strtol.c strtoul.c wcstombs.c wctomb.c memchr.c memcmp.c \
+	__memcpy.c memcpy.c memmove.c memset.c strcat.c strchr.c \
+	strcmp.c strcpy.c strcspn.c strlen.c strnlen.c strncat.c \
+	strncmp.c strncpy.c strpbrk.c strrchr.c strsep.c strspn.c \
+	strstr.c strtok.c strxfrm.c c16rtomb.c c16stombs.c c32rtomb.c \
 	mbrtoc16.c mbrtoc32.c mbstoc16s.c btowc.c mbrlen.c mbrtowc.c \
 	mbsinit.c wcrtomb.c wcscmp.c wcslen.c wctob.c
 libc_a_CFLAGS = $(AM_CFLAGS)
@@ -1231,11 +1231,11 @@ libc_a-vsprintf.o: vsprintf.c
 libc_a-vsprintf.obj: vsprintf.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-vsprintf.obj `if test -f 'vsprintf.c'; then $(CYGPATH_W) 'vsprintf.c'; else $(CYGPATH_W) '$(srcdir)/vsprintf.c'; fi`
 
-libc_a-_atof.o: _atof.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-_atof.o `test -f '_atof.c' || echo '$(srcdir)/'`_atof.c
+libc_a-atof.o: atof.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-atof.o `test -f 'atof.c' || echo '$(srcdir)/'`atof.c
 
-libc_a-_atof.obj: _atof.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-_atof.obj `if test -f '_atof.c'; then $(CYGPATH_W) '_atof.c'; else $(CYGPATH_W) '$(srcdir)/_atof.c'; fi`
+libc_a-atof.obj: atof.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-atof.obj `if test -f 'atof.c'; then $(CYGPATH_W) 'atof.c'; else $(CYGPATH_W) '$(srcdir)/atof.c'; fi`
 
 libc_a-_ftoa.o: _ftoa.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-_ftoa.o `test -f '_ftoa.c' || echo '$(srcdir)/'`_ftoa.c
@@ -1387,17 +1387,17 @@ libc_a-wctomb.o: wctomb.c
 libc_a-wctomb.obj: wctomb.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-wctomb.obj `if test -f 'wctomb.c'; then $(CYGPATH_W) 'wctomb.c'; else $(CYGPATH_W) '$(srcdir)/wctomb.c'; fi`
 
-libc_a-_memchr.o: _memchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-_memchr.o `test -f '_memchr.c' || echo '$(srcdir)/'`_memchr.c
+libc_a-memchr.o: memchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-memchr.o `test -f 'memchr.c' || echo '$(srcdir)/'`memchr.c
 
-libc_a-_memchr.obj: _memchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-_memchr.obj `if test -f '_memchr.c'; then $(CYGPATH_W) '_memchr.c'; else $(CYGPATH_W) '$(srcdir)/_memchr.c'; fi`
+libc_a-memchr.obj: memchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-memchr.obj `if test -f 'memchr.c'; then $(CYGPATH_W) 'memchr.c'; else $(CYGPATH_W) '$(srcdir)/memchr.c'; fi`
 
-libc_a-_memcmp.o: _memcmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-_memcmp.o `test -f '_memcmp.c' || echo '$(srcdir)/'`_memcmp.c
+libc_a-memcmp.o: memcmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-memcmp.o `test -f 'memcmp.c' || echo '$(srcdir)/'`memcmp.c
 
-libc_a-_memcmp.obj: _memcmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-_memcmp.obj `if test -f '_memcmp.c'; then $(CYGPATH_W) '_memcmp.c'; else $(CYGPATH_W) '$(srcdir)/_memcmp.c'; fi`
+libc_a-memcmp.obj: memcmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-memcmp.obj `if test -f 'memcmp.c'; then $(CYGPATH_W) 'memcmp.c'; else $(CYGPATH_W) '$(srcdir)/memcmp.c'; fi`
 
 libc_a-__memcpy.o: __memcpy.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-__memcpy.o `test -f '__memcpy.c' || echo '$(srcdir)/'`__memcpy.c
@@ -1411,47 +1411,47 @@ libc_a-memcpy.o: memcpy.c
 libc_a-memcpy.obj: memcpy.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-memcpy.obj `if test -f 'memcpy.c'; then $(CYGPATH_W) 'memcpy.c'; else $(CYGPATH_W) '$(srcdir)/memcpy.c'; fi`
 
-libc_a-_memmove.o: _memmove.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-_memmove.o `test -f '_memmove.c' || echo '$(srcdir)/'`_memmove.c
+libc_a-memmove.o: memmove.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-memmove.o `test -f 'memmove.c' || echo '$(srcdir)/'`memmove.c
 
-libc_a-_memmove.obj: _memmove.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-_memmove.obj `if test -f '_memmove.c'; then $(CYGPATH_W) '_memmove.c'; else $(CYGPATH_W) '$(srcdir)/_memmove.c'; fi`
+libc_a-memmove.obj: memmove.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-memmove.obj `if test -f 'memmove.c'; then $(CYGPATH_W) 'memmove.c'; else $(CYGPATH_W) '$(srcdir)/memmove.c'; fi`
 
-libc_a-_memset.o: _memset.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-_memset.o `test -f '_memset.c' || echo '$(srcdir)/'`_memset.c
+libc_a-memset.o: memset.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-memset.o `test -f 'memset.c' || echo '$(srcdir)/'`memset.c
 
-libc_a-_memset.obj: _memset.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-_memset.obj `if test -f '_memset.c'; then $(CYGPATH_W) '_memset.c'; else $(CYGPATH_W) '$(srcdir)/_memset.c'; fi`
+libc_a-memset.obj: memset.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-memset.obj `if test -f 'memset.c'; then $(CYGPATH_W) 'memset.c'; else $(CYGPATH_W) '$(srcdir)/memset.c'; fi`
 
-libc_a-_strcat.o: _strcat.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-_strcat.o `test -f '_strcat.c' || echo '$(srcdir)/'`_strcat.c
+libc_a-strcat.o: strcat.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-strcat.o `test -f 'strcat.c' || echo '$(srcdir)/'`strcat.c
 
-libc_a-_strcat.obj: _strcat.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-_strcat.obj `if test -f '_strcat.c'; then $(CYGPATH_W) '_strcat.c'; else $(CYGPATH_W) '$(srcdir)/_strcat.c'; fi`
+libc_a-strcat.obj: strcat.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-strcat.obj `if test -f 'strcat.c'; then $(CYGPATH_W) 'strcat.c'; else $(CYGPATH_W) '$(srcdir)/strcat.c'; fi`
 
-libc_a-_strchr.o: _strchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-_strchr.o `test -f '_strchr.c' || echo '$(srcdir)/'`_strchr.c
+libc_a-strchr.o: strchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-strchr.o `test -f 'strchr.c' || echo '$(srcdir)/'`strchr.c
 
-libc_a-_strchr.obj: _strchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-_strchr.obj `if test -f '_strchr.c'; then $(CYGPATH_W) '_strchr.c'; else $(CYGPATH_W) '$(srcdir)/_strchr.c'; fi`
+libc_a-strchr.obj: strchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-strchr.obj `if test -f 'strchr.c'; then $(CYGPATH_W) 'strchr.c'; else $(CYGPATH_W) '$(srcdir)/strchr.c'; fi`
 
-libc_a-_strcmp.o: _strcmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-_strcmp.o `test -f '_strcmp.c' || echo '$(srcdir)/'`_strcmp.c
+libc_a-strcmp.o: strcmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-strcmp.o `test -f 'strcmp.c' || echo '$(srcdir)/'`strcmp.c
 
-libc_a-_strcmp.obj: _strcmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-_strcmp.obj `if test -f '_strcmp.c'; then $(CYGPATH_W) '_strcmp.c'; else $(CYGPATH_W) '$(srcdir)/_strcmp.c'; fi`
+libc_a-strcmp.obj: strcmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-strcmp.obj `if test -f 'strcmp.c'; then $(CYGPATH_W) 'strcmp.c'; else $(CYGPATH_W) '$(srcdir)/strcmp.c'; fi`
 
-libc_a-_strcpy.o: _strcpy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-_strcpy.o `test -f '_strcpy.c' || echo '$(srcdir)/'`_strcpy.c
+libc_a-strcpy.o: strcpy.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-strcpy.o `test -f 'strcpy.c' || echo '$(srcdir)/'`strcpy.c
 
-libc_a-_strcpy.obj: _strcpy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-_strcpy.obj `if test -f '_strcpy.c'; then $(CYGPATH_W) '_strcpy.c'; else $(CYGPATH_W) '$(srcdir)/_strcpy.c'; fi`
+libc_a-strcpy.obj: strcpy.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-strcpy.obj `if test -f 'strcpy.c'; then $(CYGPATH_W) 'strcpy.c'; else $(CYGPATH_W) '$(srcdir)/strcpy.c'; fi`
 
-libc_a-_strcspn.o: _strcspn.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-_strcspn.o `test -f '_strcspn.c' || echo '$(srcdir)/'`_strcspn.c
+libc_a-strcspn.o: strcspn.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-strcspn.o `test -f 'strcspn.c' || echo '$(srcdir)/'`strcspn.c
 
-libc_a-_strcspn.obj: _strcspn.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-_strcspn.obj `if test -f '_strcspn.c'; then $(CYGPATH_W) '_strcspn.c'; else $(CYGPATH_W) '$(srcdir)/_strcspn.c'; fi`
+libc_a-strcspn.obj: strcspn.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-strcspn.obj `if test -f 'strcspn.c'; then $(CYGPATH_W) 'strcspn.c'; else $(CYGPATH_W) '$(srcdir)/strcspn.c'; fi`
 
 libc_a-strlen.o: strlen.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-strlen.o `test -f 'strlen.c' || echo '$(srcdir)/'`strlen.c
@@ -1465,35 +1465,35 @@ libc_a-strnlen.o: strnlen.c
 libc_a-strnlen.obj: strnlen.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-strnlen.obj `if test -f 'strnlen.c'; then $(CYGPATH_W) 'strnlen.c'; else $(CYGPATH_W) '$(srcdir)/strnlen.c'; fi`
 
-libc_a-_strncat.o: _strncat.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-_strncat.o `test -f '_strncat.c' || echo '$(srcdir)/'`_strncat.c
+libc_a-strncat.o: strncat.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-strncat.o `test -f 'strncat.c' || echo '$(srcdir)/'`strncat.c
 
-libc_a-_strncat.obj: _strncat.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-_strncat.obj `if test -f '_strncat.c'; then $(CYGPATH_W) '_strncat.c'; else $(CYGPATH_W) '$(srcdir)/_strncat.c'; fi`
+libc_a-strncat.obj: strncat.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-strncat.obj `if test -f 'strncat.c'; then $(CYGPATH_W) 'strncat.c'; else $(CYGPATH_W) '$(srcdir)/strncat.c'; fi`
 
-libc_a-_strncmp.o: _strncmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-_strncmp.o `test -f '_strncmp.c' || echo '$(srcdir)/'`_strncmp.c
+libc_a-strncmp.o: strncmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-strncmp.o `test -f 'strncmp.c' || echo '$(srcdir)/'`strncmp.c
 
-libc_a-_strncmp.obj: _strncmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-_strncmp.obj `if test -f '_strncmp.c'; then $(CYGPATH_W) '_strncmp.c'; else $(CYGPATH_W) '$(srcdir)/_strncmp.c'; fi`
+libc_a-strncmp.obj: strncmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-strncmp.obj `if test -f 'strncmp.c'; then $(CYGPATH_W) 'strncmp.c'; else $(CYGPATH_W) '$(srcdir)/strncmp.c'; fi`
 
-libc_a-_strncpy.o: _strncpy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-_strncpy.o `test -f '_strncpy.c' || echo '$(srcdir)/'`_strncpy.c
+libc_a-strncpy.o: strncpy.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-strncpy.o `test -f 'strncpy.c' || echo '$(srcdir)/'`strncpy.c
 
-libc_a-_strncpy.obj: _strncpy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-_strncpy.obj `if test -f '_strncpy.c'; then $(CYGPATH_W) '_strncpy.c'; else $(CYGPATH_W) '$(srcdir)/_strncpy.c'; fi`
+libc_a-strncpy.obj: strncpy.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-strncpy.obj `if test -f 'strncpy.c'; then $(CYGPATH_W) 'strncpy.c'; else $(CYGPATH_W) '$(srcdir)/strncpy.c'; fi`
 
-libc_a-_strpbrk.o: _strpbrk.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-_strpbrk.o `test -f '_strpbrk.c' || echo '$(srcdir)/'`_strpbrk.c
+libc_a-strpbrk.o: strpbrk.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-strpbrk.o `test -f 'strpbrk.c' || echo '$(srcdir)/'`strpbrk.c
 
-libc_a-_strpbrk.obj: _strpbrk.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-_strpbrk.obj `if test -f '_strpbrk.c'; then $(CYGPATH_W) '_strpbrk.c'; else $(CYGPATH_W) '$(srcdir)/_strpbrk.c'; fi`
+libc_a-strpbrk.obj: strpbrk.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-strpbrk.obj `if test -f 'strpbrk.c'; then $(CYGPATH_W) 'strpbrk.c'; else $(CYGPATH_W) '$(srcdir)/strpbrk.c'; fi`
 
-libc_a-_strrchr.o: _strrchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-_strrchr.o `test -f '_strrchr.c' || echo '$(srcdir)/'`_strrchr.c
+libc_a-strrchr.o: strrchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-strrchr.o `test -f 'strrchr.c' || echo '$(srcdir)/'`strrchr.c
 
-libc_a-_strrchr.obj: _strrchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-_strrchr.obj `if test -f '_strrchr.c'; then $(CYGPATH_W) '_strrchr.c'; else $(CYGPATH_W) '$(srcdir)/_strrchr.c'; fi`
+libc_a-strrchr.obj: strrchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-strrchr.obj `if test -f 'strrchr.c'; then $(CYGPATH_W) 'strrchr.c'; else $(CYGPATH_W) '$(srcdir)/strrchr.c'; fi`
 
 libc_a-strsep.o: strsep.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-strsep.o `test -f 'strsep.c' || echo '$(srcdir)/'`strsep.c
@@ -1501,17 +1501,17 @@ libc_a-strsep.o: strsep.c
 libc_a-strsep.obj: strsep.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-strsep.obj `if test -f 'strsep.c'; then $(CYGPATH_W) 'strsep.c'; else $(CYGPATH_W) '$(srcdir)/strsep.c'; fi`
 
-libc_a-_strspn.o: _strspn.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-_strspn.o `test -f '_strspn.c' || echo '$(srcdir)/'`_strspn.c
+libc_a-strspn.o: strspn.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-strspn.o `test -f 'strspn.c' || echo '$(srcdir)/'`strspn.c
 
-libc_a-_strspn.obj: _strspn.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-_strspn.obj `if test -f '_strspn.c'; then $(CYGPATH_W) '_strspn.c'; else $(CYGPATH_W) '$(srcdir)/_strspn.c'; fi`
+libc_a-strspn.obj: strspn.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-strspn.obj `if test -f 'strspn.c'; then $(CYGPATH_W) 'strspn.c'; else $(CYGPATH_W) '$(srcdir)/strspn.c'; fi`
 
-libc_a-_strstr.o: _strstr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-_strstr.o `test -f '_strstr.c' || echo '$(srcdir)/'`_strstr.c
+libc_a-strstr.o: strstr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-strstr.o `test -f 'strstr.c' || echo '$(srcdir)/'`strstr.c
 
-libc_a-_strstr.obj: _strstr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-_strstr.obj `if test -f '_strstr.c'; then $(CYGPATH_W) '_strstr.c'; else $(CYGPATH_W) '$(srcdir)/_strstr.c'; fi`
+libc_a-strstr.obj: strstr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-strstr.obj `if test -f 'strstr.c'; then $(CYGPATH_W) 'strstr.c'; else $(CYGPATH_W) '$(srcdir)/strstr.c'; fi`
 
 libc_a-strtok.o: strtok.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc_a-strtok.o `test -f 'strtok.c' || echo '$(srcdir)/'`strtok.c
@@ -1807,11 +1807,11 @@ libce_a-vsprintf.o: vsprintf.c
 libce_a-vsprintf.obj: vsprintf.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-vsprintf.obj `if test -f 'vsprintf.c'; then $(CYGPATH_W) 'vsprintf.c'; else $(CYGPATH_W) '$(srcdir)/vsprintf.c'; fi`
 
-libce_a-_atof.o: _atof.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-_atof.o `test -f '_atof.c' || echo '$(srcdir)/'`_atof.c
+libce_a-atof.o: atof.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-atof.o `test -f 'atof.c' || echo '$(srcdir)/'`atof.c
 
-libce_a-_atof.obj: _atof.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-_atof.obj `if test -f '_atof.c'; then $(CYGPATH_W) '_atof.c'; else $(CYGPATH_W) '$(srcdir)/_atof.c'; fi`
+libce_a-atof.obj: atof.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-atof.obj `if test -f 'atof.c'; then $(CYGPATH_W) 'atof.c'; else $(CYGPATH_W) '$(srcdir)/atof.c'; fi`
 
 libce_a-_ftoa.o: _ftoa.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-_ftoa.o `test -f '_ftoa.c' || echo '$(srcdir)/'`_ftoa.c
@@ -1963,17 +1963,17 @@ libce_a-wctomb.o: wctomb.c
 libce_a-wctomb.obj: wctomb.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-wctomb.obj `if test -f 'wctomb.c'; then $(CYGPATH_W) 'wctomb.c'; else $(CYGPATH_W) '$(srcdir)/wctomb.c'; fi`
 
-libce_a-_memchr.o: _memchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-_memchr.o `test -f '_memchr.c' || echo '$(srcdir)/'`_memchr.c
+libce_a-memchr.o: memchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-memchr.o `test -f 'memchr.c' || echo '$(srcdir)/'`memchr.c
 
-libce_a-_memchr.obj: _memchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-_memchr.obj `if test -f '_memchr.c'; then $(CYGPATH_W) '_memchr.c'; else $(CYGPATH_W) '$(srcdir)/_memchr.c'; fi`
+libce_a-memchr.obj: memchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-memchr.obj `if test -f 'memchr.c'; then $(CYGPATH_W) 'memchr.c'; else $(CYGPATH_W) '$(srcdir)/memchr.c'; fi`
 
-libce_a-_memcmp.o: _memcmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-_memcmp.o `test -f '_memcmp.c' || echo '$(srcdir)/'`_memcmp.c
+libce_a-memcmp.o: memcmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-memcmp.o `test -f 'memcmp.c' || echo '$(srcdir)/'`memcmp.c
 
-libce_a-_memcmp.obj: _memcmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-_memcmp.obj `if test -f '_memcmp.c'; then $(CYGPATH_W) '_memcmp.c'; else $(CYGPATH_W) '$(srcdir)/_memcmp.c'; fi`
+libce_a-memcmp.obj: memcmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-memcmp.obj `if test -f 'memcmp.c'; then $(CYGPATH_W) 'memcmp.c'; else $(CYGPATH_W) '$(srcdir)/memcmp.c'; fi`
 
 libce_a-__memcpy.o: __memcpy.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-__memcpy.o `test -f '__memcpy.c' || echo '$(srcdir)/'`__memcpy.c
@@ -1987,47 +1987,47 @@ libce_a-memcpy.o: memcpy.c
 libce_a-memcpy.obj: memcpy.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-memcpy.obj `if test -f 'memcpy.c'; then $(CYGPATH_W) 'memcpy.c'; else $(CYGPATH_W) '$(srcdir)/memcpy.c'; fi`
 
-libce_a-_memmove.o: _memmove.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-_memmove.o `test -f '_memmove.c' || echo '$(srcdir)/'`_memmove.c
+libce_a-memmove.o: memmove.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-memmove.o `test -f 'memmove.c' || echo '$(srcdir)/'`memmove.c
 
-libce_a-_memmove.obj: _memmove.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-_memmove.obj `if test -f '_memmove.c'; then $(CYGPATH_W) '_memmove.c'; else $(CYGPATH_W) '$(srcdir)/_memmove.c'; fi`
+libce_a-memmove.obj: memmove.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-memmove.obj `if test -f 'memmove.c'; then $(CYGPATH_W) 'memmove.c'; else $(CYGPATH_W) '$(srcdir)/memmove.c'; fi`
 
-libce_a-_memset.o: _memset.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-_memset.o `test -f '_memset.c' || echo '$(srcdir)/'`_memset.c
+libce_a-memset.o: memset.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-memset.o `test -f 'memset.c' || echo '$(srcdir)/'`memset.c
 
-libce_a-_memset.obj: _memset.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-_memset.obj `if test -f '_memset.c'; then $(CYGPATH_W) '_memset.c'; else $(CYGPATH_W) '$(srcdir)/_memset.c'; fi`
+libce_a-memset.obj: memset.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-memset.obj `if test -f 'memset.c'; then $(CYGPATH_W) 'memset.c'; else $(CYGPATH_W) '$(srcdir)/memset.c'; fi`
 
-libce_a-_strcat.o: _strcat.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-_strcat.o `test -f '_strcat.c' || echo '$(srcdir)/'`_strcat.c
+libce_a-strcat.o: strcat.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-strcat.o `test -f 'strcat.c' || echo '$(srcdir)/'`strcat.c
 
-libce_a-_strcat.obj: _strcat.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-_strcat.obj `if test -f '_strcat.c'; then $(CYGPATH_W) '_strcat.c'; else $(CYGPATH_W) '$(srcdir)/_strcat.c'; fi`
+libce_a-strcat.obj: strcat.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-strcat.obj `if test -f 'strcat.c'; then $(CYGPATH_W) 'strcat.c'; else $(CYGPATH_W) '$(srcdir)/strcat.c'; fi`
 
-libce_a-_strchr.o: _strchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-_strchr.o `test -f '_strchr.c' || echo '$(srcdir)/'`_strchr.c
+libce_a-strchr.o: strchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-strchr.o `test -f 'strchr.c' || echo '$(srcdir)/'`strchr.c
 
-libce_a-_strchr.obj: _strchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-_strchr.obj `if test -f '_strchr.c'; then $(CYGPATH_W) '_strchr.c'; else $(CYGPATH_W) '$(srcdir)/_strchr.c'; fi`
+libce_a-strchr.obj: strchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-strchr.obj `if test -f 'strchr.c'; then $(CYGPATH_W) 'strchr.c'; else $(CYGPATH_W) '$(srcdir)/strchr.c'; fi`
 
-libce_a-_strcmp.o: _strcmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-_strcmp.o `test -f '_strcmp.c' || echo '$(srcdir)/'`_strcmp.c
+libce_a-strcmp.o: strcmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-strcmp.o `test -f 'strcmp.c' || echo '$(srcdir)/'`strcmp.c
 
-libce_a-_strcmp.obj: _strcmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-_strcmp.obj `if test -f '_strcmp.c'; then $(CYGPATH_W) '_strcmp.c'; else $(CYGPATH_W) '$(srcdir)/_strcmp.c'; fi`
+libce_a-strcmp.obj: strcmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-strcmp.obj `if test -f 'strcmp.c'; then $(CYGPATH_W) 'strcmp.c'; else $(CYGPATH_W) '$(srcdir)/strcmp.c'; fi`
 
-libce_a-_strcpy.o: _strcpy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-_strcpy.o `test -f '_strcpy.c' || echo '$(srcdir)/'`_strcpy.c
+libce_a-strcpy.o: strcpy.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-strcpy.o `test -f 'strcpy.c' || echo '$(srcdir)/'`strcpy.c
 
-libce_a-_strcpy.obj: _strcpy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-_strcpy.obj `if test -f '_strcpy.c'; then $(CYGPATH_W) '_strcpy.c'; else $(CYGPATH_W) '$(srcdir)/_strcpy.c'; fi`
+libce_a-strcpy.obj: strcpy.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-strcpy.obj `if test -f 'strcpy.c'; then $(CYGPATH_W) 'strcpy.c'; else $(CYGPATH_W) '$(srcdir)/strcpy.c'; fi`
 
-libce_a-_strcspn.o: _strcspn.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-_strcspn.o `test -f '_strcspn.c' || echo '$(srcdir)/'`_strcspn.c
+libce_a-strcspn.o: strcspn.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-strcspn.o `test -f 'strcspn.c' || echo '$(srcdir)/'`strcspn.c
 
-libce_a-_strcspn.obj: _strcspn.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-_strcspn.obj `if test -f '_strcspn.c'; then $(CYGPATH_W) '_strcspn.c'; else $(CYGPATH_W) '$(srcdir)/_strcspn.c'; fi`
+libce_a-strcspn.obj: strcspn.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-strcspn.obj `if test -f 'strcspn.c'; then $(CYGPATH_W) 'strcspn.c'; else $(CYGPATH_W) '$(srcdir)/strcspn.c'; fi`
 
 libce_a-strlen.o: strlen.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-strlen.o `test -f 'strlen.c' || echo '$(srcdir)/'`strlen.c
@@ -2041,35 +2041,35 @@ libce_a-strnlen.o: strnlen.c
 libce_a-strnlen.obj: strnlen.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-strnlen.obj `if test -f 'strnlen.c'; then $(CYGPATH_W) 'strnlen.c'; else $(CYGPATH_W) '$(srcdir)/strnlen.c'; fi`
 
-libce_a-_strncat.o: _strncat.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-_strncat.o `test -f '_strncat.c' || echo '$(srcdir)/'`_strncat.c
+libce_a-strncat.o: strncat.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-strncat.o `test -f 'strncat.c' || echo '$(srcdir)/'`strncat.c
 
-libce_a-_strncat.obj: _strncat.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-_strncat.obj `if test -f '_strncat.c'; then $(CYGPATH_W) '_strncat.c'; else $(CYGPATH_W) '$(srcdir)/_strncat.c'; fi`
+libce_a-strncat.obj: strncat.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-strncat.obj `if test -f 'strncat.c'; then $(CYGPATH_W) 'strncat.c'; else $(CYGPATH_W) '$(srcdir)/strncat.c'; fi`
 
-libce_a-_strncmp.o: _strncmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-_strncmp.o `test -f '_strncmp.c' || echo '$(srcdir)/'`_strncmp.c
+libce_a-strncmp.o: strncmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-strncmp.o `test -f 'strncmp.c' || echo '$(srcdir)/'`strncmp.c
 
-libce_a-_strncmp.obj: _strncmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-_strncmp.obj `if test -f '_strncmp.c'; then $(CYGPATH_W) '_strncmp.c'; else $(CYGPATH_W) '$(srcdir)/_strncmp.c'; fi`
+libce_a-strncmp.obj: strncmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-strncmp.obj `if test -f 'strncmp.c'; then $(CYGPATH_W) 'strncmp.c'; else $(CYGPATH_W) '$(srcdir)/strncmp.c'; fi`
 
-libce_a-_strncpy.o: _strncpy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-_strncpy.o `test -f '_strncpy.c' || echo '$(srcdir)/'`_strncpy.c
+libce_a-strncpy.o: strncpy.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-strncpy.o `test -f 'strncpy.c' || echo '$(srcdir)/'`strncpy.c
 
-libce_a-_strncpy.obj: _strncpy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-_strncpy.obj `if test -f '_strncpy.c'; then $(CYGPATH_W) '_strncpy.c'; else $(CYGPATH_W) '$(srcdir)/_strncpy.c'; fi`
+libce_a-strncpy.obj: strncpy.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-strncpy.obj `if test -f 'strncpy.c'; then $(CYGPATH_W) 'strncpy.c'; else $(CYGPATH_W) '$(srcdir)/strncpy.c'; fi`
 
-libce_a-_strpbrk.o: _strpbrk.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-_strpbrk.o `test -f '_strpbrk.c' || echo '$(srcdir)/'`_strpbrk.c
+libce_a-strpbrk.o: strpbrk.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-strpbrk.o `test -f 'strpbrk.c' || echo '$(srcdir)/'`strpbrk.c
 
-libce_a-_strpbrk.obj: _strpbrk.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-_strpbrk.obj `if test -f '_strpbrk.c'; then $(CYGPATH_W) '_strpbrk.c'; else $(CYGPATH_W) '$(srcdir)/_strpbrk.c'; fi`
+libce_a-strpbrk.obj: strpbrk.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-strpbrk.obj `if test -f 'strpbrk.c'; then $(CYGPATH_W) 'strpbrk.c'; else $(CYGPATH_W) '$(srcdir)/strpbrk.c'; fi`
 
-libce_a-_strrchr.o: _strrchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-_strrchr.o `test -f '_strrchr.c' || echo '$(srcdir)/'`_strrchr.c
+libce_a-strrchr.o: strrchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-strrchr.o `test -f 'strrchr.c' || echo '$(srcdir)/'`strrchr.c
 
-libce_a-_strrchr.obj: _strrchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-_strrchr.obj `if test -f '_strrchr.c'; then $(CYGPATH_W) '_strrchr.c'; else $(CYGPATH_W) '$(srcdir)/_strrchr.c'; fi`
+libce_a-strrchr.obj: strrchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-strrchr.obj `if test -f 'strrchr.c'; then $(CYGPATH_W) 'strrchr.c'; else $(CYGPATH_W) '$(srcdir)/strrchr.c'; fi`
 
 libce_a-strsep.o: strsep.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-strsep.o `test -f 'strsep.c' || echo '$(srcdir)/'`strsep.c
@@ -2077,17 +2077,17 @@ libce_a-strsep.o: strsep.c
 libce_a-strsep.obj: strsep.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-strsep.obj `if test -f 'strsep.c'; then $(CYGPATH_W) 'strsep.c'; else $(CYGPATH_W) '$(srcdir)/strsep.c'; fi`
 
-libce_a-_strspn.o: _strspn.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-_strspn.o `test -f '_strspn.c' || echo '$(srcdir)/'`_strspn.c
+libce_a-strspn.o: strspn.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-strspn.o `test -f 'strspn.c' || echo '$(srcdir)/'`strspn.c
 
-libce_a-_strspn.obj: _strspn.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-_strspn.obj `if test -f '_strspn.c'; then $(CYGPATH_W) '_strspn.c'; else $(CYGPATH_W) '$(srcdir)/_strspn.c'; fi`
+libce_a-strspn.obj: strspn.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-strspn.obj `if test -f 'strspn.c'; then $(CYGPATH_W) 'strspn.c'; else $(CYGPATH_W) '$(srcdir)/strspn.c'; fi`
 
-libce_a-_strstr.o: _strstr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-_strstr.o `test -f '_strstr.c' || echo '$(srcdir)/'`_strstr.c
+libce_a-strstr.o: strstr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-strstr.o `test -f 'strstr.c' || echo '$(srcdir)/'`strstr.c
 
-libce_a-_strstr.obj: _strstr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-_strstr.obj `if test -f '_strstr.c'; then $(CYGPATH_W) '_strstr.c'; else $(CYGPATH_W) '$(srcdir)/_strstr.c'; fi`
+libce_a-strstr.obj: strstr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-strstr.obj `if test -f 'strstr.c'; then $(CYGPATH_W) 'strstr.c'; else $(CYGPATH_W) '$(srcdir)/strstr.c'; fi`
 
 libce_a-strtok.o: strtok.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libce_a_CFLAGS) $(CFLAGS) -c -o libce_a-strtok.o `test -f 'strtok.c' || echo '$(srcdir)/'`strtok.c
@@ -2383,11 +2383,11 @@ libceo_a-vsprintf.o: vsprintf.c
 libceo_a-vsprintf.obj: vsprintf.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-vsprintf.obj `if test -f 'vsprintf.c'; then $(CYGPATH_W) 'vsprintf.c'; else $(CYGPATH_W) '$(srcdir)/vsprintf.c'; fi`
 
-libceo_a-_atof.o: _atof.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-_atof.o `test -f '_atof.c' || echo '$(srcdir)/'`_atof.c
+libceo_a-atof.o: atof.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-atof.o `test -f 'atof.c' || echo '$(srcdir)/'`atof.c
 
-libceo_a-_atof.obj: _atof.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-_atof.obj `if test -f '_atof.c'; then $(CYGPATH_W) '_atof.c'; else $(CYGPATH_W) '$(srcdir)/_atof.c'; fi`
+libceo_a-atof.obj: atof.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-atof.obj `if test -f 'atof.c'; then $(CYGPATH_W) 'atof.c'; else $(CYGPATH_W) '$(srcdir)/atof.c'; fi`
 
 libceo_a-_ftoa.o: _ftoa.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-_ftoa.o `test -f '_ftoa.c' || echo '$(srcdir)/'`_ftoa.c
@@ -2539,17 +2539,17 @@ libceo_a-wctomb.o: wctomb.c
 libceo_a-wctomb.obj: wctomb.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-wctomb.obj `if test -f 'wctomb.c'; then $(CYGPATH_W) 'wctomb.c'; else $(CYGPATH_W) '$(srcdir)/wctomb.c'; fi`
 
-libceo_a-_memchr.o: _memchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-_memchr.o `test -f '_memchr.c' || echo '$(srcdir)/'`_memchr.c
+libceo_a-memchr.o: memchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-memchr.o `test -f 'memchr.c' || echo '$(srcdir)/'`memchr.c
 
-libceo_a-_memchr.obj: _memchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-_memchr.obj `if test -f '_memchr.c'; then $(CYGPATH_W) '_memchr.c'; else $(CYGPATH_W) '$(srcdir)/_memchr.c'; fi`
+libceo_a-memchr.obj: memchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-memchr.obj `if test -f 'memchr.c'; then $(CYGPATH_W) 'memchr.c'; else $(CYGPATH_W) '$(srcdir)/memchr.c'; fi`
 
-libceo_a-_memcmp.o: _memcmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-_memcmp.o `test -f '_memcmp.c' || echo '$(srcdir)/'`_memcmp.c
+libceo_a-memcmp.o: memcmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-memcmp.o `test -f 'memcmp.c' || echo '$(srcdir)/'`memcmp.c
 
-libceo_a-_memcmp.obj: _memcmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-_memcmp.obj `if test -f '_memcmp.c'; then $(CYGPATH_W) '_memcmp.c'; else $(CYGPATH_W) '$(srcdir)/_memcmp.c'; fi`
+libceo_a-memcmp.obj: memcmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-memcmp.obj `if test -f 'memcmp.c'; then $(CYGPATH_W) 'memcmp.c'; else $(CYGPATH_W) '$(srcdir)/memcmp.c'; fi`
 
 libceo_a-__memcpy.o: __memcpy.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-__memcpy.o `test -f '__memcpy.c' || echo '$(srcdir)/'`__memcpy.c
@@ -2563,47 +2563,47 @@ libceo_a-memcpy.o: memcpy.c
 libceo_a-memcpy.obj: memcpy.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-memcpy.obj `if test -f 'memcpy.c'; then $(CYGPATH_W) 'memcpy.c'; else $(CYGPATH_W) '$(srcdir)/memcpy.c'; fi`
 
-libceo_a-_memmove.o: _memmove.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-_memmove.o `test -f '_memmove.c' || echo '$(srcdir)/'`_memmove.c
+libceo_a-memmove.o: memmove.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-memmove.o `test -f 'memmove.c' || echo '$(srcdir)/'`memmove.c
 
-libceo_a-_memmove.obj: _memmove.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-_memmove.obj `if test -f '_memmove.c'; then $(CYGPATH_W) '_memmove.c'; else $(CYGPATH_W) '$(srcdir)/_memmove.c'; fi`
+libceo_a-memmove.obj: memmove.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-memmove.obj `if test -f 'memmove.c'; then $(CYGPATH_W) 'memmove.c'; else $(CYGPATH_W) '$(srcdir)/memmove.c'; fi`
 
-libceo_a-_memset.o: _memset.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-_memset.o `test -f '_memset.c' || echo '$(srcdir)/'`_memset.c
+libceo_a-memset.o: memset.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-memset.o `test -f 'memset.c' || echo '$(srcdir)/'`memset.c
 
-libceo_a-_memset.obj: _memset.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-_memset.obj `if test -f '_memset.c'; then $(CYGPATH_W) '_memset.c'; else $(CYGPATH_W) '$(srcdir)/_memset.c'; fi`
+libceo_a-memset.obj: memset.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-memset.obj `if test -f 'memset.c'; then $(CYGPATH_W) 'memset.c'; else $(CYGPATH_W) '$(srcdir)/memset.c'; fi`
 
-libceo_a-_strcat.o: _strcat.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-_strcat.o `test -f '_strcat.c' || echo '$(srcdir)/'`_strcat.c
+libceo_a-strcat.o: strcat.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-strcat.o `test -f 'strcat.c' || echo '$(srcdir)/'`strcat.c
 
-libceo_a-_strcat.obj: _strcat.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-_strcat.obj `if test -f '_strcat.c'; then $(CYGPATH_W) '_strcat.c'; else $(CYGPATH_W) '$(srcdir)/_strcat.c'; fi`
+libceo_a-strcat.obj: strcat.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-strcat.obj `if test -f 'strcat.c'; then $(CYGPATH_W) 'strcat.c'; else $(CYGPATH_W) '$(srcdir)/strcat.c'; fi`
 
-libceo_a-_strchr.o: _strchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-_strchr.o `test -f '_strchr.c' || echo '$(srcdir)/'`_strchr.c
+libceo_a-strchr.o: strchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-strchr.o `test -f 'strchr.c' || echo '$(srcdir)/'`strchr.c
 
-libceo_a-_strchr.obj: _strchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-_strchr.obj `if test -f '_strchr.c'; then $(CYGPATH_W) '_strchr.c'; else $(CYGPATH_W) '$(srcdir)/_strchr.c'; fi`
+libceo_a-strchr.obj: strchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-strchr.obj `if test -f 'strchr.c'; then $(CYGPATH_W) 'strchr.c'; else $(CYGPATH_W) '$(srcdir)/strchr.c'; fi`
 
-libceo_a-_strcmp.o: _strcmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-_strcmp.o `test -f '_strcmp.c' || echo '$(srcdir)/'`_strcmp.c
+libceo_a-strcmp.o: strcmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-strcmp.o `test -f 'strcmp.c' || echo '$(srcdir)/'`strcmp.c
 
-libceo_a-_strcmp.obj: _strcmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-_strcmp.obj `if test -f '_strcmp.c'; then $(CYGPATH_W) '_strcmp.c'; else $(CYGPATH_W) '$(srcdir)/_strcmp.c'; fi`
+libceo_a-strcmp.obj: strcmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-strcmp.obj `if test -f 'strcmp.c'; then $(CYGPATH_W) 'strcmp.c'; else $(CYGPATH_W) '$(srcdir)/strcmp.c'; fi`
 
-libceo_a-_strcpy.o: _strcpy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-_strcpy.o `test -f '_strcpy.c' || echo '$(srcdir)/'`_strcpy.c
+libceo_a-strcpy.o: strcpy.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-strcpy.o `test -f 'strcpy.c' || echo '$(srcdir)/'`strcpy.c
 
-libceo_a-_strcpy.obj: _strcpy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-_strcpy.obj `if test -f '_strcpy.c'; then $(CYGPATH_W) '_strcpy.c'; else $(CYGPATH_W) '$(srcdir)/_strcpy.c'; fi`
+libceo_a-strcpy.obj: strcpy.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-strcpy.obj `if test -f 'strcpy.c'; then $(CYGPATH_W) 'strcpy.c'; else $(CYGPATH_W) '$(srcdir)/strcpy.c'; fi`
 
-libceo_a-_strcspn.o: _strcspn.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-_strcspn.o `test -f '_strcspn.c' || echo '$(srcdir)/'`_strcspn.c
+libceo_a-strcspn.o: strcspn.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-strcspn.o `test -f 'strcspn.c' || echo '$(srcdir)/'`strcspn.c
 
-libceo_a-_strcspn.obj: _strcspn.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-_strcspn.obj `if test -f '_strcspn.c'; then $(CYGPATH_W) '_strcspn.c'; else $(CYGPATH_W) '$(srcdir)/_strcspn.c'; fi`
+libceo_a-strcspn.obj: strcspn.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-strcspn.obj `if test -f 'strcspn.c'; then $(CYGPATH_W) 'strcspn.c'; else $(CYGPATH_W) '$(srcdir)/strcspn.c'; fi`
 
 libceo_a-strlen.o: strlen.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-strlen.o `test -f 'strlen.c' || echo '$(srcdir)/'`strlen.c
@@ -2617,35 +2617,35 @@ libceo_a-strnlen.o: strnlen.c
 libceo_a-strnlen.obj: strnlen.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-strnlen.obj `if test -f 'strnlen.c'; then $(CYGPATH_W) 'strnlen.c'; else $(CYGPATH_W) '$(srcdir)/strnlen.c'; fi`
 
-libceo_a-_strncat.o: _strncat.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-_strncat.o `test -f '_strncat.c' || echo '$(srcdir)/'`_strncat.c
+libceo_a-strncat.o: strncat.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-strncat.o `test -f 'strncat.c' || echo '$(srcdir)/'`strncat.c
 
-libceo_a-_strncat.obj: _strncat.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-_strncat.obj `if test -f '_strncat.c'; then $(CYGPATH_W) '_strncat.c'; else $(CYGPATH_W) '$(srcdir)/_strncat.c'; fi`
+libceo_a-strncat.obj: strncat.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-strncat.obj `if test -f 'strncat.c'; then $(CYGPATH_W) 'strncat.c'; else $(CYGPATH_W) '$(srcdir)/strncat.c'; fi`
 
-libceo_a-_strncmp.o: _strncmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-_strncmp.o `test -f '_strncmp.c' || echo '$(srcdir)/'`_strncmp.c
+libceo_a-strncmp.o: strncmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-strncmp.o `test -f 'strncmp.c' || echo '$(srcdir)/'`strncmp.c
 
-libceo_a-_strncmp.obj: _strncmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-_strncmp.obj `if test -f '_strncmp.c'; then $(CYGPATH_W) '_strncmp.c'; else $(CYGPATH_W) '$(srcdir)/_strncmp.c'; fi`
+libceo_a-strncmp.obj: strncmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-strncmp.obj `if test -f 'strncmp.c'; then $(CYGPATH_W) 'strncmp.c'; else $(CYGPATH_W) '$(srcdir)/strncmp.c'; fi`
 
-libceo_a-_strncpy.o: _strncpy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-_strncpy.o `test -f '_strncpy.c' || echo '$(srcdir)/'`_strncpy.c
+libceo_a-strncpy.o: strncpy.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-strncpy.o `test -f 'strncpy.c' || echo '$(srcdir)/'`strncpy.c
 
-libceo_a-_strncpy.obj: _strncpy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-_strncpy.obj `if test -f '_strncpy.c'; then $(CYGPATH_W) '_strncpy.c'; else $(CYGPATH_W) '$(srcdir)/_strncpy.c'; fi`
+libceo_a-strncpy.obj: strncpy.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-strncpy.obj `if test -f 'strncpy.c'; then $(CYGPATH_W) 'strncpy.c'; else $(CYGPATH_W) '$(srcdir)/strncpy.c'; fi`
 
-libceo_a-_strpbrk.o: _strpbrk.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-_strpbrk.o `test -f '_strpbrk.c' || echo '$(srcdir)/'`_strpbrk.c
+libceo_a-strpbrk.o: strpbrk.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-strpbrk.o `test -f 'strpbrk.c' || echo '$(srcdir)/'`strpbrk.c
 
-libceo_a-_strpbrk.obj: _strpbrk.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-_strpbrk.obj `if test -f '_strpbrk.c'; then $(CYGPATH_W) '_strpbrk.c'; else $(CYGPATH_W) '$(srcdir)/_strpbrk.c'; fi`
+libceo_a-strpbrk.obj: strpbrk.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-strpbrk.obj `if test -f 'strpbrk.c'; then $(CYGPATH_W) 'strpbrk.c'; else $(CYGPATH_W) '$(srcdir)/strpbrk.c'; fi`
 
-libceo_a-_strrchr.o: _strrchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-_strrchr.o `test -f '_strrchr.c' || echo '$(srcdir)/'`_strrchr.c
+libceo_a-strrchr.o: strrchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-strrchr.o `test -f 'strrchr.c' || echo '$(srcdir)/'`strrchr.c
 
-libceo_a-_strrchr.obj: _strrchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-_strrchr.obj `if test -f '_strrchr.c'; then $(CYGPATH_W) '_strrchr.c'; else $(CYGPATH_W) '$(srcdir)/_strrchr.c'; fi`
+libceo_a-strrchr.obj: strrchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-strrchr.obj `if test -f 'strrchr.c'; then $(CYGPATH_W) 'strrchr.c'; else $(CYGPATH_W) '$(srcdir)/strrchr.c'; fi`
 
 libceo_a-strsep.o: strsep.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-strsep.o `test -f 'strsep.c' || echo '$(srcdir)/'`strsep.c
@@ -2653,17 +2653,17 @@ libceo_a-strsep.o: strsep.c
 libceo_a-strsep.obj: strsep.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-strsep.obj `if test -f 'strsep.c'; then $(CYGPATH_W) 'strsep.c'; else $(CYGPATH_W) '$(srcdir)/strsep.c'; fi`
 
-libceo_a-_strspn.o: _strspn.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-_strspn.o `test -f '_strspn.c' || echo '$(srcdir)/'`_strspn.c
+libceo_a-strspn.o: strspn.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-strspn.o `test -f 'strspn.c' || echo '$(srcdir)/'`strspn.c
 
-libceo_a-_strspn.obj: _strspn.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-_strspn.obj `if test -f '_strspn.c'; then $(CYGPATH_W) '_strspn.c'; else $(CYGPATH_W) '$(srcdir)/_strspn.c'; fi`
+libceo_a-strspn.obj: strspn.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-strspn.obj `if test -f 'strspn.c'; then $(CYGPATH_W) 'strspn.c'; else $(CYGPATH_W) '$(srcdir)/strspn.c'; fi`
 
-libceo_a-_strstr.o: _strstr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-_strstr.o `test -f '_strstr.c' || echo '$(srcdir)/'`_strstr.c
+libceo_a-strstr.o: strstr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-strstr.o `test -f 'strstr.c' || echo '$(srcdir)/'`strstr.c
 
-libceo_a-_strstr.obj: _strstr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-_strstr.obj `if test -f '_strstr.c'; then $(CYGPATH_W) '_strstr.c'; else $(CYGPATH_W) '$(srcdir)/_strstr.c'; fi`
+libceo_a-strstr.obj: strstr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-strstr.obj `if test -f 'strstr.c'; then $(CYGPATH_W) 'strstr.c'; else $(CYGPATH_W) '$(srcdir)/strstr.c'; fi`
 
 libceo_a-strtok.o: strtok.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceo_a_CFLAGS) $(CFLAGS) -c -o libceo_a-strtok.o `test -f 'strtok.c' || echo '$(srcdir)/'`strtok.c
@@ -2959,11 +2959,11 @@ libceox_a-vsprintf.o: vsprintf.c
 libceox_a-vsprintf.obj: vsprintf.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-vsprintf.obj `if test -f 'vsprintf.c'; then $(CYGPATH_W) 'vsprintf.c'; else $(CYGPATH_W) '$(srcdir)/vsprintf.c'; fi`
 
-libceox_a-_atof.o: _atof.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-_atof.o `test -f '_atof.c' || echo '$(srcdir)/'`_atof.c
+libceox_a-atof.o: atof.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-atof.o `test -f 'atof.c' || echo '$(srcdir)/'`atof.c
 
-libceox_a-_atof.obj: _atof.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-_atof.obj `if test -f '_atof.c'; then $(CYGPATH_W) '_atof.c'; else $(CYGPATH_W) '$(srcdir)/_atof.c'; fi`
+libceox_a-atof.obj: atof.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-atof.obj `if test -f 'atof.c'; then $(CYGPATH_W) 'atof.c'; else $(CYGPATH_W) '$(srcdir)/atof.c'; fi`
 
 libceox_a-_ftoa.o: _ftoa.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-_ftoa.o `test -f '_ftoa.c' || echo '$(srcdir)/'`_ftoa.c
@@ -3115,17 +3115,17 @@ libceox_a-wctomb.o: wctomb.c
 libceox_a-wctomb.obj: wctomb.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-wctomb.obj `if test -f 'wctomb.c'; then $(CYGPATH_W) 'wctomb.c'; else $(CYGPATH_W) '$(srcdir)/wctomb.c'; fi`
 
-libceox_a-_memchr.o: _memchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-_memchr.o `test -f '_memchr.c' || echo '$(srcdir)/'`_memchr.c
+libceox_a-memchr.o: memchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-memchr.o `test -f 'memchr.c' || echo '$(srcdir)/'`memchr.c
 
-libceox_a-_memchr.obj: _memchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-_memchr.obj `if test -f '_memchr.c'; then $(CYGPATH_W) '_memchr.c'; else $(CYGPATH_W) '$(srcdir)/_memchr.c'; fi`
+libceox_a-memchr.obj: memchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-memchr.obj `if test -f 'memchr.c'; then $(CYGPATH_W) 'memchr.c'; else $(CYGPATH_W) '$(srcdir)/memchr.c'; fi`
 
-libceox_a-_memcmp.o: _memcmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-_memcmp.o `test -f '_memcmp.c' || echo '$(srcdir)/'`_memcmp.c
+libceox_a-memcmp.o: memcmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-memcmp.o `test -f 'memcmp.c' || echo '$(srcdir)/'`memcmp.c
 
-libceox_a-_memcmp.obj: _memcmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-_memcmp.obj `if test -f '_memcmp.c'; then $(CYGPATH_W) '_memcmp.c'; else $(CYGPATH_W) '$(srcdir)/_memcmp.c'; fi`
+libceox_a-memcmp.obj: memcmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-memcmp.obj `if test -f 'memcmp.c'; then $(CYGPATH_W) 'memcmp.c'; else $(CYGPATH_W) '$(srcdir)/memcmp.c'; fi`
 
 libceox_a-__memcpy.o: __memcpy.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-__memcpy.o `test -f '__memcpy.c' || echo '$(srcdir)/'`__memcpy.c
@@ -3139,47 +3139,47 @@ libceox_a-memcpy.o: memcpy.c
 libceox_a-memcpy.obj: memcpy.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-memcpy.obj `if test -f 'memcpy.c'; then $(CYGPATH_W) 'memcpy.c'; else $(CYGPATH_W) '$(srcdir)/memcpy.c'; fi`
 
-libceox_a-_memmove.o: _memmove.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-_memmove.o `test -f '_memmove.c' || echo '$(srcdir)/'`_memmove.c
+libceox_a-memmove.o: memmove.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-memmove.o `test -f 'memmove.c' || echo '$(srcdir)/'`memmove.c
 
-libceox_a-_memmove.obj: _memmove.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-_memmove.obj `if test -f '_memmove.c'; then $(CYGPATH_W) '_memmove.c'; else $(CYGPATH_W) '$(srcdir)/_memmove.c'; fi`
+libceox_a-memmove.obj: memmove.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-memmove.obj `if test -f 'memmove.c'; then $(CYGPATH_W) 'memmove.c'; else $(CYGPATH_W) '$(srcdir)/memmove.c'; fi`
 
-libceox_a-_memset.o: _memset.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-_memset.o `test -f '_memset.c' || echo '$(srcdir)/'`_memset.c
+libceox_a-memset.o: memset.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-memset.o `test -f 'memset.c' || echo '$(srcdir)/'`memset.c
 
-libceox_a-_memset.obj: _memset.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-_memset.obj `if test -f '_memset.c'; then $(CYGPATH_W) '_memset.c'; else $(CYGPATH_W) '$(srcdir)/_memset.c'; fi`
+libceox_a-memset.obj: memset.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-memset.obj `if test -f 'memset.c'; then $(CYGPATH_W) 'memset.c'; else $(CYGPATH_W) '$(srcdir)/memset.c'; fi`
 
-libceox_a-_strcat.o: _strcat.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-_strcat.o `test -f '_strcat.c' || echo '$(srcdir)/'`_strcat.c
+libceox_a-strcat.o: strcat.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-strcat.o `test -f 'strcat.c' || echo '$(srcdir)/'`strcat.c
 
-libceox_a-_strcat.obj: _strcat.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-_strcat.obj `if test -f '_strcat.c'; then $(CYGPATH_W) '_strcat.c'; else $(CYGPATH_W) '$(srcdir)/_strcat.c'; fi`
+libceox_a-strcat.obj: strcat.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-strcat.obj `if test -f 'strcat.c'; then $(CYGPATH_W) 'strcat.c'; else $(CYGPATH_W) '$(srcdir)/strcat.c'; fi`
 
-libceox_a-_strchr.o: _strchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-_strchr.o `test -f '_strchr.c' || echo '$(srcdir)/'`_strchr.c
+libceox_a-strchr.o: strchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-strchr.o `test -f 'strchr.c' || echo '$(srcdir)/'`strchr.c
 
-libceox_a-_strchr.obj: _strchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-_strchr.obj `if test -f '_strchr.c'; then $(CYGPATH_W) '_strchr.c'; else $(CYGPATH_W) '$(srcdir)/_strchr.c'; fi`
+libceox_a-strchr.obj: strchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-strchr.obj `if test -f 'strchr.c'; then $(CYGPATH_W) 'strchr.c'; else $(CYGPATH_W) '$(srcdir)/strchr.c'; fi`
 
-libceox_a-_strcmp.o: _strcmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-_strcmp.o `test -f '_strcmp.c' || echo '$(srcdir)/'`_strcmp.c
+libceox_a-strcmp.o: strcmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-strcmp.o `test -f 'strcmp.c' || echo '$(srcdir)/'`strcmp.c
 
-libceox_a-_strcmp.obj: _strcmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-_strcmp.obj `if test -f '_strcmp.c'; then $(CYGPATH_W) '_strcmp.c'; else $(CYGPATH_W) '$(srcdir)/_strcmp.c'; fi`
+libceox_a-strcmp.obj: strcmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-strcmp.obj `if test -f 'strcmp.c'; then $(CYGPATH_W) 'strcmp.c'; else $(CYGPATH_W) '$(srcdir)/strcmp.c'; fi`
 
-libceox_a-_strcpy.o: _strcpy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-_strcpy.o `test -f '_strcpy.c' || echo '$(srcdir)/'`_strcpy.c
+libceox_a-strcpy.o: strcpy.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-strcpy.o `test -f 'strcpy.c' || echo '$(srcdir)/'`strcpy.c
 
-libceox_a-_strcpy.obj: _strcpy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-_strcpy.obj `if test -f '_strcpy.c'; then $(CYGPATH_W) '_strcpy.c'; else $(CYGPATH_W) '$(srcdir)/_strcpy.c'; fi`
+libceox_a-strcpy.obj: strcpy.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-strcpy.obj `if test -f 'strcpy.c'; then $(CYGPATH_W) 'strcpy.c'; else $(CYGPATH_W) '$(srcdir)/strcpy.c'; fi`
 
-libceox_a-_strcspn.o: _strcspn.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-_strcspn.o `test -f '_strcspn.c' || echo '$(srcdir)/'`_strcspn.c
+libceox_a-strcspn.o: strcspn.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-strcspn.o `test -f 'strcspn.c' || echo '$(srcdir)/'`strcspn.c
 
-libceox_a-_strcspn.obj: _strcspn.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-_strcspn.obj `if test -f '_strcspn.c'; then $(CYGPATH_W) '_strcspn.c'; else $(CYGPATH_W) '$(srcdir)/_strcspn.c'; fi`
+libceox_a-strcspn.obj: strcspn.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-strcspn.obj `if test -f 'strcspn.c'; then $(CYGPATH_W) 'strcspn.c'; else $(CYGPATH_W) '$(srcdir)/strcspn.c'; fi`
 
 libceox_a-strlen.o: strlen.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-strlen.o `test -f 'strlen.c' || echo '$(srcdir)/'`strlen.c
@@ -3193,35 +3193,35 @@ libceox_a-strnlen.o: strnlen.c
 libceox_a-strnlen.obj: strnlen.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-strnlen.obj `if test -f 'strnlen.c'; then $(CYGPATH_W) 'strnlen.c'; else $(CYGPATH_W) '$(srcdir)/strnlen.c'; fi`
 
-libceox_a-_strncat.o: _strncat.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-_strncat.o `test -f '_strncat.c' || echo '$(srcdir)/'`_strncat.c
+libceox_a-strncat.o: strncat.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-strncat.o `test -f 'strncat.c' || echo '$(srcdir)/'`strncat.c
 
-libceox_a-_strncat.obj: _strncat.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-_strncat.obj `if test -f '_strncat.c'; then $(CYGPATH_W) '_strncat.c'; else $(CYGPATH_W) '$(srcdir)/_strncat.c'; fi`
+libceox_a-strncat.obj: strncat.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-strncat.obj `if test -f 'strncat.c'; then $(CYGPATH_W) 'strncat.c'; else $(CYGPATH_W) '$(srcdir)/strncat.c'; fi`
 
-libceox_a-_strncmp.o: _strncmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-_strncmp.o `test -f '_strncmp.c' || echo '$(srcdir)/'`_strncmp.c
+libceox_a-strncmp.o: strncmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-strncmp.o `test -f 'strncmp.c' || echo '$(srcdir)/'`strncmp.c
 
-libceox_a-_strncmp.obj: _strncmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-_strncmp.obj `if test -f '_strncmp.c'; then $(CYGPATH_W) '_strncmp.c'; else $(CYGPATH_W) '$(srcdir)/_strncmp.c'; fi`
+libceox_a-strncmp.obj: strncmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-strncmp.obj `if test -f 'strncmp.c'; then $(CYGPATH_W) 'strncmp.c'; else $(CYGPATH_W) '$(srcdir)/strncmp.c'; fi`
 
-libceox_a-_strncpy.o: _strncpy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-_strncpy.o `test -f '_strncpy.c' || echo '$(srcdir)/'`_strncpy.c
+libceox_a-strncpy.o: strncpy.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-strncpy.o `test -f 'strncpy.c' || echo '$(srcdir)/'`strncpy.c
 
-libceox_a-_strncpy.obj: _strncpy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-_strncpy.obj `if test -f '_strncpy.c'; then $(CYGPATH_W) '_strncpy.c'; else $(CYGPATH_W) '$(srcdir)/_strncpy.c'; fi`
+libceox_a-strncpy.obj: strncpy.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-strncpy.obj `if test -f 'strncpy.c'; then $(CYGPATH_W) 'strncpy.c'; else $(CYGPATH_W) '$(srcdir)/strncpy.c'; fi`
 
-libceox_a-_strpbrk.o: _strpbrk.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-_strpbrk.o `test -f '_strpbrk.c' || echo '$(srcdir)/'`_strpbrk.c
+libceox_a-strpbrk.o: strpbrk.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-strpbrk.o `test -f 'strpbrk.c' || echo '$(srcdir)/'`strpbrk.c
 
-libceox_a-_strpbrk.obj: _strpbrk.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-_strpbrk.obj `if test -f '_strpbrk.c'; then $(CYGPATH_W) '_strpbrk.c'; else $(CYGPATH_W) '$(srcdir)/_strpbrk.c'; fi`
+libceox_a-strpbrk.obj: strpbrk.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-strpbrk.obj `if test -f 'strpbrk.c'; then $(CYGPATH_W) 'strpbrk.c'; else $(CYGPATH_W) '$(srcdir)/strpbrk.c'; fi`
 
-libceox_a-_strrchr.o: _strrchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-_strrchr.o `test -f '_strrchr.c' || echo '$(srcdir)/'`_strrchr.c
+libceox_a-strrchr.o: strrchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-strrchr.o `test -f 'strrchr.c' || echo '$(srcdir)/'`strrchr.c
 
-libceox_a-_strrchr.obj: _strrchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-_strrchr.obj `if test -f '_strrchr.c'; then $(CYGPATH_W) '_strrchr.c'; else $(CYGPATH_W) '$(srcdir)/_strrchr.c'; fi`
+libceox_a-strrchr.obj: strrchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-strrchr.obj `if test -f 'strrchr.c'; then $(CYGPATH_W) 'strrchr.c'; else $(CYGPATH_W) '$(srcdir)/strrchr.c'; fi`
 
 libceox_a-strsep.o: strsep.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-strsep.o `test -f 'strsep.c' || echo '$(srcdir)/'`strsep.c
@@ -3229,17 +3229,17 @@ libceox_a-strsep.o: strsep.c
 libceox_a-strsep.obj: strsep.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-strsep.obj `if test -f 'strsep.c'; then $(CYGPATH_W) 'strsep.c'; else $(CYGPATH_W) '$(srcdir)/strsep.c'; fi`
 
-libceox_a-_strspn.o: _strspn.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-_strspn.o `test -f '_strspn.c' || echo '$(srcdir)/'`_strspn.c
+libceox_a-strspn.o: strspn.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-strspn.o `test -f 'strspn.c' || echo '$(srcdir)/'`strspn.c
 
-libceox_a-_strspn.obj: _strspn.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-_strspn.obj `if test -f '_strspn.c'; then $(CYGPATH_W) '_strspn.c'; else $(CYGPATH_W) '$(srcdir)/_strspn.c'; fi`
+libceox_a-strspn.obj: strspn.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-strspn.obj `if test -f 'strspn.c'; then $(CYGPATH_W) 'strspn.c'; else $(CYGPATH_W) '$(srcdir)/strspn.c'; fi`
 
-libceox_a-_strstr.o: _strstr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-_strstr.o `test -f '_strstr.c' || echo '$(srcdir)/'`_strstr.c
+libceox_a-strstr.o: strstr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-strstr.o `test -f 'strstr.c' || echo '$(srcdir)/'`strstr.c
 
-libceox_a-_strstr.obj: _strstr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-_strstr.obj `if test -f '_strstr.c'; then $(CYGPATH_W) '_strstr.c'; else $(CYGPATH_W) '$(srcdir)/_strstr.c'; fi`
+libceox_a-strstr.obj: strstr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-strstr.obj `if test -f 'strstr.c'; then $(CYGPATH_W) 'strstr.c'; else $(CYGPATH_W) '$(srcdir)/strstr.c'; fi`
 
 libceox_a-strtok.o: strtok.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libceox_a_CFLAGS) $(CFLAGS) -c -o libceox_a-strtok.o `test -f 'strtok.c' || echo '$(srcdir)/'`strtok.c
@@ -3535,11 +3535,11 @@ libcex_a-vsprintf.o: vsprintf.c
 libcex_a-vsprintf.obj: vsprintf.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-vsprintf.obj `if test -f 'vsprintf.c'; then $(CYGPATH_W) 'vsprintf.c'; else $(CYGPATH_W) '$(srcdir)/vsprintf.c'; fi`
 
-libcex_a-_atof.o: _atof.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-_atof.o `test -f '_atof.c' || echo '$(srcdir)/'`_atof.c
+libcex_a-atof.o: atof.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-atof.o `test -f 'atof.c' || echo '$(srcdir)/'`atof.c
 
-libcex_a-_atof.obj: _atof.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-_atof.obj `if test -f '_atof.c'; then $(CYGPATH_W) '_atof.c'; else $(CYGPATH_W) '$(srcdir)/_atof.c'; fi`
+libcex_a-atof.obj: atof.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-atof.obj `if test -f 'atof.c'; then $(CYGPATH_W) 'atof.c'; else $(CYGPATH_W) '$(srcdir)/atof.c'; fi`
 
 libcex_a-_ftoa.o: _ftoa.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-_ftoa.o `test -f '_ftoa.c' || echo '$(srcdir)/'`_ftoa.c
@@ -3691,17 +3691,17 @@ libcex_a-wctomb.o: wctomb.c
 libcex_a-wctomb.obj: wctomb.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-wctomb.obj `if test -f 'wctomb.c'; then $(CYGPATH_W) 'wctomb.c'; else $(CYGPATH_W) '$(srcdir)/wctomb.c'; fi`
 
-libcex_a-_memchr.o: _memchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-_memchr.o `test -f '_memchr.c' || echo '$(srcdir)/'`_memchr.c
+libcex_a-memchr.o: memchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-memchr.o `test -f 'memchr.c' || echo '$(srcdir)/'`memchr.c
 
-libcex_a-_memchr.obj: _memchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-_memchr.obj `if test -f '_memchr.c'; then $(CYGPATH_W) '_memchr.c'; else $(CYGPATH_W) '$(srcdir)/_memchr.c'; fi`
+libcex_a-memchr.obj: memchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-memchr.obj `if test -f 'memchr.c'; then $(CYGPATH_W) 'memchr.c'; else $(CYGPATH_W) '$(srcdir)/memchr.c'; fi`
 
-libcex_a-_memcmp.o: _memcmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-_memcmp.o `test -f '_memcmp.c' || echo '$(srcdir)/'`_memcmp.c
+libcex_a-memcmp.o: memcmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-memcmp.o `test -f 'memcmp.c' || echo '$(srcdir)/'`memcmp.c
 
-libcex_a-_memcmp.obj: _memcmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-_memcmp.obj `if test -f '_memcmp.c'; then $(CYGPATH_W) '_memcmp.c'; else $(CYGPATH_W) '$(srcdir)/_memcmp.c'; fi`
+libcex_a-memcmp.obj: memcmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-memcmp.obj `if test -f 'memcmp.c'; then $(CYGPATH_W) 'memcmp.c'; else $(CYGPATH_W) '$(srcdir)/memcmp.c'; fi`
 
 libcex_a-__memcpy.o: __memcpy.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-__memcpy.o `test -f '__memcpy.c' || echo '$(srcdir)/'`__memcpy.c
@@ -3715,47 +3715,47 @@ libcex_a-memcpy.o: memcpy.c
 libcex_a-memcpy.obj: memcpy.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-memcpy.obj `if test -f 'memcpy.c'; then $(CYGPATH_W) 'memcpy.c'; else $(CYGPATH_W) '$(srcdir)/memcpy.c'; fi`
 
-libcex_a-_memmove.o: _memmove.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-_memmove.o `test -f '_memmove.c' || echo '$(srcdir)/'`_memmove.c
+libcex_a-memmove.o: memmove.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-memmove.o `test -f 'memmove.c' || echo '$(srcdir)/'`memmove.c
 
-libcex_a-_memmove.obj: _memmove.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-_memmove.obj `if test -f '_memmove.c'; then $(CYGPATH_W) '_memmove.c'; else $(CYGPATH_W) '$(srcdir)/_memmove.c'; fi`
+libcex_a-memmove.obj: memmove.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-memmove.obj `if test -f 'memmove.c'; then $(CYGPATH_W) 'memmove.c'; else $(CYGPATH_W) '$(srcdir)/memmove.c'; fi`
 
-libcex_a-_memset.o: _memset.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-_memset.o `test -f '_memset.c' || echo '$(srcdir)/'`_memset.c
+libcex_a-memset.o: memset.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-memset.o `test -f 'memset.c' || echo '$(srcdir)/'`memset.c
 
-libcex_a-_memset.obj: _memset.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-_memset.obj `if test -f '_memset.c'; then $(CYGPATH_W) '_memset.c'; else $(CYGPATH_W) '$(srcdir)/_memset.c'; fi`
+libcex_a-memset.obj: memset.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-memset.obj `if test -f 'memset.c'; then $(CYGPATH_W) 'memset.c'; else $(CYGPATH_W) '$(srcdir)/memset.c'; fi`
 
-libcex_a-_strcat.o: _strcat.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-_strcat.o `test -f '_strcat.c' || echo '$(srcdir)/'`_strcat.c
+libcex_a-strcat.o: strcat.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-strcat.o `test -f 'strcat.c' || echo '$(srcdir)/'`strcat.c
 
-libcex_a-_strcat.obj: _strcat.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-_strcat.obj `if test -f '_strcat.c'; then $(CYGPATH_W) '_strcat.c'; else $(CYGPATH_W) '$(srcdir)/_strcat.c'; fi`
+libcex_a-strcat.obj: strcat.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-strcat.obj `if test -f 'strcat.c'; then $(CYGPATH_W) 'strcat.c'; else $(CYGPATH_W) '$(srcdir)/strcat.c'; fi`
 
-libcex_a-_strchr.o: _strchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-_strchr.o `test -f '_strchr.c' || echo '$(srcdir)/'`_strchr.c
+libcex_a-strchr.o: strchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-strchr.o `test -f 'strchr.c' || echo '$(srcdir)/'`strchr.c
 
-libcex_a-_strchr.obj: _strchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-_strchr.obj `if test -f '_strchr.c'; then $(CYGPATH_W) '_strchr.c'; else $(CYGPATH_W) '$(srcdir)/_strchr.c'; fi`
+libcex_a-strchr.obj: strchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-strchr.obj `if test -f 'strchr.c'; then $(CYGPATH_W) 'strchr.c'; else $(CYGPATH_W) '$(srcdir)/strchr.c'; fi`
 
-libcex_a-_strcmp.o: _strcmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-_strcmp.o `test -f '_strcmp.c' || echo '$(srcdir)/'`_strcmp.c
+libcex_a-strcmp.o: strcmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-strcmp.o `test -f 'strcmp.c' || echo '$(srcdir)/'`strcmp.c
 
-libcex_a-_strcmp.obj: _strcmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-_strcmp.obj `if test -f '_strcmp.c'; then $(CYGPATH_W) '_strcmp.c'; else $(CYGPATH_W) '$(srcdir)/_strcmp.c'; fi`
+libcex_a-strcmp.obj: strcmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-strcmp.obj `if test -f 'strcmp.c'; then $(CYGPATH_W) 'strcmp.c'; else $(CYGPATH_W) '$(srcdir)/strcmp.c'; fi`
 
-libcex_a-_strcpy.o: _strcpy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-_strcpy.o `test -f '_strcpy.c' || echo '$(srcdir)/'`_strcpy.c
+libcex_a-strcpy.o: strcpy.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-strcpy.o `test -f 'strcpy.c' || echo '$(srcdir)/'`strcpy.c
 
-libcex_a-_strcpy.obj: _strcpy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-_strcpy.obj `if test -f '_strcpy.c'; then $(CYGPATH_W) '_strcpy.c'; else $(CYGPATH_W) '$(srcdir)/_strcpy.c'; fi`
+libcex_a-strcpy.obj: strcpy.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-strcpy.obj `if test -f 'strcpy.c'; then $(CYGPATH_W) 'strcpy.c'; else $(CYGPATH_W) '$(srcdir)/strcpy.c'; fi`
 
-libcex_a-_strcspn.o: _strcspn.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-_strcspn.o `test -f '_strcspn.c' || echo '$(srcdir)/'`_strcspn.c
+libcex_a-strcspn.o: strcspn.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-strcspn.o `test -f 'strcspn.c' || echo '$(srcdir)/'`strcspn.c
 
-libcex_a-_strcspn.obj: _strcspn.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-_strcspn.obj `if test -f '_strcspn.c'; then $(CYGPATH_W) '_strcspn.c'; else $(CYGPATH_W) '$(srcdir)/_strcspn.c'; fi`
+libcex_a-strcspn.obj: strcspn.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-strcspn.obj `if test -f 'strcspn.c'; then $(CYGPATH_W) 'strcspn.c'; else $(CYGPATH_W) '$(srcdir)/strcspn.c'; fi`
 
 libcex_a-strlen.o: strlen.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-strlen.o `test -f 'strlen.c' || echo '$(srcdir)/'`strlen.c
@@ -3769,35 +3769,35 @@ libcex_a-strnlen.o: strnlen.c
 libcex_a-strnlen.obj: strnlen.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-strnlen.obj `if test -f 'strnlen.c'; then $(CYGPATH_W) 'strnlen.c'; else $(CYGPATH_W) '$(srcdir)/strnlen.c'; fi`
 
-libcex_a-_strncat.o: _strncat.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-_strncat.o `test -f '_strncat.c' || echo '$(srcdir)/'`_strncat.c
+libcex_a-strncat.o: strncat.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-strncat.o `test -f 'strncat.c' || echo '$(srcdir)/'`strncat.c
 
-libcex_a-_strncat.obj: _strncat.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-_strncat.obj `if test -f '_strncat.c'; then $(CYGPATH_W) '_strncat.c'; else $(CYGPATH_W) '$(srcdir)/_strncat.c'; fi`
+libcex_a-strncat.obj: strncat.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-strncat.obj `if test -f 'strncat.c'; then $(CYGPATH_W) 'strncat.c'; else $(CYGPATH_W) '$(srcdir)/strncat.c'; fi`
 
-libcex_a-_strncmp.o: _strncmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-_strncmp.o `test -f '_strncmp.c' || echo '$(srcdir)/'`_strncmp.c
+libcex_a-strncmp.o: strncmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-strncmp.o `test -f 'strncmp.c' || echo '$(srcdir)/'`strncmp.c
 
-libcex_a-_strncmp.obj: _strncmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-_strncmp.obj `if test -f '_strncmp.c'; then $(CYGPATH_W) '_strncmp.c'; else $(CYGPATH_W) '$(srcdir)/_strncmp.c'; fi`
+libcex_a-strncmp.obj: strncmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-strncmp.obj `if test -f 'strncmp.c'; then $(CYGPATH_W) 'strncmp.c'; else $(CYGPATH_W) '$(srcdir)/strncmp.c'; fi`
 
-libcex_a-_strncpy.o: _strncpy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-_strncpy.o `test -f '_strncpy.c' || echo '$(srcdir)/'`_strncpy.c
+libcex_a-strncpy.o: strncpy.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-strncpy.o `test -f 'strncpy.c' || echo '$(srcdir)/'`strncpy.c
 
-libcex_a-_strncpy.obj: _strncpy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-_strncpy.obj `if test -f '_strncpy.c'; then $(CYGPATH_W) '_strncpy.c'; else $(CYGPATH_W) '$(srcdir)/_strncpy.c'; fi`
+libcex_a-strncpy.obj: strncpy.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-strncpy.obj `if test -f 'strncpy.c'; then $(CYGPATH_W) 'strncpy.c'; else $(CYGPATH_W) '$(srcdir)/strncpy.c'; fi`
 
-libcex_a-_strpbrk.o: _strpbrk.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-_strpbrk.o `test -f '_strpbrk.c' || echo '$(srcdir)/'`_strpbrk.c
+libcex_a-strpbrk.o: strpbrk.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-strpbrk.o `test -f 'strpbrk.c' || echo '$(srcdir)/'`strpbrk.c
 
-libcex_a-_strpbrk.obj: _strpbrk.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-_strpbrk.obj `if test -f '_strpbrk.c'; then $(CYGPATH_W) '_strpbrk.c'; else $(CYGPATH_W) '$(srcdir)/_strpbrk.c'; fi`
+libcex_a-strpbrk.obj: strpbrk.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-strpbrk.obj `if test -f 'strpbrk.c'; then $(CYGPATH_W) 'strpbrk.c'; else $(CYGPATH_W) '$(srcdir)/strpbrk.c'; fi`
 
-libcex_a-_strrchr.o: _strrchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-_strrchr.o `test -f '_strrchr.c' || echo '$(srcdir)/'`_strrchr.c
+libcex_a-strrchr.o: strrchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-strrchr.o `test -f 'strrchr.c' || echo '$(srcdir)/'`strrchr.c
 
-libcex_a-_strrchr.obj: _strrchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-_strrchr.obj `if test -f '_strrchr.c'; then $(CYGPATH_W) '_strrchr.c'; else $(CYGPATH_W) '$(srcdir)/_strrchr.c'; fi`
+libcex_a-strrchr.obj: strrchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-strrchr.obj `if test -f 'strrchr.c'; then $(CYGPATH_W) 'strrchr.c'; else $(CYGPATH_W) '$(srcdir)/strrchr.c'; fi`
 
 libcex_a-strsep.o: strsep.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-strsep.o `test -f 'strsep.c' || echo '$(srcdir)/'`strsep.c
@@ -3805,17 +3805,17 @@ libcex_a-strsep.o: strsep.c
 libcex_a-strsep.obj: strsep.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-strsep.obj `if test -f 'strsep.c'; then $(CYGPATH_W) 'strsep.c'; else $(CYGPATH_W) '$(srcdir)/strsep.c'; fi`
 
-libcex_a-_strspn.o: _strspn.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-_strspn.o `test -f '_strspn.c' || echo '$(srcdir)/'`_strspn.c
+libcex_a-strspn.o: strspn.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-strspn.o `test -f 'strspn.c' || echo '$(srcdir)/'`strspn.c
 
-libcex_a-_strspn.obj: _strspn.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-_strspn.obj `if test -f '_strspn.c'; then $(CYGPATH_W) '_strspn.c'; else $(CYGPATH_W) '$(srcdir)/_strspn.c'; fi`
+libcex_a-strspn.obj: strspn.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-strspn.obj `if test -f 'strspn.c'; then $(CYGPATH_W) 'strspn.c'; else $(CYGPATH_W) '$(srcdir)/strspn.c'; fi`
 
-libcex_a-_strstr.o: _strstr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-_strstr.o `test -f '_strstr.c' || echo '$(srcdir)/'`_strstr.c
+libcex_a-strstr.o: strstr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-strstr.o `test -f 'strstr.c' || echo '$(srcdir)/'`strstr.c
 
-libcex_a-_strstr.obj: _strstr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-_strstr.obj `if test -f '_strstr.c'; then $(CYGPATH_W) '_strstr.c'; else $(CYGPATH_W) '$(srcdir)/_strstr.c'; fi`
+libcex_a-strstr.obj: strstr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-strstr.obj `if test -f 'strstr.c'; then $(CYGPATH_W) 'strstr.c'; else $(CYGPATH_W) '$(srcdir)/strstr.c'; fi`
 
 libcex_a-strtok.o: strtok.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcex_a_CFLAGS) $(CFLAGS) -c -o libcex_a-strtok.o `test -f 'strtok.c' || echo '$(srcdir)/'`strtok.c
@@ -4111,11 +4111,11 @@ libco_a-vsprintf.o: vsprintf.c
 libco_a-vsprintf.obj: vsprintf.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-vsprintf.obj `if test -f 'vsprintf.c'; then $(CYGPATH_W) 'vsprintf.c'; else $(CYGPATH_W) '$(srcdir)/vsprintf.c'; fi`
 
-libco_a-_atof.o: _atof.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-_atof.o `test -f '_atof.c' || echo '$(srcdir)/'`_atof.c
+libco_a-atof.o: atof.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-atof.o `test -f 'atof.c' || echo '$(srcdir)/'`atof.c
 
-libco_a-_atof.obj: _atof.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-_atof.obj `if test -f '_atof.c'; then $(CYGPATH_W) '_atof.c'; else $(CYGPATH_W) '$(srcdir)/_atof.c'; fi`
+libco_a-atof.obj: atof.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-atof.obj `if test -f 'atof.c'; then $(CYGPATH_W) 'atof.c'; else $(CYGPATH_W) '$(srcdir)/atof.c'; fi`
 
 libco_a-_ftoa.o: _ftoa.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-_ftoa.o `test -f '_ftoa.c' || echo '$(srcdir)/'`_ftoa.c
@@ -4267,17 +4267,17 @@ libco_a-wctomb.o: wctomb.c
 libco_a-wctomb.obj: wctomb.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-wctomb.obj `if test -f 'wctomb.c'; then $(CYGPATH_W) 'wctomb.c'; else $(CYGPATH_W) '$(srcdir)/wctomb.c'; fi`
 
-libco_a-_memchr.o: _memchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-_memchr.o `test -f '_memchr.c' || echo '$(srcdir)/'`_memchr.c
+libco_a-memchr.o: memchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-memchr.o `test -f 'memchr.c' || echo '$(srcdir)/'`memchr.c
 
-libco_a-_memchr.obj: _memchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-_memchr.obj `if test -f '_memchr.c'; then $(CYGPATH_W) '_memchr.c'; else $(CYGPATH_W) '$(srcdir)/_memchr.c'; fi`
+libco_a-memchr.obj: memchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-memchr.obj `if test -f 'memchr.c'; then $(CYGPATH_W) 'memchr.c'; else $(CYGPATH_W) '$(srcdir)/memchr.c'; fi`
 
-libco_a-_memcmp.o: _memcmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-_memcmp.o `test -f '_memcmp.c' || echo '$(srcdir)/'`_memcmp.c
+libco_a-memcmp.o: memcmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-memcmp.o `test -f 'memcmp.c' || echo '$(srcdir)/'`memcmp.c
 
-libco_a-_memcmp.obj: _memcmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-_memcmp.obj `if test -f '_memcmp.c'; then $(CYGPATH_W) '_memcmp.c'; else $(CYGPATH_W) '$(srcdir)/_memcmp.c'; fi`
+libco_a-memcmp.obj: memcmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-memcmp.obj `if test -f 'memcmp.c'; then $(CYGPATH_W) 'memcmp.c'; else $(CYGPATH_W) '$(srcdir)/memcmp.c'; fi`
 
 libco_a-__memcpy.o: __memcpy.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-__memcpy.o `test -f '__memcpy.c' || echo '$(srcdir)/'`__memcpy.c
@@ -4291,47 +4291,47 @@ libco_a-memcpy.o: memcpy.c
 libco_a-memcpy.obj: memcpy.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-memcpy.obj `if test -f 'memcpy.c'; then $(CYGPATH_W) 'memcpy.c'; else $(CYGPATH_W) '$(srcdir)/memcpy.c'; fi`
 
-libco_a-_memmove.o: _memmove.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-_memmove.o `test -f '_memmove.c' || echo '$(srcdir)/'`_memmove.c
+libco_a-memmove.o: memmove.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-memmove.o `test -f 'memmove.c' || echo '$(srcdir)/'`memmove.c
 
-libco_a-_memmove.obj: _memmove.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-_memmove.obj `if test -f '_memmove.c'; then $(CYGPATH_W) '_memmove.c'; else $(CYGPATH_W) '$(srcdir)/_memmove.c'; fi`
+libco_a-memmove.obj: memmove.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-memmove.obj `if test -f 'memmove.c'; then $(CYGPATH_W) 'memmove.c'; else $(CYGPATH_W) '$(srcdir)/memmove.c'; fi`
 
-libco_a-_memset.o: _memset.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-_memset.o `test -f '_memset.c' || echo '$(srcdir)/'`_memset.c
+libco_a-memset.o: memset.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-memset.o `test -f 'memset.c' || echo '$(srcdir)/'`memset.c
 
-libco_a-_memset.obj: _memset.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-_memset.obj `if test -f '_memset.c'; then $(CYGPATH_W) '_memset.c'; else $(CYGPATH_W) '$(srcdir)/_memset.c'; fi`
+libco_a-memset.obj: memset.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-memset.obj `if test -f 'memset.c'; then $(CYGPATH_W) 'memset.c'; else $(CYGPATH_W) '$(srcdir)/memset.c'; fi`
 
-libco_a-_strcat.o: _strcat.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-_strcat.o `test -f '_strcat.c' || echo '$(srcdir)/'`_strcat.c
+libco_a-strcat.o: strcat.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-strcat.o `test -f 'strcat.c' || echo '$(srcdir)/'`strcat.c
 
-libco_a-_strcat.obj: _strcat.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-_strcat.obj `if test -f '_strcat.c'; then $(CYGPATH_W) '_strcat.c'; else $(CYGPATH_W) '$(srcdir)/_strcat.c'; fi`
+libco_a-strcat.obj: strcat.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-strcat.obj `if test -f 'strcat.c'; then $(CYGPATH_W) 'strcat.c'; else $(CYGPATH_W) '$(srcdir)/strcat.c'; fi`
 
-libco_a-_strchr.o: _strchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-_strchr.o `test -f '_strchr.c' || echo '$(srcdir)/'`_strchr.c
+libco_a-strchr.o: strchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-strchr.o `test -f 'strchr.c' || echo '$(srcdir)/'`strchr.c
 
-libco_a-_strchr.obj: _strchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-_strchr.obj `if test -f '_strchr.c'; then $(CYGPATH_W) '_strchr.c'; else $(CYGPATH_W) '$(srcdir)/_strchr.c'; fi`
+libco_a-strchr.obj: strchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-strchr.obj `if test -f 'strchr.c'; then $(CYGPATH_W) 'strchr.c'; else $(CYGPATH_W) '$(srcdir)/strchr.c'; fi`
 
-libco_a-_strcmp.o: _strcmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-_strcmp.o `test -f '_strcmp.c' || echo '$(srcdir)/'`_strcmp.c
+libco_a-strcmp.o: strcmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-strcmp.o `test -f 'strcmp.c' || echo '$(srcdir)/'`strcmp.c
 
-libco_a-_strcmp.obj: _strcmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-_strcmp.obj `if test -f '_strcmp.c'; then $(CYGPATH_W) '_strcmp.c'; else $(CYGPATH_W) '$(srcdir)/_strcmp.c'; fi`
+libco_a-strcmp.obj: strcmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-strcmp.obj `if test -f 'strcmp.c'; then $(CYGPATH_W) 'strcmp.c'; else $(CYGPATH_W) '$(srcdir)/strcmp.c'; fi`
 
-libco_a-_strcpy.o: _strcpy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-_strcpy.o `test -f '_strcpy.c' || echo '$(srcdir)/'`_strcpy.c
+libco_a-strcpy.o: strcpy.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-strcpy.o `test -f 'strcpy.c' || echo '$(srcdir)/'`strcpy.c
 
-libco_a-_strcpy.obj: _strcpy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-_strcpy.obj `if test -f '_strcpy.c'; then $(CYGPATH_W) '_strcpy.c'; else $(CYGPATH_W) '$(srcdir)/_strcpy.c'; fi`
+libco_a-strcpy.obj: strcpy.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-strcpy.obj `if test -f 'strcpy.c'; then $(CYGPATH_W) 'strcpy.c'; else $(CYGPATH_W) '$(srcdir)/strcpy.c'; fi`
 
-libco_a-_strcspn.o: _strcspn.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-_strcspn.o `test -f '_strcspn.c' || echo '$(srcdir)/'`_strcspn.c
+libco_a-strcspn.o: strcspn.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-strcspn.o `test -f 'strcspn.c' || echo '$(srcdir)/'`strcspn.c
 
-libco_a-_strcspn.obj: _strcspn.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-_strcspn.obj `if test -f '_strcspn.c'; then $(CYGPATH_W) '_strcspn.c'; else $(CYGPATH_W) '$(srcdir)/_strcspn.c'; fi`
+libco_a-strcspn.obj: strcspn.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-strcspn.obj `if test -f 'strcspn.c'; then $(CYGPATH_W) 'strcspn.c'; else $(CYGPATH_W) '$(srcdir)/strcspn.c'; fi`
 
 libco_a-strlen.o: strlen.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-strlen.o `test -f 'strlen.c' || echo '$(srcdir)/'`strlen.c
@@ -4345,35 +4345,35 @@ libco_a-strnlen.o: strnlen.c
 libco_a-strnlen.obj: strnlen.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-strnlen.obj `if test -f 'strnlen.c'; then $(CYGPATH_W) 'strnlen.c'; else $(CYGPATH_W) '$(srcdir)/strnlen.c'; fi`
 
-libco_a-_strncat.o: _strncat.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-_strncat.o `test -f '_strncat.c' || echo '$(srcdir)/'`_strncat.c
+libco_a-strncat.o: strncat.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-strncat.o `test -f 'strncat.c' || echo '$(srcdir)/'`strncat.c
 
-libco_a-_strncat.obj: _strncat.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-_strncat.obj `if test -f '_strncat.c'; then $(CYGPATH_W) '_strncat.c'; else $(CYGPATH_W) '$(srcdir)/_strncat.c'; fi`
+libco_a-strncat.obj: strncat.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-strncat.obj `if test -f 'strncat.c'; then $(CYGPATH_W) 'strncat.c'; else $(CYGPATH_W) '$(srcdir)/strncat.c'; fi`
 
-libco_a-_strncmp.o: _strncmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-_strncmp.o `test -f '_strncmp.c' || echo '$(srcdir)/'`_strncmp.c
+libco_a-strncmp.o: strncmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-strncmp.o `test -f 'strncmp.c' || echo '$(srcdir)/'`strncmp.c
 
-libco_a-_strncmp.obj: _strncmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-_strncmp.obj `if test -f '_strncmp.c'; then $(CYGPATH_W) '_strncmp.c'; else $(CYGPATH_W) '$(srcdir)/_strncmp.c'; fi`
+libco_a-strncmp.obj: strncmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-strncmp.obj `if test -f 'strncmp.c'; then $(CYGPATH_W) 'strncmp.c'; else $(CYGPATH_W) '$(srcdir)/strncmp.c'; fi`
 
-libco_a-_strncpy.o: _strncpy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-_strncpy.o `test -f '_strncpy.c' || echo '$(srcdir)/'`_strncpy.c
+libco_a-strncpy.o: strncpy.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-strncpy.o `test -f 'strncpy.c' || echo '$(srcdir)/'`strncpy.c
 
-libco_a-_strncpy.obj: _strncpy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-_strncpy.obj `if test -f '_strncpy.c'; then $(CYGPATH_W) '_strncpy.c'; else $(CYGPATH_W) '$(srcdir)/_strncpy.c'; fi`
+libco_a-strncpy.obj: strncpy.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-strncpy.obj `if test -f 'strncpy.c'; then $(CYGPATH_W) 'strncpy.c'; else $(CYGPATH_W) '$(srcdir)/strncpy.c'; fi`
 
-libco_a-_strpbrk.o: _strpbrk.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-_strpbrk.o `test -f '_strpbrk.c' || echo '$(srcdir)/'`_strpbrk.c
+libco_a-strpbrk.o: strpbrk.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-strpbrk.o `test -f 'strpbrk.c' || echo '$(srcdir)/'`strpbrk.c
 
-libco_a-_strpbrk.obj: _strpbrk.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-_strpbrk.obj `if test -f '_strpbrk.c'; then $(CYGPATH_W) '_strpbrk.c'; else $(CYGPATH_W) '$(srcdir)/_strpbrk.c'; fi`
+libco_a-strpbrk.obj: strpbrk.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-strpbrk.obj `if test -f 'strpbrk.c'; then $(CYGPATH_W) 'strpbrk.c'; else $(CYGPATH_W) '$(srcdir)/strpbrk.c'; fi`
 
-libco_a-_strrchr.o: _strrchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-_strrchr.o `test -f '_strrchr.c' || echo '$(srcdir)/'`_strrchr.c
+libco_a-strrchr.o: strrchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-strrchr.o `test -f 'strrchr.c' || echo '$(srcdir)/'`strrchr.c
 
-libco_a-_strrchr.obj: _strrchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-_strrchr.obj `if test -f '_strrchr.c'; then $(CYGPATH_W) '_strrchr.c'; else $(CYGPATH_W) '$(srcdir)/_strrchr.c'; fi`
+libco_a-strrchr.obj: strrchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-strrchr.obj `if test -f 'strrchr.c'; then $(CYGPATH_W) 'strrchr.c'; else $(CYGPATH_W) '$(srcdir)/strrchr.c'; fi`
 
 libco_a-strsep.o: strsep.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-strsep.o `test -f 'strsep.c' || echo '$(srcdir)/'`strsep.c
@@ -4381,17 +4381,17 @@ libco_a-strsep.o: strsep.c
 libco_a-strsep.obj: strsep.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-strsep.obj `if test -f 'strsep.c'; then $(CYGPATH_W) 'strsep.c'; else $(CYGPATH_W) '$(srcdir)/strsep.c'; fi`
 
-libco_a-_strspn.o: _strspn.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-_strspn.o `test -f '_strspn.c' || echo '$(srcdir)/'`_strspn.c
+libco_a-strspn.o: strspn.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-strspn.o `test -f 'strspn.c' || echo '$(srcdir)/'`strspn.c
 
-libco_a-_strspn.obj: _strspn.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-_strspn.obj `if test -f '_strspn.c'; then $(CYGPATH_W) '_strspn.c'; else $(CYGPATH_W) '$(srcdir)/_strspn.c'; fi`
+libco_a-strspn.obj: strspn.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-strspn.obj `if test -f 'strspn.c'; then $(CYGPATH_W) 'strspn.c'; else $(CYGPATH_W) '$(srcdir)/strspn.c'; fi`
 
-libco_a-_strstr.o: _strstr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-_strstr.o `test -f '_strstr.c' || echo '$(srcdir)/'`_strstr.c
+libco_a-strstr.o: strstr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-strstr.o `test -f 'strstr.c' || echo '$(srcdir)/'`strstr.c
 
-libco_a-_strstr.obj: _strstr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-_strstr.obj `if test -f '_strstr.c'; then $(CYGPATH_W) '_strstr.c'; else $(CYGPATH_W) '$(srcdir)/_strstr.c'; fi`
+libco_a-strstr.obj: strstr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-strstr.obj `if test -f 'strstr.c'; then $(CYGPATH_W) 'strstr.c'; else $(CYGPATH_W) '$(srcdir)/strstr.c'; fi`
 
 libco_a-strtok.o: strtok.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libco_a_CFLAGS) $(CFLAGS) -c -o libco_a-strtok.o `test -f 'strtok.c' || echo '$(srcdir)/'`strtok.c
@@ -4687,11 +4687,11 @@ libcox_a-vsprintf.o: vsprintf.c
 libcox_a-vsprintf.obj: vsprintf.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-vsprintf.obj `if test -f 'vsprintf.c'; then $(CYGPATH_W) 'vsprintf.c'; else $(CYGPATH_W) '$(srcdir)/vsprintf.c'; fi`
 
-libcox_a-_atof.o: _atof.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-_atof.o `test -f '_atof.c' || echo '$(srcdir)/'`_atof.c
+libcox_a-atof.o: atof.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-atof.o `test -f 'atof.c' || echo '$(srcdir)/'`atof.c
 
-libcox_a-_atof.obj: _atof.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-_atof.obj `if test -f '_atof.c'; then $(CYGPATH_W) '_atof.c'; else $(CYGPATH_W) '$(srcdir)/_atof.c'; fi`
+libcox_a-atof.obj: atof.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-atof.obj `if test -f 'atof.c'; then $(CYGPATH_W) 'atof.c'; else $(CYGPATH_W) '$(srcdir)/atof.c'; fi`
 
 libcox_a-_ftoa.o: _ftoa.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-_ftoa.o `test -f '_ftoa.c' || echo '$(srcdir)/'`_ftoa.c
@@ -4843,17 +4843,17 @@ libcox_a-wctomb.o: wctomb.c
 libcox_a-wctomb.obj: wctomb.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-wctomb.obj `if test -f 'wctomb.c'; then $(CYGPATH_W) 'wctomb.c'; else $(CYGPATH_W) '$(srcdir)/wctomb.c'; fi`
 
-libcox_a-_memchr.o: _memchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-_memchr.o `test -f '_memchr.c' || echo '$(srcdir)/'`_memchr.c
+libcox_a-memchr.o: memchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-memchr.o `test -f 'memchr.c' || echo '$(srcdir)/'`memchr.c
 
-libcox_a-_memchr.obj: _memchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-_memchr.obj `if test -f '_memchr.c'; then $(CYGPATH_W) '_memchr.c'; else $(CYGPATH_W) '$(srcdir)/_memchr.c'; fi`
+libcox_a-memchr.obj: memchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-memchr.obj `if test -f 'memchr.c'; then $(CYGPATH_W) 'memchr.c'; else $(CYGPATH_W) '$(srcdir)/memchr.c'; fi`
 
-libcox_a-_memcmp.o: _memcmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-_memcmp.o `test -f '_memcmp.c' || echo '$(srcdir)/'`_memcmp.c
+libcox_a-memcmp.o: memcmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-memcmp.o `test -f 'memcmp.c' || echo '$(srcdir)/'`memcmp.c
 
-libcox_a-_memcmp.obj: _memcmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-_memcmp.obj `if test -f '_memcmp.c'; then $(CYGPATH_W) '_memcmp.c'; else $(CYGPATH_W) '$(srcdir)/_memcmp.c'; fi`
+libcox_a-memcmp.obj: memcmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-memcmp.obj `if test -f 'memcmp.c'; then $(CYGPATH_W) 'memcmp.c'; else $(CYGPATH_W) '$(srcdir)/memcmp.c'; fi`
 
 libcox_a-__memcpy.o: __memcpy.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-__memcpy.o `test -f '__memcpy.c' || echo '$(srcdir)/'`__memcpy.c
@@ -4867,47 +4867,47 @@ libcox_a-memcpy.o: memcpy.c
 libcox_a-memcpy.obj: memcpy.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-memcpy.obj `if test -f 'memcpy.c'; then $(CYGPATH_W) 'memcpy.c'; else $(CYGPATH_W) '$(srcdir)/memcpy.c'; fi`
 
-libcox_a-_memmove.o: _memmove.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-_memmove.o `test -f '_memmove.c' || echo '$(srcdir)/'`_memmove.c
+libcox_a-memmove.o: memmove.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-memmove.o `test -f 'memmove.c' || echo '$(srcdir)/'`memmove.c
 
-libcox_a-_memmove.obj: _memmove.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-_memmove.obj `if test -f '_memmove.c'; then $(CYGPATH_W) '_memmove.c'; else $(CYGPATH_W) '$(srcdir)/_memmove.c'; fi`
+libcox_a-memmove.obj: memmove.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-memmove.obj `if test -f 'memmove.c'; then $(CYGPATH_W) 'memmove.c'; else $(CYGPATH_W) '$(srcdir)/memmove.c'; fi`
 
-libcox_a-_memset.o: _memset.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-_memset.o `test -f '_memset.c' || echo '$(srcdir)/'`_memset.c
+libcox_a-memset.o: memset.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-memset.o `test -f 'memset.c' || echo '$(srcdir)/'`memset.c
 
-libcox_a-_memset.obj: _memset.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-_memset.obj `if test -f '_memset.c'; then $(CYGPATH_W) '_memset.c'; else $(CYGPATH_W) '$(srcdir)/_memset.c'; fi`
+libcox_a-memset.obj: memset.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-memset.obj `if test -f 'memset.c'; then $(CYGPATH_W) 'memset.c'; else $(CYGPATH_W) '$(srcdir)/memset.c'; fi`
 
-libcox_a-_strcat.o: _strcat.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-_strcat.o `test -f '_strcat.c' || echo '$(srcdir)/'`_strcat.c
+libcox_a-strcat.o: strcat.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-strcat.o `test -f 'strcat.c' || echo '$(srcdir)/'`strcat.c
 
-libcox_a-_strcat.obj: _strcat.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-_strcat.obj `if test -f '_strcat.c'; then $(CYGPATH_W) '_strcat.c'; else $(CYGPATH_W) '$(srcdir)/_strcat.c'; fi`
+libcox_a-strcat.obj: strcat.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-strcat.obj `if test -f 'strcat.c'; then $(CYGPATH_W) 'strcat.c'; else $(CYGPATH_W) '$(srcdir)/strcat.c'; fi`
 
-libcox_a-_strchr.o: _strchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-_strchr.o `test -f '_strchr.c' || echo '$(srcdir)/'`_strchr.c
+libcox_a-strchr.o: strchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-strchr.o `test -f 'strchr.c' || echo '$(srcdir)/'`strchr.c
 
-libcox_a-_strchr.obj: _strchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-_strchr.obj `if test -f '_strchr.c'; then $(CYGPATH_W) '_strchr.c'; else $(CYGPATH_W) '$(srcdir)/_strchr.c'; fi`
+libcox_a-strchr.obj: strchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-strchr.obj `if test -f 'strchr.c'; then $(CYGPATH_W) 'strchr.c'; else $(CYGPATH_W) '$(srcdir)/strchr.c'; fi`
 
-libcox_a-_strcmp.o: _strcmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-_strcmp.o `test -f '_strcmp.c' || echo '$(srcdir)/'`_strcmp.c
+libcox_a-strcmp.o: strcmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-strcmp.o `test -f 'strcmp.c' || echo '$(srcdir)/'`strcmp.c
 
-libcox_a-_strcmp.obj: _strcmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-_strcmp.obj `if test -f '_strcmp.c'; then $(CYGPATH_W) '_strcmp.c'; else $(CYGPATH_W) '$(srcdir)/_strcmp.c'; fi`
+libcox_a-strcmp.obj: strcmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-strcmp.obj `if test -f 'strcmp.c'; then $(CYGPATH_W) 'strcmp.c'; else $(CYGPATH_W) '$(srcdir)/strcmp.c'; fi`
 
-libcox_a-_strcpy.o: _strcpy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-_strcpy.o `test -f '_strcpy.c' || echo '$(srcdir)/'`_strcpy.c
+libcox_a-strcpy.o: strcpy.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-strcpy.o `test -f 'strcpy.c' || echo '$(srcdir)/'`strcpy.c
 
-libcox_a-_strcpy.obj: _strcpy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-_strcpy.obj `if test -f '_strcpy.c'; then $(CYGPATH_W) '_strcpy.c'; else $(CYGPATH_W) '$(srcdir)/_strcpy.c'; fi`
+libcox_a-strcpy.obj: strcpy.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-strcpy.obj `if test -f 'strcpy.c'; then $(CYGPATH_W) 'strcpy.c'; else $(CYGPATH_W) '$(srcdir)/strcpy.c'; fi`
 
-libcox_a-_strcspn.o: _strcspn.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-_strcspn.o `test -f '_strcspn.c' || echo '$(srcdir)/'`_strcspn.c
+libcox_a-strcspn.o: strcspn.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-strcspn.o `test -f 'strcspn.c' || echo '$(srcdir)/'`strcspn.c
 
-libcox_a-_strcspn.obj: _strcspn.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-_strcspn.obj `if test -f '_strcspn.c'; then $(CYGPATH_W) '_strcspn.c'; else $(CYGPATH_W) '$(srcdir)/_strcspn.c'; fi`
+libcox_a-strcspn.obj: strcspn.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-strcspn.obj `if test -f 'strcspn.c'; then $(CYGPATH_W) 'strcspn.c'; else $(CYGPATH_W) '$(srcdir)/strcspn.c'; fi`
 
 libcox_a-strlen.o: strlen.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-strlen.o `test -f 'strlen.c' || echo '$(srcdir)/'`strlen.c
@@ -4921,35 +4921,35 @@ libcox_a-strnlen.o: strnlen.c
 libcox_a-strnlen.obj: strnlen.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-strnlen.obj `if test -f 'strnlen.c'; then $(CYGPATH_W) 'strnlen.c'; else $(CYGPATH_W) '$(srcdir)/strnlen.c'; fi`
 
-libcox_a-_strncat.o: _strncat.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-_strncat.o `test -f '_strncat.c' || echo '$(srcdir)/'`_strncat.c
+libcox_a-strncat.o: strncat.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-strncat.o `test -f 'strncat.c' || echo '$(srcdir)/'`strncat.c
 
-libcox_a-_strncat.obj: _strncat.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-_strncat.obj `if test -f '_strncat.c'; then $(CYGPATH_W) '_strncat.c'; else $(CYGPATH_W) '$(srcdir)/_strncat.c'; fi`
+libcox_a-strncat.obj: strncat.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-strncat.obj `if test -f 'strncat.c'; then $(CYGPATH_W) 'strncat.c'; else $(CYGPATH_W) '$(srcdir)/strncat.c'; fi`
 
-libcox_a-_strncmp.o: _strncmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-_strncmp.o `test -f '_strncmp.c' || echo '$(srcdir)/'`_strncmp.c
+libcox_a-strncmp.o: strncmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-strncmp.o `test -f 'strncmp.c' || echo '$(srcdir)/'`strncmp.c
 
-libcox_a-_strncmp.obj: _strncmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-_strncmp.obj `if test -f '_strncmp.c'; then $(CYGPATH_W) '_strncmp.c'; else $(CYGPATH_W) '$(srcdir)/_strncmp.c'; fi`
+libcox_a-strncmp.obj: strncmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-strncmp.obj `if test -f 'strncmp.c'; then $(CYGPATH_W) 'strncmp.c'; else $(CYGPATH_W) '$(srcdir)/strncmp.c'; fi`
 
-libcox_a-_strncpy.o: _strncpy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-_strncpy.o `test -f '_strncpy.c' || echo '$(srcdir)/'`_strncpy.c
+libcox_a-strncpy.o: strncpy.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-strncpy.o `test -f 'strncpy.c' || echo '$(srcdir)/'`strncpy.c
 
-libcox_a-_strncpy.obj: _strncpy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-_strncpy.obj `if test -f '_strncpy.c'; then $(CYGPATH_W) '_strncpy.c'; else $(CYGPATH_W) '$(srcdir)/_strncpy.c'; fi`
+libcox_a-strncpy.obj: strncpy.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-strncpy.obj `if test -f 'strncpy.c'; then $(CYGPATH_W) 'strncpy.c'; else $(CYGPATH_W) '$(srcdir)/strncpy.c'; fi`
 
-libcox_a-_strpbrk.o: _strpbrk.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-_strpbrk.o `test -f '_strpbrk.c' || echo '$(srcdir)/'`_strpbrk.c
+libcox_a-strpbrk.o: strpbrk.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-strpbrk.o `test -f 'strpbrk.c' || echo '$(srcdir)/'`strpbrk.c
 
-libcox_a-_strpbrk.obj: _strpbrk.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-_strpbrk.obj `if test -f '_strpbrk.c'; then $(CYGPATH_W) '_strpbrk.c'; else $(CYGPATH_W) '$(srcdir)/_strpbrk.c'; fi`
+libcox_a-strpbrk.obj: strpbrk.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-strpbrk.obj `if test -f 'strpbrk.c'; then $(CYGPATH_W) 'strpbrk.c'; else $(CYGPATH_W) '$(srcdir)/strpbrk.c'; fi`
 
-libcox_a-_strrchr.o: _strrchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-_strrchr.o `test -f '_strrchr.c' || echo '$(srcdir)/'`_strrchr.c
+libcox_a-strrchr.o: strrchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-strrchr.o `test -f 'strrchr.c' || echo '$(srcdir)/'`strrchr.c
 
-libcox_a-_strrchr.obj: _strrchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-_strrchr.obj `if test -f '_strrchr.c'; then $(CYGPATH_W) '_strrchr.c'; else $(CYGPATH_W) '$(srcdir)/_strrchr.c'; fi`
+libcox_a-strrchr.obj: strrchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-strrchr.obj `if test -f 'strrchr.c'; then $(CYGPATH_W) 'strrchr.c'; else $(CYGPATH_W) '$(srcdir)/strrchr.c'; fi`
 
 libcox_a-strsep.o: strsep.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-strsep.o `test -f 'strsep.c' || echo '$(srcdir)/'`strsep.c
@@ -4957,17 +4957,17 @@ libcox_a-strsep.o: strsep.c
 libcox_a-strsep.obj: strsep.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-strsep.obj `if test -f 'strsep.c'; then $(CYGPATH_W) 'strsep.c'; else $(CYGPATH_W) '$(srcdir)/strsep.c'; fi`
 
-libcox_a-_strspn.o: _strspn.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-_strspn.o `test -f '_strspn.c' || echo '$(srcdir)/'`_strspn.c
+libcox_a-strspn.o: strspn.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-strspn.o `test -f 'strspn.c' || echo '$(srcdir)/'`strspn.c
 
-libcox_a-_strspn.obj: _strspn.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-_strspn.obj `if test -f '_strspn.c'; then $(CYGPATH_W) '_strspn.c'; else $(CYGPATH_W) '$(srcdir)/_strspn.c'; fi`
+libcox_a-strspn.obj: strspn.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-strspn.obj `if test -f 'strspn.c'; then $(CYGPATH_W) 'strspn.c'; else $(CYGPATH_W) '$(srcdir)/strspn.c'; fi`
 
-libcox_a-_strstr.o: _strstr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-_strstr.o `test -f '_strstr.c' || echo '$(srcdir)/'`_strstr.c
+libcox_a-strstr.o: strstr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-strstr.o `test -f 'strstr.c' || echo '$(srcdir)/'`strstr.c
 
-libcox_a-_strstr.obj: _strstr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-_strstr.obj `if test -f '_strstr.c'; then $(CYGPATH_W) '_strstr.c'; else $(CYGPATH_W) '$(srcdir)/_strstr.c'; fi`
+libcox_a-strstr.obj: strstr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-strstr.obj `if test -f 'strstr.c'; then $(CYGPATH_W) 'strstr.c'; else $(CYGPATH_W) '$(srcdir)/strstr.c'; fi`
 
 libcox_a-strtok.o: strtok.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcox_a_CFLAGS) $(CFLAGS) -c -o libcox_a-strtok.o `test -f 'strtok.c' || echo '$(srcdir)/'`strtok.c
@@ -5263,11 +5263,11 @@ libcx_a-vsprintf.o: vsprintf.c
 libcx_a-vsprintf.obj: vsprintf.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-vsprintf.obj `if test -f 'vsprintf.c'; then $(CYGPATH_W) 'vsprintf.c'; else $(CYGPATH_W) '$(srcdir)/vsprintf.c'; fi`
 
-libcx_a-_atof.o: _atof.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-_atof.o `test -f '_atof.c' || echo '$(srcdir)/'`_atof.c
+libcx_a-atof.o: atof.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-atof.o `test -f 'atof.c' || echo '$(srcdir)/'`atof.c
 
-libcx_a-_atof.obj: _atof.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-_atof.obj `if test -f '_atof.c'; then $(CYGPATH_W) '_atof.c'; else $(CYGPATH_W) '$(srcdir)/_atof.c'; fi`
+libcx_a-atof.obj: atof.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-atof.obj `if test -f 'atof.c'; then $(CYGPATH_W) 'atof.c'; else $(CYGPATH_W) '$(srcdir)/atof.c'; fi`
 
 libcx_a-_ftoa.o: _ftoa.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-_ftoa.o `test -f '_ftoa.c' || echo '$(srcdir)/'`_ftoa.c
@@ -5419,17 +5419,17 @@ libcx_a-wctomb.o: wctomb.c
 libcx_a-wctomb.obj: wctomb.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-wctomb.obj `if test -f 'wctomb.c'; then $(CYGPATH_W) 'wctomb.c'; else $(CYGPATH_W) '$(srcdir)/wctomb.c'; fi`
 
-libcx_a-_memchr.o: _memchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-_memchr.o `test -f '_memchr.c' || echo '$(srcdir)/'`_memchr.c
+libcx_a-memchr.o: memchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-memchr.o `test -f 'memchr.c' || echo '$(srcdir)/'`memchr.c
 
-libcx_a-_memchr.obj: _memchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-_memchr.obj `if test -f '_memchr.c'; then $(CYGPATH_W) '_memchr.c'; else $(CYGPATH_W) '$(srcdir)/_memchr.c'; fi`
+libcx_a-memchr.obj: memchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-memchr.obj `if test -f 'memchr.c'; then $(CYGPATH_W) 'memchr.c'; else $(CYGPATH_W) '$(srcdir)/memchr.c'; fi`
 
-libcx_a-_memcmp.o: _memcmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-_memcmp.o `test -f '_memcmp.c' || echo '$(srcdir)/'`_memcmp.c
+libcx_a-memcmp.o: memcmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-memcmp.o `test -f 'memcmp.c' || echo '$(srcdir)/'`memcmp.c
 
-libcx_a-_memcmp.obj: _memcmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-_memcmp.obj `if test -f '_memcmp.c'; then $(CYGPATH_W) '_memcmp.c'; else $(CYGPATH_W) '$(srcdir)/_memcmp.c'; fi`
+libcx_a-memcmp.obj: memcmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-memcmp.obj `if test -f 'memcmp.c'; then $(CYGPATH_W) 'memcmp.c'; else $(CYGPATH_W) '$(srcdir)/memcmp.c'; fi`
 
 libcx_a-__memcpy.o: __memcpy.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-__memcpy.o `test -f '__memcpy.c' || echo '$(srcdir)/'`__memcpy.c
@@ -5443,47 +5443,47 @@ libcx_a-memcpy.o: memcpy.c
 libcx_a-memcpy.obj: memcpy.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-memcpy.obj `if test -f 'memcpy.c'; then $(CYGPATH_W) 'memcpy.c'; else $(CYGPATH_W) '$(srcdir)/memcpy.c'; fi`
 
-libcx_a-_memmove.o: _memmove.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-_memmove.o `test -f '_memmove.c' || echo '$(srcdir)/'`_memmove.c
+libcx_a-memmove.o: memmove.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-memmove.o `test -f 'memmove.c' || echo '$(srcdir)/'`memmove.c
 
-libcx_a-_memmove.obj: _memmove.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-_memmove.obj `if test -f '_memmove.c'; then $(CYGPATH_W) '_memmove.c'; else $(CYGPATH_W) '$(srcdir)/_memmove.c'; fi`
+libcx_a-memmove.obj: memmove.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-memmove.obj `if test -f 'memmove.c'; then $(CYGPATH_W) 'memmove.c'; else $(CYGPATH_W) '$(srcdir)/memmove.c'; fi`
 
-libcx_a-_memset.o: _memset.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-_memset.o `test -f '_memset.c' || echo '$(srcdir)/'`_memset.c
+libcx_a-memset.o: memset.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-memset.o `test -f 'memset.c' || echo '$(srcdir)/'`memset.c
 
-libcx_a-_memset.obj: _memset.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-_memset.obj `if test -f '_memset.c'; then $(CYGPATH_W) '_memset.c'; else $(CYGPATH_W) '$(srcdir)/_memset.c'; fi`
+libcx_a-memset.obj: memset.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-memset.obj `if test -f 'memset.c'; then $(CYGPATH_W) 'memset.c'; else $(CYGPATH_W) '$(srcdir)/memset.c'; fi`
 
-libcx_a-_strcat.o: _strcat.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-_strcat.o `test -f '_strcat.c' || echo '$(srcdir)/'`_strcat.c
+libcx_a-strcat.o: strcat.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-strcat.o `test -f 'strcat.c' || echo '$(srcdir)/'`strcat.c
 
-libcx_a-_strcat.obj: _strcat.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-_strcat.obj `if test -f '_strcat.c'; then $(CYGPATH_W) '_strcat.c'; else $(CYGPATH_W) '$(srcdir)/_strcat.c'; fi`
+libcx_a-strcat.obj: strcat.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-strcat.obj `if test -f 'strcat.c'; then $(CYGPATH_W) 'strcat.c'; else $(CYGPATH_W) '$(srcdir)/strcat.c'; fi`
 
-libcx_a-_strchr.o: _strchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-_strchr.o `test -f '_strchr.c' || echo '$(srcdir)/'`_strchr.c
+libcx_a-strchr.o: strchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-strchr.o `test -f 'strchr.c' || echo '$(srcdir)/'`strchr.c
 
-libcx_a-_strchr.obj: _strchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-_strchr.obj `if test -f '_strchr.c'; then $(CYGPATH_W) '_strchr.c'; else $(CYGPATH_W) '$(srcdir)/_strchr.c'; fi`
+libcx_a-strchr.obj: strchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-strchr.obj `if test -f 'strchr.c'; then $(CYGPATH_W) 'strchr.c'; else $(CYGPATH_W) '$(srcdir)/strchr.c'; fi`
 
-libcx_a-_strcmp.o: _strcmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-_strcmp.o `test -f '_strcmp.c' || echo '$(srcdir)/'`_strcmp.c
+libcx_a-strcmp.o: strcmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-strcmp.o `test -f 'strcmp.c' || echo '$(srcdir)/'`strcmp.c
 
-libcx_a-_strcmp.obj: _strcmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-_strcmp.obj `if test -f '_strcmp.c'; then $(CYGPATH_W) '_strcmp.c'; else $(CYGPATH_W) '$(srcdir)/_strcmp.c'; fi`
+libcx_a-strcmp.obj: strcmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-strcmp.obj `if test -f 'strcmp.c'; then $(CYGPATH_W) 'strcmp.c'; else $(CYGPATH_W) '$(srcdir)/strcmp.c'; fi`
 
-libcx_a-_strcpy.o: _strcpy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-_strcpy.o `test -f '_strcpy.c' || echo '$(srcdir)/'`_strcpy.c
+libcx_a-strcpy.o: strcpy.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-strcpy.o `test -f 'strcpy.c' || echo '$(srcdir)/'`strcpy.c
 
-libcx_a-_strcpy.obj: _strcpy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-_strcpy.obj `if test -f '_strcpy.c'; then $(CYGPATH_W) '_strcpy.c'; else $(CYGPATH_W) '$(srcdir)/_strcpy.c'; fi`
+libcx_a-strcpy.obj: strcpy.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-strcpy.obj `if test -f 'strcpy.c'; then $(CYGPATH_W) 'strcpy.c'; else $(CYGPATH_W) '$(srcdir)/strcpy.c'; fi`
 
-libcx_a-_strcspn.o: _strcspn.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-_strcspn.o `test -f '_strcspn.c' || echo '$(srcdir)/'`_strcspn.c
+libcx_a-strcspn.o: strcspn.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-strcspn.o `test -f 'strcspn.c' || echo '$(srcdir)/'`strcspn.c
 
-libcx_a-_strcspn.obj: _strcspn.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-_strcspn.obj `if test -f '_strcspn.c'; then $(CYGPATH_W) '_strcspn.c'; else $(CYGPATH_W) '$(srcdir)/_strcspn.c'; fi`
+libcx_a-strcspn.obj: strcspn.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-strcspn.obj `if test -f 'strcspn.c'; then $(CYGPATH_W) 'strcspn.c'; else $(CYGPATH_W) '$(srcdir)/strcspn.c'; fi`
 
 libcx_a-strlen.o: strlen.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-strlen.o `test -f 'strlen.c' || echo '$(srcdir)/'`strlen.c
@@ -5497,35 +5497,35 @@ libcx_a-strnlen.o: strnlen.c
 libcx_a-strnlen.obj: strnlen.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-strnlen.obj `if test -f 'strnlen.c'; then $(CYGPATH_W) 'strnlen.c'; else $(CYGPATH_W) '$(srcdir)/strnlen.c'; fi`
 
-libcx_a-_strncat.o: _strncat.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-_strncat.o `test -f '_strncat.c' || echo '$(srcdir)/'`_strncat.c
+libcx_a-strncat.o: strncat.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-strncat.o `test -f 'strncat.c' || echo '$(srcdir)/'`strncat.c
 
-libcx_a-_strncat.obj: _strncat.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-_strncat.obj `if test -f '_strncat.c'; then $(CYGPATH_W) '_strncat.c'; else $(CYGPATH_W) '$(srcdir)/_strncat.c'; fi`
+libcx_a-strncat.obj: strncat.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-strncat.obj `if test -f 'strncat.c'; then $(CYGPATH_W) 'strncat.c'; else $(CYGPATH_W) '$(srcdir)/strncat.c'; fi`
 
-libcx_a-_strncmp.o: _strncmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-_strncmp.o `test -f '_strncmp.c' || echo '$(srcdir)/'`_strncmp.c
+libcx_a-strncmp.o: strncmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-strncmp.o `test -f 'strncmp.c' || echo '$(srcdir)/'`strncmp.c
 
-libcx_a-_strncmp.obj: _strncmp.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-_strncmp.obj `if test -f '_strncmp.c'; then $(CYGPATH_W) '_strncmp.c'; else $(CYGPATH_W) '$(srcdir)/_strncmp.c'; fi`
+libcx_a-strncmp.obj: strncmp.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-strncmp.obj `if test -f 'strncmp.c'; then $(CYGPATH_W) 'strncmp.c'; else $(CYGPATH_W) '$(srcdir)/strncmp.c'; fi`
 
-libcx_a-_strncpy.o: _strncpy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-_strncpy.o `test -f '_strncpy.c' || echo '$(srcdir)/'`_strncpy.c
+libcx_a-strncpy.o: strncpy.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-strncpy.o `test -f 'strncpy.c' || echo '$(srcdir)/'`strncpy.c
 
-libcx_a-_strncpy.obj: _strncpy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-_strncpy.obj `if test -f '_strncpy.c'; then $(CYGPATH_W) '_strncpy.c'; else $(CYGPATH_W) '$(srcdir)/_strncpy.c'; fi`
+libcx_a-strncpy.obj: strncpy.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-strncpy.obj `if test -f 'strncpy.c'; then $(CYGPATH_W) 'strncpy.c'; else $(CYGPATH_W) '$(srcdir)/strncpy.c'; fi`
 
-libcx_a-_strpbrk.o: _strpbrk.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-_strpbrk.o `test -f '_strpbrk.c' || echo '$(srcdir)/'`_strpbrk.c
+libcx_a-strpbrk.o: strpbrk.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-strpbrk.o `test -f 'strpbrk.c' || echo '$(srcdir)/'`strpbrk.c
 
-libcx_a-_strpbrk.obj: _strpbrk.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-_strpbrk.obj `if test -f '_strpbrk.c'; then $(CYGPATH_W) '_strpbrk.c'; else $(CYGPATH_W) '$(srcdir)/_strpbrk.c'; fi`
+libcx_a-strpbrk.obj: strpbrk.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-strpbrk.obj `if test -f 'strpbrk.c'; then $(CYGPATH_W) 'strpbrk.c'; else $(CYGPATH_W) '$(srcdir)/strpbrk.c'; fi`
 
-libcx_a-_strrchr.o: _strrchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-_strrchr.o `test -f '_strrchr.c' || echo '$(srcdir)/'`_strrchr.c
+libcx_a-strrchr.o: strrchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-strrchr.o `test -f 'strrchr.c' || echo '$(srcdir)/'`strrchr.c
 
-libcx_a-_strrchr.obj: _strrchr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-_strrchr.obj `if test -f '_strrchr.c'; then $(CYGPATH_W) '_strrchr.c'; else $(CYGPATH_W) '$(srcdir)/_strrchr.c'; fi`
+libcx_a-strrchr.obj: strrchr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-strrchr.obj `if test -f 'strrchr.c'; then $(CYGPATH_W) 'strrchr.c'; else $(CYGPATH_W) '$(srcdir)/strrchr.c'; fi`
 
 libcx_a-strsep.o: strsep.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-strsep.o `test -f 'strsep.c' || echo '$(srcdir)/'`strsep.c
@@ -5533,17 +5533,17 @@ libcx_a-strsep.o: strsep.c
 libcx_a-strsep.obj: strsep.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-strsep.obj `if test -f 'strsep.c'; then $(CYGPATH_W) 'strsep.c'; else $(CYGPATH_W) '$(srcdir)/strsep.c'; fi`
 
-libcx_a-_strspn.o: _strspn.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-_strspn.o `test -f '_strspn.c' || echo '$(srcdir)/'`_strspn.c
+libcx_a-strspn.o: strspn.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-strspn.o `test -f 'strspn.c' || echo '$(srcdir)/'`strspn.c
 
-libcx_a-_strspn.obj: _strspn.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-_strspn.obj `if test -f '_strspn.c'; then $(CYGPATH_W) '_strspn.c'; else $(CYGPATH_W) '$(srcdir)/_strspn.c'; fi`
+libcx_a-strspn.obj: strspn.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-strspn.obj `if test -f 'strspn.c'; then $(CYGPATH_W) 'strspn.c'; else $(CYGPATH_W) '$(srcdir)/strspn.c'; fi`
 
-libcx_a-_strstr.o: _strstr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-_strstr.o `test -f '_strstr.c' || echo '$(srcdir)/'`_strstr.c
+libcx_a-strstr.o: strstr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-strstr.o `test -f 'strstr.c' || echo '$(srcdir)/'`strstr.c
 
-libcx_a-_strstr.obj: _strstr.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-_strstr.obj `if test -f '_strstr.c'; then $(CYGPATH_W) '_strstr.c'; else $(CYGPATH_W) '$(srcdir)/_strstr.c'; fi`
+libcx_a-strstr.obj: strstr.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-strstr.obj `if test -f 'strstr.c'; then $(CYGPATH_W) 'strstr.c'; else $(CYGPATH_W) '$(srcdir)/strstr.c'; fi`
 
 libcx_a-strtok.o: strtok.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcx_a_CFLAGS) $(CFLAGS) -c -o libcx_a-strtok.o `test -f 'strtok.c' || echo '$(srcdir)/'`strtok.c

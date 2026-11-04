@@ -1,8 +1,8 @@
 # libc/sm83 Makefile
 
-srcdir = @srcdir@
+srcdir		= @srcdir@
 top_srcdir      = @top_srcdir@
-top_builddir = @top_builddir@
+top_builddir	= @top_builddir@
 abs_top_builddir = @abs_top_builddir@
 
 VPATH  		= $(srcdir)
@@ -10,9 +10,13 @@ INCDIR          = $(top_srcdir)/device/include
 PORTINCDIR      = $(INCDIR)/$(PORT)
 
 LIB_TYPE     = @LIB_TYPE@
+LIB = sm83.lib
 
+AS = $(top_builddir)/bin/sdasgb
+
+ASFLAGS = -plosgff -I$(srcdir)
+CFLAGS = -I$(INCDIR) -I$(PORTINCDIR) -I. --std-c23
 EXTRA_CFLAGS = $(MODELFLAGS) --max-allocs-per-node 25000
-SAS = $(top_builddir)/bin/sdasgb
 
 # override PORTDIR defined by super (parent) makefile
 override PORTDIR = ../build/$(PORT)
@@ -37,10 +41,8 @@ PORT_LONGLONG = $(COMMON_LONGLONG) \
 PORT_SDCC = $(COMMON_SDCC) \
   __itoa.c \
   __ltoa.c \
-  _memmove.c \
+  memmove.c \
   _startup.c \
-  _strcmp.c \
-  _strcpy.c \
   div.c \
   ldiv.c \
   lldiv.c \
@@ -49,18 +51,12 @@ PORT_SDCC = $(COMMON_SDCC) \
   strnlen.c \
   atomic_flag_clear.c
 
-PORT_SOURCES = $(addprefix ../,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))
-PORT_OBJECTS = $(patsubst %.c,%.rel,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))
-
 OBJ = divint.rel mul.rel memcpy.rel abs.rel \
       __initrleblock.rel heap.rel __sdcc_call_hl.rel \
       setjmp.rel atomic_flag_test_and_set.rel strlen.rel
 
-LIB = sm83.lib
-AS = $(SAS)
-ASFLAGS = -plosgff
-
-CFLAGS = -I$(INCDIR) -I$(PORTINCDIR) -I. --std-c23
+PORT_SOURCES = $(addprefix ../,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))
+PORT_OBJECTS = $(patsubst %.c,%.rel,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))
 
 all: $(PORTDIR)/$(LIB) $(PORTDIR)/crt0.rel
 

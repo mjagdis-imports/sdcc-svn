@@ -1,7 +1,6 @@
 .DELETE_ON_ERROR:
 
 COMMON_FLOAT = \
-  _atof.c \
   _schar2fs.c \
   _sint2fs.c \
   _slong2fs.c \
@@ -25,6 +24,7 @@ COMMON_FLOAT = \
   _fseq.c \
   _fslt.c \
   _fsneq.c \
+  atof.c \
   fabsf.c \
   frexpf.c \
   ldexpf.c \
@@ -108,27 +108,30 @@ COMMON_SDCC = \
   ullabs.c \
   imaxabs.c \
   umaxabs.c \
+  memccpy.c \
+  memchr.c \
+  memcmp.c \
+  memmove.c \
+  memset.c \
+  memset_explicit.c \
   rand.c \
-  _strcat.c \
-  _strchr.c \
-  _strcspn.c \
+  strcat.c \
+  strchr.c \
+  strcmp.c \
+  strcpy.c \
+  strcspn.c \
   strdup.c \
   strndup.c \
-  _strncat.c \
-  _strncmp.c \
-  strxfrm.c \
-  _strncpy.c \
-  _strpbrk.c \
-  _strrchr.c \
+  strncat.c \
+  strncmp.c \
+  strncpy.c \
+  strpbrk.c \
+  strrchr.c \
   strsep.c \
-  _strspn.c \
-  _strstr.c \
+  strspn.c \
+  strstr.c \
   strtok.c \
-  memccpy.c \
-  _memchr.c \
-  _memcmp.c \
-  _memset.c \
-  memset_explicit.c \
+  strxfrm.c \
   aligned_alloc.c \
   calloc.c \
   malloc.c \

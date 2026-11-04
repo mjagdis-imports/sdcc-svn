@@ -67,20 +67,17 @@ PORT_SDCC = $(COMMON_SDCC) \
   _gptrgetc.c \
   _gptrput.c \
   _ser.c \
-  _setjmp.c \
+  setjmp.c \
   serial.c \
   __itoa.c \
   __ltoa.c \
+  __memcpy.c \
+  _heap.c \
   _spx.c \
   _startup.c \
-  _strcmp.c \
   strlen.c \
   strnlen.c \
-  __memcpy.c \
   memcpy.c \
-  _memmove.c \
-  _strcpy.c \
-  _heap.c \
   div.c \
   ldiv.c \
   lldiv.c \

@@ -10,9 +10,13 @@ INCDIR          = $(top_srcdir)/device/include
 PORTINCDIR      = $(INCDIR)/$(PORT)
 
 LIB_TYPE     = @LIB_TYPE@
+LIB = stm8.lib
 
+AS = $(top_builddir)/bin/sdasstm8
+
+ASFLAGS = -plosgff -I$(srcdir)
+CFLAGS = -I$(INCDIR) -I$(PORTINCDIR) -I. --std-c23
 EXTRA_CFLAGS = $(MODELFLAGS) --max-allocs-per-node 25000
-SAS = $(top_builddir)/bin/sdasstm8
 
 # override PORTDIR defined by super (parent) makefile
 override PORTDIR = ../build/$(PORT)
@@ -23,7 +27,9 @@ PORT_FLOAT = $(COMMON_FLOAT)
 
 PORT_INT = _mulschar.c _divschar.c _modschar.c
 
-PORT_LONG =
+PORT_LONG = \
+  _divulong.c \
+  _modulong.c
 
 PORT_LONGLONG = $(COMMON_LONGLONG) \
   _srulonglong.c \
@@ -42,7 +48,7 @@ PORT_SDCC = $(COMMON_SDCC) \
   _startup.c \
   strlen.c \
   strnlen.c \
-  _memmove.c \
+  memmove.c \
   div.c \
   ldiv.c \
   lldiv.c \
@@ -50,16 +56,12 @@ PORT_SDCC = $(COMMON_SDCC) \
   vprintf.c \
   atomic_flag_clear.c
 
+OBJ = setjmp.rel _mulint.rel __mulsint2slong.rel __mululonguchar2ulonglong.rel \
+      _divsint.rel _modsint.rel _mullong.rel _divslong.rel _modslong.rel _fast_long_neg.rel \
+      heap.rel memcpy.rel atomic_flag_test_and_set.rel
+
 PORT_SOURCES = $(addprefix ../,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))
 PORT_OBJECTS = $(patsubst %.c,%.rel,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))
-
-OBJ = setjmp.rel _mulint.rel __mulsint2slong.rel __mululonguchar2ulonglong.rel _divsint.rel _modsint.rel _mullong.rel _divulong.rel _modulong.rel _divslong.rel _modslong.rel _fast_long_neg.rel heap.rel strcpy.rel strcmp.rel memcpy.rel atomic_flag_test_and_set.rel
-
-LIB = stm8.lib
-AS = $(SAS)
-ASFLAGS = -plosgff
-
-CFLAGS = -I$(INCDIR) -I$(PORTINCDIR) -I. --std-c23
 
 all: $(PORTDIR)/$(LIB)
 
