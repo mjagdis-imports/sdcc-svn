@@ -1,3 +1,10 @@
+2026-11-05 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
+	* src/SDCCmain.c (_preCmd): Pass -ffreestanding when invoking the
+	  preprocessor, matching SDCC's documented implementation model
+	  (bug #4209).
+	* support/regression/tests/bug-4209.c: Check __STDC_HOSTED__.
+
 2026-11-04 Gabriele Gorla <gorlik@yahoo.com>
 
 	* device/lib/ds390/Makefile.in,
