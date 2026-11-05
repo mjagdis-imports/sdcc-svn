@@ -1,10 +1,15 @@
-.define MOS65C02
-
+; assembler configuration
+.optsdcc -mhuc6280
 .r65c02
 
+; defines for conditional code
+.define MOS65C02
+
+; pseudo instructions
 .define CLA "lda #0x00"
 .define CLX "ldx #0x00"
 .define CLY "ldy #0x00"
 
+; stack location
 STACK = 0x0100
 

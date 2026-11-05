@@ -1,3 +1,22 @@
+2026-11-05 Gabriele Gorla <gorlik@yahoo.com>
+
+	* device/lib/ds390/config.inc
+	  device/lib/ds400/config.inc
+	  device/lib/huc6280/config.inc
+	  device/lib/mcs51-huge/config.inc
+	  device/lib/mcs51-large/config.inc
+	  device/lib/mcs51-medium/config.inc
+	  device/lib/mcs51-small/config.inc
+	  device/lib/mcs51-small-stack-auto/config.inc
+	  device/lib/mcs51-small-xstack-auto/config.inc
+	  device/lib/mos6502/config.inc
+	  device/lib/mos65c02/config.inc
+	  device/lib/r800/config.inc
+	  device/lib/z180/config.inc
+	  device/lib/z80/config.inc
+	  device/lib/z80n/config.inc
+	  Make all library assembly configuration consistent.
+
 2026-11-05 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
 	* src/SDCCmain.c (_preCmd): Pass -ffreestanding when invoking the
