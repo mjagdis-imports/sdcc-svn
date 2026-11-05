@@ -10,7 +10,7 @@ INCDIR          = $(top_srcdir)/device/include
 PORTINCDIR      = $(INCDIR)/$(PORT)
 
 LIB_TYPE	= @LIB_TYPE@
-LIB		= libsdcc.lib libc.lib libm.lib
+LIB		= mos6502.lib
 
 AS = $(top_builddir)/bin/sdas6500
 
@@ -70,17 +70,15 @@ OBJ = __sdcc_regs.rel __sdcc_indirect_jsr.rel\
       setjmp.rel  \
       _floatlib.rel
 
-PORT_SOURCES = $(addprefix ../,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG))
-PORT_LIBSDCC = $(patsubst %.c,%.rel,$(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(OBJ))
-PORT_LIBC = $(patsubst %.c,%.rel,$(PORT_SDCC))
-PORT_LIBM = $(patsubst %.c,%.rel,$(PORT_FLOAT))
+PORT_SOURCES = $(addprefix ../,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))
+PORT_OBJECTS = $(patsubst %.c,%.rel,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))
 
 all: $(PORTDIR)/$(LIB) $(PORTDIR)/crt0.rel
 
 $(PORTDIR)/crt0.rel: crt0.rel
 	cp crt0.rel $(PORTDIR)/crt0.rel
 
-$(PORTDIR)/$(LIB): $(PORT_LIBSDCC) $(PORT_LIBC) $(PORT_LIBM) Makefile
+$(PORTDIR)/$(LIB): $(OBJ) $(PORT_OBJECTS) Makefile
 ifeq ($(LIB_TYPE), SDCCLIB)
 	rm -f $@; \
 	$(top_builddir)/bin/sdcclib -a $@ $(OBJ) $(PORT_OBJECTS)
@@ -89,9 +87,7 @@ else
 	$(SDAR) -rcSD $@ $(OBJ) $(PORT_OBJECTS)
   else
     ifeq ($(LIB_TYPE), RANLIB)
-	$(SDAR) -rcD libsdcc.lib $(PORT_LIBSDCC)
-	$(SDAR) -rcD libc.lib $(PORT_LIBC)
-	$(SDAR) -rcD libm.lib $(PORT_LIBM)
+	$(SDAR) -rcD $@ $(OBJ) $(PORT_OBJECTS)
     else
 	rm -f $@
 	for i in $(basename $(OBJ) $(PORT_OBJECTS)); do echo $$i >>$@; done
