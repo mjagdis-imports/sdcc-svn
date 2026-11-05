@@ -31,7 +31,7 @@ ifdef CROSSCOMPILING
 endif
 
 SDCCFLAGS += -mmos6502 --less-pedantic --code-loc 0x8000 --i-code-in-asm --opt-code-speed
-LINKFLAGS += mos6502.lib
+LINKFLAGS += libsdcc.lib libc.lib libm.lib
 
 OBJEXT = .rel
 BINEXT = .ihx

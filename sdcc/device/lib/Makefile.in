@@ -234,6 +234,13 @@ objects:
 	$(MAKE) port-specific-objects
 	$(MAKE) clean_intermediate
 
+objects-mcs51:
+	$(MAKE) build-dir
+	$(MAKE) $(OBJECTS)
+	$(MAKE) port-specific-objects
+	$(MAKE) $(LIB_FILES)
+	$(MAKE) clean_intermediate
+
 objects-pic14:
 	$(MAKE) build-dir
 	$(MAKE) port-specific-objects-pic14
@@ -499,6 +506,90 @@ port-specific-objects-pic14:
             cp -f "$$i" $(PORTDIR)/`basename "$$i" .a`.lib; \
           done; \
 	fi || :
+
+ifeq ($(LIB_TYPE), SDCCLIB)
+
+$(PORTDIR)/libfloat.lib: $(OBJECTS_FLOAT)
+	$(top_builddir)/bin/sdcclib -a $(PORTDIR)/libfloat.lib $(OBJECTS_FLOAT)
+
+$(PORTDIR)/libint.lib: $(OBJECTS_INT)
+	$(top_builddir)/bin/sdcclib -a $(PORTDIR)/libint.lib $(OBJECTS_INT)
+
+$(PORTDIR)/liblong.lib: $(OBJECTS_LONG)
+	$(top_builddir)/bin/sdcclib -a $(PORTDIR)/liblong.lib $(OBJECTS_LONG)
+
+$(PORTDIR)/liblonglong.lib: $(OBJECTS_LONGLONG)
+	$(top_builddir)/bin/sdcclib -a $(PORTDIR)/liblonglong.lib $(OBJECTS_LONGLONG)
+
+$(PORTDIR)/libsdcc.lib: $(OBJECTS_SDCC)
+	$(top_builddir)/bin/sdcclib -a $(PORTDIR)/libsdcc.lib $(OBJECTS_SDCC)
+
+else
+  ifeq ($(LIB_TYPE), AR)
+
+$(PORTDIR)/libfloat.lib: $(OBJECTS_FLOAT)
+	${SDAR} -rcSD $(PORTDIR)/libfloat.lib $(OBJECTS_FLOAT)
+
+$(PORTDIR)/libint.lib: $(OBJECTS_INT)
+	${SDAR} -rcSD $(PORTDIR)/libint.lib $(OBJECTS_INT)
+
+$(PORTDIR)/liblong.lib: $(OBJECTS_LONG)
+	${SDAR} -rcSD $(PORTDIR)/liblong.lib $(OBJECTS_LONG)
+
+$(PORTDIR)/liblonglong.lib: $(OBJECTS_LONGLONG)
+	${SDAR} -rcSD $(PORTDIR)/liblonglong.lib $(OBJECTS_LONGLONG)
+
+$(PORTDIR)/libsdcc.lib: $(OBJECTS_SDCC)
+	${SDAR} -rcSD $(PORTDIR)/libsdcc.lib $(OBJECTS_SDCC)
+
+  else
+    ifeq ($(LIB_TYPE), RANLIB)
+
+$(PORTDIR)/libfloat.lib: $(OBJECTS_FLOAT)
+	${SDAR} -rcD $(PORTDIR)/libfloat.lib $(OBJECTS_FLOAT)
+
+$(PORTDIR)/libint.lib: $(OBJECTS_INT)
+	${SDAR} -rcD $(PORTDIR)/libint.lib $(OBJECTS_INT)
+
+$(PORTDIR)/liblong.lib: $(OBJECTS_LONG)
+	${SDAR} -rcD $(PORTDIR)/liblong.lib $(OBJECTS_LONG)
+
+$(PORTDIR)/liblonglong.lib: $(OBJECTS_LONGLONG)
+	${SDAR} -rcD $(PORTDIR)/liblonglong.lib $(OBJECTS_LONGLONG)
+
+$(PORTDIR)/libsdcc.lib: $(OBJECTS_SDCC)
+	${SDAR} -rcD $(PORTDIR)/libsdcc.lib $(OBJECTS_SDCC)
+
+    else
+
+$(PORTDIR)/libfloat.lib: $(OBJECTS_FLOAT)
+	rm -f $(PORTDIR)/libfloat.lib
+	for i in $(notdir $(basename $(OBJECTS_FLOAT))); do echo $$i >> $(PORTDIR)/libfloat.lib; done
+	cp $(OBJECTS_FLOAT) $(PORTDIR)
+
+$(PORTDIR)/libint.lib: $(OBJECTS_INT)
+	rm -f $(PORTDIR)/libint.lib
+	for i in $(notdir $(basename $(OBJECTS_INT))); do echo $$i >> $(PORTDIR)/libint.lib; done
+	cp $(OBJECTS_INT) $(PORTDIR)
+
+$(PORTDIR)/liblong.lib: $(OBJECTS_LONG)
+	rm -f $(PORTDIR)/liblong.lib
+	for i in $(notdir $(basename $(OBJECTS_LONG))); do echo $$i >> $(PORTDIR)/liblong.lib; done
+	cp $(OBJECTS_LONG) $(PORTDIR)
+
+$(PORTDIR)/liblonglong.lib: $(OBJECTS_LONGLONG)
+	rm -f $(PORTDIR)/liblonglong.lib
+	for i in $(notdir $(basename $(OBJECTS_LONGLONG))); do echo $$i >> $(PORTDIR)/liblonglong.lib; done
+	cp $(OBJECTS_LONGLONG) $(PORTDIR)
+
+$(PORTDIR)/libsdcc.lib: $(OBJECTS_SDCC)
+	rm -f $(PORTDIR)/libsdcc.lib
+	for i in $(notdir $(basename $(OBJECTS_SDCC))); do echo $$i >> $(PORTDIR)/libsdcc.lib; done
+	cp $(OBJECTS_SDCC) $(PORTDIR)
+
+    endif
+  endif
+endif
 
 clean_intermediate:
 	rm -f $(PORTDIR)/*.lst $(PORTDIR)/*.sym

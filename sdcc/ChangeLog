@@ -65,6 +65,22 @@
 	  device/lib/strspn.c,
 	  device/lib/strstr.c:
 	  Rename atof, memchr, memcmp, memmove, memset and all string functions.
+	* Makefile.in,
+	  _divsint.c,
+	  _divslong.c,
+	  _divuint.c,
+	  memset.c,
+	  mcs51-large/memset.c,
+	  mcs51-small/_divsint.c,
+	  mcs51-small/_divslong.c,
+	  mcs51-small/_divuint.c,
+	  mcs51-small/memset.c,
+	  mcs51-small-stack-auto/_divsint.c,
+	  mcs51-small-stack-auto/_divslong.c,
+	  mcs51-small-stack-auto/_divuint.c,
+	  sm83/memset.c,
+	  z80-common/memset.c:
+	  Move assembly to port specific directories for memset, divsint, divuint, divslong.
 
 2026-11-03 Philipp Klaus Krause <philipp@colecovision.eu>
 
