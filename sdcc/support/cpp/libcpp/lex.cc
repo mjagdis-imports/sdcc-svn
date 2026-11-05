@@ -4065,6 +4065,9 @@ _cpp_lex_direct (cpp_reader *pfile)
               _sdcpp_skip_asm_block (pfile);
               /* Save the __asm block as a token in its own right.  */
               _sdcpp_save_asm (pfile, result, comment_start, result->val.node.node == pfile->spec_nodes.n__asm);
+              /* The matching __endasm is consumed by _sdcpp_skip_asm_block(),
+                 so no separate token will carry EXIT_ASM. */
+              result->flags |= EXIT_ASM;
 				}
           result->flags |= ENTER_ASM;
         }

@@ -43,6 +43,9 @@
 	  device/lib/mcs51-common/bp.s,
 	  device/lib/mcs51-common/bpx.s:
 	  Hide several internal symbols from C namespace.
+	* support/cpp/libcpp/lex.cc:
+	  Partial fix for bug #4241
+
 
 2026-11-05 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
