@@ -1,21 +1,48 @@
 2026-11-05 Gabriele Gorla <gorlik@yahoo.com>
 
-	* device/lib/ds390/config.inc
-	  device/lib/ds400/config.inc
-	  device/lib/huc6280/config.inc
-	  device/lib/mcs51-huge/config.inc
-	  device/lib/mcs51-large/config.inc
-	  device/lib/mcs51-medium/config.inc
-	  device/lib/mcs51-small/config.inc
-	  device/lib/mcs51-small-stack-auto/config.inc
-	  device/lib/mcs51-small-xstack-auto/config.inc
-	  device/lib/mos6502/config.inc
-	  device/lib/mos65c02/config.inc
-	  device/lib/r800/config.inc
-	  device/lib/z180/config.inc
-	  device/lib/z80/config.inc
-	  device/lib/z80n/config.inc
+	* device/lib/ds390/config.inc,
+	  device/lib/ds400/config.inc,
+	  device/lib/huc6280/config.inc,
+	  device/lib/mcs51-huge/config.inc,
+	  device/lib/mcs51-large/config.inc,
+	  device/lib/mcs51-medium/config.inc,
+	  device/lib/mcs51-small/config.inc,
+	  device/lib/mcs51-small-stack-auto/config.inc,
+	  device/lib/mcs51-small-xstack-auto/config.inc,
+	  device/lib/mos6502/config.inc,
+	  device/lib/mos65c02/config.inc,
+	  device/lib/r800/config.inc,
+	  device/lib/z180/config.inc,
+	  device/lib/z80/config.inc,
+	  device/lib/z80n/config.inc:
 	  Make all library assembly configuration consistent.
+	* device/lib/ds390/Makefile.in,
+	  device/lib/ds390/gptr_cmp.c,
+	  device/lib/ds400/Makefile.in,
+	  device/lib/mcs51-common/abs.s,
+	  device/lib/mcs51-common/crtxpush.s,
+	  device/lib/mcs51-common/gptr_cmp.s,
+	  device/lib/mcs51-common/labs.s,
+	  device/lib/mcs51-common/setjmp.c,
+	  device/lib/mcs51-common/strlen.s,
+	  device/lib/mcs51-huge/Makefile.in,
+	  device/lib/mcs51-large/Makefile.in,
+	  device/lib/mcs51-large-stack-auto/Makefile.in,
+	  device/lib/mcs51-medium/Makefile.in,
+	  device/lib/mcs51-small/Makefile.in,
+	  device/lib/mcs51-small-stack-auto/Makefile.in,
+	  device/lib/mcs51-small-xstack-auto/Makefile.in,
+	  device/lib/r800/Makefile.in,
+	  device/lib/z180/Makefile.in,
+	  device/lib/z80/Makefile.in,
+	  src/SDCCmem.c,
+	  src/ds390/gen.c,
+	  src/ds390/main.c,
+	  src/mcs51/gen.c,
+	  support/regression/ports/mcs51-small-stack-auto/spec.mk,
+	  device/lib/mcs51-common/bp.s,
+	  device/lib/mcs51-common/bpx.s:
+	  Hide several internal symbols from C namespace.
 
 2026-11-05 Christopher Bazley <chris.bazley.wg14@gmail.com>
 

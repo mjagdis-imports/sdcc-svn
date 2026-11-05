@@ -1,5 +1,5 @@
 ;--------------------------------------------------------------------------
-;  abs.c - computes absolute value of an integer.
+;  labs.s - computes absolute value of a long.
 ;
 ;  Copyright (C) 2004, Maarten Brock, sourceforge.brock@dse.nl
 ;
@@ -34,7 +34,7 @@
 	.area CSEG    (CODE)
 
 _labs:
-	jnb	acc.7, 00001$
+	jnb	acc.7, skip_neg
 	mov	r2,a
 	clr	c
 	clr	a
@@ -48,6 +48,6 @@ _labs:
 	mov	b,a
 	clr	a
 	subb	a,r2
-00001$:
+skip_neg:
 	RET
 

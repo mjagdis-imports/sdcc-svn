@@ -1,5 +1,5 @@
 ;--------------------------------------------------------------------------
-;  crtxpush.asm :- C run-time: push registers (not R0) to xstack
+;  crtxpush.asm : C run-time: push registers (not R0) to xstack
 ;
 ;  Copyright (C) 2009, Maarten Brock
 ;

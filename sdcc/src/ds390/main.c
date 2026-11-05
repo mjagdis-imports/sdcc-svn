@@ -1408,7 +1408,7 @@ static void _tininative_genAssemblerStart (FILE * of)
   fputs("$include(ds80c390.inc)\n", of);
   fputs("$include(tinimacro.inc)\n", of);
   fputs("$include(apiequ.inc)\n", of);
-  fputs("_bpx EQU 01Eh \t\t; _bpx (frame pointer) mapped to R7_B3:R6_B3\n", of);
+  fputs("bpx EQU 01Eh \t\t; bpx (frame pointer) mapped to R7_B3:R6_B3\n", of);
   fputs("acc1  EQU 01Dh \t\t; acc1 mapped to R5_B3\n", of);
   /* Must be first and return 0 */
   fputs("Lib_Native_Init:\n",of);

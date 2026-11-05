@@ -59,7 +59,7 @@ ___setjmp:
 ;../../device/lib/_setjmp.c:125:*buf   = BP;
 ;     genPointerSet
 ;     genGenPointerSet
-	mov	a,_bp
+	mov	a,bp
 	lcall	__gptrput
 	inc	dptr
 ;../../device/lib/_setjmp.c:126:*buf   = SP;
@@ -144,7 +144,7 @@ _longjmp:
 	lcall	__gptrget
 	inc	dptr
 ;     genAssign
-	mov	_bp,a
+	mov	bp,a
 ;../../device/lib/_setjmp.c:31:lsp = (unsigned char __idata *) *buf++;
 ;     genPointerGet
 ;     genGenPointerGet

@@ -60,8 +60,8 @@ PORT_LONGLONG = $(COMMON_LONGLONG) \
 
 PORT_SDCC = $(COMMON_SDCC) \
   _autobaud.c \
-  _bp.c \
-  _bpx.c \
+  bp.c \
+  bpx.c \
   _decdptr.c \
   _gptrget.c \
   _gptrgetc.c \

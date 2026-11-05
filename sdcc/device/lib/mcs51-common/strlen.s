@@ -1,5 +1,5 @@
 ;--------------------------------------------------------------------------
-;  abs.c - computes absolute value of an integer.
+;  strlen.s - part of string library functions
 ;
 ;  Copyright (C) 2007, Frieder Ferlemann (2007)
 ;

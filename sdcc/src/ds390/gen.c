@@ -735,7 +735,7 @@ aopForSym (iCode * ic, symbol * sym, bool result, bool useDP2)
 
               if ((abs (offset) < 3) || (accuse && (abs (offset) < 4)))
                 {
-                  emitcode ("mov", "%s,_bp", aop->aopu.aop_ptr->name);
+                  emitcode ("mov", "%s,bp", aop->aopu.aop_ptr->name);
                   while (offset < 0)
                     {
                       emitcode ("dec", aop->aopu.aop_ptr->name);
@@ -752,13 +752,13 @@ aopForSym (iCode * ic, symbol * sym, bool result, bool useDP2)
                   if (accuse)
                     {
                       emitcode ("xch", "a,%s", aop->aopu.aop_ptr->name);
-                      emitcode ("mov", "a,_bp");
+                      emitcode ("mov", "a,bp");
                       emitcode ("add", "a,#0x%02x", offset & 0xff);
                       emitcode ("xch", "a,%s", aop->aopu.aop_ptr->name);
                     }
                   else
                     {
-                      emitcode ("mov", "a,_bp");
+                      emitcode ("mov", "a,bp");
                       emitcode ("add", "a,#0x%02x", offset & 0xff);
                       emitcode ("mov", "%s,a", aop->aopu.aop_ptr->name);
                     }
@@ -792,8 +792,8 @@ aopForSym (iCode * ic, symbol * sym, bool result, bool useDP2)
           if (useDP2)
             emitcode ("mov", "dps,#1");
 
-          emitcode ("mov", "%s,_bpx", dpl);
-          emitcode ("mov", "%s,_bpx+1", dph);
+          emitcode ("mov", "%s,bpx", dpl);
+          emitcode ("mov", "%s,bpx+1", dph);
           while (offset--)
             {
               emitcode ("inc", "dptr");
@@ -807,10 +807,10 @@ aopForSym (iCode * ic, symbol * sym, bool result, bool useDP2)
           if (accuse)
             emitcode ("push", "acc");
 
-          emitcode ("mov", "a,_bpx");
+          emitcode ("mov", "a,bpx");
           emitcode ("add", "a,#!constbyte", (unsigned)(offset & 0xff));
           emitcode ("mov", "%s,a", dpl);
-          emitcode ("mov", "a,_bpx+1");
+          emitcode ("mov", "a,bpx+1");
           emitcode ("addc", "a,#!constbyte", (unsigned)((offset >> 8) & 0xff));
           emitcode ("mov", "%s,a", dph);
 
@@ -1335,13 +1335,13 @@ freeAsmop (operand * op, asmop * aaop, iCode * ic, bool pop)
 
       if (stk)
         {
-          emitcode ("mov", "a,_bp");
+          emitcode ("mov", "a,bp");
           emitcode ("add", "a,#!constbyte", (unsigned)((char)stk & 0xff));
           emitcode ("mov", "%s,a", aop->aopu.aop_ptr->name);
         }
       else
         {
-          emitcode ("mov", "%s,_bp", aop->aopu.aop_ptr->name);
+          emitcode ("mov", "%s,bp", aop->aopu.aop_ptr->name);
         }
 
       while (sz--)
@@ -3430,18 +3430,18 @@ emitPassStructReturnPointer (operand * result)
       /* Address of a stack result. */
       if (options.stack10bit)
         {
-          emitcode ("mov", "dpl,_bpx");
+          emitcode ("mov", "dpl,bpx");
           emitcode ("mov", "a,dpl");
           emitcode ("add", "a,#!constbyte", (unsigned)(sym->stack & 0xffu));
           emitcode ("mov", "dpl,a");
-          emitcode ("mov", "dph,_bpx+1");
+          emitcode ("mov", "dph,bpx+1");
           emitcode ("mov", "a,dph");
           emitcode ("addc", "a,#!constbyte", (unsigned)((sym->stack >> 8) & 0xffu));
           emitcode ("mov", "dph,a");
         }
       else
         {
-          emitcode ("mov", "dpl,_bp");
+          emitcode ("mov", "dpl,bp");
           if (sym->stack)
             {
               emitcode ("mov", "a,dpl");
@@ -4041,27 +4041,27 @@ genFunction (iCode * ic)
     {
       if (options.stack10bit)
         {
-          emitcode ("push", "_bpx");
-          emitcode ("push", "_bpx+1");
-          emitcode ("mov", "_bpx,%s", spname);
-          emitcode ("mov", "_bpx+1,esp");
-          adjustEsp ("_bpx+1");
+          emitcode ("push", "bpx");
+          emitcode ("push", "bpx+1");
+          emitcode ("mov", "bpx,%s", spname);
+          emitcode ("mov", "bpx+1,esp");
+          adjustEsp ("bpx+1");
         }
       else
         {
           if (options.useXstack)
             {
               emitcode ("mov", "r0,%s", spname);
-              emitcode ("mov", "a,_bp");
+              emitcode ("mov", "a,bp");
               emitcode ("movx", "@r0,a");
               emitcode ("inc", "%s", spname);
             }
           else
             {
               /* set up the stack */
-              emitcode ("push", "_bp"); /* save the callers stack  */
+              emitcode ("push", "bp"); /* save the callers stack  */
             }
-          emitcode ("mov", "_bp,%s", spname);
+          emitcode ("mov", "bp,%s", spname);
         }
     }
 
@@ -4183,13 +4183,13 @@ genEndFunction (iCode * ic)
       if (options.stack10bit)
         {
           PROTECT_SP;
-          emitcode ("mov", "sp,_bpx", spname);
-          emitcode ("mov", "esp,_bpx+1", spname);
+          emitcode ("mov", "sp,bpx", spname);
+          emitcode ("mov", "esp,bpx+1", spname);
           UNPROTECT_SP;
         }
       else
         {
-          emitcode ("mov", "%s,_bp", spname);
+          emitcode ("mov", "%s,bp", spname);
         }
     }
 
@@ -4211,19 +4211,19 @@ genEndFunction (iCode * ic)
         {
           emitcode ("mov", "r0,%s", spname);
           emitcode ("movx", "a,@r0");
-          emitcode ("mov", "_bp,a");
+          emitcode ("mov", "bp,a");
           emitcode ("dec", "%s", spname);
         }
       else
         {
           if (options.stack10bit)
             {
-              emitcode ("pop", "_bpx+1");
-              emitcode ("pop", "_bpx");
+              emitcode ("pop", "bpx+1");
+              emitcode ("pop", "bpx");
             }
           else
             {
-              emitcode ("pop", "_bp");
+              emitcode ("pop", "bp");
             }
         }
     }
@@ -4520,7 +4520,7 @@ emitLoadStructReturnPointer (int pointerOffset)
 {
   int i;
 
-  /* SP includes saved _bpx and local variables. */
+  /* SP includes saved bpx and local variables. */
   emitcode ("mov", "dpx,#!constbyte", (unsigned)((options.stack_loc >> 16) & 0xffu));
   emitcode ("mov", "a,sp");
   emitcode ("add", "a,#0x%02x", pointerOffset & 0xffu);
@@ -4612,7 +4612,7 @@ genStructReturn (iCode * ic, int size)
   if (IFFUNC_ISCRITICAL (currFunc->type))
     pointerOffset--;
 
-  /* Count both _bpx bytes and local variables. */
+  /* Count both bpx bytes and local variables. */
   if (usesFramePointer)
     pointerOffset -= 2;
   pointerOffset -= currFunc->stack;
@@ -6989,7 +6989,7 @@ genCmp (operand * left, operand * right, iCode * ic, iCode * ifx, int sign)
           emitpush (aopGet (left, offset++, FALSE, TRUE, NULL));
         }
       loadDptrFromOperand (right, TRUE);
-      emitcode ("lcall", "___gptr_cmp");
+      emitcode ("lcall", "sdcc_gptr_cmp");
       for (offset = 0; offset < GPTRSIZE; offset++)
         emitpop (NULL);
     }
@@ -7222,7 +7222,7 @@ gencjneshort (operand * left, operand * right, symbol * lbl)
           emitpush (aopGet (left, offset++, FALSE, TRUE, NULL));
         }
       loadDptrFromOperand (right, TRUE);
-      emitcode ("lcall", "___gptr_cmp");
+      emitcode ("lcall", "sdcc_gptr_cmp");
       for (offset = 0; offset < GPTRSIZE; offset++)
         emitpop (NULL);
       emitcode ("jnz", "!tlabel", labelKey2num (lbl->key));
@@ -12150,10 +12150,10 @@ genAddrOf (iCode * ic)
           dbuf_tprintf (&dbuf, "#!constbyte", (unsigned)((options.stack_loc >> 16) & 0xffu));
           if (stack_offset)
             {
-              emitcode ("mov", "a,_bpx");
+              emitcode ("mov", "a,bpx");
               emitcode ("add", "a,#!constbyte", (unsigned)(stack_offset & 0xffu));
               emitcode ("mov", "b,a");
-              emitcode ("mov", "a,_bpx+1");
+              emitcode ("mov", "a,bpx+1");
               emitcode ("addc", "a,#!constbyte", (unsigned)((stack_offset >> 8) & 0xff));
 
               if (aopPutUsesAcc (IC_RESULT (ic), "b", 0))
@@ -12169,9 +12169,9 @@ genAddrOf (iCode * ic)
             }
           else
             {
-              /* we can just move _bp */
-              aopPut (IC_RESULT (ic), "_bpx", 0);
-              aopPut (IC_RESULT (ic), "_bpx+1", 1);
+              /* we can just move bp */
+              aopPut (IC_RESULT (ic), "bpx", 0);
+              aopPut (IC_RESULT (ic), "bpx+1", 1);
               aopPut (IC_RESULT (ic), dbuf_c_str (&dbuf), 2);
             }
           dbuf_destroy (&dbuf);
@@ -12181,14 +12181,14 @@ genAddrOf (iCode * ic)
           /* if it has an offset then we need to compute it */
           if (stack_offset)
             {
-              emitcode ("mov", "a,_bp");
+              emitcode ("mov", "a,bp");
               emitcode ("add", "a,#!constbyte", (unsigned)(stack_offset & 0xff));
               aopPut (IC_RESULT (ic), "a", 0);
             }
           else
             {
-              /* we can just move _bp */
-              aopPut (IC_RESULT (ic), "_bp", 0);
+              /* we can just move bp */
+              aopPut (IC_RESULT (ic), "bp", 0);
             }
           /* fill the result with zero */
           size = AOP_SIZE (IC_RESULT (ic)) - 1;

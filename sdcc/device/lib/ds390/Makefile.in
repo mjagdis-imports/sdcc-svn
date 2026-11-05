@@ -12,7 +12,7 @@ PORTINCDIR      = $(INCDIR)/$(PORT)
 LIB_TYPE	= @LIB_TYPE@
 LIB		= ds390.lib
 
-AS = $(top_builddir)/bin/sdas8051
+AS = $(top_builddir)/bin/sdas390
 
 #CPPFLAGS = -I$(srcdir)/../../include
 ASFLAGS = -plosgff -I$(srcdir)
@@ -52,8 +52,8 @@ PORT_LONGLONG = $(COMMON_LONGLONG) \
 
 PORT_SDCC = $(COMMON_SDCC) \
   _autobaud.c \
-  _bp.c \
-  _bpx.c \
+  bp.c \
+  bpx.c \
   _decdptr.c \
   _gptrget.c \
   _gptrgetc.c \

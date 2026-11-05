@@ -2,7 +2,7 @@
 #
 # model small stack-auto
 
-SDCCFLAGS +=--stack-auto
+SDCCFLAGS +=--model-small --stack-auto
 
 include $(PORTS_DIR)/mcs51-common/spec.mk
 

@@ -79,7 +79,7 @@ static short rbank = -1;
                                         AOP_TYPE(x) == AOP_STR))
 
 #define SP_BP(sp, bp) (options.omitFramePtr ? sp : bp)
-#define SYM_BP(sym)   (SPEC_OCLS (sym->etype)->paged ? SP_BP("_spx", "_bpx") : SP_BP("sp", "_bp"))
+#define SYM_BP(sym)   (SPEC_OCLS (sym->etype)->paged ? SP_BP("spx", "bpx") : SP_BP("sp", "bp"))
 
 #define EQ(a, b)      (strcmp (a, b) == 0)
 
@@ -4850,17 +4850,17 @@ genFunction (iCode * ic)
             {
               emitcode ("mov", "r0,%s", spname);
               emitcode ("inc", "%s", spname);
-              emitcode ("xch", "a,_bpx");
+              emitcode ("xch", "a,bpx");
               emitcode ("movx", "@r0,a");
               emitcode ("inc", "r0");
               emitcode ("mov", "a,r0");
-              emitcode ("xch", "a,_bpx");
+              emitcode ("xch", "a,bpx");
             }
           if (sym->stack)
             {
               /* save the callers stack, but without pushed++ */
-              emitcode ("push", "_bp");
-              emitcode ("mov", "_bp,sp");
+              emitcode ("push", "bp");
+              emitcode ("mov", "bp,sp");
             }
         }
       else
@@ -4869,8 +4869,8 @@ genFunction (iCode * ic)
             {
               /* set up the stack */
               /* save the callers stack, but without pushed++ */
-              emitcode ("push", "_bp");
-              emitcode ("mov", "_bp,sp");
+              emitcode ("push", "bp");
+              emitcode ("mov", "bp,sp");
             }
         }
     }
@@ -4896,7 +4896,7 @@ genFunction (iCode * ic)
         }
 
       /* If the RECEIVE operand immediately spills to the first entry on the */
-      /* stack, we can push it directly (since sp = _bp + 1 at this point) */
+      /* stack, we can push it directly (since sp = bp + 1 at this point) */
       /* rather than the usual @r0/r1 machinations. */
       if (!options.useXstack && rsym && rsym->onStack && rsym->stack == 1)
         {
@@ -5151,16 +5151,16 @@ genEndFunction (iCode * ic)
                   if (sym->stack == 1)
                     emitcode ("dec", "sp");
                   else
-                    emitcode ("mov", "sp,_bp");
-                  emitcode ("pop", "_bp");      /* without pushed-- */
+                    emitcode ("mov", "sp,bp");
+                  emitcode ("pop", "bp");      /* without pushed-- */
                 }
               if (sym->xstack || FUNC_HASSTACKPARM (ftype))
                 {
-                  emitcode ("xch", "a,_bpx");
+                  emitcode ("xch", "a,bpx");
                   emitcode ("mov", "r0,a");
                   emitcode ("dec", "r0");
                   emitcode ("movx", "a,@r0");
-                  emitcode ("xch", "a,_bpx");
+                  emitcode ("xch", "a,bpx");
                   emitcode ("mov", "%s,r0", spname);    //read before freeing stack space (interrupts)
                 }
             }
@@ -5169,8 +5169,8 @@ genEndFunction (iCode * ic)
               if (sym->stack == 1)
                 emitcode ("dec", "sp");
               else if (sym->stack)
-                emitcode ("mov", "sp,_bp");
-              emitcode ("pop", "_bp");  /* without pushed-- */
+                emitcode ("mov", "sp,bp");
+              emitcode ("pop", "bp");  /* without pushed-- */
             }
         }
     }
@@ -5487,7 +5487,7 @@ genRet (iCode *ic)
       bool framepointer = (IFFUNC_ISREENT (currFunc->type) || options.stackAuto) && !options.omitFramePtr && (currFunc->stack || FUNC_HASSTACKPARM (currFunc->type));
       asmop *aop = newAsmop (0);
       reg_info *preg = getFreePtr (ic, aop, false);
-      const char *bp = options.useXstack ? (framepointer ? "_bpx" : "_spx") : (framepointer ? "_bp" : "sp");
+      const char *bp = options.useXstack ? (framepointer ? "bpx" : "spx") : (framepointer ? "bp" : "sp");
       int offset = -(GPTRSIZE - 1);
       if (!options.useXstack)
         offset -= 2 + IFFUNC_ISBANKEDCALL (currFunc->type);
@@ -12683,7 +12683,7 @@ genAddrOf (iCode * ic)
         }
       else
         {
-          /* we can just move _bp */
+          /* we can just move bp */
           opPut(IC_RESULT (ic), SYM_BP (sym), 0);
         }
       /* fill the result with zero */

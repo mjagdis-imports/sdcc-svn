@@ -1,5 +1,5 @@
-;--------------------------------------------------------------------------
-;  gptr_cmp.asm - C run-time: compare two generic pointers
+;-------------------------------------------------------------------------
+;  gptr_cmp.s - C run-time: compare two generic pointers
 ;
 ;  Copyright (C) 2011, Maarten Brock
 ;
@@ -24,18 +24,10 @@
 ;  be covered by the GNU General Public License. This exception does
 ;  not however invalidate any other reasons why the executable file
 ;  might be covered by the GNU General Public License.
-;--------------------------------------------------------------------------
+;-------------------------------------------------------------------------
 
-	.area HOME    (CODE)
-	.area GSINIT0 (CODE)
-	.area GSINIT1 (CODE)
-	.area GSINIT2 (CODE)
-	.area GSINIT3 (CODE)
-	.area GSINIT4 (CODE)
-	.area GSINIT5 (CODE)
-	.area GSINIT  (CODE)
-	.area GSFINAL (CODE)
-	.area CSEG    (CODE)
+	.module gptr_cmp
+	.include "config.inc"
 
 	.area HOME    (CODE)
 
@@ -84,3 +76,4 @@ sdcc_gptr_cmp::
 	pop  acc
 	xch  a,r0
 	ret
+

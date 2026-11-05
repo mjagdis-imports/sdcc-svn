@@ -1260,7 +1260,7 @@ redoStackOffsets (void)
 }
 
 #define SP_BP(sp, bp) (options.omitFramePtr ? sp : bp)
-#define SYM_BP(sym)   (SPEC_OCLS (sym->etype)->paged ? SP_BP("_spx", "_bpx") : SP_BP("sp", "_bp"))
+#define SYM_BP(sym)   (SPEC_OCLS (sym->etype)->paged ? SP_BP("spx", "bpx") : SP_BP("sp", "bp"))
 
 /*-----------------------------------------------------------------*/
 /* printAllocInfoSeg- print the allocation for a given section     */

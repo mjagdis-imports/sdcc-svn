@@ -1,5 +1,5 @@
-/*-------------------------------------------------------------------------
-;  gptr_cmp.asm - C run-time: compare two generic pointers
+;-------------------------------------------------------------------------
+;  gptr_cmp.s - C run-time: compare two generic pointers
 ;
 ;  Copyright (C) 2011, Maarten Brock
 ;
@@ -24,13 +24,11 @@
 ;  be covered by the GNU General Public License. This exception does
 ;  not however invalidate any other reasons why the executable file
 ;  might be covered by the GNU General Public License.
-;------------------------------------------------------------------------*/
+;-------------------------------------------------------------------------
 
-#ifdef __SDCC_MODEL_FLAT24
+	.module gptr_cmp
+	.include "config.inc"
 
-static void dummy(void) __naked
-{
-	__asm
 	.area HOME    (CODE)
 
 ; compares two generic pointers.
@@ -39,7 +37,7 @@ static void dummy(void) __naked
 ; if p1 > p2  return NZ and NC
 ; if both are a NULL pointer (yes, we have several) also return Z and NC
 
-___gptr_cmp::
+sdcc_gptr_cmp::
     mov  a,sp
     add  a,#0xFA
     mov  dpl1,a
@@ -90,9 +88,4 @@ ___gptr_cmp::
 00002$:
     dec  dps        ;select dptr0
     ret
-
-	__endasm;
-}
-
-#endif
 

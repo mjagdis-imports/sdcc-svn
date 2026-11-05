@@ -1,5 +1,5 @@
 ;--------------------------------------------------------------------------
-;  abs.c - computes absolute value of an integer.
+;  abs.s - computes absolute value of an integer.
 ;
 ;  Copyright (C) 2004, Maarten Brock, sourceforge.brock@dse.nl
 ;
@@ -35,10 +35,10 @@
 
 _abs:
 	mov	a, dph
-	jnb	acc.7, 00001$
+	jnb	acc.7, skip_neg
 	xrl	dpl, #0xFF
 	xrl	dph, #0xFF
 	inc	dptr
-00001$:
+skip_neg:
 	RET
 
