@@ -11,6 +11,9 @@
 	  device/lib/z80/Makefile.in,
 	  support/regression/ports/uc6502/spec.mk:
 	  Fix Z80 and MOS6502 build.
+	* device/lib/mcs51-common/atomic_flag_clear.s,
+	  device/lib/ds390/labs.s:
+	  Fix ds390 regression introduced by library merging.
 
 2026-11-05 Gabriele Gorla <gorlik@yahoo.com>
 
