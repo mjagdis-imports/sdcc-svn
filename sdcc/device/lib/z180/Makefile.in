@@ -23,20 +23,22 @@ override PORTDIR = ../build/$(PORT)
 
 include $(srcdir)/../incl.mk
 
-OBJ = divunsigned.rel divsigned.rel divmixed.rel modunsigned.rel modsigned.rel modmixed.rel mul.rel mulchar.rel \
-      heap.rel memmove.rel strcpy.rel strlen.rel abs.rel __sdcc_call_hl.rel __sdcc_call_iy.rel crtenter.rel \
-      setjmp.rel atomic_flag_test_and_set.rel memcpy.rel __strreverse.rel __uitobcd.rel __ultobcd.rel __itoa.rel \
-      __ltoa.rel __sdcc_bcall.rel __muluint2ulong.rel __mulsint2slong.rel
+PORT_FLOAT = $(COMMON_FLOAT)
 
+PORT_INT = $(COMMON_INT)
+
+PORT_LONG = $(COMMON_LONG) \
   _divulong.c \
   _mullong.c
+
+PORT_LONGLONG = $(COMMON_LONGLONG) \
   _mullonglong.c \
   _divslonglong.c \
   _divulonglong.c \
   _modslonglong.c \
   _modulonglong.c
 
-PORT_LIBC = $(COMMON_LIBC) \
+PORT_SDCC = $(COMMON_SDCC) \
   _startup.c \
   div.c \
   ldiv.c \
@@ -47,10 +49,13 @@ PORT_LIBC = $(COMMON_LIBC) \
   vprintf.c \
   atomic_flag_clear.c
 
-PORT_LIBM = $(COMMON_LIBM)
+OBJ = divunsigned.rel divsigned.rel divmixed.rel modunsigned.rel modsigned.rel modmixed.rel mul.rel mulchar.rel \
+      heap.rel memmove.rel strcpy.rel strlen.rel abs.rel __sdcc_call_hl.rel __sdcc_call_iy.rel crtenter.rel \
+      setjmp.rel atomic_flag_test_and_set.rel memcpy.rel __strreverse.rel __uitobcd.rel __ultobcd.rel __itoa.rel \
+      __ltoa.rel __sdcc_bcall.rel __muluint2ulong.rel __mulsint2slong.rel
 
-PORT_SOURCES = $(addprefix ../,$(PORT_SDCC) $(PORT_FLOAT) $(PORT_LIBC) $(PORT_LIBM) )
-PORT_OBJECTS = $(patsubst %.c,%.rel,$(PORT_SDCC) $(PORT_FLOAT) $(PORT_LIBC) $(PORT_LIBM) )
+PORT_SOURCES = $(addprefix ../,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))
+PORT_OBJECTS = $(patsubst %.c,%.rel,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))
 
 all: $(PORTDIR)/$(LIB) $(PORTDIR)/crt0.rel
 

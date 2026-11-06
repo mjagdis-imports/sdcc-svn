@@ -1,5 +1,5 @@
 ; assembler configuration
-.optsdcc -mhuc6280
+.optsdcc -mmos65c02
 .r65c02
 
 ; defines for conditional code

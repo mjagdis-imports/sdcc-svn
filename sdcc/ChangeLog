@@ -1,3 +1,17 @@
+2026-11-06 Gabriele Gorla <gorlik@yahoo.com>
+
+	* device/lib/ds390/gptr_cmp.s,
+	  device/lib/ds390/config.inc,
+	  device/lib/mcs51-common/bp.s,
+	  device/lib/mcs51-common/bpx.s,
+	  device/lib/mos6502/config.inc,
+	  device/lib/mos65c02/config.inc,
+	  device/lib/r800/Makefile.in,
+	  device/lib/z180/Makefile.in,
+	  device/lib/z80/Makefile.in,
+	  support/regression/ports/uc6502/spec.mk:
+	  Fix Z80 and MOS6502 build.
+
 2026-11-05 Gabriele Gorla <gorlik@yahoo.com>
 
 	* device/lib/ds390/config.inc,

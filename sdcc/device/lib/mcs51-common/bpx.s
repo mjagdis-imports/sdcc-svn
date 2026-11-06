@@ -27,11 +27,12 @@
 ;--------------------------------------------------------------------------
 
 	.module bpx
+	.include "config.inc"
 
 	.globl bpx
 
 	.area DSEG    (DATA)
-bp:
+bpx:
 .ifdef DSXXX
 	.ds 2
 .else
