@@ -614,7 +614,7 @@ install: all installdirs
 		$(srcdir)/pic14 $(srcdir)/pic16 $(srcdir)/*.c $(sdcc_libdir)/src
 	$(CP_U) -r mcs51-small mcs51-medium mcs51-large mcs51-huge ds390 ds400 z80 z180 ez80 z80n r2k r2ka r3ka r4k r5k r6k tlcs90 sm83 r800 hc08 s08 mos6502 mos65c02 huc6280 stm8 pdk13 pdk14 pdk15 f8 f8l $(sdcc_libdir)/src
 
-	for src in mcs51-small mcs51-medium mcs51-large ds390 ds400 z80 z180 ez80 z80n r2k r2ka r3ka r4k r5k r6k tlcs90 sm83 r800 hc08 s08 mos6502 mos65c02 huc6280 stm8 pdk13 pdk14 pdk15 f8 f8l pic14 pic16; do \
+	for src in mcs51-small mcs51-medium mcs51-large mcs51-huge ds390 ds400 z80 z180 ez80 z80n r2k r2ka r3ka r4k r5k r6k tlcs90 sm83 r800 hc08 s08 mos6502 mos65c02 huc6280 stm8 pdk13 pdk14 pdk15 f8 f8l pic14 pic16; do \
 	  find $(sdcc_libdir)/src/$$src -depth \
 	    \( -name '*.rel' -o -name '*.dump*' -o -name '*.sym' -o -name '*.o' -o -name '*.lib' -o \
 	    -name '*.lst' -o -name '*.asm' -o -name '.svn' -o -name 'autom4te.cache' -o \

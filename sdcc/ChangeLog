@@ -14,6 +14,15 @@
 	* device/lib/mcs51-common/atomic_flag_clear.s,
 	  device/lib/ds390/labs.s:
 	  Fix ds390 regression introduced by library merging.
+	* device/lib/Makefile.in,
+	  device/lib/huc6280/Makefile.in,
+	  device/lib/mos6502/Makefile.in,
+	  device/lib/mos6502-stack-auto/Makefile.in,
+	  device/lib/mos65c02/Makefile.in,
+	  device/lib/mos65c02-stack-auto/Makefile.in,
+	  device/lib/common_files.mk,
+	  device/lib/library_build.mk:
+	  New library build infrastructure.
 
 2026-11-05 Gabriele Gorla <gorlik@yahoo.com>
 
