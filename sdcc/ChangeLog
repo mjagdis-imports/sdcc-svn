@@ -1,3 +1,7 @@
+2026-11-07 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* device/lib/mcs51-medium/config.inc: fix .optsdcc
+
 2026-11-06 Gabriele Gorla <gorlik@yahoo.com>
 
 	* device/lib/ds390/gptr_cmp.s,
