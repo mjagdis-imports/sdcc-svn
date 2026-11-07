@@ -1,4 +1,4 @@
-/* bug #4209: SDCC implements a freestanding environment. */
+/* bug #4209. SDCC implements a freestanding environment. */
 #include <testfwk.h>
 
 void test_freestanding(void)
