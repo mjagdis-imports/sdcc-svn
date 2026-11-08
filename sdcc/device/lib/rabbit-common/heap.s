@@ -1,7 +1,7 @@
 ;--------------------------------------------------------------------------
-;  crtenter.s
+;  heap.s
 ;
-;  Copyright (C) 2015, Alan Cox, Philipp Klaus Krause
+;  Copyright (C) 2001, Michael Hope
 ;
 ;  This library is free software; you can redistribute it and/or modify it
 ;  under the terms of the GNU General Public License as published by the
@@ -13,7 +13,7 @@
 ;  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 ;  GNU General Public License for more details.
 ;
-;  You should have received a copy of the GNU General Public License
+;  You should have received a copy of the GNU General Public License 
 ;  along with this library; see the file COPYING. If not, write to the
 ;  Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
 ;   MA 02110-1301, USA.
@@ -26,16 +26,19 @@
 ;   might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-	.area   _CODE
+; Just stubs - not copyrightable
 
-	.globl ___sdcc_enter_ix
+        ;; Stubs that hook the heap in
+        .globl	___sdcc_heap_init
 
-; Factor out some start of function code to reduce code size
+        .area   _GSINIT
+        call    ___sdcc_heap_init
 
-___sdcc_enter_ix:
-	pop	hl	; return address
-	push	ix	; save frame pointer
-	ld	ix, #0
-	add	ix, sp	; set ix to the stack frame
-	jp	(hl)	; and return
+        .area   _HEAP
+___sdcc_heap::
+        ;; For now just allocate 1k of heap.
+        .ds     1023
 
+        .area   _HEAP_END
+___sdcc_heap_end::
+        .ds     1

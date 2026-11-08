@@ -33,6 +33,40 @@
 	  device/lib/z180/config.inc,
 	  device/lib/z80n/config.inc:
 	  Add CPU type to config files.
+	* device/lib/hc08/Makefile.in,
+	  device/lib/huc6280/Makefile.in,
+	  device/lib/mos6502/Makefile.in,
+	  device/lib/mos65c02/Makefile.in,
+	  device/lib/r2k/Makefile.in,
+	  device/lib/r2ka/Makefile.in,
+	  device/lib/r3ka/Makefile.in,
+	  device/lib/r4k/Makefile.in,
+	  device/lib/r5k/Makefile.in,
+	  device/lib/r6k/Makefile.in,
+	  device/lib/r800/Makefile.in,
+	  device/lib/s08/Makefile.in,
+	  device/lib/z180/Makefile.in,
+	  device/lib/z80/Makefile.in,
+	  device/lib/z80n/Makefile.in,
+	  device/lib/rabbit-common,
+	  device/lib/rabbit-common/__sdcc_call_hl.s,
+	  device/lib/rabbit-common/__sdcc_call_iy.s,
+	  device/lib/rabbit-common/abs.s,
+	  device/lib/rabbit-common/atomic_flag_test_and_set.s,
+	  device/lib/rabbit-common/crtenter.s,
+	  device/lib/rabbit-common/divmixed.s,
+	  device/lib/rabbit-common/divsigned.s,
+	  device/lib/rabbit-common/divunsigned.s,
+	  device/lib/rabbit-common/heap.s,
+	  device/lib/rabbit-common/memcpy.s,
+	  device/lib/rabbit-common/memmove.s,
+	  device/lib/rabbit-common/modmixed.s,
+	  device/lib/rabbit-common/modsigned.s,
+	  device/lib/rabbit-common/modunsigned.s,
+	  device/lib/rabbit-common/mulchar.s,
+	  device/lib/rabbit-common/setjmp.s,
+	  device/lib/rabbit-common/strcpy.s:
+	  Move r4k, r5k and r6k common library files into rabbit-common.
 
 2026-11-07 Christopher Bazley <chris.bazley.wg14@gmail.com>
 

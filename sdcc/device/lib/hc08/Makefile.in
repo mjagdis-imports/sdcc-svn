@@ -2,7 +2,7 @@
 
 srcdir = @srcdir@
 top_srcdir      = @top_srcdir@
-top_builddir = @top_builddir@
+top_builddir	= @top_builddir@
 abs_top_builddir = @abs_top_builddir@
 
 include $(srcdir)/../common_files.mk
@@ -17,36 +17,36 @@ LIB 		= hc08.lib
 
 
 PORT_SDCC = $(COMMON_SDCC) \
-  _mulint \
   _divsint \
+  _divslonglong \
   _divuint \
+  _divulonglong \
   _modsint \
+  _modslonglong \
   _moduint \
+  _modulonglong \
+  _mulint \
+  _mullonglong \
+  _ret \
   _srulonglong \
   _srslonglong \
   _slulonglong \
   _slslonglong \
-  _mullonglong \
-  _divslonglong \
-  _divulonglong \
-  _modslonglong \
-  _modulonglong \
-  _ret
+  _startup
 
 PORT_FLOAT = $(COMMON_FLOAT)
 
 PORT_LIBC = $(COMMON_LIBC) \
+  atomic_flag_clear \
+  atomic_flag_test_and_set \
   __itoa \
   __ltoa \
   __memcpy \
   _heap \
-  _startup \
   setjmp \
   div \
   ldiv \
-  vprintf \
-  atomic_flag_clear \
-  atomic_flag_test_and_set
+  vprintf
 
 PORT_LIBM = $(COMMON_LIBM)
 

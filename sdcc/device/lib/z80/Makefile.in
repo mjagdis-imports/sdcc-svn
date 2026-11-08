@@ -23,20 +23,21 @@ PORT_SDCC = $(COMMON_SDCC) \
   _divslonglong \
   _divulonglong \
   divunsigned \
+  modmixed \
+  modsigned \
   _modslonglong \
   _modulonglong \
   modunsigned \
-  modsigned \
-  modmixed \
   mul \
   mulchar \
   _mullonglong \
-  __muluint2ulong \
   __mulsint2slong \
+  __muluint2ulong \
   __sdcc_bcall \
   __sdcc_call_hl \
   __sdcc_call_iy \
   __sdcc_critical \
+  _startup \
   __strreverse \
   __uitobcd \
   __ultobcd
@@ -50,7 +51,6 @@ PORT_LIBC = $(COMMON_LIBC) \
   __itoa \
   __ltoa \
   setjmp \
-  _startup \
   div \
   ldiv \
   lldiv \

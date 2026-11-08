@@ -1,7 +1,7 @@
 ;--------------------------------------------------------------------------
-;  crtenter.s
+;  divmixed.s
 ;
-;  Copyright (C) 2015, Alan Cox, Philipp Klaus Krause
+;  Copyright (C) 2010-2021, Philipp Klaus Krause
 ;
 ;  This library is free software; you can redistribute it and/or modify it
 ;  under the terms of the GNU General Public License as published by the
@@ -13,7 +13,7 @@
 ;  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 ;  GNU General Public License for more details.
 ;
-;  You should have received a copy of the GNU General Public License
+;  You should have received a copy of the GNU General Public License 
 ;  along with this library; see the file COPYING. If not, write to the
 ;  Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
 ;   MA 02110-1301, USA.
@@ -26,16 +26,26 @@
 ;   might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-	.area   _CODE
+.globl	__divsuchar
+.globl	__divuschar
 
-	.globl ___sdcc_enter_ix
+__divuschar:
+	ld	e, l
+	ld	l, a
+	ld	h, #0
 
-; Factor out some start of function code to reduce code size
+	jp	__div_signexte
 
-___sdcc_enter_ix:
-	pop	hl	; return address
-	push	ix	; save frame pointer
-	ld	ix, #0
-	add	ix, sp	; set ix to the stack frame
-	jp	(hl)	; and return
+__divsuchar:
+	; Zero-extend
+	ld	e, l
+	ld	d, #0
+
+	; Sign-extend
+	ld	l, a
+	rlca
+	sbc	a, a
+	ld	h, a
+
+	jp	__div16
 
