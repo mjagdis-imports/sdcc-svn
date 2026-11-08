@@ -1,8 +1,15 @@
 ; assembler configuration
 .optsdcc -mds390 --model-flat24
 .DS80C390
+.amode	2	; 24 bit flat addressing
 
-	.amode	2	; 24 bit flat addressing
+; defines for conditional code
+.define DS390
+.define DSXXX
+
+; pseudo instructions
+.define RET "ret"
+
 dpl	=	0x82
 dph	=	0x83
 dpl1	=	0x84
@@ -22,10 +29,3 @@ acon	=	0x9D
 mcon	=	0xC6
 F1	=	0xD1	; user flag
 
-
-; defines for conditional code
-.define DS390
-.define DSXXX
-
-; pseudo instructions
-.define RET "ret"
