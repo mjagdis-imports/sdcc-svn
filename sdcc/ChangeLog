@@ -1,3 +1,33 @@
+2026-11-08 Gabriele Gorla <gorlik@yahoo.com>
+
+	* ds390/Makefile.in
+	  ds400/Makefile.in
+	  hc08/Makefile.in
+	  huc6280/Makefile.in
+	  library_build.mk
+	  mcs51-huge/Makefile.in
+	  mcs51-large/Makefile.in
+	  mcs51-large-stack-auto/Makefile.in
+	  mcs51-medium/Makefile.in
+	  mcs51-small/Makefile.in
+	  mcs51-small-stack-auto/Makefile.in
+	  mcs51-small-xstack-auto/Makefile.in
+	  mos6502/Makefile.in
+	  mos6502-stack-auto/Makefile.in
+	  mos65c02/Makefile.in
+	  mos65c02-stack-auto/Makefile.in
+	  r800/Makefile.in
+	  s08/Makefile.in
+	  s08-stack-auto/Makefile.in
+	  sm83/Makefile.in
+	  stm8/Makefile.in
+	  stm8-large/Makefile.in
+	  z180/Makefile.in
+	  z80/Makefile.in
+	  z80n/Makefile.in
+	  mcs51-common/Makefile.in
+	  Use new library build infrastructure for mcs51, s08, stm8, sm83 and z80.
+
 2026-11-07 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
 	* support/regression/tests/bug-4209.c: Don't use a colon

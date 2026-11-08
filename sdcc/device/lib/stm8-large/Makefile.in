@@ -5,90 +5,60 @@ top_srcdir      = @top_srcdir@
 top_builddir = @top_builddir@
 abs_top_builddir = @abs_top_builddir@
 
-VPATH  		= $(srcdir)
-INCDIR          = $(top_srcdir)/device/include
-PORTINCDIR      = $(INCDIR)/$(PORT)
+include $(srcdir)/../common_files.mk
 
+# user configuration
+VPATH		= $(std_lib_dirs)
+AS		= $(top_builddir)/bin/sdasstm8
+EXTRA_CFLAGS 	= --max-allocs-per-node 25000
+PORT_CRT	=
 LIB_TYPE     = @LIB_TYPE@
 LIB = stm8.lib
 
-AS = $(top_builddir)/bin/sdasstm8
 
-ASFLAGS = -plosgff -I$(srcdir)
-CFLAGS = -I$(INCDIR) -I$(PORTINCDIR) -I. --std-c23
-EXTRA_CFLAGS = $(MODELFLAGS) --max-allocs-per-node 25000
-
-# override PORTDIR defined by super (parent) makefile
-override PORTDIR = ../build/$(PORT)
-
-include $(srcdir)/../incl.mk
+PORT_SDCC = \
+  _divschar \
+  _divsint \
+  _divslong \
+  _divslonglong \
+  _divulong \
+  _divulonglong \
+  _fast_long_neg \
+  _modschar \
+  _modsint \
+  _modslong \
+  _modslonglong \
+  _modulong \
+  _modulonglong \
+  _mulint \
+  _mullong \
+  _mullonglong \
+  _mulschar \
+  __mulsint2slong \
+  __mulslong2slonglong \
+  __mululong2ulonglong \
+  __mululonguchar2ulonglong \
+  _srulonglong \
+  _srslonglong \
+  _slulonglong \
+  _slslonglong
 
 PORT_FLOAT = $(COMMON_FLOAT)
 
-PORT_INT = _mulschar.c _divschar.c _modschar.c
+PORT_LIBC = $(COMMON_LIBC) \
+  atomic_flag_clear \
+  atomic_flag_test_and_set \
+  heap \
+  __itoa \
+  __ltoa \
+  setjmp \
+  _startup \
+  div \
+  ldiv \
+  lldiv \
+  vprintf
 
-PORT_LONG = \
-  _divulong.c \
-  _modulong.c
+PORT_LIBM = $(COMMON_LIBM)
 
-PORT_LONGLONG = $(COMMON_LONGLONG) \
-  _srulonglong.c \
-  _srslonglong.c \
-  _slulonglong.c \
-  _slslonglong.c \
-  _mullonglong.c \
-  _divslonglong.c \
-  _divulonglong.c \
-  _modslonglong.c \
-  _modulonglong.c
-
-PORT_SDCC = $(COMMON_SDCC) \
-  __itoa.c \
-  __ltoa.c \
-  _startup.c \
-  strlen.c \
-  strnlen.c \
-  memmove.c \
-  div.c \
-  ldiv.c \
-  lldiv.c \
-  sprintf.c \
-  vprintf.c \
-  atomic_flag_clear.c
-
-OBJ = setjmp.rel _mulint.rel __mulsint2slong.rel __mululonguchar2ulonglong.rel \
-      _divsint.rel _modsint.rel _mullong.rel _divslong.rel _modslong.rel _fast_long_neg.rel \
-      heap.rel memcpy.rel atomic_flag_test_and_set.rel
-
-PORT_SOURCES = $(addprefix ../,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))
-PORT_OBJECTS = $(patsubst %.c,%.rel,$(PORT_FLOAT) $(PORT_INT) $(PORT_LONG) $(PORT_LONGLONG) $(PORT_SDCC))
-
-all: $(PORTDIR)/$(LIB)
-
-$(PORTDIR)/$(LIB): $(OBJ) $(PORT_OBJECTS) Makefile
-ifeq ($(LIB_TYPE), SDCCLIB)
-	rm -f $@; \
-	$(top_builddir)/bin/sdcclib -a $@ $(OBJ) $(PORT_OBJECTS)
-else
-  ifeq ($(LIB_TYPE), AR)
-	$(SDAR) -rcSD $@ $(OBJ) $(PORT_OBJECTS)
-  else
-    ifeq ($(LIB_TYPE), RANLIB)
-	$(SDAR) -rcD $@ $(OBJ) $(PORT_OBJECTS)
-    else
-	rm -f $@
-	for i in $(basename $(OBJ) $(PORT_OBJECTS)); do echo $$i >>$@; done
-	cp $(OBJ) $(PORT_OBJECTS) $(PORTDIR)
-    endif
-  endif
-endif
-
-clean:
-	rm -f *.rel *.sym *.lst *~ $(CLEANSPEC) *.dump* *.asm *.lib
-
-distclean: clean
-	rm -f Makefile
-
-Makefile: $(srcdir)/Makefile.in
-	cd $(top_builddir); ./config.status device/lib/$(PORT)/Makefile
+include $(srcdir)/../library_build.mk
 

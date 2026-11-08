@@ -11,7 +11,8 @@ include $(srcdir)/../common_files.mk
 VPATH  		= $(srcdir)/../mos-common:$(std_lib_dirs)
 AS 		= $(top_builddir)/bin/sdas6500
 EXTRA_CFLAGS 	= --max-allocs-per-node 25000 --opt-code-speed
-PORT_CRT	= $(PORTDIR)/crt0.rel
+PORT_CRT	= crt0.rel
+LIB_TYPE	= @LIB_TYPE@
 LIB		= mos65c02.lib
 
 
@@ -27,9 +28,6 @@ PORT_SDCC = $(COMMON_SDCC) \
   _mulint \
   _muluchar \
   _mulschar \
-  _divslong \
-  _divulong \
-  _mullong \
   _mullonglong \
   _divslonglong \
   _divulonglong \
