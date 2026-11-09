@@ -26,6 +26,15 @@
 	  pdk15-stack-auto/config.inc,
 	  ports.mk:
 	  Move pdk common library files into pdk-common.
+	* ez80/Makefile.in,
+	  f8/Makefile.in,
+	  f8l/Makefile.in,
+	  ports.mk,
+	  tlcs90/Makefile.in,
+	  tlcs90/memmove.s,
+	  ez80/config.inc,
+	  tlcs90/config.inc:
+	  Move tcls90, ez80, f8 and f8l to new library build infrastructure.
 
 2026-11-08 Gabriele Gorla <gorlik@yahoo.com>
 
