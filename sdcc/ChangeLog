@@ -1,3 +1,13 @@
+2026-11-09 Gabriele Gorla <gorlik@yahoo.com>
+
+	* r2k/config.inc,
+	  r2ka/config.inc,
+	  r3ka/config.inc,
+	  r4k/config.inc,
+	  r5k/config.inc,
+	  r6k/config.inc:
+	  Add missing files for the rabbit-common changes.
+
 2026-11-08 Gabriele Gorla <gorlik@yahoo.com>
 
 	* device/lib/ds390/Makefile.in,
