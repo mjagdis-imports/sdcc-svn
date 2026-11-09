@@ -26,6 +26,9 @@
 ;   might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
+	.module memmove
+	.include "config.inc"
+
         .area   _CODE
 
 	.globl _memmove

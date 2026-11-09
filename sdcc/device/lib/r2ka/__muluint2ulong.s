@@ -27,9 +27,7 @@
 ;--------------------------------------------------------------------------
 
 .module __muluint2ulong
-
-.r2k
-.optsdcc -mr2ka sdcccall(1)
+.include "config.inc"
   
 .globl ___muluint2ulong
 

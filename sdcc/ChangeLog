@@ -67,6 +67,16 @@
 	  device/lib/rabbit-common/setjmp.s,
 	  device/lib/rabbit-common/strcpy.s:
 	  Move r4k, r5k and r6k common library files into rabbit-common.
+	* device/lib/r2k/Makefile.in,
+	  device/lib/r2k/memcpy.s,
+	  device/lib/r2k/memmove.s,
+	  device/lib/r2ka/Makefile.in,
+	  device/lib/r2ka/memcpy.s,
+	  device/lib/r2ka/memmove.s,
+	  device/lib/r3ka/Makefile.in,
+	  device/lib/rabbit-common/memcpy.s,
+	  device/lib/rabbit-common/memmove.s:
+	  Move r2k, r2ka and r3ka common library files into rabbit-common.
 
 2026-11-07 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
