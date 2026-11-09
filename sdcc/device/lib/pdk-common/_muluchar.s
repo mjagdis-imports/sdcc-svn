@@ -1,5 +1,5 @@
 	.module _muluchar
-	.optsdcc -mpdk15
+	.include "config.inc"
 
 	.area DATA
 

@@ -4,7 +4,7 @@
 
 #$(addsuffix suffix,names)
 
-#LIB_TYPE=debug
+LIB_TYPE=debug
 
 PORT_OBJECTS = $(addsuffix .rel, $(PORT_SDCC) $(PORT_FLOAT) $(PORT_LIBC) $(PORT_LIBM) )
 

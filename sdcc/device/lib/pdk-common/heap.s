@@ -1,7 +1,7 @@
 ;--------------------------------------------------------------------------
-;  __setjmp.s
+;  heap.s
 ;
-;  Copyright (C) 2019, Philipp Klaus Krause
+;  Copyright (C) 2014, Ben Shi
 ;
 ;  This library is free software; you can redistribute it and/or modify it
 ;  under the terms of the GNU General Public License as published by the
@@ -26,68 +26,24 @@
 ;   might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-        .area DATA
-___setjmp_PARM_1::
-        .ds 2
-_longjmp_PARM_1::
-	.ds 2
-_longjmp_PARM_2::
-	.ds 2
+	.module heap
+	.include "config.inc"
 
-	.area   CODE
+	.globl ___sdcc_heap_init
+	.globl ___sdcc_heap
+	.globl ___sdcc_heap_end
 
-___setjmp::
-	mov.io	a, sp
-	add	a, #-1
-	mov	p, a
-	idxm	a, p
-	push	af
-	dec	p
-	idxm	a, p
+	.area GSINIT
+	call ___sdcc_heap_init
 
-	xch	a, p
-	mov	a, ___setjmp_PARM_1+0
-	xch	a, p
-
-	idxm	p, a
-	inc	p
-	pop	af
-	idxm	p, a
-
-	inc	p
-	mov.io	a, sp
-	idxm	p, a
-	clear	p
-	ret	#0
-
-_longjmp::
-	mov	a, _longjmp_PARM_1+0
-	add	a, #2
-	mov	p, a
-	idxm	a, p
-	add	a, #-2
-	mov.io	sp, a
-
-	dec	p
-	dec	p
-	idxm	a, p
-	push	af
-	inc	p
-	idxm	a, p
-
-	xch	a, p
-	mov.io	a, sp
-	add	a, #-1
-	xch	a, p
-	idxm	p, a
-
-	mov	a, _longjmp_PARM_2+1
-	mov	p, a
-	mov	a, _longjmp_PARM_2+0
-
-	ceqsn	a, p
-	ret
-	ceqsn	a, #0
-	ret
-	ret	#1
+	.area DATA
+	; Allocate 16 bytes for pdk13, 64 bytes for all the other pdk
+___sdcc_heap::
+.ifdef PDK13
+	.ds 15
+.else
+	.ds 63
+.endif
+___sdcc_heap_end::
+	.ds 1
 

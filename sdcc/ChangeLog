@@ -7,6 +7,25 @@
 	  r5k/config.inc,
 	  r6k/config.inc:
 	  Add missing files for the rabbit-common changes.
+	* Makefile.in,
+	  clean.mk,
+	  library_build.mk,
+	  pdk13/Makefile.in,
+	  pdk14/Makefile.in,
+	  pdk15/Makefile.in,
+	  pdk15-stack-auto/Makefile.in,
+	  pdk-common,
+	  pdk-common/__gptrget.s,
+	  pdk-common/__gptrget2.s,
+	  pdk-common/__setjmp.s,
+	  pdk-common/_muluchar.s,
+	  pdk-common/heap.s,
+	  pdk13/config.inc,
+	  pdk14/config.inc,
+	  pdk15/config.inc,
+	  pdk15-stack-auto/config.inc,
+	  ports.mk:
+	  Move pdk common library files into pdk-common.
 
 2026-11-08 Gabriele Gorla <gorlik@yahoo.com>
 
