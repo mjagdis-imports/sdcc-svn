@@ -1,3 +1,27 @@
+2026-11-10 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
+	* src/SDCC.y (postfix_expression, unary_expression):
+	  Fix inconsistent diagnostic messages when constraint
+	  on unary & operator is violated (bug #3960).
+	  A new member of struct ast records the origin of
+	  an address: DOT (from the . operator), EXPLICIT
+	  (from unary &), or INTERNAL (everything else).
+	  DOT is needed so that the result of member
+	  access inherits the non-lvalue status of the
+	  original structure expression; INTERNAL is required
+	  because a.b is represented internally as (&a)->b
+	  so not every address-of node represents use of &.
+	* src/SDCCast.c (copyAst, copyAstNode, decorateType):
+	  E_LVALUE_REQUIRED is now reported only for
+	  explicit unary &. Assignments and calls are marked
+	  as non-lvalues, and the left operand of assignment
+	  is checked before any structure-assignment rewriting.
+	* src/SDCCast.h: Add the addressOrigin member to struct
+	  ast and defined its values in an enum.
+	* support/valdiag/tests/bug-3960.c:
+	  Add new tests to verify that function calls and
+	  assignments do not produce lvalues.
+
 2026-11-10 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* support/regression/tests/bug-4170.c.in,

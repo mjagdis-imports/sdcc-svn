@@ -223,10 +223,13 @@ postfix_expression
           }
    | postfix_expression '.' { ignoreTypedefType = 1; } identifier
                       {
+                        ast *address;
                         ignoreTypedefType = 0;
                         $4 = newSymbol($4->name,NestLevel);
                         $4->implicit = 1;
-                        $$ = newNode(PTR_OP,newNode('&',$1,NULL),newAst_VALUE(symbolVal($4)));
+                        address = newNode('&',$1,NULL);
+                        address->addressOrigin = ADDRESS_DOT;
+                        $$ = newNode(PTR_OP,address,newAst_VALUE(symbolVal($4)));
                       }
    | postfix_expression PTR_OP { ignoreTypedefType = 1; } identifier
                       {
@@ -332,7 +335,11 @@ unary_expression
          else if ($1 == '*' && IS_AST_OP ($2) && $2->opval.op == '&' && $2->right == NULL)
            $$ = $2->left;
          else
-           $$ = newNode ($1, $2, NULL);
+           {
+             $$ = newNode ($1, $2, NULL);
+             if ($1 == '&')
+               $$->addressOrigin = ADDRESS_EXPLICIT;
+           }
        }
    | SIZEOF unary_expression        { $$ = newNode (SIZEOF, NULL, $2); }
    | SIZEOF '(' type_name ')'       { $$ = newAst_VALUE (sizeofOp ($3)); }

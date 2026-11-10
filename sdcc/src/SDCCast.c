@@ -256,6 +256,7 @@ copyAst (ast * src)
   dest->reversed = src->reversed;
   dest->inlined = src->inlined;
   dest->initMode = src->initMode;
+  dest->addressOrigin = src->addressOrigin;
 
   if (src->ftype)
     dest->etype = getSpec (dest->ftype = copyLinkChain (src->ftype));
@@ -3530,6 +3531,7 @@ copyAstNode (ast *tree)
   newtree->funcName = tree->funcName;
   newtree->reversed = tree->reversed;
   newtree->decorated = tree->decorated;
+  newtree->addressOrigin = tree->addressOrigin;
 
   if (tree->ftype)
     newtree->etype = getSpec (newtree->ftype = copyLinkChain (tree->ftype));
@@ -4233,6 +4235,9 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
         }
 #endif
 
+      if (IS_ADDRESS_OF_OP (tree->left) && tree->left->addressOrigin == ADDRESS_DOT)
+        TRVAL (tree) = LRVAL (tree->left);
+
       return tree;
 
       /*------------------------------------------------------------------*/
@@ -4380,7 +4385,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           werror (E_SFR_POINTER);
         }
 
-      if (LRVAL (tree))
+      if (LRVAL (tree) && tree->addressOrigin == ADDRESS_EXPLICIT)
         {
           werrorfl (tree->filename, tree->lineno, E_LVALUE_REQUIRED, "address of");
           goto errorTreeReturn;
@@ -6359,19 +6364,27 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           printFromToType (RTYPE (tree), LTYPE (tree));
         }
 
+      if (LRVAL (tree))
+        {
+          werrorfl (tree->filename, tree->lineno, E_LVALUE_REQUIRED, "=");
+          goto errorTreeReturn;
+        }
+
       TETYPE (tree) = getSpec (TTYPE (tree) = LTYPE (tree));
       if (!tree->initMode && IS_STRUCT (LTYPE (tree)) && hasConstMember (LTYPE (tree)))
         {
           werrorfl (tree->filename, tree->lineno, E_CODE_WRITE, "=");
           goto errorTreeReturn;
         }
+
       if (IS_STRUCT (LTYPE (tree)))
         tree = rewriteStructAssignment (tree);
       else
         {
-          TRVAL(tree) = RRVAL (tree) = 1;
+          RRVAL (tree) = 1;
           LLVAL (tree) = 1;
         }
+      TRVAL (tree) = 1;
       if (!tree->initMode)
         {
           if (IS_CONSTANT (LTYPE (tree)))
@@ -6379,12 +6392,6 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
         }
       if (tree->initMode && SPEC_STAT (getSpec (LTYPE (tree))) && !constExprTree (tree->right))
         werrorfl (tree->filename, tree->lineno, E_CONST_EXPECTED, "=");
-      if (TRVAL(tree) = LRVAL (tree))
-        {
-          werrorfl (tree->filename, tree->lineno, E_LVALUE_REQUIRED, "=");
-          goto errorTreeReturn;
-        }
-
       if (IS_PTR (LTYPE (tree)) && !isConst (LTYPE (tree)->next) && IS_AST_SYM_VALUE (tree->right) && AST_SYMBOL (tree->right)->isstrlit)
         werrorfl (tree->filename, tree->lineno, W_NONCONST_STRINGLIT);
 
@@ -6472,6 +6479,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           TETYPE (tree) = getSpec (TTYPE (tree));
           SPEC_SCLS (TETYPE (tree)) = S_FIXED;
         }
+      TRVAL (tree) = 1;
       return tree;
 
       /*------------------------------------------------------------------*/

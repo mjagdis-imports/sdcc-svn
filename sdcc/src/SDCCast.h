@@ -39,6 +39,13 @@ typedef enum
   EX_OPERAND
 } ASTTYPE;
 
+enum
+{
+  ADDRESS_INTERNAL,
+  ADDRESS_DOT,
+  ADDRESS_EXPLICIT
+};
+
 /* expression tree   */
 typedef struct ast
 {
@@ -51,6 +58,7 @@ typedef struct ast
   unsigned initMode:1;
   unsigned reversed:1;
   unsigned inlined:1;
+  unsigned addressOrigin:2;
   long level;                   /* level for expr */
   int block;                    /* block number   */
   int seqPoint;                 /* sequence point */
