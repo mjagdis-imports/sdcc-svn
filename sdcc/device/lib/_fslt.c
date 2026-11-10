@@ -30,56 +30,6 @@
 #define __SDCC_FLOAT_LIB
 #include <float.h>
 
-
-#ifdef FLOAT_ASM_MCS51
-
-// _Bool __fslt (float a, float b)
-static void dummy(void) __naked
-{
-	__asm
-	.globl	___fslt
-___fslt:
-	mov	r7, a
-	mov	r0, sp
-	dec	r0
-	dec	r0
-	lcall	fs_check_negative_zeros
-	setb	sign_a
-	rlc	a
-	mov	a, @r0
-	jc	a_negative
-a_positive:
-	jnb	acc.7, ab_positive
-	// a is positive and b is negative, so a > b
-	mov	dpl, #0
-	ret
-a_negative:
-	jb	acc.7, ab_negative
-	// a is negative and b is positive, so a < b
-	mov	dpl, #1
-	ret
-ab_positive:
-	clr	sign_a
-ab_negative:
-	lcall	fs_compare_uint32
-	mov	a, r1
-	jnz	ab_different
-	// a and b are equal
-	mov	dpl, a
-	ret
-ab_different:
-	jb	sign_a, skip_invert
-	cpl	c
-skip_invert:
-	clr	a
-	rlc	a
-	mov	dpl, a
-	ret
-	__endasm;
-}
-
-#else
-
 /*
 ** libgcc support for software floating point.
 ** Copyright (C) 1991 by Pipeline Associates, Inc.  All rights reserved.
@@ -125,6 +75,4 @@ _Bool __fslt (float a1, float a2) __SDCC_FLOAT_NONBANKED
     return (1);
   return (0);
 }
-
-#endif
 

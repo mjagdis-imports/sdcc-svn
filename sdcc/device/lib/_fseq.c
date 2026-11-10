@@ -30,30 +30,6 @@
 #define __SDCC_FLOAT_LIB
 #include <float.h>
 
-
-#ifdef FLOAT_ASM_MCS51
-
-// _Bool __fseq (float a, float b)
-static void dummy(void) __naked
-{
-	__asm
-	.globl	___fseq
-___fseq:
-	mov	r7, a
-	mov	r0, sp
-	dec	r0
-	dec	r0
-	lcall	fs_check_negative_zeros
-	lcall	fs_compare_uint32
-	mov	a, r1
-	xrl	a, #1
-	mov	dpl, a
-	ret
-	__endasm;
-}
-
-#else
-
 /*
 ** libgcc support for software floating point.
 ** Copyright (C) 1991 by Pipeline Associates, Inc.  All rights reserved.
@@ -93,6 +69,4 @@ _Bool __fseq (float a1, float a2) __SDCC_FLOAT_NONBANKED
     return (1);
   return (0);
 }
-
-#endif
 

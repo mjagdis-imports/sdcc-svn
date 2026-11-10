@@ -63,6 +63,10 @@
 	  device/lib/mcs51-common/_fsreturnval.s,
 	  device/lib/mcs51-common/_fssub.s:
 	  Move 8051 assembly out of common C files for _fsadd, _fssub, _fsmul and _fsdiv (RFE #327).
+	* device/lib/_fseq.c,
+	  device/lib/_fslt.c,
+	  device/lib/_fsneq.c:
+	  Move 8051 assembly out of common C files for _fseq, _fsneq, and _fslt (RFE #327).
 
 2026-11-08 Gabriele Gorla <gorlik@yahoo.com>
 
