@@ -113,7 +113,7 @@ void Areas51 (void)
  *	or read from a command file.  The functions nxtline() and parse()
  *	are to input and evaluate the linker parameters.  The linking process
  *	proceeds by making the first pass through each .rel file in the order
- *	presented to the linker.  At the end of the first pass the setbase(),
+ *	presented to the linker.  At the end of the first pass the setarea(),
  *	lnkarea(), setgbl(), and symdef() functions are called to evaluate
  *	the base address terms, link all areas, define global variables,
  *	and look for undefined symbols.  Following these routines a linker

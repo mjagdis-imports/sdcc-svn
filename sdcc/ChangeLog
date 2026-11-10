@@ -1,3 +1,8 @@
+2026-11-10 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdas/linksrc/lkmain.c:
+	  Fix a comment that had been reverted to its outdated upstream version earlier.
+
 2026-11-10 Gabriele Gorla <gorlik@yahoo.com>
 
 	* device/lib/ds390/Makefile.in,
