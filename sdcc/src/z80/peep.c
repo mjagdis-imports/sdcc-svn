@@ -1572,7 +1572,7 @@ z80canAssign (const char *op1, const char *op2, const char *exotic)
         return true;
     }
 
-  // Immediates van be loaded into 8-bit registers.
+  // Immediates can be loaded into 8-bit registers.
   if((isReg(dst) || HAS_IYL_INST && isUReg(dst)) && src[0] == '#')
     return true;
 
@@ -1586,15 +1586,15 @@ z80canAssign (const char *op1, const char *op2, const char *exotic)
   if(!strcmp(dst, "a") &&
      (!strcmp(src, "(bc)") || !strcmp(src, "(de)") || !strcmp(src, "(hl+)") || !strcmp(src, "(hl-)")))
     return TRUE;
-  if((!strcmp(dst, "(bc)") || !strcmp(dst, "(de)") || !strcmp(src, "(hl+)") || !strcmp(src, "(hl-)"))
+  if((!strcmp(dst, "(bc)") || !strcmp(dst, "(de)") || !strcmp(dst, "(hl+)") || !strcmp(dst, "(hl-)"))
      && !strcmp(src, "a"))
     return TRUE;
 
   // Can load immediate values directly into registers and register pairs.
-  if((isReg(dst) || isRegPair(dst) || !strcmp(src, "sp")) && src[0] == '#')
+  if((isReg(dst) || isRegPair(dst) || !strcmp(dst, "sp")) && src[0] == '#')
     return TRUE;
 
-  if((!strcmp(dst, "a") || (!IS_SM83 && (isRegPair(dst) || !strcmp(src, "sp")))) && !strncmp(src, "(#", 2))
+  if((!strcmp(dst, "a") || (!IS_SM83 && (isRegPair(dst) || !strcmp(dst, "sp")))) && !strncmp(src, "(#", 2))
     return TRUE;
   if(!strncmp(dst, "(#", 2) && (!strcmp(src, "a") || (!IS_SM83 && isRegPair(src)) || !strcmp(src, "sp")))
     return TRUE;

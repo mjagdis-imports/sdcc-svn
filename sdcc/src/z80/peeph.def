@@ -1681,6 +1681,36 @@ replace restart {
 }
 
 replace restart {
+	add	a, a
+	add	a, #0x02
+} by {
+	inc	a
+	; common peephole 121c incremented a once instead of adding #0x02 to a.
+	add	a, a
+} if notUsed('hf' 'pf' 'cf')
+
+replace restart {
+	add	a, a
+	add	a, a
+	add	a, #0x04
+} by {
+	inc	a
+	; common peephole 121d incremented a once instead of adding #0x04 to a.
+	add	a, a
+	add	a, a
+} if notUsed('hf' 'pf' 'cf')
+
+replace restart {
+	add	hl, hl
+	inc	hl
+	inc	hl
+} by {
+	inc	hl
+	; common peephole 121e incremented hl once instead of twice.
+	add	hl, hl
+} if notUsed('hf' 'nf' 'cf')
+
+replace restart {
 	ld	a, #%1
 } by {
 	; common peephole 123 optimize ld a, %1

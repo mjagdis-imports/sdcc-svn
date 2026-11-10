@@ -1,0 +1,39 @@
+/* Regression test for bug #4170 (untested tlcs90 peephole optimizer rules)
+   Rule 4 (add a,a; add a,a; add a,#0x04 -> inc a; add a,a; add a,a)
+   was not triggered by any regression test.
+   type: unsigned char, unsigned int, unsigned long
+   Testcase found using Qwen3.8 */
+
+#include <testfwk.h>
+#include <limits.h>
+
+{type} f2({type} x) // x*4 + 2
+{
+    return x * 4 + 2;
+}
+
+{type} f4({type} x) // x*4 + 4, matches tlcs90 rule 4
+{
+    return x * 4 + 4;
+}
+
+void test4(void)
+{
+    ASSERT(f2(0) == 2);
+    ASSERT(f2(1) == 6);
+    ASSERT(f2(10) == 42);
+    ASSERT(f4(0) == 4);
+    ASSERT(f4(1) == 8);
+    ASSERT(f4(10) == 44);
+    ASSERT(f4(31) == 128);
+    if (sizeof({type}) * CHAR_BIT == 8) {
+        ASSERT(f2(64) == 2);    // 64*4 + 2 = 260 wraps to 2
+        ASSERT(f4(63) == 0);    // 63*4 + 4 = 256 wraps to 0
+    } else if (sizeof({type}) * CHAR_BIT == 16) {
+        ASSERT(f2(0xD000) == 0x4002); // 0xD000*4 + 2 = 0x34002 wraps to 0x4002
+        ASSERT(f4(0xFFFF) == 0);      // 0xFFFF*4 + 4 = 0x40000 wraps to 0
+    } else if (sizeof({type}) * CHAR_BIT == 32) {
+        ASSERT(f2(0x40000000UL) == 2); // 0x40000000*4 + 2 = 0x100000002 wraps to 2
+        ASSERT(f4(0xFFFFFFFFUL) == 0); // 0xFFFFFFFF*4 + 4 = 0x400000000 wraps to 0
+    }
+}
