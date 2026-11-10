@@ -1,5 +1,5 @@
 /* New tests for some existing z80 peephole optimizer rules that were no longer triggered by their original testcases.
-   Tetscases found using Gemma-4-31B-IT-QAT-Q4 */
+   Testcases found using Gemma-4-31B-IT-QAT-Q4 */
 
 #include <testfwk.h>
 

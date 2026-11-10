@@ -6,6 +6,9 @@
 	  Fix bug #4170.
 	* src/z80/peep.c:
 	  z80CanAssign fixes for issues found by zlfn (https://github.com/zlfn/alive-sdcc/blob/main/FINDINGS.md).
+	* support/regression/tests/bug-4172.c,
+	  src/z80/peeph-r2k.def:
+	  Fix bug #4172.
 
 2026-11-10 Gabriele Gorla <gorlik@yahoo.com>
 

@@ -1,5 +1,5 @@
 /* New tests for some existing z80 peephole optimizer rules that were no longer triggered by their original testcases.
-   Tetscases found using Qwen3.8-27B-Q5_K_M */
+   Testcases found using Qwen3.8-27B-Q5_K_M */
 
 #include <testfwk.h>
 
