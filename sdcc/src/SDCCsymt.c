@@ -5363,7 +5363,7 @@ initCSupport (void)
   floatTypeNear = newFloatLink ();
   floatTypeNear->select.s.sclass=S_DATA;
 
-  if(!(TARGET_IS_MOS6502 && !options.stackAuto))
+  if(!(TARGET_MOS6502_LIKE && !options.stackAuto))
     {
       floatTypeNear=floatType;
     }

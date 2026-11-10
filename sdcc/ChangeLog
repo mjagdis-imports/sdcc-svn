@@ -25,6 +25,8 @@
 	  device/lib/mcs51-common/asmfloat/expf.s,
 	  device/lib/mcs51-common/asmfloat/logf.s:
 	  Share temp between logf and expf.
+	* src/SDCCsymt.c:
+	  Enable FP functions parameter passing in ZP for mos65c02 and huc6280. 
 
 2026-11-10 Philipp Klaus Krause <philipp@colecovision.eu>
 
