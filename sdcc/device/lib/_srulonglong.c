@@ -38,7 +38,7 @@
 unsigned long long _srulonglong(unsigned long long l, unsigned char s) __SDCC_NONBANKED
 {
     uint32_t *const top =    (uint32_t *)((char *)(&l) + 0);
-    uint32_t *const middle = (uint16_t *)((char *)(&l) + 2);
+    uint32_t *const middle = (uint32_t *)((char *)(&l) + 2);
     uint32_t *const bottom = (uint32_t *)((char *)(&l) + 4);
     uint16_t *const w =      (uint16_t *)(&l);
 
