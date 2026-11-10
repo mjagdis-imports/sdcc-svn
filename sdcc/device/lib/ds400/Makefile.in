@@ -44,7 +44,6 @@ PORT_SDCC = $(COMMON_SDCC) \
 PORT_FLOAT = $(COMMON_FLOAT)
 
 PORT_LIBC = $(COMMON_LIBC) \
-  _autobaud \
   div \
   _heap \
   imaxdiv \
@@ -57,12 +56,8 @@ PORT_LIBC = $(COMMON_LIBC) \
   printf_fast_f \
   printfl \
   printf_tiny \
-  _ser \
-  serial \
   setjmp \
-  tinibios \
   memcpyx \
-  ds400rom \
   vprintf
 
 PORT_LIBM = $(COMMON_LIBM)

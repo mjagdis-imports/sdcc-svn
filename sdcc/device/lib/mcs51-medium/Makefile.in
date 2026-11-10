@@ -63,7 +63,6 @@ PORT_FLOAT = $(COMMON_FLOAT) \
 
 PORT_LIBC = $(COMMON_LIBC) \
   atomic_flag_clear \
-  _autobaud \
   div \
   _heap \
   imaxdiv \
@@ -77,8 +76,6 @@ PORT_LIBC = $(COMMON_LIBC) \
   printfl \
   printf_tiny \
   sdcc_atomic_maybe_rollback \
-  _ser \
-  serial \
   setjmp \
   vprintf
 

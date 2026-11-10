@@ -1,3 +1,31 @@
+2026-11-10 Gabriele Gorla <gorlik@yahoo.com>
+
+	* device/lib/ds390/Makefile.in,
+	  device/lib/ds400/Makefile.in,
+	  device/lib/mcs51-huge/Makefile.in,
+	  device/lib/mcs51-large/Makefile.in,
+	  device/lib/mcs51-large-stack-auto/Makefile.in,
+	  device/lib/mcs51-medium/Makefile.in,
+	  device/lib/mcs51-small/Makefile.in,
+	  device/lib/mcs51-small-stack-auto/Makefile.in,
+	  device/lib/mcs51-small-xstack-auto/Makefile.in,
+	  device/examples,
+	  device/examples/ds390,
+	  device/examples/ds390/i2c390.c,
+	  device/examples/ds390/putchar.c,
+	  device/examples/ds390/rtc390.c,
+	  device/examples/ds390/tinibios.c,
+	  device/examples/ds400,
+	  device/examples/ds400/ds400rom.c,
+	  device/examples/ds400/tinibios.c,
+	  device/examples/mcs51,
+	  device/examples/mcs51/_autobaud.c,
+	  device/examples/mcs51/_ser.c,
+	  device/examples/mcs51/ser_ir.c,
+	  device/examples/mcs51/ser_ir_cts_rts.c,
+	  device/examples/mcs51/serial.c:
+	  Move non standard library files to devices/examples directory.
+
 2026-11-09 Gabriele Gorla <gorlik@yahoo.com>
 
 	* r2k/config.inc,
