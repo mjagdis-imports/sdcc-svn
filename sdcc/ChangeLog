@@ -5,6 +5,20 @@
 	  device/lib/ds390/tinibios.c,
 	  device/lib/ds400/tinibios.c:
 	  Fix ds390 regression broken by [r17163]
+	* device/lib/expf.c,
+	  device/lib/logf.c,
+	  device/lib/mcs51-huge/config.inc,
+	  device/lib/mcs51-large/config.inc,
+	  device/lib/mcs51-large-stack-auto/config.inc,
+	  device/lib/mcs51-medium/config.inc,
+	  device/lib/mcs51-small/config.inc,
+	  device/lib/mcs51-small-stack-auto/config.inc,
+	  device/lib/mcs51-small-xstack-auto/config.inc,
+	  device/lib/mcs51-common/asmfloat/_fsrshift.s,
+	  device/lib/mcs51-common/asmfloat/_logexpf.s,
+	  device/lib/mcs51-common/asmfloat/expf.s,
+	  device/lib/mcs51-common/asmfloat/logf.s:
+	  Move 8051 assembly out of common C files for logf and expf (RFE #327).
 
 2026-11-10 Philipp Klaus Krause <philipp@colecovision.eu>
 
