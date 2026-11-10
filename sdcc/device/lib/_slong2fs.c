@@ -30,51 +30,6 @@
 #define __SDCC_FLOAT_LIB
 #include <float.h>
 
-
-#ifdef FLOAT_ASM_MCS51
-
-//float __slong2fs (long x)
-static void dummy(void) __naked
-{
-	__asm
-	.globl	___slong2fs
-___slong2fs:
-	mov	r4, a
-	mov	r3, b
-	mov	r2, dph
-	mov	r1, dpl
-	mov	a, #158
-	.globl	slong2fs_doit
-slong2fs_doit:
-	mov	exp_a, a
-	clr	sign_a
-	mov	a, r4
-	jnb	acc.7, slong2fs_positive
-	setb	sign_a
-	mov	a, r1
-	cpl	a
-	add	a, #1
-	mov	r1, a
-	mov	a, r2
-	cpl	a
-	addc	a, #0
-	mov	r2, a
-	mov	a, r3
-	cpl	a
-	addc	a, #0
-	mov	r3, a
-	mov	a, r4
-	cpl	a
-	addc	a, #0
-	mov	r4, a
-slong2fs_positive:
-	lcall	fs_normalize_a
-	ljmp	fs_round_and_return
-	__endasm;
-}
-
-#else
-
 /* convert signed long to float */
 float __slong2fs (signed long sl) __SDCC_FLOAT_NONBANKED
 {
@@ -84,4 +39,3 @@ float __slong2fs (signed long sl) __SDCC_FLOAT_NONBANKED
     return __ulong2fs(sl);
 }
 
-#endif

@@ -81,6 +81,20 @@
 	  device/lib/mcs51-common/asmfloat/_fs2uint.s,
 	  device/lib/mcs51-common/asmfloat/_fs2ulong.s:
 	  Move 8051 assembly out of common C files for _f2Xchar, _f2Xint, and _f2Xlong (RFE #327).
+	* device/lib/_schar2fs.c,
+	  device/lib/_sint2fs.c,
+	  device/lib/_slong2fs.c,
+	  device/lib/_srulonglong.c,
+	  device/lib/_uchar2fs.c,
+	  device/lib/_uint2fs.c,
+	  device/lib/_ulong2fs.c,
+	  device/lib/mcs51-common/asmfloat/_schar2fs.s,
+	  device/lib/mcs51-common/asmfloat/_sint2fs.s,
+	  device/lib/mcs51-common/asmfloat/_slong2fs.s,
+	  device/lib/mcs51-common/asmfloat/_uchar2fs.s,
+	  device/lib/mcs51-common/asmfloat/_uint2fs.s,
+	  device/lib/mcs51-common/asmfloat/_ulong2fs.s:
+	  Move 8051 assembly out of common C files for _Xchar2fs, _Xint2fs, and _Xlong2fs (RFE #327).
 
 2026-11-08 Gabriele Gorla <gorlik@yahoo.com>
 

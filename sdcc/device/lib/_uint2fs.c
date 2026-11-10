@@ -29,31 +29,9 @@
 #define __SDCC_FLOAT_LIB
 #include <float.h>
 
-
-#ifdef FLOAT_ASM_MCS51
-
-// float long __uint2fs (float x)
-static void dummy(void) __naked
-{
-	__asm
-	.globl	___uint2fs
-___uint2fs:
-	clr	a
-	mov	r4, dph
-	mov	r3, dpl
-	mov	r2, a
-	mov	r1, a
-	mov	a, #142
-	ljmp	ulong2fs_doit
-	__endasm;
-}
-
-#else
-
 /* convert unsigned int to float */
 float __uint2fs (unsigned int ui) __SDCC_FLOAT_NONBANKED
 {
   return __ulong2fs(ui);
 }
 
-#endif

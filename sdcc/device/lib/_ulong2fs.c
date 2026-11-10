@@ -30,32 +30,6 @@
 #define __SDCC_FLOAT_LIB
 #include <float.h>
 
-
-#ifdef FLOAT_ASM_MCS51
-
-// float long __ulong2fs (float x)
-static void dummy(void) __naked
-{
-	__asm
-	.globl	___ulong2fs
-___ulong2fs:
-	mov	r4, a
-	mov	r3, b
-	mov	r2, dph
-	mov	r1, dpl
-	mov	a, #158
-	.globl	ulong2fs_doit
-ulong2fs_doit:
-	clr	sign_a
-long2fs_doit:
-	mov	exp_a, a
-	lcall	fs_normalize_a
-	ljmp	fs_round_and_return
-	__endasm;
-}
-
-#else
-
 /*
 ** libgcc support for software floating point.
 ** Copyright (C) 1991 by Pipeline Associates, Inc.  All rights reserved.
@@ -118,4 +92,3 @@ float __ulong2fs (unsigned long a ) __SDCC_FLOAT_NONBANKED
   return (fl.f);
 }
 
-#endif

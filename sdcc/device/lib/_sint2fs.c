@@ -30,30 +30,9 @@
 #define __SDCC_FLOAT_LIB
 #include <float.h>
 
-
-#ifdef FLOAT_ASM_MCS51
-
-// float long __sint2fs (float x)
-static void dummy(void) __naked
-{
-	__asm
-	.globl	___sint2fs
-___sint2fs:
-	mov	r4, dph
-	mov	r3, dpl
-	mov	r2, #0
-	mov	r1, #0
-	mov	a, #142
-	ljmp	slong2fs_doit
-	__endasm;
-}
-
-#else
-
 /* convert signed int to float */
 float __sint2fs (signed int si) __SDCC_FLOAT_NONBANKED
 {
   return __slong2fs(si);
 }
 
-#endif

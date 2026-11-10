@@ -30,31 +30,9 @@
 #define __SDCC_FLOAT_LIB
 #include <float.h>
 
-
-#ifdef FLOAT_ASM_MCS51
-
-// float __schar2fs (char c)
-static void dummy(void) __naked
-{
-	__asm
-	.globl	___schar2fs
-___schar2fs:
-	mov	r4, dpl
-	clr	a
-	mov	r3, a
-	mov	r2, a
-	mov	r1, a
-	mov	a, #134
-	ljmp	slong2fs_doit
-	__endasm;
-}
-
-#else
-
 /* convert signed char to float */
 float __schar2fs (signed char sc) __SDCC_FLOAT_NONBANKED
 {
   return __slong2fs(sc);
 }
 
-#endif
