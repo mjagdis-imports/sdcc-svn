@@ -17,70 +17,62 @@ LIB		= mcs51.lib
 
 
 PORT_SDCC = $(COMMON_SDCC) \
-  _divsint \
-  _divuint \
-  _modsint \
-  _moduint \
-  _mulint \
-  _srulonglong \
-  _srslonglong \
-  _slulonglong \
-  _slslonglong \
-  _mullonglong \
-  _divslonglong \
-  _divulonglong \
-  _modslonglong \
-  _modulonglong
-
-PORT_FLOAT = $(COMMON_FLOAT) \
-  _fscmp \
-  _fsget1arg \
-  _fsget2args \
-  _fsnormalize \
-  _fsreturnval \
-  _fsrshift \
-  _fsswapargs \
-  _logexpf
-
-PORT_LIBC = $(COMMON_LIBC) \
-  _autobaud \
   bp \
   bpx \
+  crtbank \
+  crtcall \
+  crtclear \
+  crtpagesfr \
+  crtstart \
+  crtxclear \
+  crtxinit \
+  crtxpop \
+  crtxpush \
+  crtxstack \
   _decdptr \
+  _divsint \
+  _divslonglong \
+  _divuint \
+  _divulonglong \
+  gptr_cmp \
   _gptrget \
   _gptrgetc \
   _gptrput \
-  _ser \
-  setjmp \
-  serial \
-  __itoa \
-  __ltoa \
-  __memcpy \
-  _heap \
+  _modsint \
+  _modslonglong \
+  _moduint \
+  _modulonglong \
+  _mulint \
+  _mullonglong \
+  _slslonglong \
+  _slulonglong \
   _spx \
-  _startup \
+  _srslonglong \
+  _srulonglong \
+  _startup
+
+PORT_FLOAT = $(COMMON_FLOAT)
+
+PORT_LIBC = $(COMMON_LIBC) \
+  atomic_flag_clear \
+  _autobaud \
   div \
+  _heap \
+  imaxdiv \
+  __itoa \
   ldiv \
   lldiv \
-  imaxdiv \
-  vprintf \
+  __ltoa \
+  __memcpy \
   printf_fast \
   printf_fast_f \
-  printf_tiny \
   printfl \
-  crtstart \
-  crtxinit \
-  crtxclear \
-  crtclear \
-  crtpagesfr \
-  crtbank \
-  crtcall \
-  crtxstack \
-  crtxpush \
-  crtxpop \
-  gptr_cmp \
-  atomic_flag_clear \
-  sdcc_atomic_maybe_rollback
+  printf_tiny \
+  sdcc_atomic_maybe_rollback \
+  _ser \
+  serial \
+  setjmp \
+  vprintf
 
 PORT_LIBM = $(COMMON_LIBM)
 

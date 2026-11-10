@@ -21,7 +21,6 @@ PORT_SDCC = $(COMMON_SDCC) \
   divmixed \
   divsigned \
   _divslonglong \
-  _divulong \
   _divulonglong \
   divunsigned \
   modmixed \
@@ -31,7 +30,6 @@ PORT_SDCC = $(COMMON_SDCC) \
   modunsigned \
   mul \
   mulchar \
-  _mullong \
   _mullonglong \
   __sdcc_call_hl \
   __sdcc_call_iy \

@@ -30,27 +30,6 @@
 #define __SDCC_FLOAT_LIB
 #include <float.h>
 
-
-#ifdef FLOAT_ASM_MCS51
-
-//float __fssub (float a, float b) __reentrant
-static void dummy(void) __naked
-{
-	__asm
-	.globl	___fssub
-___fssub:
-	mov	r0, sp
-	dec	r0
-	dec	r0
-	xch	a, @r0
-	cpl	acc.7
-	xch	a, @r0
-	ljmp	___fsadd
-	__endasm;
-}
-
-#else
-
 /*
 ** libgcc support for software floating point.
 ** Copyright (C) 1991 by Pipeline Associates, Inc.  All rights reserved.
@@ -75,5 +54,3 @@ float __fssub (float a1, float a2) __SDCC_FLOAT_NONBANKED
   float neg = -a1;
   return -(neg + a2);
 }
-
-#endif

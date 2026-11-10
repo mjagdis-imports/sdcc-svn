@@ -8,7 +8,7 @@ abs_top_builddir = @abs_top_builddir@
 include $(srcdir)/../common_files.mk
 
 # user configuration
-VPATH  		= $(srcdir)/../mcs51-common:$(std_lib_dirs)
+VPATH  		= $(srcdir)/../mcs51-common/asmfloat:$(srcdir)/../mcs51-common:$(std_lib_dirs)
 AS		= $(top_builddir)/bin/sdas8051
 EXTRA_CFLAGS	= -I$(INCDIR)/mcs51 --opt-code-speed
 PORT_CRT	=
@@ -17,20 +17,39 @@ LIB		= mcs51.lib
 
 
 PORT_SDCC = $(COMMON_SDCC) \
+  bp \
+  bpx \
+  crtbank \
+  crtcall \
+  crtclear \
+  crtpagesfr \
+  crtstart \
+  crtxclear \
+  crtxinit \
+  crtxpop \
+  crtxpush \
+  crtxstack \
+  _decdptr \
   _divsint \
-  _divuint \
-  _modsint \
-  _moduint \
-  _mulint \
-  _srulonglong \
-  _srslonglong \
-  _slulonglong \
-  _slslonglong \
-  _mullonglong \
   _divslonglong \
+  _divuint \
   _divulonglong \
+  gptr_cmp \
+  _gptrget \
+  _gptrgetc \
+  _gptrput \
+  _modsint \
   _modslonglong \
-  _modulonglong
+  _moduint \
+  _modulonglong \
+  _mulint \
+  _mullonglong \
+  _slslonglong \
+  _slulonglong \
+  _spx \
+  _srslonglong \
+  _srulonglong \
+  _startup
 
 PORT_FLOAT = $(COMMON_FLOAT) \
   _fscmp \
@@ -43,44 +62,25 @@ PORT_FLOAT = $(COMMON_FLOAT) \
   _logexpf
 
 PORT_LIBC = $(COMMON_LIBC) \
+  atomic_flag_clear \
   _autobaud \
-  bp \
-  bpx \
-  _decdptr \
-  _gptrget \
-  _gptrgetc \
-  _gptrput \
-  _ser \
-  setjmp \
-  serial \
-  __itoa \
-  __ltoa \
-  __memcpy \
-  _heap \
-  _spx \
-  _startup \
   div \
+  _heap \
+  imaxdiv \
+  __itoa \
   ldiv \
   lldiv \
-  imaxdiv \
-  vprintf \
+  __ltoa \
+  __memcpy \
   printf_fast \
   printf_fast_f \
-  printf_tiny \
   printfl \
-  crtstart \
-  crtxinit \
-  crtxclear \
-  crtclear \
-  crtpagesfr \
-  crtbank \
-  crtcall \
-  crtxstack \
-  crtxpush \
-  crtxpop \
-  gptr_cmp \
-  atomic_flag_clear \
-  sdcc_atomic_maybe_rollback
+  printf_tiny \
+  sdcc_atomic_maybe_rollback \
+  _ser \
+  serial \
+  setjmp \
+  vprintf
 
 PORT_LIBM = $(COMMON_LIBM)
 

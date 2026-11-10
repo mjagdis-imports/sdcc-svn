@@ -9,7 +9,7 @@ include $(srcdir)/../common_files.mk
 
 # user configuration
 VPATH  		= $(srcdir)/../mcs51-common:$(std_lib_dirs)
-AS = $(top_builddir)/bin/sdas390
+AS		= $(top_builddir)/bin/sdas390
 EXTRA_CFLAGS	= -I$(INCDIR)/mcs51 --opt-code-speed
 PORT_CRT	=
 LIB_TYPE	= @LIB_TYPE@
@@ -17,57 +17,57 @@ LIB		= ds390.lib
 
 
 PORT_SDCC = $(COMMON_SDCC) \
+  bp \
+  bpx \
+  _decdptr \
   _divsint \
-  _divuint \
-  _modsint \
-  _moduint \
-  _mulint \
-  _srulonglong \
-  _srslonglong \
-  _slulonglong \
-  _slslonglong \
-  _mullonglong \
   _divslonglong \
+  _divuint \
   _divulonglong \
+  gptr_cmp \
+  _gptrget \
+  _gptrgetc \
+  _gptrput \
+  _modsint \
   _modslonglong \
+  _moduint \
   _modulonglong \
-  gptr_cmp
+  _mulint \
+  _mullonglong \
+  _slslonglong \
+  _slulonglong \
+  _spx \
+  _srslonglong \
+  _srulonglong \
+  _startup
 
 PORT_FLOAT = $(COMMON_FLOAT)
 
 PORT_LIBC = $(COMMON_LIBC) \
+  atomic_flag_clear \
   _autobaud \
-  bp \
-  bpx \
-  _decdptr \
-  _gptrget \
-  _gptrgetc \
-  _gptrput \
-  _ser \
-  setjmp \
-  serial \
-  __itoa \
-  __ltoa \
-  __memcpy \
-  _heap \
-  _spx \
-  _startup \
   div \
+  _heap \
+  imaxdiv \
+  __itoa \
   ldiv \
   lldiv \
-  imaxdiv \
-  vprintf \
+  __ltoa \
+  __memcpy \
   printf_fast \
   printf_fast_f \
-  printf_tiny \
   printfl \
+  printf_tiny \
+  sdcc_atomic_maybe_rollback \
+  _ser \
+  serial \
+  setjmp \
   tinibios \
   memcpyx \
   i2c390 \
   rtc390 \
   putchar \
-  atomic_flag_clear \
-  sdcc_atomic_maybe_rollback
+  vprintf
 
 PORT_LIBM = $(COMMON_LIBM)
 

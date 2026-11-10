@@ -38,6 +38,31 @@
 	* device/lib/f8/Makefile.in,
 	  device/lib/f8l/Makefile.in:
 	  Correct typos in f8 Makefiles.
+	* device/lib/_fsadd.c,
+	  device/lib/_fsdiv.c,
+	  device/lib/_fsmul.c,
+	  device/lib/_fssub.c,
+	  device/lib/mcs51-huge/Makefile.in,
+	  device/lib/mcs51-huge/config.inc,
+	  device/lib/mcs51-large/Makefile.in,
+	  device/lib/mcs51-large/config.inc,
+	  device/lib/mcs51-large-stack-auto/Makefile.in,
+	  device/lib/mcs51-large-stack-auto/config.inc,
+	  device/lib/mcs51-medium/Makefile.in,
+	  device/lib/mcs51-medium/config.inc,
+	  device/lib/mcs51-small/Makefile.in,
+	  device/lib/mcs51-small/config.inc,
+	  device/lib/mcs51-small-stack-auto/Makefile.in,
+	  device/lib/mcs51-small-stack-auto/config.inc,
+	  device/lib/mcs51-small-xstack-auto/Makefile.in,
+	  device/lib/mcs51-small-xstack-auto/config.inc,
+	  device/lib/tlcs90/Makefile.in,
+	  device/lib/mcs51-common/_fsadd.s,
+	  device/lib/mcs51-common/_fsdiv.s,
+	  device/lib/mcs51-common/_fsmul.s,
+	  device/lib/mcs51-common/_fsreturnval.s,
+	  device/lib/mcs51-common/_fssub.s:
+	  Move 8051 assembly out of common C files for _fsadd, _fssub, _fsmul and _fsdiv (RFE #327).
 
 2026-11-08 Gabriele Gorla <gorlik@yahoo.com>
 
