@@ -19,6 +19,12 @@
 	  device/lib/mcs51-common/asmfloat/expf.s,
 	  device/lib/mcs51-common/asmfloat/logf.s:
 	  Move 8051 assembly out of common C files for logf and expf (RFE #327).
+	* device/lib/_srulonglong.c:
+	  Fix warning.
+	* device/lib/mcs51-common/asmfloat/_logexpf.s,
+	  device/lib/mcs51-common/asmfloat/expf.s,
+	  device/lib/mcs51-common/asmfloat/logf.s:
+	  Share temp between logf and expf.
 
 2026-11-10 Philipp Klaus Krause <philipp@colecovision.eu>
 
@@ -150,8 +156,6 @@
 	  device/lib/mcs51-common/asmfloat/_uint2fs.s,
 	  device/lib/mcs51-common/asmfloat/_ulong2fs.s:
 	  Move 8051 assembly out of common C files for _Xchar2fs, _Xint2fs, and _Xlong2fs (RFE #327).
-	* device/lib/_srulonglong.c:
-	  Fix warning.
 
 2026-11-08 Gabriele Gorla <gorlik@yahoo.com>
 

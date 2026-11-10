@@ -41,8 +41,6 @@
 ;static __data unsigned char expf_y[4];
 ;static __data unsigned char n;
 	.area DSEG    (DATA)
-_expf_y:
-	.ds 4
 _n:
 	.ds 1
 
@@ -83,10 +81,10 @@ expf_not_zero:
 	mov	a, r0
 	jnc	expf_no_range_reduction
 expf_range_reduction:
-	mov	(_expf_y + 0), dpl	; keep copy of x in "exp_y"
-	mov	(_expf_y + 1), dph
-	mov	(_expf_y + 2), b
-	mov	(_expf_y + 3), a
+	mov	(_logexpf_tmp + 0), dpl	; keep copy of x in "exp_y"
+	mov	(_logexpf_tmp + 1), dph
+	mov	(_logexpf_tmp + 2), b
+	mov	(_logexpf_tmp + 3), a
 	mov     r0, #0x3B
 	push    ar0
 	mov     r0, #0xAA
@@ -113,10 +111,10 @@ expf_range_ok:
 	mov     r2,#0x31
 	mov     r3,#0xBF
 	lcall	expf_scale_and_add
-	mov	(_expf_y + 0), dpl
-	mov	(_expf_y + 1), dph
-	mov	(_expf_y + 2), b
-	mov	(_expf_y + 3), a
+	mov	(_logexpf_tmp + 0), dpl
+	mov	(_logexpf_tmp + 1), dph
+	mov	(_logexpf_tmp + 2), b
+	mov	(_logexpf_tmp + 3), a
 	mov     r0,#0x83
 	mov     r1,#0x80
 	mov     r2,#0x5E
@@ -156,10 +154,10 @@ exp_rshift:
 	lcall	fs_rshift_a
 exp_noshift:				; r4/r3/r2/r1 = x
 	clr	a
-	mov	(_expf_y + 0), a	; y = 1.0;
-	mov	(_expf_y + 1), a
-	mov	(_expf_y + 2), a
-	mov	(_expf_y + 3), #0x20
+	mov	(_logexpf_tmp + 0), a	; y = 1.0;
+	mov	(_logexpf_tmp + 1), a
+	mov	(_logexpf_tmp + 2), a
+	mov	(_logexpf_tmp + 3), #0x20
 	mov	dptr, #__fs_natural_log_table
 	mov	r0, a			; r0 = i
 exp_cordic_loop:
@@ -202,31 +200,31 @@ exp_cordic_loop:
 	mov	a, r4
 	subb	a, r7
 	mov	r4, a
-	mov	b,  (_expf_y + 0)
-	mov	r5, (_expf_y + 1)	; r7/r6/r5/b = y >> i
-	mov	r6, (_expf_y + 2)
-	mov	r7, (_expf_y + 3)
+	mov	b,  (_logexpf_tmp + 0)
+	mov	r5, (_logexpf_tmp + 1)	; r7/r6/r5/b = y >> i
+	mov	r6, (_logexpf_tmp + 2)
+	mov	r7, (_logexpf_tmp + 3)
 	mov	a, r0
 	lcall	__fs_cordic_rshift_r765_unsigned
-	mov	a, (_expf_y + 0)
+	mov	a, (_logexpf_tmp + 0)
 	add	a, b
-	mov	(_expf_y + 0), a
-	mov	a, (_expf_y + 1)
+	mov	(_logexpf_tmp + 0), a
+	mov	a, (_logexpf_tmp + 1)
 	addc	a, r5
-	mov	(_expf_y + 1), a	; y += (y >> i)
-	mov	a, (_expf_y + 2)
+	mov	(_logexpf_tmp + 1), a	; y += (y >> i)
+	mov	a, (_logexpf_tmp + 2)
 	addc	a, r6
-	mov	(_expf_y + 2), a
-	mov	a, (_expf_y + 3)
+	mov	(_logexpf_tmp + 2), a
+	mov	a, (_logexpf_tmp + 3)
 	addc	a, r7
-	mov	(_expf_y + 3), a
+	mov	(_logexpf_tmp + 3), a
 exp_cordic_skip:
 	inc	r0
 	cjne	r0, #27, exp_cordic_loop
-	mov	r4, (_expf_y + 3)
-	mov	r3, (_expf_y + 2)
-	mov	r2, (_expf_y + 1)
-	mov	r1, (_expf_y + 0)
+	mov	r4, (_logexpf_tmp + 3)
+	mov	r3, (_logexpf_tmp + 2)
+	mov	r2, (_logexpf_tmp + 1)
+	mov	r1, (_logexpf_tmp + 0)
 	mov	exp_a, #121
 	lcall	fs_normalize_a		; end of cordic
 
@@ -270,10 +268,10 @@ expf_scale_and_add:
 	push	dph
 	push	b
 	push	acc
-	mov	dpl, (_expf_y + 0)
-	mov	dph, (_expf_y + 1)
-	mov	b,   (_expf_y + 2)
-	mov	a,   (_expf_y + 3)
+	mov	dpl, (_logexpf_tmp + 0)
+	mov	dph, (_logexpf_tmp + 1)
+	mov	b,   (_logexpf_tmp + 2)
+	mov	a,   (_logexpf_tmp + 3)
 	lcall	___fsadd	; x += (n * scale_factor)
 	dec	sp
 	dec	sp

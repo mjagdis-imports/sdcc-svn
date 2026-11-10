@@ -38,9 +38,6 @@
 
 ; TODO: share with other temps
 ;static __data unsigned char logf_tmp[4];
-	.area DSEG    (DATA)
-_logf_tmp:
-	.ds 4
 
 	.area CSEG (CODE)
 
@@ -73,10 +70,10 @@ logf_ok:
 	lcall	fs_rshift_a
 
 	clr	a
-	mov	(_logf_tmp + 0), a	; y = 0
-	mov	(_logf_tmp + 1), a
-	mov	(_logf_tmp + 2), a
-	mov	(_logf_tmp + 3), a
+	mov	(_logexpf_tmp + 0), a	; y = 0
+	mov	(_logexpf_tmp + 1), a
+	mov	(_logexpf_tmp + 2), a
+	mov	(_logexpf_tmp + 3), a
 	mov	dptr, #__fs_natural_log_table
 	mov	r0, a
 logf_cordic_loop:
@@ -110,20 +107,20 @@ logf_cordic_loop:
 	mov	r4, a
 	clr	a		; y = y + log_table[i]
 	movc	a, @a+dptr
-	add	a, (_logf_tmp + 0)
-	mov	(_logf_tmp + 0), a
+	add	a, (_logexpf_tmp + 0)
+	mov	(_logexpf_tmp + 0), a
 	mov	a, #1
 	movc	a, @a+dptr
-	addc	a, (_logf_tmp + 1)
-	mov	(_logf_tmp + 1), a
+	addc	a, (_logexpf_tmp + 1)
+	mov	(_logexpf_tmp + 1), a
 	mov	a, #2
 	movc	a, @a+dptr
-	addc	a, (_logf_tmp + 2)
-	mov	(_logf_tmp + 2), a
+	addc	a, (_logexpf_tmp + 2)
+	mov	(_logexpf_tmp + 2), a
 	mov	a, #3
 	movc	a, @a+dptr
-	addc	a, (_logf_tmp + 3)
-	mov	(_logf_tmp + 3), a
+	addc	a, (_logexpf_tmp + 3)
+	mov	(_logexpf_tmp + 3), a
 logf_cordic_skip:
 	inc	dptr
 	inc	dptr
@@ -131,12 +128,12 @@ logf_cordic_skip:
 	inc	dptr
 	inc	r0
 	cjne	r0, #30, logf_cordic_loop
-	; at this point, _logf_tmp has the natural log of the positive
+	; at this point, _logexpf_tmp has the natural log of the positive
 	; normalized fractional part (0.5 to 1.0 -> 0.693 to 0.0)
-	mov	r4, (_logf_tmp + 3)
-	mov	r3, (_logf_tmp + 2)
-	mov	r2, (_logf_tmp + 1)
-	mov	r1, (_logf_tmp + 0)
+	mov	r4, (_logexpf_tmp + 3)
+	mov	r3, (_logexpf_tmp + 2)
+	mov	r2, (_logexpf_tmp + 1)
+	mov	r1, (_logexpf_tmp + 0)
 	mov	exp_a, #129
 	setb	sign_a
 	lcall	fs_normalize_a

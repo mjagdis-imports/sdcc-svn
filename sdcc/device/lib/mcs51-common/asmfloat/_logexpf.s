@@ -31,6 +31,12 @@
 
 	.globl __fs_cordic_rshift_r765_unsigned
 	.globl __fs_natural_log_table
+	.globl _logexpf_tmp
+
+
+	.area DSEG    (DATA)
+_logexpf_tmp:
+	.ds 4
 
 	.area CSEG    (CODE)
 
