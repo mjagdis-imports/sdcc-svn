@@ -30,53 +30,6 @@
 #define __SDCC_FLOAT_LIB
 #include <float.h>
 
-
-#ifdef FLOAT_ASM_MCS51
-
-// int __fs2sint (float x)
-static void dummy(void) __naked
-{
-	__asm
-	.globl	___fs2sint
-___fs2sint:
-	lcall	___fs2slong
-	jnz fs2sint_not_zero
-	mov a, dpl
-	orl a, dph
-	orl a, b
-	jnz fs2sint_clr_a
-	ret
-fs2sint_clr_a:
-	clr a
-fs2sint_not_zero:
-	jnb	sign_a, fs2sint_pos
-fs2sint_neg:
-	cpl	a
-	jnz	fs2sint_maxval_neg
-	mov	a, b
-	cpl	a
-	jnz	fs2sint_maxval_neg
-	mov	a, dph
-	jnb	acc.7, fs2sint_maxval_neg
-	ret
-fs2sint_maxval_neg:
-	mov	dptr, #0x8000
-	ret
-fs2sint_pos:
-	jnz	fs2sint_maxval_pos
-	mov	a, b
-	jnz	fs2sint_maxval_pos
-	mov	a, dph
-	jb	acc.7, fs2sint_maxval_pos
-	ret
-fs2sint_maxval_pos:
-	mov	dptr, #0x7FFF
-	ret
-	__endasm;
-}
-
-#else
-
 /* convert float to signed int */
 signed int __fs2sint (float f) __SDCC_FLOAT_NONBANKED
 {
@@ -88,4 +41,3 @@ signed int __fs2sint (float f) __SDCC_FLOAT_NONBANKED
   return sl;
 }
 
-#endif

@@ -67,6 +67,20 @@
 	  device/lib/_fslt.c,
 	  device/lib/_fsneq.c:
 	  Move 8051 assembly out of common C files for _fseq, _fsneq, and _fslt (RFE #327).
+	* device/lib/_fs2schar.c,
+	  device/lib/_fs2sint.c,
+	  device/lib/_fs2slong.c,
+	  device/lib/_fs2uchar.c,
+	  device/lib/_fs2uint.c,
+	  device/lib/_fs2ulong.c,
+	  device/lib/mcs51-common/asmfloat/_fseq.s,
+	  device/lib/mcs51-common/asmfloat/_fs2schar.s,
+	  device/lib/mcs51-common/asmfloat/_fs2sint.s,
+	  device/lib/mcs51-common/asmfloat/_fs2slong.s,
+	  device/lib/mcs51-common/asmfloat/_fs2uchar.s,
+	  device/lib/mcs51-common/asmfloat/_fs2uint.s,
+	  device/lib/mcs51-common/asmfloat/_fs2ulong.s:
+	  Move 8051 assembly out of common C files for _f2Xchar, _f2Xint, and _f2Xlong (RFE #327).
 
 2026-11-08 Gabriele Gorla <gorlik@yahoo.com>
 

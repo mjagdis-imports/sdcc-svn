@@ -29,25 +29,6 @@
 #define __SDCC_FLOAT_LIB
 #include <float.h>
 
-
-#ifdef FLOAT_ASM_MCS51
-
-// unsigned int __fs2uint (float x)
-static void dummy(void) __naked
-{
-	__asm
-	.globl	___fs2uint
-___fs2uint:
-	mov	r7, #142
-	lcall	fs2ulong_begin
-	mov	dph, a
-	mov	dpl, b
-	ret
-	__endasm;
-}
-
-#else
-
 /* convert float to unsigned int */
 unsigned int __fs2uint (float f) __SDCC_FLOAT_NONBANKED
 {
@@ -56,4 +37,3 @@ unsigned int __fs2uint (float f) __SDCC_FLOAT_NONBANKED
   return ul;
 }
 
-#endif

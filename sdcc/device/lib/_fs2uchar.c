@@ -29,24 +29,6 @@
 #define __SDCC_FLOAT_LIB
 #include <float.h>
 
-
-#ifdef FLOAT_ASM_MCS51
-
-// unsigned char __fs2uchar (float x)
-static void dummy(void) __naked
-{
-	__asm
-	.globl	___fs2uchar
-___fs2uchar:
-	mov	r7, #134
-	lcall	fs2ulong_begin
-	mov	dpl, a
-	ret
-	__endasm;
-}
-
-#else
-
 /* convert float to unsigned char */
 unsigned char __fs2uchar (float f) __SDCC_FLOAT_NONBANKED
 {
@@ -55,4 +37,3 @@ unsigned char __fs2uchar (float f) __SDCC_FLOAT_NONBANKED
   return ul;
 }
 
-#endif

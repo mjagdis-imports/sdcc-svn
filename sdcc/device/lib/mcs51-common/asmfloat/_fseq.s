@@ -33,9 +33,6 @@
 
 	.area CSEG (CODE)
 
-	.globl	___fseq
-
-
 ; _Bool __fseq (float a, float b)
 
 ___fseq:
