@@ -7,8 +7,8 @@ else
   GPSIM = gpsim$(EXEEXT)
 endif
 
-EMU_INPUT = $(PORTS_DIR)/$(PORT_BASE)/gpsim.cmd
-EMU_FLAGS = -i -c
+EMU_INPUT = -c $(PORTS_DIR)/$(PORT_BASE)/gpsim.cmd
+EMU_FLAGS = -i -s
 EMU = ${WINE} ${GPSIM}
 
 ifndef SDCC_BIN_PATH
@@ -28,22 +28,24 @@ endif
 
 SDCCFLAGS += -mpic14 -pp16f877 --less-pedantic
 SDCCFLAGS += --no-warn-non-free
-LINKFLAGS += libsdcc.lib libm.lib
+LINKFLAGS += libsdcc.lib libc.lib libm.lib
 
 OBJEXT = .o
 BINEXT = .cod
 
 EXTRAS = $(PORT_CASES_DIR)/testfwk$(OBJEXT) $(PORT_CASES_DIR)/support$(OBJEXT)
 
-# Rule to link into .ihx
+# Link a fresh symbol image; propagate failures to the regression runner.
 %$(BINEXT): %$(OBJEXT) $(EXTRAS)
-	-$(SDCC) $(SDCCFLAGS) $(LINKFLAGS) $(EXTRAS) $< -o $@
+	@rm -f "$@"
+	$(SDCC) $(SDCCFLAGS) $(LINKFLAGS) $(EXTRAS) $< -o $@
+	@test -s "$@"
 
 %$(OBJEXT): %.c
-	-$(SDCC) $(SDCCFLAGS) -c $< -o $@
+	$(SDCC) $(SDCCFLAGS) -c $< -o $@
 
 $(PORT_CASES_DIR)/%$(OBJEXT): $(PORTS_DIR)/$(PORT)/%.c
-	-$(SDCC) $(SDCCFLAGS) -c $< -o $@
+	$(SDCC) $(SDCCFLAGS) -c $< -o $@
 
 .PRECIOUS: gen/pic14/testfwk.o gen/pic14/support.o
 
