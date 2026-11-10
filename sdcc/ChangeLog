@@ -35,6 +35,9 @@
 	  ez80/config.inc,
 	  tlcs90/config.inc:
 	  Move tcls90, ez80, f8 and f8l to new library build infrastructure.
+	* device/lib/f8/Makefile.in,
+	  device/lib/f8l/Makefile.in:
+	  Correct typos in f8 Makefiles.
 
 2026-11-08 Gabriele Gorla <gorlik@yahoo.com>
 
