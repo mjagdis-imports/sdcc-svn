@@ -1001,12 +1001,32 @@ replace restart {
 } if operandsLiteral(%3), immdInRange(0 256 '+' %3 1 %4), notUsed('f')
 
 replace restart {
+	inc	hl
+	ld	%1, #%2
+	add	hl, %1
+} by {
+	ld	%1, #%2+1
+	add	hl, %1
+	; peephole 77b moved increment of hl to constant.
+} if notUsed(%1), notUsed('hf')
+
+replace restart {
 	ld	%1, #%2 + %3
 	dec	%1
 } by {
 	ld	%1, #%2 + %4
 	; common peephole 77c decremented immediate.
 } if operandsLiteral(%3), immdInRange(0 256 '-' %3 1 %4), notUsed('f')
+
+replace restart {
+	dec	hl
+	ld	%1, #%2
+	add	hl, %1
+} by {
+	ld	%1, #%2-1
+	add	hl, %1
+	; peephole 77d moved decrement of hl to constant.
+} if notUsed(%1), notUsed('hf')
 
 replace restart {
 	jp	nc, %1

@@ -1,3 +1,9 @@
+2026-11-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/peeph-r2k.def,
+	  src/z80/peeph.def:
+	  Reorganise rab vs. z80 common peephole optimiser rules.
+
 2026-11-10 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
 	* src/SDCC.y (postfix_expression, unary_expression):
