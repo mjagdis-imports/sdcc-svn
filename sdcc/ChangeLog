@@ -134,6 +134,8 @@
 	  device/lib/mcs51-small-stack-auto/_moduint.s,
 	  device/lib/mcs51-small-stack-auto/_mulint.s:
 	  Move 8051 assembly out of common C files for _mulint and _moduint (RFE #327).
+	* device/lib/mcs51-large-stack-auto/_mulint.s:
+	  Add assembly implementation of mulint to mcs51-large-stack-auto.
 
 2026-11-10 Philipp Klaus Krause <philipp@colecovision.eu>
 
