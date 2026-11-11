@@ -404,6 +404,7 @@ enum {
   E_CAST_PTR_TO_FLOAT          = 373, // pointer cannot be cast to floating type
   E_CAST_NONSCALAR             = 374, // non-scalar operand of cast to non-void type
   E_ENUM_REDECL                = 375, // enumeration redeclared with incompatible underlying type or fixedness
+  E_SIZEOF_FUNCTION            = 376, // sizeof applied to a function type
 
   // If you get a merge conflict here, some #pragma disable_warning in support/valdiag and support/regression will likely need to be adapted to the resolution. Check there!
 

@@ -815,6 +815,8 @@ struct
      "operand of cast to non-void type must be scalar", 0},
   {E_ENUM_REDECL, ERROR_LEVEL_ERROR,
      "enumeration %s redeclared with incompatible underlying type or fixedness", 0},
+  {E_SIZEOF_FUNCTION, ERROR_LEVEL_ERROR,
+     "sizeof applied to a function type", 0 },
 };
 
 /* -------------------------------------------------------------------------------

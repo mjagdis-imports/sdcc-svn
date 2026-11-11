@@ -68,6 +68,7 @@ static struct
 
 int noLineno = 0;
 int noAlloc = 0;
+static int inSizeof = 0;
 symbol *currFunc = NULL;
 static ast *createIval (ast *, sym_link *, initList *, ast *, ast *, int);
 static ast *createIvalCharPtr (ast *, sym_link *, ast *, ast *);
@@ -4064,6 +4065,14 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
         dtr = tree->right;
         break;
       case SIZEOF:
+        ++inSizeof;
+        ++noAlloc;
+        resultTypeProp = RESULT_TYPE_OTHER;
+        reduceTypeAllowed = false;
+        dtr = decorateType (tree->right, resultTypeProp, reduceTypeAllowed);
+        --noAlloc;
+        --inSizeof;
+        break;
       case COUNTOF:
       case TYPEOF:
       case TYPEOF_UNQUAL:
@@ -4367,7 +4376,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
       /*----------------------------*/
       /*  address of                */
       /*----------------------------*/
-      if (IS_FUNC (LTYPE (tree)))
+      if (IS_FUNC (LTYPE (tree)) && !inSizeof)
         {
           // this ought to be ignored
           return (tree->left);
@@ -5921,7 +5930,9 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
 
         dbuf_init (&dbuf, 128);
         dbuf_printf (&dbuf, "%d", size);
-        if (!size && !IS_VOID (tree->right->ftype))
+        if (IS_FUNC (tree->right->ftype))
+          werrorfl (tree->filename, tree->lineno, E_SIZEOF_FUNCTION);
+        else if (!size && !IS_VOID (tree->right->ftype))
           werrorfl (tree->filename, tree->lineno, E_SIZEOF_INCOMPLETE_TYPE);
         if (IS_BITFIELD (tree->right->ftype))
           werror (E_SIZEOF_BITFLD);
@@ -6657,7 +6668,9 @@ sizeofOp (sym_link *type)
   /* get the size and convert it to character  */
   dbuf_init (&dbuf, 128);
   dbuf_printf (&dbuf, "%d", size = getSize (type));
-  if (!size && !IS_VOID (type))
+  if (IS_FUNC (type))
+    werror (E_SIZEOF_FUNCTION);
+  else if (!size && !IS_VOID (type))
     werror (E_SIZEOF_INCOMPLETE_TYPE);
   if (IS_BITFIELD (type))
     werror (E_SIZEOF_BITFLD);

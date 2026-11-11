@@ -1,3 +1,12 @@
+2026-11-11 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
+	* src/SDCCast.c (decorateType): Diagnose sizeof
+	  misapplied to a function (bug #4090).
+	* src/SDCCerr.c, src/SDCCerr.h:
+	  Define new error code, E_SIZEOF_FUNCTION.
+	* support/valdiag/tests/bug-4090.c: Add tests for
+	  the constraint violation.
+
 2026-11-11 Gabriele Gorla <gorlik@yahoo.com>
 
 	* device/lib/common_files.mk,
