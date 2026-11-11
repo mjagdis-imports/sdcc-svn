@@ -17,21 +17,14 @@ LIB 		= hc08.lib
 
 
 PORT_SDCC = $(COMMON_SDCC) \
+  $(COMMON_SDCC_LL) \
+  $(COMMON_SDCC_LL_SHIFT) \
   _divsint \
-  _divslonglong \
   _divuint \
-  _divulonglong \
   _modsint \
-  _modslonglong \
   _moduint \
-  _modulonglong \
   _mulint \
-  _mullonglong \
   _ret \
-  _srulonglong \
-  _srslonglong \
-  _slulonglong \
-  _slslonglong \
   _startup
 
 PORT_FLOAT = $(COMMON_FLOAT)

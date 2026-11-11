@@ -1,3 +1,46 @@
+2026-11-11 Gabriele Gorla <gorlik@yahoo.com>
+
+	* device/lib/common_files.mk,
+	  device/lib/ds390/Makefile.in,
+	  device/lib/ds400/Makefile.in,
+	  device/lib/ez80/Makefile.in,
+	  device/lib/f8/Makefile.in,
+	  device/lib/f8l/Makefile.in,
+	  device/lib/hc08/Makefile.in,
+	  device/lib/huc6280/Makefile.in,
+	  device/lib/mcs51-huge/Makefile.in,
+	  device/lib/mcs51-large/Makefile.in,
+	  device/lib/mcs51-large-stack-auto/Makefile.in,
+	  device/lib/mcs51-medium/Makefile.in,
+	  device/lib/mcs51-small/Makefile.in,
+	  device/lib/mcs51-small-stack-auto/Makefile.in,
+	  device/lib/mcs51-small-xstack-auto/Makefile.in,
+	  device/lib/mos6502/Makefile.in,
+	  device/lib/mos6502-stack-auto/Makefile.in,
+	  device/lib/mos65c02/Makefile.in,
+	  device/lib/mos65c02-stack-auto/Makefile.in,
+	  device/lib/pdk13/Makefile.in,
+	  device/lib/pdk14/Makefile.in,
+	  device/lib/pdk15/Makefile.in,
+	  device/lib/pdk15-stack-auto/Makefile.in,
+	  device/lib/r2k/Makefile.in,
+	  device/lib/r2ka/Makefile.in,
+	  device/lib/r3ka/Makefile.in,
+	  device/lib/r4k/Makefile.in,
+	  device/lib/r5k/Makefile.in,
+	  device/lib/r6k/Makefile.in,
+	  device/lib/r800/Makefile.in,
+	  device/lib/s08/Makefile.in,
+	  device/lib/s08-stack-auto/Makefile.in,
+	  device/lib/sm83/Makefile.in,
+	  device/lib/stm8/Makefile.in,
+	  device/lib/stm8-large/Makefile.in,
+	  device/lib/tlcs90/Makefile.in,
+	  device/lib/z180/Makefile.in,
+	  device/lib/z80/Makefile.in,
+	  device/lib/z80n/Makefile.in:
+	  Group files that are not supported by all ports.
+
 2026-11-11 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
 	* src/SDCCsymt.c (compStructSize): Propagate flexible-array containment

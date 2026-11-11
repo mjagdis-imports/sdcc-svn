@@ -17,20 +17,16 @@ LIB		= mos6502.lib
 
 
 PORT_SDCC = $(COMMON_SDCC) \
+  $(COMMON_SDCC_LL) \
   _divschar \
   _divsint \
-  _divslonglong \
   _divuchar \
   _divuint \
-  _divulonglong \
   _modschar \
   _modsint \
-  _modslonglong \
   _moduchar \
   _moduint \
-  _modulonglong \
   _mulint \
-  _mullonglong \
   _mulschar \
   _muluchar \
   __sdcc_regs \
@@ -41,16 +37,13 @@ PORT_FLOAT = $(COMMON_FLOAT) \
   _floatlib
 
 PORT_LIBC = $(COMMON_LIBC) \
+  $(COMMON_LIBC_STRUCT_RET) \
   atomic_flag_clear \
   atomic_flag_test_and_set \
   __itoa \
   __ltoa \
   _heap \
-  setjmp \
-  div \
-  ldiv \
-  lldiv \
-  vprintf
+  setjmp
 
 PORT_LIBM = $(COMMON_LIBM)
 

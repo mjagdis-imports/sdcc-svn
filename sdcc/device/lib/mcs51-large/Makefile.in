@@ -17,6 +17,8 @@ LIB 		= mcs51.lib
 
 
 PORT_SDCC = $(COMMON_SDCC) \
+  $(COMMON_SDCC_LL) \
+  $(COMMON_SDCC_LL_SHIFT) \
   bp \
   bpx \
   crtbank \
@@ -31,24 +33,15 @@ PORT_SDCC = $(COMMON_SDCC) \
   crtxstack \
   _decdptr \
   _divsint \
-  _divslonglong \
   _divuint \
-  _divulonglong \
   gptr_cmp \
   _gptrget \
   _gptrgetc \
   _gptrput \
   _modsint \
-  _modslonglong \
   _moduint \
-  _modulonglong \
   _mulint \
-  _mullonglong \
-  _slslonglong \
-  _slulonglong \
   _spx \
-  _srslonglong \
-  _srulonglong \
   _startup
 
 PORT_FLOAT = $(COMMON_FLOAT) \
@@ -62,13 +55,10 @@ PORT_FLOAT = $(COMMON_FLOAT) \
   _logexpf
 
 PORT_LIBC = $(COMMON_LIBC) \
+  $(COMMON_LIBC_STRUCT_RET) \
   atomic_flag_clear \
-  div \
   _heap \
-  imaxdiv \
   __itoa \
-  ldiv \
-  lldiv \
   __ltoa \
   __memcpy \
   printf_fast \

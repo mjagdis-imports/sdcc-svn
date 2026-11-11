@@ -17,40 +17,31 @@ LIB		= pdk13.lib
 
 
 PORT_SDCC = $(COMMON_SDCC) \
+  $(COMMON_SDCC_LL) \
+  $(COMMON_SDCC_LL_SHIFT) \
   _divschar \
   _divsint \
-  _divslonglong \
   _divuchar \
   _divuint \
-  _divulonglong \
   __gptrget \
   __gptrget2 \
   _modschar \
   _modsint \
-  _modslonglong \
   _moduchar \
   _moduint \
-  _modulonglong \
   _mulint \
-  _mullonglong \
   _mulschar \
   _muluchar \
-  _slslonglong \
-  _slulonglong \
-  _srslonglong \
-  _srulonglong \
   _startup
 
 PORT_FLOAT = $(COMMON_FLOAT)
 
 PORT_LIBC = $(COMMON_LIBC) \
+  $(COMMON_LIBC_STRUCT_RET) \
   heap \
   __itoa \
   __memcpy \
-  __setjmp \
-  div \
-  ldiv \
-  lldiv
+  __setjmp
 
 PORT_LIBM = $(COMMON_LIBM)
 

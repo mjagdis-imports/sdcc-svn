@@ -17,20 +17,13 @@ LIB 		= s08.lib
 
 
 PORT_SDCC = $(COMMON_SDCC) \
+  $(COMMON_SDCC_LL) \
+  $(COMMON_SDCC_LL_SHIFT) \
   _mulint \
   _divsint \
   _divuint \
   _modsint \
   _moduint \
-  _srulonglong \
-  _srslonglong \
-  _slulonglong \
-  _slslonglong \
-  _mullonglong \
-  _divslonglong \
-  _divulonglong \
-  _modslonglong \
-  _modulonglong \
   _ret
 
 PORT_FLOAT = $(COMMON_FLOAT)

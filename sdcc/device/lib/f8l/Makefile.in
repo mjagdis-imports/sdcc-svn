@@ -17,40 +17,31 @@ LIB		= f8l.lib
 
 
 PORT_SDCC = $(COMMON_SDCC) \
+  $(COMMON_SDCC_LL) \
   _muluchar \
   _divschar \
   _divsint \
-  _divslonglong \
   _divuchar \
   _divuint \
-  _divulong \
-  _divulonglong \
   _modschar \
   _modsint \
-  _modslonglong \
   _moduchar \
   _moduint \
-  _modulonglong \
   _mulint \
-  _mullong \
-  _mullonglong \
   _mulschar \
   _startup
 
 PORT_FLOAT = $(COMMON_FLOAT)
 
 PORT_LIBC = $(COMMON_LIBC) \
+  $(COMMON_LIBC_STRUCT_RET) \
   atomic_flag_clear \
   atomic_flag_test_and_set \
   __itoa \
   __ltoa \
   heap \
-  setjmp \
   __memcpy \
-  div \
-  ldiv \
-  lldiv \
-  vprintf
+  setjmp
 
 PORT_LIBM = $(COMMON_LIBM)
 

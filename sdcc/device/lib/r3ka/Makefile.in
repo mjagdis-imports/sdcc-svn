@@ -17,21 +17,15 @@ LIB		= r3ka.lib
 
 
 PORT_SDCC = $(COMMON_SDCC) \
+  $(COMMON_SDCC_LL) \
   crtenter \
   divmixed \
   divsigned \
-  _divslonglong \
-  _divulong \
-  _divulonglong \
   divunsigned \
   modmixed \
   modsigned \
-  _modslonglong \
-  _modulonglong \
   modunsigned \
   mulchar \
-  _mullong \
-  _mullonglong \
   __muluint2ulong \
   __mululonguchar2ulonglong \
   __sdcc_call_hl \
@@ -41,15 +35,13 @@ PORT_SDCC = $(COMMON_SDCC) \
 PORT_FLOAT = $(COMMON_FLOAT)
 
 PORT_LIBC = $(COMMON_LIBC) \
+  $(COMMON_LIBC_STRUCT_RET) \
   atomic_flag_clear \
   atomic_flag_test_and_set  \
   heap \
   __itoa \
   __ltoa \
-  setjmp \
-  div \
-  ldiv \
-  lldiv
+  setjmp
 
 PORT_LIBM = $(COMMON_LIBM)
 

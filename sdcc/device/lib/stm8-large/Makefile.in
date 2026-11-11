@@ -16,46 +16,30 @@ LIB_TYPE     = @LIB_TYPE@
 LIB = stm8.lib
 
 
-PORT_SDCC = \
+PORT_SDCC = $(COMMON_SDCC) \
+  $(COMMON_SDCC_LL) \
+  $(COMMON_SDCC_LL_SHIFT) \
   _divschar \
   _divsint \
-  _divslong \
-  _divslonglong \
-  _divulong \
-  _divulonglong \
   _fast_long_neg \
   _modschar \
   _modsint \
-  _modslong \
-  _modslonglong \
-  _modulong \
-  _modulonglong \
   _mulint \
-  _mullong \
-  _mullonglong \
   _mulschar \
   __mulsint2slong \
-  __mulslong2slonglong \
-  __mululong2ulonglong \
   __mululonguchar2ulonglong \
-  _srulonglong \
-  _srslonglong \
-  _slulonglong \
-  _slslonglong
+  _startup
 
 PORT_FLOAT = $(COMMON_FLOAT)
 
 PORT_LIBC = $(COMMON_LIBC) \
+  $(COMMON_LIBC_STRUCT_RET) \
   atomic_flag_clear \
   atomic_flag_test_and_set \
   heap \
   __itoa \
   __ltoa \
-  setjmp \
-  _startup \
-  div \
-  ldiv \
-  lldiv
+  setjmp
 
 PORT_LIBM = $(COMMON_LIBM)
 

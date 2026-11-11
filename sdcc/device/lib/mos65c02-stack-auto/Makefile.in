@@ -17,6 +17,7 @@ LIB		= mos65c02.lib
 
 
 PORT_SDCC = $(COMMON_SDCC) \
+  $(COMMON_SDCC_LL) \
   _divschar \
   _divsint \
   _divuchar \
@@ -28,11 +29,6 @@ PORT_SDCC = $(COMMON_SDCC) \
   _mulint \
   _muluchar \
   _mulschar \
-  _mullonglong \
-  _divslonglong \
-  _divulonglong \
-  _modslonglong \
-  _modulonglong \
   __sdcc_regs \
   __sdcc_indirect_jsr
 

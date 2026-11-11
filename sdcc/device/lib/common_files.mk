@@ -14,14 +14,39 @@ std_lib_dirs	= $(srcdir):$(srcdir)/..
 # override PORTDIR defined by super (parent) makefile
 override PORTDIR = ../build/$(PORT)
 
+# SDCC LONG LONG support.
+# Should be merged into COMMON_SDCC when all ports support long long
+COMMON_SDCC_LL = \
+  _divslonglong \
+  _divulonglong \
+  _modslonglong \
+  _modulonglong \
+  _mullonglong \
+  __mulslong2slonglong \
+  __mululong2ulonglong
+
+# SDCC LONG LONG shifts support.
+# Required for ports that implement long long shifts with support routines
+COMMON_SDCC_LL_SHIFT = \
+  _slslonglong \
+  _slulonglong \
+  _srslonglong \
+  _srulonglong
+
+# LIBC support for div, ldiv, lldiv, imaxdiv.
+# Should be merged into COMMON_LIBC when all ports fully support struct return
+COMMON_LIBC_STRUCT_RET = \
+  div \
+  ldiv \
+  lldiv \
+  imaxdiv
+
 COMMON_SDCC = \
   _divslong \
   _divulong \
   _modslong \
   _modulong \
-  _mullong \
-  __mulslong2slonglong \
-  __mululong2ulonglong
+  _mullong
 
 COMMON_FLOAT = \
   atof \

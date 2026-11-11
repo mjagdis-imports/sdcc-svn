@@ -17,20 +17,16 @@ LIB = tlcs90.lib
 
 
 PORT_SDCC = $(COMMON_SDCC) \
+  $(COMMON_SDCC_LL) \
   crtenter \
   divmixed \
   divsigned \
-  _divslonglong \
-  _divulonglong \
   divunsigned \
   modmixed \
   modsigned \
-  _modslonglong \
-  _modulonglong \
   modunsigned \
   mul \
   mulchar \
-  _mullonglong \
   __sdcc_call_hl \
   __sdcc_call_iy \
   _startup
@@ -38,16 +34,13 @@ PORT_SDCC = $(COMMON_SDCC) \
 PORT_FLOAT = $(COMMON_FLOAT)
 
 PORT_LIBC = $(COMMON_LIBC) \
+  $(COMMON_LIBC_STRUCT_RET) \
   atomic_flag_clear \
   atomic_flag_test_and_set \
   heap \
   __itoa \
   __ltoa \
-  setjmp \
-  div \
-  ldiv \
-  lldiv \
-  vprintf
+  setjmp
 
 PORT_LIBM = $(COMMON_LIBM)
 

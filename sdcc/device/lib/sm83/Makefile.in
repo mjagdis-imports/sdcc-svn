@@ -17,31 +17,24 @@ LIB		= sm83.lib
 
 
 PORT_SDCC = $(COMMON_SDCC) \
+  $(COMMON_SDCC_LL) \
   __sdcc_call_hl \
   divint \
-  _divslonglong \
-  _divulonglong \
   __initrleblock \
-  _modslonglong \
-  _modulonglong \
   mul \
-  _mullonglong
+  _startup
 
 PORT_FLOAT = $(COMMON_FLOAT)
 
 PORT_LIBC = $(COMMON_LIBC) \
+  $(COMMON_LIBC_STRUCT_RET) \
   atomic_flag_clear \
   atomic_flag_test_and_set \
   heap \
   __itoa \
   __ltoa \
-  setjmp \
-  _startup \
-  div \
-  ldiv \
-  lldiv \
-  vprintf
-
+  setjmp
+  
 PORT_LIBM = $(COMMON_LIBM)
 
 include $(srcdir)/../library_build.mk
