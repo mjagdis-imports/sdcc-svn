@@ -26,200 +26,17 @@
    might be covered by the GNU General Public License.
 -------------------------------------------------------------------------*/
 
-/* Signed and unsigned multiplication are the same - as long as the output
-   has the same precision as the input.
-
-   Assembler-functions are provided for:
-     ds390
-     mcs51 small
-     mcs51 small stack-auto
-     mcs51 large
-*/
-
 #include <sdcc-lib.h>
-
-#if !defined(__SDCC_USE_XSTACK) && !defined(_SDCC_NO_ASM_LIB_FUNCS)
-#  if defined(__SDCC_ds390)
-#    if !defined(__SDCC_STACK_AUTO)
-#      define _MULINT_ASM_LARGE
-#    endif
-#  elif defined(__SDCC_mcs51)
-#    if defined(__SDCC_MODEL_SMALL)
-#      if defined(__SDCC_STACK_AUTO) && !defined(__SDCC_PARMS_IN_BANK1)
-#        define _MULINT_ASM_SMALL_AUTO
-#      else
-#        define _MULINT_ASM_SMALL
-#      endif
-#    else // must be __SDCC_MODEL_LARGE
-#      if !defined(__SDCC_STACK_AUTO)
-#        define _MULINT_ASM_LARGE
-#     endif
-#   endif
-#  endif
-#endif
-
-#if defined(_MULINT_ASM_LARGE)
-
-#pragma save
-#pragma less_pedantic
-int
-_mulint (int a, int b) __SDCC_NONBANKED
-{
-  a*b; // hush the compiler
-
-  /* mulint=
-      (int)(lsb_a*lsb_b) +
-      (char)(msb_a*lsb_b)<<8 +
-      (char)(lsb_a*msb_b)<<8
-  */
-
-  __asm
-    mov r2,dph ; msb_a
-    mov r3,dpl ; lsb_a
-
-    mov b,r3 ; lsb_a
-#if defined(__SDCC_PARMS_IN_BANK1)
-    mov a,b1_0
-#else
-    mov dptr,#__mulint_PARM_2
-    movx a,@dptr ; lsb_b
-#endif
-    mul ab ; lsb_a*lsb_b
-    mov r0,a
-    mov r1,b
-
-    mov b,r2 ; msb_a
-#if defined(__SDCC_PARMS_IN_BANK1)
-    mov a,b1_0
-#else
-    movx a,@dptr ; lsb_b
-#endif
-    mul ab ; msb_a*lsb_b
-    add a,r1
-    mov r1,a
-
-    mov b,r3 ; lsb_a
-#if defined(__SDCC_PARMS_IN_BANK1)
-    mov a,b1_1
-#else
-    inc dptr
-    movx a,@dptr ; msb_b
-#endif
-    mul ab ; lsb_a*msb_b
-    add a,r1
-
-    mov dph,a
-    mov dpl,r0
-    ret
-  __endasm;
-}
-#pragma restore
-
-#elif defined(_MULINT_ASM_SMALL) || defined(_MULINT_ASM_SMALL_AUTO)
-
-#pragma save
-#pragma less_pedantic
-int
-_mulint_dummy (void) __naked
-{
-	__asm
-
-__mulint:
-
-	.globl __mulint
-
-#if !defined(__SDCC_STACK_AUTO) || defined(__SDCC_PARMS_IN_BANK1)
-
-#if defined(__SDCC_NOOVERLAY)
-	.area DSEG    (DATA)
-#else
-	.area OSEG    (OVR,DATA)
-#endif
-#if defined(__SDCC_PARMS_IN_BANK1)
-	#define bl 	(b1_0)
-	#define bh 	(b1_1)
-#else
-	#define bl 	(__mulint_PARM_2)
-	#define bh 	(__mulint_PARM_2 + 1)
-__mulint_PARM_2:
-
-	.globl __mulint_PARM_2
-
-	.ds	2
-#endif
-
-	.area CSEG    (CODE)
-
-	; globbered registers none
-
-	mov	a,dpl			;  1  al
-	mov	b,bl			;  2  bl
-	mul	ab			;  4  al * bl
-	xch	a,dpl			;  1  store low-byte of return value, fetch al
-	push	b			;  2
-
-	mov	b,bh			;  2  bh
-	mul	ab			;  4  al * bh
-	pop	b			;  2
-	add	a,b			;  1
-	xch	a,dph			;  1  ah -> acc
-
-	mov	b,bl			;  2  bl
-	mul	ab			;  4  ah * bl
-	add	a,dph			;  1
-	mov	dph,a			;  1
-	ret				;  2
-					; 30
-
-#else // __SDCC_STACK_AUTO
-
-	; globbered registers r0
-
-	mov	a,#-2			;  1  return address 2 bytes
-	add	a,sp			;  1
-	mov	r0,a			;  1  r0 points to bh
-
-	mov	a,@r0			;  1  bh
-	mov	b,dpl			;  2  al
-	mul	ab			;  4  al * bh
-	push	acc			;  2
-
-	mov	b,dpl			;  2  al
-	dec	r0			;  1
-	mov	a,@r0			;  1  bl
-	mul	ab			;  4  al * bl
-
-	mov	dpl,a			;  1  low-byte of return-value
-
-	pop	acc			;  2
-	add	a,b			;  1
-	xch	a,dph			;  1  ah -> acc
-
-	mov	b,@r0			;  2  bl
-	mul	ab			;  4  ah * bl
-	add	a,dph			;  1
-	mov	dph,a			;  1
-
-	ret
-
-#endif // __SDCC_STACK_AUTO
-
-	__endasm;
-}
-#pragma restore
-
-#else
-
 #include <stdbit.h>
 
 #if __STDC_ENDIAN_NATIVE__ == __STDC_ENDIAN_BIG__
 union uu {
-	struct { unsigned char hi, lo ;} s;
+	struct { unsigned char hi, lo; } s;
         unsigned int t;
 };
 #else
 union uu {
-	struct { unsigned char lo,hi ;} s;
+	struct { unsigned char lo, hi; } s;
         unsigned int t;
 };
 #endif
@@ -248,6 +65,3 @@ _mulint (int a, int b) __SDCC_NONBANKED
   return t.t;
 }
 
-#endif
-
-#undef _MULINT_ASM
