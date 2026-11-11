@@ -154,10 +154,11 @@ cl_tb::write(class cl_memory_cell *cell, t_mem *val)
       cmp2|= (*val & 0xff);
     }
   
-  else if (cell == tbcmr) // read-only
-    return;
-  else if (cell == tbclr) // read-only
-    return;
+  else if ((cell == tbcmr) || (cell == tbclr)) // read-only
+    {
+      *val= cell->get();
+      return;
+    }
   
   cell->set(*val);
 }
@@ -165,7 +166,7 @@ cl_tb::write(class cl_memory_cell *cell, t_mem *val)
 void
 cl_tb::set_clk(u8_t val)
 {
-  switch (val & 0xc0)
+  switch (val & 0x0c)
     {
     case 0x00: clk_src= a1in ; divby= 1; break;
     case 0x04: clk_src= a1out; divby= 1; break;
@@ -196,12 +197,12 @@ cl_tb::counted(void)
 {
   if (cnt == cmp1)
     {
-      tbstat->write(tbstat->get() | 0x02);
+      tbstat->write(tbstat->read() | 0x02);
       ruc->hw8msg->write(rxkhw_tb1_out, 1);
     }
   if (cnt == cmp2)
     {
-      tbstat->write(tbstat->get() | 0x04);
+      tbstat->write(tbstat->read() | 0x04);
       ruc->hw8msg->write(rxkhw_tb2_out, 1);
     }
 }
@@ -293,7 +294,7 @@ cl_tbs6::init(void)
 void
 cl_tbs6::set_clk(u8_t val)
 {
-  if ((val & 0xc0) == 0xc0)
+  if ((val & 0x0c) == 0x0c)
     {
       clk_src= a11out;
       divby= 1;
