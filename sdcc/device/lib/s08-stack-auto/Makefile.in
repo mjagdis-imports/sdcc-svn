@@ -36,17 +36,16 @@ PORT_SDCC = $(COMMON_SDCC) \
 PORT_FLOAT = $(COMMON_FLOAT)
 
 PORT_LIBC = $(COMMON_LIBC) \
+  atomic_flag_clear \
+  atomic_flag_test_and_set
   __itoa \
   __ltoa \
   __memcpy \
   _heap \
   _startup \
-  setjmp \
   div \
   ldiv \
-  vprintf \
-  atomic_flag_clear \
-  atomic_flag_test_and_set
+  setjmp
 
 PORT_LIBM = $(COMMON_LIBM)
 

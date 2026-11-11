@@ -58,8 +58,7 @@ PORT_LIBC = $(COMMON_LIBC) \
   printf_tiny \
   setjmp \
   memcpyx \
-  tinibios \
-  vprintf
+  tinibios
 
 PORT_LIBM = $(COMMON_LIBM)
 

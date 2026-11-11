@@ -63,13 +63,10 @@ PORT_LIBC = $(COMMON_LIBC) \
   lldiv \
   __ltoa \
   __memcpy \
-  printf_fast \
-  printf_fast_f \
   printfl \
   printf_tiny \
   sdcc_atomic_maybe_rollback \
-  setjmp \
-  vprintf
+  setjmp
 
 PORT_LIBM = $(COMMON_LIBM)
 

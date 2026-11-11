@@ -151,6 +151,7 @@ COMMON_LIBC = \
   ulabs \
   ullabs \
   umaxabs \
+  vprintf \
   wcrtomb \
   wcscmp \
   wcslen \

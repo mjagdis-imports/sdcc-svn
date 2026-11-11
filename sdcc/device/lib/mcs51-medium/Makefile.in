@@ -76,8 +76,7 @@ PORT_LIBC = $(COMMON_LIBC) \
   printfl \
   printf_tiny \
   sdcc_atomic_maybe_rollback \
-  setjmp \
-  vprintf
+  setjmp
 
 PORT_LIBM = $(COMMON_LIBM)
 

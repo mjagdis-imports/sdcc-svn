@@ -55,8 +55,7 @@ PORT_LIBC = $(COMMON_LIBC) \
   _startup \
   div \
   ldiv \
-  lldiv \
-  vprintf
+  lldiv
 
 PORT_LIBM = $(COMMON_LIBM)
 

@@ -1,3 +1,37 @@
+2026-11-11 Gabriele Gorla <gorlik@yahoo.com>
+
+	* common_files.mk,
+	  ds390/Makefile.in,
+	  ds400/Makefile.in,
+	  hc08/Makefile.in,
+	  huc6280/Makefile.in,
+	  mcs51-huge/Makefile.in,
+	  mcs51-large/Makefile.in,
+	  mcs51-large-stack-auto/Makefile.in,
+	  mcs51-medium/Makefile.in,
+	  mcs51-small/Makefile.in,
+	  mcs51-small-stack-auto/Makefile.in,
+	  mcs51-small-xstack-auto/Makefile.in,
+	  pdk13/Makefile.in,
+	  pdk14/Makefile.in,
+	  pdk15/Makefile.in,
+	  pdk15-stack-auto/Makefile.in,
+	  r2k/Makefile.in,
+	  r2ka/Makefile.in,
+	  r3ka/Makefile.in,
+	  r4k/Makefile.in,
+	  r5k/Makefile.in,
+	  r6k/Makefile.in,
+	  r800/Makefile.in,
+	  s08/Makefile.in,
+	  s08-stack-auto/Makefile.in,
+	  stm8/Makefile.in,
+	  stm8-large/Makefile.in,
+	  z180/Makefile.in,
+	  z80/Makefile.in,
+	  z80n/Makefile.in:
+	  Move vprintf to common_files.mk
+
 2026-11-11 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/z80/peeph-r2k.def,
@@ -71,6 +105,47 @@
 	  Enable FP functions parameter passing in ZP for mos65c02 and huc6280.
 	* support/regression/ports/pic14/spec.mk:
 	  Fix bug #4241
+	* device/lib/_moduint.c,
+	  device/lib/_mulint.c,
+	  device/lib/mcs51-small/_modsint.s,
+	  device/lib/ds390/_mulint.s,
+	  device/lib/mcs51-large/_mulint.s,
+	  device/lib/mcs51-small/_moduint.s,
+	  device/lib/mcs51-small/_mulint.s,
+	  device/lib/mcs51-small-stack-auto/_moduint.s,
+	  device/lib/mcs51-small-stack-auto/_mulint.s:
+	  Move 8051 assembly out of common C files for _mulint and _moduint (RFE #327).
+	* common_files.mk,
+	  ds390/Makefile.in,
+	  ds400/Makefile.in,
+	  hc08/Makefile.in,
+	  huc6280/Makefile.in,
+	  mcs51-huge/Makefile.in,
+	  mcs51-large/Makefile.in,
+	  mcs51-large-stack-auto/Makefile.in,
+	  mcs51-medium/Makefile.in,
+	  mcs51-small/Makefile.in,
+	  mcs51-small-stack-auto/Makefile.in,
+	  mcs51-small-xstack-auto/Makefile.in,
+	  pdk13/Makefile.in,
+	  pdk14/Makefile.in,
+	  pdk15/Makefile.in,
+	  pdk15-stack-auto/Makefile.in,
+	  r2k/Makefile.in,
+	  r2ka/Makefile.in,
+	  r3ka/Makefile.in,
+	  r4k/Makefile.in,
+	  r5k/Makefile.in,
+	  r6k/Makefile.in,
+	  r800/Makefile.in,
+	  s08/Makefile.in,
+	  s08-stack-auto/Makefile.in,
+	  stm8/Makefile.in,
+	  stm8-large/Makefile.in,
+	  z180/Makefile.in,
+	  z80/Makefile.in,
+	  z80n/Makefile.in:
+	  Move vprintf to common_files.mk
 
 2026-11-10 Philipp Klaus Krause <philipp@colecovision.eu>
 

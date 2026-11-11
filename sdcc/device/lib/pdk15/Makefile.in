@@ -50,8 +50,7 @@ PORT_LIBC = $(COMMON_LIBC) \
   __setjmp \
   div \
   ldiv \
-  lldiv \
-  vprintf
+  lldiv
 
 PORT_LIBM = $(COMMON_LIBM)
 

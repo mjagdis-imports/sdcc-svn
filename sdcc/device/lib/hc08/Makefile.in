@@ -45,8 +45,7 @@ PORT_LIBC = $(COMMON_LIBC) \
   _heap \
   setjmp \
   div \
-  ldiv \
-  vprintf
+  ldiv
 
 PORT_LIBM = $(COMMON_LIBM)
 

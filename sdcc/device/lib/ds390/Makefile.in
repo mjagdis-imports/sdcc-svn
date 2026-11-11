@@ -60,8 +60,7 @@ PORT_LIBC = $(COMMON_LIBC) \
   sdcc_atomic_maybe_rollback \
   setjmp \
   memcpyx \
-  tinibios \
-  vprintf
+  tinibios
 
 PORT_LIBM = $(COMMON_LIBM)
 
