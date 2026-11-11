@@ -1,3 +1,17 @@
+2026-11-11 Gabriele Gorla <gorlik@yahoo.com>
+
+	* device/lib/_divulong.c,
+	  device/lib/_modslong.c,
+	  device/lib/_modulong.c,
+	  device/lib/mcs51-small/_mulint.s,
+	  device/lib/mcs51-small/_divulong.s,
+	  device/lib/mcs51-small/_modslong.s,
+	  device/lib/mcs51-small/_modulong.s,
+	  device/lib/mcs51-small-stack-auto/_divulong.s,
+	  device/lib/mcs51-small-stack-auto/_modslong.s,
+	  device/lib/mcs51-small-stack-auto/_modulong.s:
+	  Move 8051 assembly out of common C files for divulong, modulong and modslong (RFE #327).
+
 2026-11-11 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
 	* src/SDCCsymt.c (compStructSize): Reject incomplete array members

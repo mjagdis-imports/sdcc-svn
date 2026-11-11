@@ -35,18 +35,17 @@
 	.globl	__mulint
 	.globl __mulint_PARM_2
 
-.ifdef __SDCC_NOOVERLAY
-	.area DSEG    (DATA)
-.else
-	.area OSEG    (OVR,DATA)
-.endif
-
 .ifdef __SDCC_PARMS_IN_BANK1
 	.define bl 	"b1_0"
 	.define bh 	"b1_1"
 .else
 	.define bl 	"__mulint_PARM_2"
 	.define bh 	"__mulint_PARM_2 + 1"
+.ifdef __SDCC_NOOVERLAY
+	.area DSEG    (DATA)
+.else
+	.area OSEG    (OVR,DATA)
+.endif
 __mulint_PARM_2:
 	.ds	2
 .endif
