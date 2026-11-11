@@ -1999,6 +1999,20 @@ compStructSize (structdef * sdef)
           checkDecl (loop, 1);
           sum += getSize (loop->type);
 
+          /* A union containing a flexible-array structure inherits its
+             restrictions on use as a structure member or array element. */
+          if (sdef->type == UNION && IS_STRUCT (loop->type) &&
+              SPEC_STRUCT (loop->type)->b_flexArrayMember)
+            sdef->b_flexArrayMember = true;
+
+          /* Array members of unions have the same element-type restriction
+             as other arrays. Direct flexible array members are separate. */
+          if (sdef->type == UNION)
+            for (sym_link *type = loop->type; type && type->next; type = type->next)
+              if (IS_ARRAY (type) && IS_STRUCT (type->next) &&
+                  SPEC_STRUCT (type->next)->b_flexArrayMember)
+                werror (W_INVALID_FLEXARRAY);
+
           /* search for "flexible array members" */
           /* and do some syntax checks */
           if (sdef->type == STRUCT)

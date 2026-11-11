@@ -1,5 +1,14 @@
 2026-11-11 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
+	* src/SDCCsymt.c (compStructSize): Propagate flexible-array containment
+	  through unions. Diagnose prohibited array members of unions (bug #4197).
+	* src/SDCCsymt.h (structdef): Document the containment flag.
+	* support/valdiag/tests/bug-4197.c: Check nested unions, array types,
+	  members, anonymous aggregates and valid pointer/fixed-array controls.
+	* support/regression/tests/bug-4197.c: Check valid union objects and pointers.
+
+2026-11-11 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
 	* src/SDCC.y (checkTagKind, struct_or_union_specifier,
 	  enum_specifier): Check the shared tag namespace for conflicting
 	  structure, union and enumeration definitions in the same scope.

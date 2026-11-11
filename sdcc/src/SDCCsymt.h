@@ -67,8 +67,8 @@ typedef struct structdef
   struct symbol *fields;        /* pointer to fields          */
   unsigned size;                /* sizeof the table in bytes  */
   int type;                     /* STRUCT or UNION            */
-  bool b_flexArrayMember;       /* has got a flexible array member,
-                                   only needed for syntax checks */
+  bool b_flexArrayMember;       /* has a flexible array member, or is a union
+                                   recursively containing such a structure */
   bool being_defined;           /* member list is currently being parsed */
   bool redefinition;            /* is a redefinition only needed for syntax checks */
   struct symbol *tagsym;        /* tag symbol (NULL if no tag) */
