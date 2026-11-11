@@ -71,6 +71,8 @@ STACK_DCL(blockNum,int,MAX_NEST_LEVEL*3)
 value *cenum = NULL;        /* current enumeration  type chain*/
 bool uselessDecl = true;
 
+static void checkTagKind (symbol *tag, int kind);
+
 #define YYDEBUG 1
 
 %}
@@ -856,6 +858,9 @@ struct_or_union_specifier
         {
           structdef *sdef;
 
+          if ($3->tagsym)
+            checkTagKind ($3->tagsym, $1);
+
           if (!$3->tagsym)
             {
               /* no tag given, so new struct def for current scope */
@@ -900,11 +905,6 @@ struct_or_union_specifier
           if (!$3->type)
             {
               $3->type = $1;
-            }
-          else
-            {
-              if ($3->type != $1)
-                  werror(E_BAD_TAG, $3->tag, $1==STRUCT ? "struct" : "union");
             }
           $3->being_defined = true;
         }
@@ -963,7 +963,7 @@ struct_or_union_specifier
                   else if (compareTypeExact (fieldsym1->type, fieldsym2->type, -1, true) <= 0)
                     compatible = false;
                }
-              if (!compatible)
+              if (!compatible && sdef->type == $1)
                 {
                   werror(E_STRUCT_REDEF_INCOMPATIBLE, $3->tag);
                   werrorfl(sdef->tagsym->fileDef, sdef->tagsym->lineDef, E_PREVIOUS_DEF);
@@ -1135,6 +1135,7 @@ enum_specifier
           symbol *csym;
           sym_link *enumtype;
 
+          checkTagKind ($2, ENUM);
           enumtype = newEnumType ($4, NULL);
           SPEC_SCLS(getSpec(enumtype)) = 0;
           $2->type = enumtype;
@@ -1162,6 +1163,7 @@ enum_specifier
           symbol *csym;
           sym_link *enumtype;
 
+          checkTagKind ($2, ENUM);
           enumtype = newEnumType ($5, $3);
           SPEC_SCLS(getSpec(enumtype)) = 0;
           $2->type = enumtype;
@@ -3393,3 +3395,16 @@ identifier
    : IDENTIFIER   { $$ = newSymbol ($1, NestLevel); }
    ;
 %%
+
+/* Definitions may shadow outer tags, but all three tag kinds share a scope. */
+static void
+checkTagKind (symbol *tag, int kind)
+{
+  structdef *sdef = findSymWithBlock (StructTab, tag, currBlockno, NestLevel);
+  symbol *edef = findSymWithLevel (enumTab, tag);
+
+  if (sdef && sdef->block == currBlockno && sdef->type != kind ||
+      edef && edef->block == currBlockno && kind != ENUM)
+    werrorfl (tag->fileDef, tag->lineDef, E_BAD_TAG, tag->name,
+              kind == STRUCT ? "struct" : kind == UNION ? "union" : "enum");
+}
