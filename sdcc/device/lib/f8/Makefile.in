@@ -38,11 +38,7 @@ PORT_LIBC = $(COMMON_LIBC) \
   $(COMMON_LIBC_STRUCT_RET) \
   atomic_flag_clear \
   atomic_flag_test_and_set \
-  __itoa \
-  __ltoa \
-  __memcpy \
-  heap \
-  setjmp
+  __memcpy
 
 
 PORT_LIBM = $(COMMON_LIBM)

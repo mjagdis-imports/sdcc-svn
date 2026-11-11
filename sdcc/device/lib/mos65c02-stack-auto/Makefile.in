@@ -30,22 +30,17 @@ PORT_SDCC = $(COMMON_SDCC) \
   _muluchar \
   _mulschar \
   __sdcc_regs \
-  __sdcc_indirect_jsr
+  __sdcc_indirect_jsr \
+  _startup
 
 PORT_FLOAT = $(COMMON_FLOAT)
 
 PORT_LIBC = $(COMMON_LIBC) \
-  __itoa \
-  __ltoa \
-  __memcpy \
-  _heap \
-  _startup \
-  setjmp \
-  div \
-  ldiv \
-  vprintf \
   atomic_flag_clear \
-  atomic_flag_test_and_set
+  atomic_flag_test_and_set \
+  __memcpy \
+  div \
+  ldiv
 
 PORT_LIBM = $(COMMON_LIBM)
 

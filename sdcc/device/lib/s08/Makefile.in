@@ -32,11 +32,7 @@ PORT_FLOAT = $(COMMON_FLOAT)
 PORT_LIBC = $(COMMON_LIBC) \
   atomic_flag_clear \
   atomic_flag_test_and_set \
-  __itoa \
-  __ltoa \
   __memcpy \
-  _heap \
-  setjmp \
   div \
   ldiv
 

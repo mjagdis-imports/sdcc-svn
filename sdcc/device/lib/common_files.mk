@@ -94,6 +94,7 @@ COMMON_LIBC = \
   errno \
   free \
   gets \
+  heap \
   imaxabs \
   isalnum \
   isalpha \
@@ -107,6 +108,8 @@ COMMON_LIBC = \
   isspace \
   isupper \
   isxdigit \
+  __itoa \
+  __ltoa \
   labs \
   llabs \
   malloc \
@@ -132,6 +135,7 @@ COMMON_LIBC = \
   qsort \
   rand \
   realloc \
+  setjmp \
   sprintf \
   __stdc_bit_ceilull \
   __stdc_bit_width \

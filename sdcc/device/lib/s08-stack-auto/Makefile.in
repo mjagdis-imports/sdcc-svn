@@ -24,21 +24,17 @@ PORT_SDCC = $(COMMON_SDCC) \
   _divuint \
   _modsint \
   _moduint \
-  _ret
+  _ret \
+  _startup
 
 PORT_FLOAT = $(COMMON_FLOAT)
 
 PORT_LIBC = $(COMMON_LIBC) \
   atomic_flag_clear \
   atomic_flag_test_and_set \
-  __itoa \
-  __ltoa \
   __memcpy \
-  _heap \
-  _startup \
   div \
-  ldiv \
-  setjmp
+  ldiv
 
 PORT_LIBM = $(COMMON_LIBM)
 

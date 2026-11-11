@@ -39,16 +39,12 @@ PORT_FLOAT = $(COMMON_FLOAT)
 PORT_LIBC = $(COMMON_LIBC) \
   $(COMMON_LIBC_STRUCT_RET) \
   atomic_flag_clear \
-  _heap \
-  __itoa \
-  __ltoa \
   __memcpy \
   printf_fast \
   printf_fast_f \
   printfl \
   printf_tiny \
   sdcc_atomic_maybe_rollback \
-  setjmp \
   memcpyx \
   tinibios
 

@@ -32,10 +32,7 @@ PORT_SDCC = $(COMMON_SDCC) \
   __sdcc_bcall \
   __sdcc_call_hl \
   __sdcc_call_iy \
-  _startup \
-  __strreverse \
-  __uitobcd \
-  __ultobcd 
+  _startup
 
 PORT_FLOAT = $(COMMON_FLOAT)
 
@@ -43,10 +40,9 @@ PORT_LIBC = $(COMMON_LIBC) \
   $(COMMON_LIBC_STRUCT_RET) \
   atomic_flag_clear \
   atomic_flag_test_and_set \
-  heap \
-  __itoa \
-  __ltoa \
-  setjmp
+  __strreverse \
+  __uitobcd \
+  __ultobcd 
 
 PORT_LIBM = $(COMMON_LIBM)
 
