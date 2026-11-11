@@ -7,10 +7,12 @@ SDCCFLAGS   += --stack-auto --xstack
 
 include $(PORTS_DIR)/mcs51-common/spec.mk
 
-LIBDIR      = $(top_builddir)/device/lib/build/small-xstack-auto
+LIBDIR      = $(top_builddir)/device/lib/build/mcs51-small-xstack-auto
 
 MAKE_LIBRARY = lib-files
 
 .PHONY: lib-files
 lib-files:
-	$(MAKE) -C $(top_builddir)/device/lib model-mcs51-xstack-auto MODELS=small
+	$(MAKE) -C $(top_builddir)/device/lib model-mcs51-xstack-auto
+
+# MODELS=small

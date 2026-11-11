@@ -1,5 +1,5 @@
 ; assembler configuration
-.optsdcc -mmcs51 --model-small
+.optsdcc -mmcs51 --model-small --xstack
 
 ; defines for conditional code
 .define MCS51
