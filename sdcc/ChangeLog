@@ -1,5 +1,17 @@
 2026-11-11 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
+	* src/SDCCsymt.c (compStructSize): Reject incomplete array members
+	  of unions. Require a preceding named member for a flexible array
+	  member, excluding unnamed bit-fields but counting named members
+	  of anonymous aggregates (bug #4221).
+	* src/SDCCerr.c (E_FLEXARRAY_INEMPTYSTRCT): Describe the missing
+	  named member rather than an empty structure.
+	* support/valdiag/tests/bug-4221.c: Add invalid union and unnamed
+	  bit-field cases, valid named and anonymous members, typedefs,
+	  and controls for existing diagnostics and extensions.
+
+2026-11-11 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
 	* src/SDCCmain.c (main): Exclude typedef names when completing
 	  file-scope arrays of unknown bound at the end of translation (bug #4246).
 	* support/valdiag/tests/bug-4246.c: Check incomplete-array typedefs,

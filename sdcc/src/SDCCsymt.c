@@ -1862,6 +1862,7 @@ compStructSize (structdef * sdef)
 {
   int sum = 0, usum = 0;
   int bitOffset = 0;
+  bool hasNamedMember = false;
   symbol *loop;
   const int oldlineno = lineno;
 
@@ -2010,8 +2011,8 @@ compStructSize (structdef * sdef)
                   /* is another struct-member following? */
                   if (loop->next)
                     werror (E_FLEXARRAY_NOTATEND, loop->name);
-                  /* is it the first struct-member? */
-                  else if (loop == sdef->fields)
+                  /* Unnamed bit-fields do not supply another named member. */
+                  else if (!hasNamedMember)
                     werror (E_FLEXARRAY_INEMPTYSTRCT, loop->name);
                 }
               else if (ret == INCOMPLETE)
@@ -2019,6 +2020,19 @@ compStructSize (structdef * sdef)
                   werror (E_INCOMPLETE_FIELD, loop->name);
                 }
             }
+          else if (IS_ARRAY (loop->type) &&
+                   DCL_ARRAY_LENGTH_TYPE (loop->type) == ARRAY_LENGTH_UNKNOWN)
+            werror (E_INCOMPLETE_FIELD, loop->name);
+        }
+
+      if (!loop->bitUnnamed && *loop->name)
+        hasNamedMember = true;
+      else if (!*loop->name && IS_STRUCT (loop->type))
+        {
+          /* Promoted members of an anonymous aggregate count as members. */
+          for (symbol *field = SPEC_STRUCT (loop->type)->fields; field; field = field->next)
+            if (!field->bitUnnamed && *field->name)
+              hasNamedMember = true;
         }
 
       loop = loop->next;

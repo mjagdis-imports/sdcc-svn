@@ -441,7 +441,7 @@ struct
   { E_FLEXARRAY_NOTATEND, ERROR_LEVEL_ERROR,
      "flexible array member '%s' not at end of struct", 0 },
   { E_FLEXARRAY_INEMPTYSTRCT, ERROR_LEVEL_ERROR,
-     "flexible array '%s' in otherwise empty struct", 0 },
+     "flexible array member '%s' in struct with no other named member", 0 },
   { W_EMPTY_TRANSLATION_UNIT, ERROR_LEVEL_PEDANTIC,
      "ISO C forbids an empty translation unit", 0 },
   { W_BAD_PRAGMA_ARGUMENTS, ERROR_LEVEL_WARNING,
