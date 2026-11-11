@@ -40,6 +40,8 @@
 	  device/lib/z80/Makefile.in,
 	  device/lib/z80n/Makefile.in:
 	  Group files that are not supported by all ports.
+	* device/lib/clean.mk:
+	  Fix library clean script.
 
 2026-11-11 Christopher Bazley <chris.bazley.wg14@gmail.com>
 

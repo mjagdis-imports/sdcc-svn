@@ -9,7 +9,7 @@ clean:
 	rm -rf build
 	for port in $(ALLPORTS) ; do\
 	  if [ -f $$port/Makefile ]; then\
-	    $(MAKE) -C $$port clean ;\
+	    $(MAKE) -C $$port PORT=$$port clean ;\
 	  fi;\
 	done
 
