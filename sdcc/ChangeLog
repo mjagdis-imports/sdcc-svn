@@ -1,5 +1,15 @@
 2026-11-11 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
+	* src/SDCCmain.c (main): Exclude typedef names when completing
+	  file-scope arrays of unknown bound at the end of translation (bug #4246).
+	* support/valdiag/tests/bug-4246.c: Check incomplete-array typedefs,
+	  aliases, flexible array members, initialised objects and genuine
+	  tentative definitions.
+	* support/regression/tests/bug-4246.c: Check independent object bounds
+	  and values when reusing an incomplete-array typedef.
+
+2026-11-11 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
 	* src/SDCCast.c (decorateType): Diagnose sizeof
 	  misapplied to a function (bug #4090).
 	* src/SDCCerr.c, src/SDCCerr.h:
