@@ -41,6 +41,11 @@
 	  device/lib/mcs51-small-stack-auto/_moduint.s,
 	  device/lib/mcs51-small-stack-auto/_mulint.s:
 	  Move 8051 assembly out of common C files for mulint, moduint and modsint (RFE #327).
+	* device/lib/mcs51-common/printf_fast.c,
+	  device/lib/mcs51-common/printf_fast_f.c,
+	  device/lib/mcs51-common/printf_tiny.s,
+	  device/lib/mcs51-common/printfl.c:
+	  Move 8051 specific files to the mcs51-common directory.
 
 2026-11-11 Philipp Klaus Krause <philipp@colecovision.eu>
 
