@@ -1,3 +1,18 @@
+2026-11-12 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
+	* src/SDCCval.h, src/SDCCval.c (checkConstexprIntegerInitialiser):
+	  Check the source expression's integer type before implicit conversion.
+	* src/SDCCast.c (createIval, gatherAutoInit): Check explicit constexpr
+	  initialisers, including automatic objects (bug #4178).
+	  (constExprValue): Copy the initialiser value before recasting it, so
+	  reading a constexpr cannot change its source initialiser's type.
+	* src/SDCCglue.c (printIvalType, printIvalBitFields): Check static
+	  scalar and aggregate members, including bit-fields.
+	* src/SDCCerr.h, src/SDCCerr.c: Add E_CONSTEXPR_INTEGER.
+	* support/valdiag/tests/bug-4178.c: Check scalar, local, aggregate,
+	  bit-field and named initialisers, preserving explicit integer casts.
+	* support/regression/tests/bug-4178.c: Check valid constexpr values.
+
 2026-11-12 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* support/regression/tests/bug-4171.c,

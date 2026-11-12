@@ -3702,3 +3702,16 @@ stringInitializerTypesMatch (sym_link *array, sym_link *string)
     (IS_CHAR (array->next) && IS_CHAR (string->next) ||
      similarTypes (array->next, string->next));
 }
+/* Check the source expression before implicit conversion to the integer object. */
+void
+checkConstexprIntegerInitialiser (sym_link *type, initList *ilist)
+{
+  if (!IS_INTEGRAL (type) || !ilist || ilist->type == INIT_HOLE)
+    return;
+
+  ++noAlloc;
+  ast *expr = decorateType (resolveSymbols (copyAst (list2expr (ilist))), RESULT_TYPE_NONE, false);
+  --noAlloc;
+  if (expr && !expr->isError && expr->ftype && !IS_INTEGRAL (expr->ftype))
+    werrorfl (ilist->filename, ilist->lineno, E_CONSTEXPR_INTEGER);
+}

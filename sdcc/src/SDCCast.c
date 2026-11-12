@@ -1795,6 +1795,10 @@ createIval (ast * sym, sym_link * type, initList * ilist, ast * wid, ast * rootV
   if (!ilist && (!AST_SYMBOL (rootValue)->islocal || (omitStatic && SPEC_STAT (getSpec (type)))))
     return NULL;
 
+  if (IS_CONSTEXPR (AST_SYMBOL (rootValue)->etype) &&
+      !SPEC_IMPLICIT_CONSTEXPR (AST_SYMBOL (rootValue)->etype))
+    checkConstexprIntegerInitialiser (type, ilist);
+
   /* if structure then    */
   if (IS_STRUCT (type))
     rast = createIvalStruct (sym, type, ilist, rootValue);
@@ -1854,6 +1858,8 @@ gatherAutoInit (symbol * autoChain, ast * block, int *stack)
 
       /* resolve the symbols in the ival */
       resolveIvalSym (sym->ival, sym->type);
+      if (IS_CONSTEXPR (sym->etype) && !SPEC_IMPLICIT_CONSTEXPR (sym->etype))
+        checkConstexprIntegerInitialiser (sym->type, sym->ival);
 
 #if 1
       /* if we are PIC14 or PIC16 port,
@@ -2229,7 +2235,7 @@ constExprValue (ast * cexpr, int check)
       if (IS_CONSTEXPR (cexpr->ftype))
         {
           value *ivalAsVal = list2val (AST_SYMBOL (cexpr)->ival, check);
-          value *val = valRecastLitVal (cexpr->etype, ivalAsVal);
+          value *val = valRecastLitVal (cexpr->etype, copyValue (ivalAsVal));
           // TODO: find a way to properly check for loss of range or precisioin
           // /* initializer must not exceed target type's range or precision */
           // if (check && isEqualVal (valCompare (val, ivalAsVal, 0, true), 0))

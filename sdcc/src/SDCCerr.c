@@ -817,6 +817,8 @@ struct
      "enumeration %s redeclared with incompatible underlying type or fixedness", 0},
   {E_SIZEOF_FUNCTION, ERROR_LEVEL_ERROR,
      "sizeof applied to a function type", 0 },
+  {E_CONSTEXPR_INTEGER, ERROR_LEVEL_ERROR,
+     "initialiser for constexpr integer object is not an integer constant expression", 0},
 };
 
 /* -------------------------------------------------------------------------------

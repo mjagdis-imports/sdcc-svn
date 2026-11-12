@@ -405,6 +405,7 @@ enum {
   E_CAST_NONSCALAR             = 374, // non-scalar operand of cast to non-void type
   E_ENUM_REDECL                = 375, // enumeration redeclared with incompatible underlying type or fixedness
   E_SIZEOF_FUNCTION            = 376, // sizeof applied to a function type
+  E_CONSTEXPR_INTEGER          = 377, // constexpr integer requires integer constant expression
 
   // If you get a merge conflict here, some #pragma disable_warning in support/valdiag and support/regression will likely need to be adapted to the resolution. Check there!
 

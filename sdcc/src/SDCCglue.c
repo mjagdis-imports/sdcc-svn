@@ -848,6 +848,9 @@ printIvalType (symbol * sym, sym_link * type, initList * ilist, struct dbuf_s *o
   value *val;
   unsigned long ulVal = 0;
 
+  if (IS_CONSTEXPR (sym->etype) && !SPEC_IMPLICIT_CONSTEXPR (sym->etype))
+    checkConstexprIntegerInitialiser (type, ilist);
+
   /* if initList is deep */
   if (ilist && (ilist->type == INIT_DEEP))
     ilist = ilist->init.deep;
@@ -975,7 +978,7 @@ printIvalType (symbol * sym, sym_link * type, initList * ilist, struct dbuf_s *o
 /* return the number of bytes written                              */
 /*-----------------------------------------------------------------*/
 static unsigned int
-printIvalBitFields (symbol ** sym, initList ** ilist, struct dbuf_s *oBuf)
+printIvalBitFields (symbol *root, symbol ** sym, initList ** ilist, struct dbuf_s *oBuf)
 {
   symbol *lsym = *sym;
   initList *lilist = *ilist;
@@ -996,6 +999,8 @@ printIvalBitFields (symbol ** sym, initList ** ilist, struct dbuf_s *oBuf)
       else if (!SPEC_BUNNAMED (lsym->etype))
         {
           /* not an unnamed bit-field structure member */
+          if (IS_CONSTEXPR (root->etype) && !SPEC_IMPLICIT_CONSTEXPR (root->etype))
+            checkConstexprIntegerInitialiser (lsym->type, lilist);
           value *val = list2val (lilist, true);
 
           if (val && val->etype && SPEC_SCLS (val->etype) != S_LITERAL)
@@ -1202,7 +1207,7 @@ printIvalStruct (symbol *sym, sym_link *type, initList *ilist, struct dbuf_s *oB
             }
           else if (IS_BITFIELD (sflds->type))
             {
-              written += printIvalBitFields (&sflds, &iloop, oBuf);
+              written += printIvalBitFields (sym, &sflds, &iloop, oBuf);
             }
           else
             {
