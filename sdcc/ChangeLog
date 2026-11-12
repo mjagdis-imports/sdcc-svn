@@ -1,3 +1,9 @@
+2026-11-12 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/bug-4171.c,
+	  src/z80/peeph-sm83.def:
+	  Fix bug #4171.
+
 2026-11-11 Gabriele Gorla <gorlik@yahoo.com>
 
 	* device/lib/common_files.mk,
