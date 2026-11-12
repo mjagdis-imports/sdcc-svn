@@ -264,7 +264,8 @@ postfix_expression
                            6.7.2p6), while a compound literal without a storage class has the
                            type written in it and nothing more (C11 6.5.2.5p4). */
                         sym1->etype = getSpec(sym1->type);
-                        if (constExprTree(list2expr(sym1->ival)))
+                        /* Preserve the initialiser when decoration replaces its root. */
+                        if (constExprTree(copyAst(list2expr(sym1->ival))))
                           {
                             SPEC_CONSTEXPR(sym1->etype) = 1;
                             SPEC_IMPLICIT_CONSTEXPR(sym1->etype) = 1;

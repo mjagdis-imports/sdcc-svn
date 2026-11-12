@@ -2234,7 +2234,8 @@ constExprValue (ast * cexpr, int check)
       /* if this is a C23 constexpr, use its value */
       if (IS_CONSTEXPR (cexpr->ftype))
         {
-          value *ivalAsVal = list2val (AST_SYMBOL (cexpr)->ival, check);
+          /* Evaluation may replace the initialiser root (e.g. _Generic). */
+          value *ivalAsVal = list2val (copyIlist (AST_SYMBOL (cexpr)->ival), check);
           value *val = valRecastLitVal (cexpr->etype, copyValue (ivalAsVal));
           // TODO: find a way to properly check for loss of range or precisioin
           // /* initializer must not exceed target type's range or precision */

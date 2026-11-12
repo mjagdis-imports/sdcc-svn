@@ -6166,8 +6166,8 @@ prepareDeclarationSymbol (attribute *attr, sym_link *declSpecs, symbol *initDecl
       for (l0 = sym->type; l0 != NULL; l0 = l0->next)
         if (IS_PTR (l0))
           break;
-      /* perform sanity checks concerning constexpr initialization */
-      if (IS_CONSTEXPR (declSpecs) && (sym->ival == NULL || !constExprTree (list2expr (sym->ival))))
+      /* Inspect a copy: decoration may replace the initialiser root. */
+      if (IS_CONSTEXPR (declSpecs) && (sym->ival == NULL || !constExprTree (copyAst (list2expr (sym->ival)))))
         {
           /* constexpr must be initialized with a constant expression (duh!) */
           werror (sym->ival ? E_CONST_EXPECTED : E_CONSTEXPR_WITHOUT_INIT);

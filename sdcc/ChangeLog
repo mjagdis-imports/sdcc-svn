@@ -1,5 +1,18 @@
 2026-11-12 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
+	* src/SDCCsymt.c (prepareDeclarationSymbol),
+	  src/SDCC.y (postfix_expression): Inspect a copy of the initialiser
+	  when checking whether it is constant.
+	* src/SDCCast.c (constExprValue): Evaluate a copy of a constexpr
+	  object's initialiser. Preserve stored initialisers when decoration
+	  replaces their root, fixing bug #4228.
+	* support/valdiag/tests/bug-4228.c,
+	  support/regression/tests/bug-4228.c: Add valdiag and regression
+	  tests for generic-selection initialisers at file and block scope,
+	  including checks for representability and unselected associations.
+
+2026-11-12 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
 	* src/SDCCval.h, src/SDCCval.c (checkConstexprIntegerInitialiser):
 	  Check the source expression's integer type before implicit conversion.
 	* src/SDCCast.c (createIval, gatherAutoInit): Check explicit constexpr
