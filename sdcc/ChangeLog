@@ -78,6 +78,12 @@
 	  device/lib/z80-common/_moduint.s,
 	  device/lib/z80n/_mulint.s:
 	  Split div and mod for z80 like all other ports.
+	* device/lib/_mullong.c,
+	  device/lib/mcs51-large/_mullong.s,
+	  device/lib/mcs51-medium/_mullong.s,
+	  device/lib/mcs51-small/_mullong.s,
+	  device/lib/mcs51-small-stack-auto/_mullong.s:
+	  Complete RFE #327
 
 2026-11-12 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
