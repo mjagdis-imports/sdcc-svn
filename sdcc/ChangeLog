@@ -1,3 +1,20 @@
+2026-11-12 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
+	* src/SDCCgenconstprop.cc (recomputeValinfos): Preserve value information
+	  for non-volatile const objects across function calls and indirect
+	  writes, even when their addresses escape (RFE #1043). Use the
+	  declared object's type to distinguish a const pointer object from
+	  a mutable object accessed through a pointer to const.
+	* support/regression/tests/feature-request-1043.c: Test preservation of
+	  const-qualified object values across calls and indirect writes,
+	  including pointer objects and objects with static or automatic storage
+	  duration. Test runtime and repeated initialisation, indirect calls,
+	  and changes to objects accessed through const-qualified lvalues.
+	* support/valdiag/tests/feature-request-1043.c: Test preservation of
+	  constant values and non-null information across calls and indirect
+	  writes. Check invalidation of information about objects also accessible
+	  through non-const-qualified lvalues. Test objects with internal and
+	  external linkage, volatile-qualified objects, and indirect calls.
 
 2026-11-12 Christopher Bazley <chris.bazley.wg14@gmail.com>
 

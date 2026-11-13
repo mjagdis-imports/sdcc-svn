@@ -1182,20 +1182,27 @@ recomputeValinfos (iCode *sic, ebbIndex *ebbi, const char *suffix)
         G[0].ic->valinfos->map[G[i].ic->right->key] = getParamValinfo (G[i].ic->right);
       if (POINTER_SET (G[i].ic) && IS_SYMOP (G[i].ic->result) && OP_SYMBOL (G[i].ic->result)->ismyparm)
         G[0].ic->valinfos->map[G[i].ic->result->key] = getParamValinfo (G[i].ic->result);
-      // Need to include static objects here, since they might revert their state via setjmp/longjmp.
+      // Const objects cannot be modified through an escaped address. Test the
+      // declared object type, not the type of a pointer used to access it.
+      // Keep volatile objects conservative.
+      // Include mutable static locals even if their addresses have not escaped:
+      // another invocation can modify them, invalidating recorded value information.
       if (G[i].ic->left && !IS_ITEMP(G[i].ic->left) && IS_SYMOP (G[i].ic->left) &&
+        (!IS_CONSTANT (OP_SYMBOL_CONST (G[i].ic->left)->type) || isVolatile (OP_SYMBOL_CONST (G[i].ic->left)->type)) &&
         (!OP_SYMBOL_CONST (G[i].ic->left)->islocal && !OP_SYMBOL_CONST (G[i].ic->left)->ismyparm || OP_SYMBOL_CONST (G[i].ic->left)->addrtaken || IS_STATIC (OP_SYMBOL_CONST (G[i].ic->left)->etype)))
         {
           global_operands.map[G[i].ic->left->key] = getOperandValinfo (G[i].ic, G[i].ic->left, true);
           global_types[G[i].ic->left->key] = operandType (G[i].ic->left);
         }
       if (G[i].ic->right && !IS_ITEMP(G[i].ic->right) && IS_SYMOP (G[i].ic->right) &&
+        (!IS_CONSTANT (OP_SYMBOL_CONST (G[i].ic->right)->type) || isVolatile (OP_SYMBOL_CONST (G[i].ic->right)->type)) &&
         (!OP_SYMBOL_CONST (G[i].ic->right)->islocal && !OP_SYMBOL_CONST (G[i].ic->right)->ismyparm || OP_SYMBOL_CONST (G[i].ic->right)->addrtaken || IS_STATIC (OP_SYMBOL_CONST (G[i].ic->right)->etype)))
         {
           global_operands.map[G[i].ic->right->key] = getOperandValinfo (G[i].ic, G[i].ic->right, true);
           global_types[G[i].ic->right->key] = operandType (G[i].ic->right);
         }
       if (G[i].ic->result && !IS_ITEMP(G[i].ic->result) && IS_SYMOP (G[i].ic->result) &&
+        (!IS_CONSTANT (OP_SYMBOL_CONST (G[i].ic->result)->type) || isVolatile (OP_SYMBOL_CONST (G[i].ic->result)->type)) &&
         (!OP_SYMBOL_CONST (G[i].ic->result)->islocal && !OP_SYMBOL_CONST (G[i].ic->result)->ismyparm || OP_SYMBOL_CONST (G[i].ic->result)->addrtaken || IS_STATIC (OP_SYMBOL_CONST (G[i].ic->result)->etype)))
         {
           global_operands.map[G[i].ic->result->key] = getOperandValinfo (G[i].ic, G[i].ic->result, true);
