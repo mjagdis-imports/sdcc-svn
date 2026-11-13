@@ -1,3 +1,16 @@
+
+2026-11-12 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
+	* src/SDCCval.c, src/SDCCval.h (checkConstexprBoolInitialiser):
+	  Diagnose constexpr boolean initialisers whose original integer
+	  values are not zero or one (bug #4230).
+	* src/SDCCast.c (createIval, gatherAutoInit): Check explicit constexpr
+	  initialisers of automatic scalars and aggregate subobjects.
+	* src/SDCCglue.c (printIvalType, printIvalBitFields): Check static
+	  scalars and aggregate subobjects, including boolean bit-fields.
+	* support/valdiag/tests/bug-4230.c: Test invalid boolean initialisers.
+	* support/regression/tests/bug-4230.c: Test valid boolean initialisers.
+
 2026-11-12 Gabriele Gorla <gorlik@yahoo.com>
 
 	  device/lib/_divschar.c,

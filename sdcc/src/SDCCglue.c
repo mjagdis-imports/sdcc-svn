@@ -849,7 +849,10 @@ printIvalType (symbol * sym, sym_link * type, initList * ilist, struct dbuf_s *o
   unsigned long ulVal = 0;
 
   if (IS_CONSTEXPR (sym->etype) && !SPEC_IMPLICIT_CONSTEXPR (sym->etype))
-    checkConstexprIntegerInitialiser (type, ilist);
+    {
+      checkConstexprIntegerInitialiser (type, ilist);
+      checkConstexprBoolInitialiser (type, ilist);
+    }
 
   /* if initList is deep */
   if (ilist && (ilist->type == INIT_DEEP))
@@ -1000,7 +1003,10 @@ printIvalBitFields (symbol *root, symbol ** sym, initList ** ilist, struct dbuf_
         {
           /* not an unnamed bit-field structure member */
           if (IS_CONSTEXPR (root->etype) && !SPEC_IMPLICIT_CONSTEXPR (root->etype))
-            checkConstexprIntegerInitialiser (lsym->type, lilist);
+            {
+              checkConstexprIntegerInitialiser (lsym->type, lilist);
+              checkConstexprBoolInitialiser (lsym->type, lilist);
+            }
           value *val = list2val (lilist, true);
 
           if (val && val->etype && SPEC_SCLS (val->etype) != S_LITERAL)

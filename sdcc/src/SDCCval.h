@@ -187,6 +187,7 @@ value *valRecastLitVal (sym_link * dtype, value *val);
 void checkParameterTypeList (value *forward_declaration, value *parameters);
 
 void checkConstexprIntegerInitialiser (sym_link *type, initList *ilist);
+void checkConstexprBoolInitialiser (sym_link *type, initList *ilist);
 bool stringInitializerTypesMatch (sym_link *array, sym_link *string);
 #endif
 

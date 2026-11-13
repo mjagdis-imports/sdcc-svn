@@ -1797,7 +1797,10 @@ createIval (ast * sym, sym_link * type, initList * ilist, ast * wid, ast * rootV
 
   if (IS_CONSTEXPR (AST_SYMBOL (rootValue)->etype) &&
       !SPEC_IMPLICIT_CONSTEXPR (AST_SYMBOL (rootValue)->etype))
-    checkConstexprIntegerInitialiser (type, ilist);
+    {
+      checkConstexprIntegerInitialiser (type, ilist);
+      checkConstexprBoolInitialiser (type, ilist);
+    }
 
   /* if structure then    */
   if (IS_STRUCT (type))
@@ -1859,7 +1862,10 @@ gatherAutoInit (symbol * autoChain, ast * block, int *stack)
       /* resolve the symbols in the ival */
       resolveIvalSym (sym->ival, sym->type);
       if (IS_CONSTEXPR (sym->etype) && !SPEC_IMPLICIT_CONSTEXPR (sym->etype))
-        checkConstexprIntegerInitialiser (sym->type, sym->ival);
+        {
+          checkConstexprIntegerInitialiser (sym->type, sym->ival);
+          checkConstexprBoolInitialiser (sym->type, sym->ival);
+        }
 
 #if 1
       /* if we are PIC14 or PIC16 port,

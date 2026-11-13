@@ -3715,3 +3715,22 @@ checkConstexprIntegerInitialiser (sym_link *type, initList *ilist)
   if (expr && !expr->isError && expr->ftype && !IS_INTEGRAL (expr->ftype))
     werrorfl (ilist->filename, ilist->lineno, E_CONSTEXPR_INTEGER);
 }
+
+/* Check the initialiser value before implicit conversion to constexpr bool. */
+void
+checkConstexprBoolInitialiser (sym_link *type, initList *ilist)
+{
+  if ((!IS_BOOL (type) && !(IS_BITFIELD (type) && SPEC_NOUN (type) == V_BBITFIELD)) ||
+      !ilist || ilist->type == INIT_HOLE)
+    return;
+
+  ++noAlloc;
+  ast *expr = decorateType (resolveSymbols (copyAst (list2expr (ilist))), RESULT_TYPE_NONE, false);
+  --noAlloc;
+  if (!expr || expr->isError || !expr->ftype || !IS_INTEGRAL (expr->ftype))
+    return;
+
+  value *val = constExprValue (expr, false);
+  if (val && IS_LITERAL (val->etype) && ullFromVal (val) > 1)
+    werrorfl (ilist->filename, ilist->lineno, E_CONSTEXPR_RANGE_PRECISION);
+}
