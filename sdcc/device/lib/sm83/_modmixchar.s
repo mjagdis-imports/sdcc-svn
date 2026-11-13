@@ -1,8 +1,9 @@
 ;--------------------------------------------------------------------------
-;  mul.s
+;  __modmixchar.s
 ;
 ;  Copyright (C) 2000, Michael Hope
-;  Copyright (C) 2021, Philipp Klaus Krause
+;  Copyright (C) 2021, Sebastian 'basxto' Riedel (sdcc@basxto.de)
+;  Copyright (c) 2021, Philipp Klaus Krause
 ;
 ;  This library is free software; you can redistribute it and/or modify it
 ;  under the terms of the GNU General Public License as published by the
@@ -14,7 +15,7 @@
 ;  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 ;  GNU General Public License for more details.
 ;
-;  You should have received a copy of the GNU General Public License
+;  You should have received a copy of the GNU General Public License 
 ;  along with this library; see the file COPYING. If not, write to the
 ;  Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
 ;   MA 02110-1301, USA.
@@ -27,49 +28,39 @@
 ;   might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-	.module mul
-	.optsdcc -mz80 sdcccall(1)
+	.module __modmixchar
+	.optsdcc -msm83 sdcccall(1)
 
-.area   _CODE
+        ;; Originally from GBDK by Pascal Felber.
+.globl	__moduschar
+.globl	__modsuchar
 
-.globl	__mulint
+        .area   _CODE
 
-__mulint:
-        ld	c, l
-        ld	b, h
+__moduschar:
+	ld	c, a
+	ld	b, #0
 
-	;; 16-bit multiplication
-	;;
-	;; Entry conditions
-	;; bc = multiplicand
-	;; de = multiplier
-	;;
-	;; Exit conditions
-	;; de = less significant word of product
-	;;
-	;; Register used: AF,BC,DE,HL
-__mul16::
-	xor	a,a
-	ld	l,a
-	or	a,b
-	ld	b,#16
+	call	signexte
 
-        ;; Optimise for the case when this side has 8 bits of data or
-        ;; less.  This is often the case with support address calls.
-        jr      NZ,2$
-        ld      b,#8
-        ld      a,c
-1$:
-        ;; Taken from z88dk, which originally borrowed from the
-        ;; Spectrum rom.
-        add     hl,hl
-2$:
-        rl      c
-        rla                     ;DLE 27/11/98
-        jr      NC,3$
-        add     hl,de
-3$:
-        djnz    1$
-        ex	de, hl
-        ret
+	ld	c, e
+	ld	b, d
 
+	ret
+
+
+
+__modsuchar:
+	ld	d, #0
+
+	ld	c, a             ; Sign extend
+	rlca
+	sbc	a
+	ld	b,a
+
+	call	.divmods16
+
+	ld	c, e
+	ld	b, d
+
+	ret

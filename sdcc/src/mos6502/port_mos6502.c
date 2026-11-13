@@ -60,30 +60,30 @@ _genAssemblerStart (FILE * of)
 /* Globals */
 PORT mos6502_port =
   {
-    TARGET_ID_MOS6502,
-    "mos6502",
-    "MOS 6502",                 /* Target name */
-    NULL,                       /* Processor name */
-    {
-      glue,
+    TARGET_ID_MOS6502,          /* Unique id for this target */
+    "mos6502",                  /* Target name used for -m */
+    "MOS 6502",                 /* Target name string, used for --help */
+    NULL,                       /* Specific processor for the given target family. specified by -p */
+    {                           /* general */
+      glue,                     /* Pointer to glue function */
       false,                    /* Emit glue around main */
-      MODEL_SMALL | MODEL_LARGE,
-      MODEL_LARGE,
-      _get_model
+      MODEL_SMALL | MODEL_LARGE,/* OR of MODEL_* */
+      MODEL_LARGE,              /* default model */
+      _get_model                /* return the model string, used as library destination */
     },
-    {
-      m6502_asmCmd,
-      NULL,
+    {                           /* Assembler */
+      m6502_asmCmd,             /* Command to run and arguments */
+      NULL,                     /* Alternate macro based form */
       "-plosgffwy",             /* Options with debug */
       "-plosgffw",              /* Options without debug */
-      0,
-      ".asm",
-      NULL                      /* no do_assemble function */
+      0,                        /* print externs as global */
+      ".asm",                   /* assembler file extension */
+      NULL                      /* If non-null will be used to execute the assembler. */
     },
     {                           /* Linker */
-      m6502_linkCmd,
-      NULL,
-      NULL,
+      m6502_linkCmd,            /** Command to run (eg link-z80) */
+      NULL,                     /** Alternate macro based form. */
+      NULL,                     /** If non-null will be used to execute the link. */
       ".rel",                   /* object file extension */
       1,                        /* need linker script */
       _crt,                     /* crt */
@@ -102,7 +102,7 @@ PORT mos6502_port =
       NULL,
       NULL
     },
-    /* Sizes: char, short, int, long, long long, ptr, fptr, gptr, bit, float, max */
+    /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float, BitInt (in bits) */
     // TODO: banked func ptr
     {
       1,                        /* char */
@@ -187,25 +187,25 @@ PORT mos6502_port =
       5,                        /* sizeofSubtract */
       10                        /* sizeofDispatch */
     },
-    "_",
-    _init,
-    m6502_parseOptions,
-    m6502_options,
-    NULL,
-    m6502_finaliseOptions,
-    m6502_setDefaultOptions,
+    "_",                        /* Prefix to add to a C function (eg "_") */
+    _init,                      /* First chance to initialise and set any port specific variables */
+    m6502_parseOptions,         /* Optional list of automatically parsed options */
+    m6502_options,              /* Parses one option + its arguments */
+    NULL,                       /* Initialise port spectific paths */
+    m6502_finaliseOptions,      /* Called after all the options have been parsed */
+    m6502_setDefaultOptions,    /* Called before any options are parsed. */
     m6502_assignRegisters,
-    m6502_getRegName,
-    0,
-    NULL,
-    m6502_keywords,
+    m6502_getRegName,           /* Returns the register name of a symbol */
+    NULL,                       /* getRegByName */
+    NULL,                       /* rtrackUpdate - Try to keep track of register contents. */
+    m6502_keywords,             /* list of keywords that are used by this target */
     _genAssemblerStart,         /* genAssemblerStart */
     m6502_genAssemblerEnd,      /* genAssemblerEnd */
     m6502_genIVT,               /* local IVT generation code */
     m6502_genXINIT,             /* genXINIT code */
     NULL,                       /* genInitStartup */
-    m6502_reset_regparm,
-    m6502_regparm,
+    m6502_reset_regparm,        /* reset the register count */
+    m6502_regparm,              /* will return 1 if can be passed in register */
     m6502_process_pragma,       /* process_pragma */
     NULL,                       /* getMangledFunctionName */
     m6502_hasNativeMulFor,      /* hasNativeMulFor */
@@ -223,8 +223,8 @@ PORT mos6502_port =
     NULL,                       /* CSE cost estimation */
     m6502_builtins,             /* builtin functions */
     GPOINTER,                   /* treat unqualified pointers as "generic" pointers */
-    true,
-    false,
+    true,                       /* __far is a subset of generic. */
+    false,                      /* generic is a subset of __far. */
     1,                          /* reset labelKey to 1 */
     1,                          /* globals & local statics allowed */
     3,                          /* Number of registers handled in the tree-decomposition-based register allocator in SDCCralloc.hpp */

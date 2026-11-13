@@ -1,5 +1,5 @@
 ;--------------------------------------------------------------------------
-;  div.s
+;  __divuint.s
 ;
 ;  Copyright (C) 2000, Michael Hope
 ;  Copyright (C) 2021, Sebastian 'basxto' Riedel (sdcc@basxto.de)
@@ -28,125 +28,13 @@
 ;   might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
+	.module __divuint
+	.optsdcc -msm83 sdcccall(1)
+
         ;; Originally from GBDK by Pascal Felber.
-        .area   _CODE
-
-.globl	__divsuchar
-.globl	__modsuchar
-.globl	__divuschar
-.globl	__moduschar
-.globl	__divschar
-.globl	__modschar
-.globl	__divsint
-.globl	__modsint
-.globl	__divuchar
-.globl	__moduchar
 .globl	__divuint
-.globl	__moduint
 
-__divuschar:
-	ld	c, a
-	ld	b, #0
-
-	jp	signexte
-
-__moduschar:
-	ld	c, a
-	ld	b, #0
-
-	call	signexte
-
-	ld	c, e
-	ld	b, d
-
-	ret
-
-__divsuchar:
-	ld	d, #0
-
-	ld	c, a             ; Sign extend
-	rlca
-	sbc     a
-	ld      b,a
-
-	jp	.div16
-
-__modsuchar:
-	ld	d, #0
-
-	ld	c, a             ; Sign extend
-	rlca
-	sbc	a
-	ld	b,a
-
-	call	.div16
-
-	ld	c, e
-	ld	b, d
-
-	ret
-
-__divschar:
-	ld	c, a
-
-	call	.div8
-
-	ret
-
-__modschar:
-        ld      c, a
-
-	call	.div8
-
-	ld	c, e
-	ld	b, d
-
-	ret
-
-__divsint:
-        ld	a, e
-        ld	e, c
-        ld	c, a
-
-        ld	a, d
-        ld	d, b
-        ld	b, a
-
-        jp	.div16
-
-__modsint:
-        ld	a, e
-        ld	e, c
-        ld	c, a
-
-        ld	a, d
-        ld	d, b
-        ld	b, a
-
-        call	.div16
-
-	ld	c, e
-	ld	b, d
-
-        ret
-
-        ;; Unsigned
-__divuchar:
-        ld      c, a
-
-	call	.divu8
-
-	ret
-
-__moduchar:
-        ld      c, a
-
-	call	.divu8
-
-	ld	c, e
-	ld	b, d
-
-	ret
+        .area   _CODE
 
 __divuint:      
         ld	a, e
@@ -157,7 +45,7 @@ __divuint:
         ld	d, b
         ld	b, a
 
-        jp	.divu16
+        jp	.divmodu16
 
 __moduint:
         ld	a, e
@@ -168,26 +56,18 @@ __moduint:
         ld	d, b
         ld	b, a
 
-        call	.divu16
+        call	.divmodu16
 
 	ld	c, e
 	ld	b, d
 
         ret
 
-.div8::
-.mod8::
-        ld      a,c             ; Sign extend
-        rlca
-        sbc     a
-        ld      b,a
-signexte:
-        ld      a, e             ; Sign extend
-        rlca
-        sbc     a
-        ld      d, a
 
-        ; Fall through to .div16
+.divmodu8::
+        ld      b,#0x00
+        ld      d,b
+        ; Fall through to divu16
 
         ;; 16-bit division
         ;;
@@ -202,75 +82,8 @@ signexte:
         ;;   If divisor is 0, carry=1 and both quotient and remainder are 0
         ;;
         ;; Register used: AF,BC,DE,HL
-.div16::
-.mod16::
-        ;; Determine sign of quotient by xor-ing high bytes of dividend
-        ;;  and divisor. Quotient is positive if signs are the same, negative
-        ;;  if signs are different
-        ;; Remainder has same sign as dividend
-        ld      a,b             ; Get high byte of dividend
-        push    af              ; Save as sign of remainder
-        xor     d               ; Xor with high byte of divisor
-        push    af              ; Save sign of quotient
 
-        ;; Take absolute value of divisor
-        bit     7,d
-        jr      Z,.chkde        ; Jump if divisor is positive
-        sub     a               ; Subtract divisor from 0
-        sub     e
-        ld      e,a
-        sbc     a               ; Propagate borrow (A=0xFF if borrow)
-        sub     d
-        ld      d,a
-        ;; Take absolute value of dividend
-.chkde:
-        bit     7,b
-        jr      Z,.dodiv        ; Jump if dividend is positive
-        sub     a               ; Subtract dividend from 0
-        sub     c
-        ld      c,a
-        sbc     a               ; Propagate borrow (A=0xFF if borrow)
-        sub     b
-        ld      b,a
-        ;; Divide absolute values
-.dodiv:
-        call    .divu16
-        jr      C,.exit         ; Exit if divide by zero
-        ;; Negate quotient if it is negative
-        pop     af              ; recover sign of quotient
-        and     #0x80
-        jr      Z,.dorem        ; Jump if quotient is positive
-        sub     a               ; Subtract quotient from 0
-        sub     c
-        ld      c,a
-        sbc     a               ; Propagate borrow (A=0xFF if borrow)
-        sub     b
-        ld      b,a
-.dorem:
-        ;; Negate remainder if it is negative
-        pop     af              ; recover sign of remainder
-        and     #0x80
-        ret     Z               ; Return if remainder is positive
-        sub     a               ; Subtract remainder from 0
-        sub     e
-        ld      e,a
-        sbc     a               ; Propagate remainder (A=0xFF if borrow)
-        sub     d
-        ld      d,a
-        ret
-.exit:
-        pop     af
-        pop     af
-        ret
-
-.divu8::
-.modu8::
-        ld      b,#0x00
-        ld      d,b
-        ; Fall through to divu16
-
-.divu16::
-.modu16::
+.divmodu16::
         ;; Check for division by zero
         ld      a,e
         or      d

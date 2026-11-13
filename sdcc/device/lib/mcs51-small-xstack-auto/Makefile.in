@@ -8,7 +8,7 @@ abs_top_builddir = @abs_top_builddir@
 include $(srcdir)/../common_files.mk
 
 # user configuration
-VPATH  		= $(srcdir)/../mcs51-common:$(std_lib_dirs)
+VPATH  		= $(srcdir):$(srcdir)/../mcs51-common:$(std_lib_dirs)
 AS		= $(top_builddir)/bin/sdas8051
 EXTRA_CFLAGS	= -I$(INCDIR)/mcs51 --opt-code-speed
 PORT_CRT	=
@@ -32,15 +32,10 @@ PORT_SDCC = $(COMMON_SDCC) \
   crtxpush \
   crtxstack \
   _decdptr \
-  _divsint \
-  _divuint \
   gptr_cmp \
   _gptrget \
   _gptrgetc \
   _gptrput \
-  _modsint \
-  _moduint \
-  _mulint \
   _spx \
   _startup
 

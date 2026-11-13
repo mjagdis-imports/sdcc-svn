@@ -27,20 +27,10 @@
    might be covered by the GNU General Public License.
 -------------------------------------------------------------------------*/
 
-signed int
-_divschar (signed char x, signed char y)
-{
-  return ((int)x / (int)y);
-}
+#include <sdcc-lib.h>
 
 signed int
-_divuschar (unsigned char x, signed char y)
-{
-  return ((int)x / (int)y);
-}
-
-signed int
-_divsuchar (signed char x, unsigned char y)
+_divschar (signed char x, signed char y) __SDCC_NONBANKED
 {
   return ((int)x / (int)y);
 }

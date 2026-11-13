@@ -8,7 +8,7 @@ abs_top_builddir = @abs_top_builddir@
 include $(srcdir)/../common_files.mk
 
 # user configuration
-VPATH  		= $(std_lib_dirs)
+VPATH  		= $(srcdir):$(std_lib_dirs)
 AS		= $(top_builddir)/bin/sdas6808
 EXTRA_CFLAGS	= --max-allocs-per-node 25000
 PORT_CRT	=
@@ -19,11 +19,6 @@ LIB 		= s08.lib
 PORT_SDCC = $(COMMON_SDCC) \
   $(COMMON_SDCC_LL) \
   $(COMMON_SDCC_LL_SHIFT) \
-  _mulint \
-  _divsint \
-  _divuint \
-  _modsint \
-  _moduint \
   _ret \
   _startup
 

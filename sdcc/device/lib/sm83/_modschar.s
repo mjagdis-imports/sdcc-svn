@@ -1,7 +1,9 @@
 ;--------------------------------------------------------------------------
-;  modsigned.s
+;  __modschar.s
 ;
-;  Copyright (C) 2009-2021, Philipp Klaus Krause
+;  Copyright (C) 2000, Michael Hope
+;  Copyright (C) 2021, Sebastian 'basxto' Riedel (sdcc@basxto.de)
+;  Copyright (c) 2021, Philipp Klaus Krause
 ;
 ;  This library is free software; you can redistribute it and/or modify it
 ;  under the terms of the GNU General Public License as published by the
@@ -13,7 +15,7 @@
 ;  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 ;  GNU General Public License for more details.
 ;
-;  You should have received a copy of the GNU General Public License
+;  You should have received a copy of the GNU General Public License 
 ;  along with this library; see the file COPYING. If not, write to the
 ;  Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
 ;   MA 02110-1301, USA.
@@ -26,24 +28,20 @@
 ;   might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-	.module modsigned
-	.include "config.inc"
+	.module __modschar
+	.optsdcc -msm83 sdcccall(1)
 
-.area   _CODE
-
+        ;; Originally from GBDK by Pascal Felber.
 .globl	__modschar
-.globl	__modsint
+
+        .area   _CODE
 
 __modschar:
-	ld	e, l
-	ld	l, a
+        ld      c, a
 
-	call    __div8
+	call	.divmods8
 
-	jp	__get_remainder
+	ld	c, e
+	ld	b, d
 
-__modsint:
-	call    __div16
-
-	jp	__get_remainder
-
+	ret

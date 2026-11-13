@@ -1,7 +1,9 @@
 ;--------------------------------------------------------------------------
-;  divmixed.s
+;  __divuchar.s
 ;
-;  Copyright (C) 2010-2021, Philipp Klaus Krause
+;  Copyright (C) 2000, Michael Hope
+;  Copyright (C) 2021, Sebastian 'basxto' Riedel (sdcc@basxto.de)
+;  Copyright (c) 2021, Philipp Klaus Krause
 ;
 ;  This library is free software; you can redistribute it and/or modify it
 ;  under the terms of the GNU General Public License as published by the
@@ -26,26 +28,19 @@
 ;   might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-.globl	__divsuchar
-.globl	__divuschar
+	.module __divuchar
+	.optsdcc -msm83 sdcccall(1)
 
-__divuschar:
-	ld	e, l
-	ld	l, a
-	ld	h, #0
+        ;; Originally from GBDK by Pascal Felber.
+.globl	__divuchar
 
-	jp	__div_signexte
+        .area   _CODE
 
-__divsuchar:
-	; Zero-extend
-	ld	e, l
-	ld	d, #0
+.globl	__divuchar
 
-	; Sign-extend
-	ld	l, a
-	rlca
-	sbc	a, a
-	ld	h, a
+__divuchar:
+        ld      c, a
 
-	jp	__div16
+	call	.divmodu8
 
+	ret

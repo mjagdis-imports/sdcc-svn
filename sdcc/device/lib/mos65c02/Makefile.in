@@ -8,7 +8,7 @@ abs_top_builddir = @abs_top_builddir@
 include $(srcdir)/../common_files.mk
 
 # user configuration
-VPATH  		= $(srcdir)/../mos-common:$(std_lib_dirs)
+VPATH  		= $(srcdir):$(srcdir)/../mos-common:$(std_lib_dirs)
 AS 		= $(top_builddir)/bin/sdas6500
 EXTRA_CFLAGS 	= --max-allocs-per-node 25000 --opt-code-speed
 PORT_CRT	= crt0.rel
@@ -18,15 +18,6 @@ LIB		= mos65c02.lib
 
 PORT_SDCC = $(COMMON_SDCC) \
   $(COMMON_SDCC_LL) \
-  _divschar \
-  _divsint \
-  _divuchar \
-  _divuint \
-  _modschar \
-  _modsint \
-  _moduchar \
-  _moduint \
-  _mulint \
   _mulschar \
   _muluchar \
   __sdcc_regs \

@@ -42,6 +42,17 @@ COMMON_LIBC_STRUCT_RET = \
   imaxdiv
 
 COMMON_SDCC = \
+  _divmixchar \
+  _divschar \
+  _divuchar \
+  _modmixchar \
+  _modschar \
+  _moduchar \
+  _divsint \
+  _divuint \
+  _modsint \
+  _moduint \
+  _mulint \
   _divslong \
   _divulong \
   _modslong \

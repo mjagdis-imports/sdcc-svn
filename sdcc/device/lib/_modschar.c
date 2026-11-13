@@ -27,21 +27,24 @@
    might be covered by the GNU General Public License.
 -------------------------------------------------------------------------*/
 
+#include <sdcc-lib.h>
+
 signed int
-_modschar (signed char x, signed char y)
+_modschar (signed char x, signed char y) __SDCC_NONBANKED
+{
+  return ((int)x % (int)y);
+}
+
+/*
+signed int
+_moduschar (unsigned char x, signed char y) __SDCC_NONBANKED
 {
   return ((int)x % (int)y);
 }
 
 signed int
-_moduschar (unsigned char x, signed char y)
+_modsuchar (signed char x, unsigned char y) __SDCC_NONBANKED
 {
   return ((int)x % (int)y);
 }
-
-signed int
-_modsuchar (signed char x, unsigned char y)
-{
-  return ((int)x % (int)y);
-}
-
+*/

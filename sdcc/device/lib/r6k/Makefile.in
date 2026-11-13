@@ -8,7 +8,7 @@ abs_top_builddir = @abs_top_builddir@
 include $(srcdir)/../common_files.mk
 
 # user configuration
-VPATH		= $(srcdir)/../rabbit-common:$(std_lib_dirs)
+VPATH		= $(srcdir):$(srcdir)/../rabbit-common:$(std_lib_dirs)
 AS		= $(top_builddir)/bin/sdasrab
 EXTRA_CFLAGS 	= --max-allocs-per-node 25000
 PORT_CRT	= crt0.rel
@@ -19,12 +19,6 @@ LIB		= r6k.lib
 PORT_SDCC = $(COMMON_SDCC) \
   $(COMMON_SDCC_LL) \
   crtenter \
-  divmixed \
-  divsigned \
-  divunsigned \
-  modmixed \
-  modsigned \
-  modunsigned \
   mulchar \
   __sdcc_call_hl \
   __sdcc_call_iy \

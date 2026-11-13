@@ -1,7 +1,7 @@
 ;--------------------------------------------------------------------------
-;  divmixed.s
+;  moduint.s
 ;
-;  Copyright (C) 2010-2021, Philipp Klaus Krause
+;  Copyright (C) 2009-2021, Philipp Klaus Krause
 ;
 ;  This library is free software; you can redistribute it and/or modify it
 ;  under the terms of the GNU General Public License as published by the
@@ -13,7 +13,7 @@
 ;  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 ;  GNU General Public License for more details.
 ;
-;  You should have received a copy of the GNU General Public License
+;  You should have received a copy of the GNU General Public License 
 ;  along with this library; see the file COPYING. If not, write to the
 ;  Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
 ;   MA 02110-1301, USA.
@@ -26,27 +26,20 @@
 ;   might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-	.module divmixed
+	.module __moduint
 	.include "config.inc"
 
-.globl	__divsuchar
-.globl	__divuschar
+.area   _CODE
 
-__divuschar:
-	ld	e, l
-	ld	l, a
-	ld	h, #0
+.globl	__moduint
 
-	jp	__div_signexte
+__moduint:
+	pop     iy
+	pop     de
 
-__divsuchar:
-	ld	e, l
-	ld	d, #0
-	ld	l, a
+	call    __divu16
 
-	rlca		; Sign extend
-	sbc	a, a
-	ld	h, a
+	ex	de, hl
 
-	jp	__div16
+	jp	(iy)
 

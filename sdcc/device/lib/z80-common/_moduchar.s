@@ -1,7 +1,7 @@
 ;--------------------------------------------------------------------------
-;  modmixed.s
+;  moduchar.s
 ;
-;  Copyright (C) 2010-2021, Philipp Klaus Krause
+;  Copyright (C) 2009-2010, Philipp Klaus Krause
 ;
 ;  This library is free software; you can redistribute it and/or modify it
 ;  under the terms of the GNU General Public License as published by the
@@ -26,31 +26,18 @@
 ;   might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-	.module modmixed
+	.module __moduchar
 	.include "config.inc"
 
-.globl	__modsuchar
-.globl	__moduschar
+.area   _CODE
 
-__moduschar:
+.globl	__moduchar
+
+__moduchar:
 	ld	e, l
 	ld	l, a
-	ld	h, #0
 
-	call    __div_signexte
-
-	jp	__get_remainder
-
-__modsuchar:
-	ld	e, l
-	ld	d, #0
-	ld	l, a
-
-	rlca		; Sign extend
-	sbc	a, a
-	ld	h, a
-
-	call	__div16
-
-	jp	__get_remainder
+	call    __divu8
+	ex	de, hl
+	ret
 

@@ -1,7 +1,7 @@
 ;--------------------------------------------------------------------------
-;  modunsigned.s
+;  __modmixchar.s
 ;
-;  Copyright (C) 2009-2021, Philipp Klaus Krause
+;  Copyright (C) 2010-2021, Philipp Klaus Krause
 ;
 ;  This library is free software; you can redistribute it and/or modify it
 ;  under the terms of the GNU General Public License as published by the
@@ -13,7 +13,7 @@
 ;  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 ;  GNU General Public License for more details.
 ;
-;  You should have received a copy of the GNU General Public License 
+;  You should have received a copy of the GNU General Public License
 ;  along with this library; see the file COPYING. If not, write to the
 ;  Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
 ;   MA 02110-1301, USA.
@@ -26,28 +26,31 @@
 ;   might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-.area   _CODE
+	.module modmixchar
+	.include "config.inc"
 
-.globl	__moduchar
-.globl	__moduint
+.globl	__modsuchar
+.globl	__moduschar
 
-__moduchar:
+__moduschar:
 	ld	e, l
 	ld	l, a
+	ld	h, #0
 
-	call    __divu8
+	call    __div_signexte
 
-	ex	de, hl
+	jp	__get_remainder
 
-	ret
+__modsuchar:
+	ld	e, l
+	ld	d, #0
+	ld	l, a
 
-__moduint:
-	pop     iy
-	pop     de
+	rlca		; Sign extend
+	sbc	a, a
+	ld	h, a
 
-	call    __divu16
+	call	__div16
 
-	ex	de, hl
-
-	jp	(iy)
+	jp	__get_remainder
 

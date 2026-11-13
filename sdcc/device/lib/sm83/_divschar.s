@@ -1,7 +1,9 @@
 ;--------------------------------------------------------------------------
-;  modunsigned.s
+;  __divschar.s
 ;
-;  Copyright (C) 2009-2010, Philipp Klaus Krause
+;  Copyright (C) 2000, Michael Hope
+;  Copyright (C) 2021, Sebastian 'basxto' Riedel (sdcc@basxto.de)
+;  Copyright (c) 2021, Philipp Klaus Krause
 ;
 ;  This library is free software; you can redistribute it and/or modify it
 ;  under the terms of the GNU General Public License as published by the
@@ -13,7 +15,7 @@
 ;  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 ;  GNU General Public License for more details.
 ;
-;  You should have received a copy of the GNU General Public License
+;  You should have received a copy of the GNU General Public License 
 ;  along with this library; see the file COPYING. If not, write to the
 ;  Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
 ;   MA 02110-1301, USA.
@@ -26,24 +28,18 @@
 ;   might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-	.module modunsigned
-	.include "config.inc"
+	.module __divschar
+	.optsdcc -msm83 sdcccall(1)
 
-.area   _CODE
+        ;; Originally from GBDK by Pascal Felber.
+.globl	__divschar
 
-.globl	__moduchar
-.globl	__moduint
+        .area   _CODE
 
-__moduchar:
-	ld	e, l
-	ld	l, a
 
-	call    __divu8
-	ex	de, hl
+__divschar:
+	ld	c, a
+
+	call	.divmods8
+
 	ret
-
-__moduint:
-	call    __divu16
-	ex	de, hl
-	ret
-
