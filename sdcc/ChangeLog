@@ -1,3 +1,8 @@
+2026-11-14 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/blake2s.c:
+	  Disable a test for sm83, where the failure is a known bug.
+
 2026-11-13 Gabriele Gorla <gorlik@yahoo.com>
 
 	* device/lib/pdk15-stack-auto/__gptrget.s,

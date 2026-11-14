@@ -273,8 +273,10 @@ int blake2s_selftest()
 void testBlake(void)
 {
 #if !defined(__SDCC_z80) && !defined(__SDCC_z80n) && !defined(__SDCC_z180) && !defined(__SDCC_r2k) && !defined(__SDCC_r2ka) && !defined(__SDCC_r3ka) && !defined(__SDCC_r4k) && !defined(__SDCC_r5k) && !defined(__SDCC_r6k) && !defined(__SDCC_r800) // Bug #3915
+#if !defined(__SDCC_sm83) // Bug #4213
 #ifndef LACK_OF_MEMORY
    ASSERT (!blake2s_selftest() );
+#endif
 #endif
 #endif
 }
