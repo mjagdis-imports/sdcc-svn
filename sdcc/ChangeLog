@@ -1,3 +1,12 @@
+2026-11-13 Gabriele Gorla <gorlik@yahoo.com>
+
+	* device/lib/pdk15-stack-auto/__gptrget.s,
+	  device/lib/pdk15-stack-auto/__gptrget2.s,
+	  device/lib/pdk15-stack-auto/heap.s,
+	  device/lib/pdk15-stack-auto/setjmp.s,
+	  device/lib/pdk15-stack-auto/Makefile.in:
+	  Fix pdk15-stack-auto regression failures.
+
 2026-11-12 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
 	* src/SDCCgenconstprop.cc (recomputeValinfos): Preserve value information
