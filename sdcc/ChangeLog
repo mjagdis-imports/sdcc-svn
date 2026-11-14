@@ -6,6 +6,8 @@
 	  device/lib/pdk15-stack-auto/setjmp.s,
 	  device/lib/pdk15-stack-auto/Makefile.in:
 	  Fix pdk15-stack-auto regression failures.
+	* src/mcs51/main.c:
+	  Apply patch from bug #4252
 
 2026-11-12 Christopher Bazley <chris.bazley.wg14@gmail.com>
 

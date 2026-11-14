@@ -970,10 +970,10 @@ getRegsWritten (lineNode *line)
 
 static const char * models[] =
 {
-  "small",  "small-xstack",  "small-stack-auto",  "small-xstack-auto",
-  "medium", "medium-xstack", "medium-stack-auto", "medium-xstack-auto",
-  "large",  "large-xstack",  "large-stack-auto",  "large-xstack-auto",
-  "huge",   "huge-xstack",   "huge-stack-auto",   "huge-xstack-auto",
+  "mcs51-small",  "mcs51-small-xstack",  "mcs51-small-stack-auto",  "mcs51-small-xstack-auto",
+  "mcs51-medium", "mcs51-medium-xstack", "mcs51-medium-stack-auto", "mcs51-medium-xstack-auto",
+  "mcs51-large",  "mcs51-large-xstack",  "mcs51-large-stack-auto",  "mcs51-large-xstack-auto",
+  "mcs51-huge",   "mcs51-huge-xstack",   "mcs51-huge-stack-auto",   "mcs51-huge-xstack-auto",
 };
 
 static const char *
