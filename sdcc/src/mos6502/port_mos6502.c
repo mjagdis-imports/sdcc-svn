@@ -23,16 +23,10 @@
   -------------------------------------------------------------------------*/
 
 #include "common.h"
-#include "m6502.h"
+#include "subport.h"
 #include "peep.h"
 
-static const char *const _crt[]  = { "crt0.rel", NULL };
 static const char *const _libs[] = { "mos6502",  NULL };
-
-static char _defaultRules[] =
-  {
-#include "peeph.rul"
-  };
 
 static void
 _init (void)
@@ -81,16 +75,16 @@ PORT mos6502_port =
       NULL                      /* If non-null will be used to execute the assembler. */
     },
     {                           /* Linker */
-      m6502_linkCmd,            /** Command to run (eg link-z80) */
-      NULL,                     /** Alternate macro based form. */
-      NULL,                     /** If non-null will be used to execute the link. */
+      m6502_linkCmd,            /* Command to run (eg link-z80) */
+      NULL,                     /* Alternate macro based form. */
+      NULL,                     /* If non-null will be used to execute the link. */
       ".rel",                   /* object file extension */
       1,                        /* need linker script */
-      _crt,                     /* crt */
+      m6502_crt,                /* crt */
       _libs                     /* libs */
     },
     {                           /* Peephole optimizer */
-      _defaultRules,
+      m6502_peepRules,
       m6502_getInstructionSize,
       NULL,
       NULL,
@@ -150,7 +144,10 @@ PORT mos6502_port =
       false,                    /* doesn't matter, as port has no __sfr anyway */
       1                         /* No fancy alignments supported. */
     },
-    { NULL, NULL },             /* No extra areas */
+    {                           /* No extra areas */
+      NULL, 
+      NULL 
+    },
     0,                          /* default ABI revision */
     {                           /* stack information */
       -1,                       /* stack grows down */

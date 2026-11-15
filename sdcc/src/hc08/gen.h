@@ -45,9 +45,8 @@ enum
     ACCUSE_HX
   };
 
-/* type asmop : a homogenised type for 
-   all the different spaces an operand can be
-   in */
+/* asmop: a homogenised type for all the different
+   spaces an operand can be in */
 typedef struct asmop
   {
     AOP_TYPE type;		
@@ -63,11 +62,10 @@ typedef struct asmop
       {
 	value *aop_lit;		/* if literal */
 	reg_info *aop_reg[4];	/* array of registers */
-	char *aop_dir;		/* if direct  */
+        char *aop_dir;		/* if direct/ext  */
         char *aop_immd;         /* if immediate */
 	int aop_stk;		/* stack offset when AOP_STK */
-      }
-    aopu;
+      } aopu;
     struct valinfo valinfo;
   }
 asmop;

@@ -20,7 +20,7 @@
 #include "common.h"
 
 #include "dbuf_string.h"
-#include "m6502.h"
+//#include "subport.h"
 
 enum
 {

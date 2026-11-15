@@ -25,7 +25,7 @@
   Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
   -------------------------------------------------------------------------*/
 
-#include "m6502.h"
+#include "subport.h"
 #include "ralloc.h"
 #include "gen.h"
 #include "dbuf_string.h"
@@ -4500,7 +4500,6 @@ genPointerPush (iCode *ic)
   m6502_freeAsmop (left, NULL);
 }
 
-
 /**************************************************************************
  * genSend - gen code for SEND
  *************************************************************************/
@@ -4578,9 +4577,9 @@ genSend (set *sendSet)
     }
 }
 
-/*-----------------------------------------------------------------*/
-/* pushbigreturn - emit code to push hidden pointer for struct return */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * pushbigreturn - emit code to push hidden pointer for struct return
+ *************************************************************************/
 static void
 pushbigreturn (operand *result)
 {
@@ -5829,7 +5828,6 @@ genCmp (iCode * ic, iCode * ifx)
   m6502_freeAsmop (result, NULL);
 }
 
-
 /**************************************************************************
  * genCmpEQorNE - equal or not equal comparison
  *************************************************************************/
@@ -6485,7 +6483,8 @@ static void bitAConst(int val)
 /**************************************************************************
  * genUnpackBits - generates code for unpacking bits
  *************************************************************************/
-static void genUnpackBits (operand * result, operand * left, operand * right, iCode * ifx)
+static void
+genUnpackBits (operand * result, operand * left, operand * right, iCode * ifx)
 {
   int offset = 0;               /* result byte offset */
   int rsize;                    /* result size */
@@ -6643,7 +6642,8 @@ static void genUnpackBits (operand * result, operand * left, operand * right, iC
 /**************************************************************************
  * genUnpackBitsImmed - generates code for unpacking bits
  *************************************************************************/
-static void genUnpackBitsImmed (operand * left, operand *right, operand * result, iCode * ic, iCode * ifx)
+static void
+genUnpackBitsImmed (operand * left, operand *right, operand * result, iCode * ic, iCode * ifx)
 {
   int size;
   int offset = 0;               /* result byte offset */
@@ -6850,7 +6850,8 @@ static void genUnpackBitsImmed (operand * left, operand *right, operand * result
 /**************************************************************************
  * genDataPointerGet - generates code when ptr offset is known
  *************************************************************************/
-static void genDataPointerGet (operand * left, operand * right, operand * result, iCode * ic, iCode * ifx)
+static void
+genDataPointerGet (operand * left, operand * right, operand * result, iCode * ic, iCode * ifx)
 {
   int size;
   int litOffset = 0;
@@ -6902,7 +6903,8 @@ static void genDataPointerGet (operand * left, operand * right, operand * result
 /**************************************************************************
  * genPointerGet - generate code for pointer get
  *************************************************************************/
-static void genPointerGet (iCode * ic, iCode * ifx)
+static void
+genPointerGet (iCode * ic, iCode * ifx)
 {
   operand *right  = IC_RIGHT (ic);
   operand *left = IC_LEFT (ic);
@@ -7296,7 +7298,8 @@ static void genPointerGet (iCode * ic, iCode * ifx)
 /**************************************************************************
  * genPackBits - generates code for packed bit storage
  *************************************************************************/
-static void genPackBits (operand * result, operand * left, sym_link * etype, operand * right)
+static void
+genPackBits (operand * result, operand * left, sym_link * etype, operand * right)
 {
   int offset = 0;               /* source byte offset */
   int rlen = 0;                 /* remaining bitfield length */
@@ -7474,7 +7477,8 @@ static void genPackBits (operand * result, operand * left, sym_link * etype, ope
 /**************************************************************************
  * genPackBitsImmed - generates code for packed bit storage
  *************************************************************************/
-static void genPackBitsImmed (operand * result, operand * left, sym_link * etype, operand * right, iCode * ic)
+static void
+genPackBitsImmed (operand * result, operand * left, sym_link * etype, operand * right, iCode * ic)
 {
   asmop *derefaop;
   int size;
@@ -7635,7 +7639,8 @@ static void genPackBitsImmed (operand * result, operand * left, sym_link * etype
 /**************************************************************************
  * genDataPointerSet - remat pointer to data space
  *************************************************************************/
-static void genDataPointerSet (operand * left, operand * right, operand * result, iCode * ic)
+static void
+genDataPointerSet (operand * left, operand * right, operand * result, iCode * ic)
 {
   int size, offset;
   asmop *derefaop;
@@ -8043,7 +8048,8 @@ genPointerSet (iCode * ic)
 /**************************************************************************
  * genIfx - generate code for Ifx statement
  *************************************************************************/
-static void genIfx (iCode * ic, iCode * popIc)
+static void
+genIfx (iCode * ic, iCode * popIc)
 {
   operand *cond = IC_COND (ic);
 
@@ -8091,7 +8097,8 @@ static void genIfx (iCode * ic, iCode * popIc)
 /**************************************************************************
  * genAddrOf - generates code for address of
  *************************************************************************/
-static void genAddrOf (iCode * ic)
+static void
+genAddrOf (iCode * ic)
 {
   operand *result = IC_RESULT (ic);
   symbol *sym = OP_SYMBOL (IC_LEFT (ic));
@@ -8185,7 +8192,8 @@ static void genAddrOf (iCode * ic)
  * genAssignLit - Try to generate code for literal assignment.
  *                result and right should already be asmOped
  *************************************************************************/
-static bool genAssignLit (operand * result, operand * right)
+static bool
+genAssignLit (operand * result, operand * right)
 {
   char assigned[8];
   unsigned char value[sizeof(assigned)];
@@ -8281,7 +8289,8 @@ genAssign (iCode * ic)
 /**************************************************************************
  * genJumpTab - generates code for jump table
  *************************************************************************/
-static void genJumpTab (iCode * ic)
+static void
+genJumpTab (iCode * ic)
 {
   symbol *jtab;
   symbol *jtablo = m6502_safeNewiTempLabel (NULL);
@@ -8349,7 +8358,8 @@ static void genJumpTab (iCode * ic)
 /**************************************************************************
  * genCast - generate code for casting
  *************************************************************************/
-static void genCast (iCode * ic)
+static void
+genCast (iCode * ic)
 {
   operand *right  = IC_RIGHT (ic);
   operand *result = IC_RESULT (ic);

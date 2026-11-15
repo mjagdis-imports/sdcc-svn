@@ -179,7 +179,7 @@ typedef struct
   /** Default peephole rules */
   struct
   {
-    char *default_rules;
+    const char *default_rules;
     int (*getSize) (lineNode * line);
     bitVect *(*getRegsRead) (lineNode * line);
     bitVect *(*getRegsWritten) (lineNode * line);

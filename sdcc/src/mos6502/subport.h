@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-  m6502.h - header for SDCC mos6502 port
+  subport.h - subport header for SDCC mos6502 port
 
   Copyright (C) 2022-2025, Gabriele Gorla
 
@@ -39,6 +39,8 @@ MOS6502_OPTS;
 extern const char *m6502_linkCmd[];
 extern const char *m6502_asmCmd[];
 extern const char *const m6502_crt[];
+//extern const char *const m6502_libs[];
+extern const char m6502_peepRules[];
 extern const char m6502_builtins[];
 extern char *m6502_keywords[];
 extern OPTION m6502_options[];

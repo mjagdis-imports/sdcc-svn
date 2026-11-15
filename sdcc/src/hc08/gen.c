@@ -38,7 +38,7 @@
 #include <ctype.h>
 
 #include "common.h"
-#include "hc08.h"
+#include "subport.h"
 #include "ralloc.h"
 #include "gen.h"
 #include "dbuf_string.h"
@@ -1383,9 +1383,10 @@ loadRegFromImm (reg_info * reg, char * c)
   hc08_useReg (reg);
 }
 
-/*--------------------------------------------------------------------------*/
-/* storeConstToAop- Store constant c to logical offset loffset of asmop aop.*/
-/*--------------------------------------------------------------------------*/
+/**************************************************************************
+ * m6502_storeConstToAop - Store constant c to logical offset loffset of
+ *                   asmop aop.
+ *************************************************************************/
 static void
 storeConstToAop (int c, asmop * aop, int loffset)
 {
@@ -1519,14 +1520,13 @@ storeImmToAop (char *c, asmop * aop, int loffset)
     }
 }
 
-
-/*--------------------------------------------------------------------------*/
-/* storeRegSignToUpperAop - If isSigned is true, the sign bit of register   */
-/*                          reg is extended to fill logical offsets loffset */
-/*                          and above of asmop aop. Otherwise, logical      */
-/*                          offsets loffset and above of asmop aop are      */
-/*                          zeroed. reg must be an 8-bit register.          */
-/*--------------------------------------------------------------------------*/
+/**************************************************************************
+ * storeRegSignToUpperAop - If isSigned is true, the sign bit of register
+ *                          reg is extended to fill logical offsets loffset
+ *                          and above of asmop aop. Otherwise, logical
+ *                          offsets loffset and above of asmop aop are
+ *                          zeroed. reg must be an 8-bit register.
+ *************************************************************************/
 static void
 storeRegSignToUpperAop (reg_info * reg, asmop * aop, int loffset, bool isSigned)
 {
@@ -1557,11 +1557,11 @@ storeRegSignToUpperAop (reg_info * reg, asmop * aop, int loffset, bool isSigned)
     }
 }
 
-/*--------------------------------------------------------------------------*/
-/* storeRegToFullAop - Store register reg to asmop aop with appropriate     */
-/*                     padding and/or truncation as needed. If isSigned is  */
-/*                     true, sign extension will take place in the padding. */
-/*--------------------------------------------------------------------------*/
+/**************************************************************************
+ * m6502_storeRegToFullAop - Store register reg to asmop aop with appropriate
+ *                     padding and/or truncation as needed. If isSigned is
+ *                     true, sign extension will take place in the padding.
+ *************************************************************************/
 static void
 storeRegToFullAop (reg_info *reg, asmop *aop, bool isSigned)
 {
@@ -1607,10 +1607,10 @@ storeRegToFullAop (reg_info *reg, asmop *aop, bool isSigned)
     }
 }
 
-/*--------------------------------------------------------------------------*/
-/* transferAopAop - Transfer the value at logical offset srcofs of asmop    */
-/*                  srcaop to logical offset dstofs of asmop dstaop.        */
-/*--------------------------------------------------------------------------*/
+/**************************************************************************
+ * m6502_transferAopAop - Transfer the value at logical offset srcofs of asmop
+ *                  srcaop to logical offset dstofs of asmop dstaop.
+ *************************************************************************/
 static void
 transferAopAop (asmop *srcaop, int srcofs, asmop *dstaop, int dstofs)
 {
@@ -1712,11 +1712,11 @@ accopWithMisc (char *accop, char *param)
     hc08_dirtyReg (hc08_reg_a, false);
 }
 
-/*--------------------------------------------------------------------------*/
-/* accopWithAop - Emit accumulator modifying instruction accop with the     */
-/*                byte at logical offset loffset of asmop aop.              */
-/*                Supports: adc, add, and, bit, cmp, eor, ora, sbc, sub     */
-/*--------------------------------------------------------------------------*/
+/**************************************************************************
+ * m6502_accopWithAop - Emit accumulator modifying instruction accop with
+ *                the byte at logical offset loffset of asmop aop.
+ *                Supports: adc, and, cmp, eor, ora, sbc
+ *************************************************************************/
 static void
 accopWithAop (char *accop, asmop *aop, int loffset)
 {
@@ -1756,12 +1756,12 @@ accopWithAop (char *accop, asmop *aop, int loffset)
 }
 
 
-/*--------------------------------------------------------------------------*/
-/* rmwWithReg - Emit read/modify/write instruction rmwop with register reg. */
-/*              byte at logical offset loffset of asmop aop. Register reg   */
-/*              must be 8-bit.                                              */
-/*              Supports: com, dec, inc, lsl, lsr, neg, rol, ror            */
-/*--------------------------------------------------------------------------*/
+/**************************************************************************
+ * m6502_rmwWithReg - Emit read/modify/write instruction rmwop with register reg.
+ *              byte at logical offset loffset of asmop aop. Register reg
+ *              must be 8-bit.
+ *              Supports: com, dec, inc, lsl, lsr, neg, rol, ror
+ *************************************************************************/
 static void
 rmwWithReg (char *rmwop, reg_info * reg)
 {
@@ -1792,11 +1792,11 @@ rmwWithReg (char *rmwop, reg_info * reg)
     }
 }
 
-/*--------------------------------------------------------------------------*/
-/* rmwWithAop - Emit read/modify/write instruction rmwop with the byte at   */
-/*                logical offset loffset of asmop aop.                      */
-/*                Supports: com, dec, inc, lsl, lsr, neg, rol, ror, tst     */
-/*--------------------------------------------------------------------------*/
+/**************************************************************************
+ * m6502_rmwWithAop - Emit read/modify/write instruction rmwop with the byte at
+ *                logical offset loffset of asmop aop.
+ *                Supports: com, dec, inc, lsl, lsr, neg, rol, ror, tst
+ *************************************************************************/
 static void
 rmwWithAop (char *rmwop, asmop * aop, int loffset)
 {
@@ -2065,10 +2065,9 @@ storeRegIndexed (reg_info * reg, int offset, char * rematOfs)
     }
 }
 
-
-/*-----------------------------------------------------------------*/
-/* newAsmop - creates a new asmOp                                  */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * newAsmop - creates a new asmOp
+ *************************************************************************/
 static asmop *
 newAsmop (short type)
 {
@@ -2081,10 +2080,9 @@ newAsmop (short type)
   return aop;
 }
 
-
-/*-----------------------------------------------------------------*/
-/* operandConflictsWithHX - true if operand in h and/or x register */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * operandConflictsWithXY - true if operand in y and/or x register
+ *************************************************************************/
 static bool
 operandConflictsWithHX (operand *op)
 {
@@ -2105,9 +2103,9 @@ operandConflictsWithHX (operand *op)
   return false;
 }
 
-/*-----------------------------------------------------------------*/
-/* operandOnStack - returns True if operand is on the stack        */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * operandOnStack - returns True if operand is on the stack
+ *************************************************************************/
 static bool
 operandOnStack(operand *op)
 {
@@ -2115,9 +2113,11 @@ operandOnStack(operand *op)
 
   if (!op || !IS_SYMOP (op))
     return false;
+
   sym = OP_SYMBOL (op);
   if (!sym->isspilt && sym->onStack)
     return true;
+
   if (sym->isspilt)
     {
       sym = sym->usl.spillLoc;
@@ -2127,10 +2127,10 @@ operandOnStack(operand *op)
   return false;
 }
 
-/*-----------------------------------------------------------------*/
-/* tsxUseful - returns True if tsx could help at least two         */
-/*             anticipated stack references                        */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * tsxUseful - returns True if tsx could help at least two
+ *             anticipated stack references
+ *************************************************************************/
 static bool
 tsxUseful(iCode *ic)
 {
@@ -2186,10 +2186,9 @@ tsxUseful(iCode *ic)
   return uses>=2;
 }
 
-
-/*-----------------------------------------------------------------*/
-/* aopForSym - for a true symbol                                   */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * aopForSym - for a true symbol
+ *************************************************************************/
 static asmop *
 aopForSym (iCode * ic, symbol * sym, bool result)
 {
@@ -2277,9 +2276,9 @@ aopForSym (iCode * ic, symbol * sym, bool result)
   return aop;
 }
 
-/*-----------------------------------------------------------------*/
-/* aopForRemat - rematerializes an object                          */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * aopForRemat - rematerializes an object
+ *************************************************************************/
 static asmop *
 aopForRemat (symbol * sym)
 {
@@ -2341,9 +2340,9 @@ aopForRemat (symbol * sym)
   return aop;
 }
 
-/*-----------------------------------------------------------------*/
-/* regsInCommon - two operands have some registers in common       */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * regsInCommon - two operands have some registers in common
+ *************************************************************************/
 static bool
 regsInCommon (operand * op1, operand * op2)
 {
@@ -2379,9 +2378,9 @@ regsInCommon (operand * op1, operand * op2)
   return false;
 }
 
-/*-----------------------------------------------------------------*/
-/* operandsEqu - equivalent                                        */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * operandsEqu - equivalent
+ *************************************************************************/
 static bool
 operandsEqu (operand *op1, operand *op2)
 {
@@ -2417,9 +2416,9 @@ operandsEqu (operand *op1, operand *op2)
   return false;
 }
 
-/*-----------------------------------------------------------------*/
-/* sameRegs - two asmops have the same registers                   */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * m6502_sameRegs - two asmops have the same registers
+ *************************************************************************/
 static bool
 sameRegs (const asmop *aop1, const asmop *aop2)
 {
@@ -2638,9 +2637,9 @@ aopOp (operand *op, iCode * ic, bool result)
     aop->valinfo = getOperandValinfo (ic, op, false);
 }
 
-/*-----------------------------------------------------------------*/
-/* freeAsmop - free up the asmop given to an operand               */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * m6502_freeAsmop - free up the asmop given to an operand
+ *************************************************************************/
 static void
 freeAsmop (operand * op, asmop * aaop, iCode * ic, bool pop)
 {
@@ -2692,10 +2691,10 @@ dealloc:
 }
 
 
-/*-----------------------------------------------------------------*/
-/* aopDerefAop - treating the aop parameter as a pointer, return   */
-/*               an asmop for the object it references             */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * aopDerefAop - treating the aop parameter as a pointer, return an asmop
+ *               for the object it references
+ *************************************************************************/
 asmop *
 aopDerefAop (asmop * aop, int offset)
 {
@@ -2849,9 +2848,9 @@ aopOpExtToIdx(asmop * result, asmop *left, asmop *right)
 }
 
 
-/*-----------------------------------------------------------------*/
-/* aopAdrStr - for referencing the address of the aop              */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * aopAdrStr - for referencing the address of the aop
+ *************************************************************************/
 /* loffset seems to have a weird meaning here. It seems to be nonzero in some places where one would expect an offset to be zero */
 static const char *
 aopAdrStr (asmop * aop, int loffset, bool bit16)
@@ -2966,11 +2965,11 @@ getDataSize (operand *op)
 }
 
 
-/*-----------------------------------------------------------------*/
-/* asmopToBool - Emit code to convert an asmop to a bool.          */
-/*               Result left in A (0=false, 1=true) if ResultInA,  */
-/*               otherwise result left in Z flag (1=false, 0=true) */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * asmopToBool - Emit code to convert an asmop to a boolean.
+ *               Result left in A (0=false, 1=true) if ResultInA,
+ *               otherwise result left in Z flag (1=false, 0=true)
+ *************************************************************************/
 static void
 asmopToBool (asmop *aop, bool resultInA)
 {
@@ -3199,10 +3198,10 @@ asmopToBool (asmop *aop, bool resultInA)
     }
 }
 
-/*-----------------------------------------------------------------*/
-/* genCopy - Copy the value from one operand to another            */
-/*           The caller is responsible for aopOp and freeAsmop     */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genCopy - Copy the value from one operand to another
+ *           The caller is responsible for m6502_aopOp and m6502_freeAsmop
+ *************************************************************************/
 static void
 genCopy (operand *result, operand *source)
 {
@@ -3375,9 +3374,9 @@ genCopy (operand *result, operand *source)
     }
 }
 
-/*-----------------------------------------------------------------*/
-/* genNot - generate code for ! operation                          */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genNot - generate code for ! operation
+ *************************************************************************/
 static void
 genNot (iCode * ic)
 {
@@ -3636,9 +3635,9 @@ release:
   freeAsmop (IC_LEFT (ic), NULL, ic, false);
 }
 
-/*-----------------------------------------------------------------*/
-/* saveRegisters - will look for a call and save the registers     */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * saveRegisters - will look for a call and save the registers
+ *************************************************************************/
 static void
 saveRegisters (iCode *lic)
 {
@@ -3673,9 +3672,9 @@ saveRegisters (iCode *lic)
     }
 }
 
-/*-----------------------------------------------------------------*/
-/* unsaveRegisters - pop the pushed registers                      */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * unsaveRegisters - pop the pushed registers
+ *************************************************************************/
 static void
 unsaveRegisters (iCode *ic)
 {
@@ -3739,9 +3738,9 @@ pushSide (operand *oper, int size, iCode *ic)
     hc08_freeReg (hc08_reg_x);
 }
 
-/*-----------------------------------------------------------------*/
-/* assignResultValue -                                             */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * assignResultValue
+ *************************************************************************/
 static void
 assignResultValue (operand * oper)
 {
@@ -3765,9 +3764,9 @@ assignResultValue (operand * oper)
     pullReg (hc08_reg_x);
 }
 
-/*-----------------------------------------------------------------*/
-/* genIpush - generate code for pushing this gets a little complex */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genIpush - generate code for pushing
+ *************************************************************************/
 static void
 genIpush (iCode * ic)
 {
@@ -3836,9 +3835,9 @@ release:
   freeAsmop (IC_LEFT (ic), NULL, ic, true);
 }
 
-/*-----------------------------------------------------------------*/
-/* genPointerPush - generate code for pushing                      */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genPointerPush - generate code for pushing
+ *************************************************************************/
 static void
 genPointerPush (iCode *ic)
 {
@@ -3891,9 +3890,9 @@ genIpop (iCode * ic)
   freeAsmop (IC_LEFT (ic), NULL, ic, true);
 }
 
-/*-----------------------------------------------------------------*/
-/* genSend - gen code for SEND                                     */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genSend - gen code for SEND
+ *************************************************************************/
 static void
 genSend (set *sendSet)
 {
@@ -3971,9 +3970,9 @@ genSend (set *sendSet)
     }
 }
 
-/*-----------------------------------------------------------------*/
-/* pushbigreturn - emit code to push hidden pointer for struct return */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * pushbigreturn - emit code to push hidden pointer for struct return
+ *************************************************************************/
 static void
 pushbigreturn (operand *result)
 {
@@ -4014,9 +4013,9 @@ pushbigreturn (operand *result)
   pushReg (hc08_reg_hx, true);
 }
 
-/*-----------------------------------------------------------------*/
-/* genCall - generates a call statement                            */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genCall - generates a call statement
+ *************************************************************************/
 static void
 genCall (iCode * ic)
 {
@@ -4195,9 +4194,9 @@ genPcall (iCode * ic)
     unsaveRegisters (ic);
 }
 
-/*-----------------------------------------------------------------*/
-/* resultRemat - result  is rematerializable                       */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * resultRemat - result  is rematerializable
+ *************************************************************************/
 static int
 resultRemat (iCode * ic)
 {
@@ -4216,9 +4215,9 @@ resultRemat (iCode * ic)
   return 0;
 }
 
-/*-----------------------------------------------------------------*/
-/* inExcludeList - return 1 if the string is in exclude Reg list   */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * inExcludeList - return 1 if the string is in exclude Reg list
+ *************************************************************************/
 static int
 regsCmp (void *p1, void *p2)
 {
@@ -4237,9 +4236,9 @@ inExcludeList (char *s)
   return isinSetWith (options.excludeRegsSet, s, regsCmp);
 }
 
-/*-----------------------------------------------------------------*/
-/* genFunction - generated code for function entry                 */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genFunction - generated code for function entry
+ *************************************************************************/
 static void
 genFunction (iCode * ic)
 {
@@ -4356,9 +4355,9 @@ genFunction (iCode * ic)
     }
 }
 
-/*-----------------------------------------------------------------*/
-/* genEndFunction - generates epilogue for functions               */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genEndFunction - generates epilogue for functions
+ *************************************************************************/
 static void
 genEndFunction (iCode * ic)
 {
@@ -4453,9 +4452,9 @@ genEndFunction (iCode * ic)
     }
 }
 
-/*-----------------------------------------------------------------*/
-/* genRet - generate code for return statement                     */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genRet - generate code for return statement
+ *************************************************************************/
 static void
 genRet (iCode * ic)
 {
@@ -5794,10 +5793,10 @@ exchangedCmp (int opcode)
   return EQ_OP;                 /* shouldn't happen, but need to return something */
 }
 
-/*------------------------------------------------------------------*/
-/* negatedCmp : returns the equivalent opcode for when a comparison */
-/*              if not true                                         */
-/*------------------------------------------------------------------*/
+/**************************************************************************
+ * negatedCmp : returns the equivalent opcode for when a comparison
+ *              if not true
+ *************************************************************************/
 static int
 negatedCmp (int opcode)
 {
@@ -5821,9 +5820,9 @@ negatedCmp (int opcode)
   return EQ_OP;                 /* shouldn't happen, but need to return something */
 }
 
-/*------------------------------------------------------------------*/
-/* nameCmp : helper function for human readable debug output        */
-/*------------------------------------------------------------------*/
+/**************************************************************************
+ * nameCmp : helper function for human readable debug output
+ *************************************************************************/
 static char *
 nameCmp (int opcode)
 {
@@ -5846,10 +5845,10 @@ nameCmp (int opcode)
     }
 }
 
-/*------------------------------------------------------------------*/
-/* branchInstCmp : returns the conditional branch instruction that  */
-/*                 will branch if the comparison is true            */
-/*------------------------------------------------------------------*/
+/**************************************************************************
+ * branchInstCmp : returns the conditional branch instruction that
+ *                 will branch if the comparison is true
+ *************************************************************************/
 static char *
 branchInstCmp (int opcode, int sign)
 {
@@ -5886,9 +5885,9 @@ branchInstCmp (int opcode, int sign)
 }
 
 
-/*------------------------------------------------------------------*/
-/* genCmp :- greater or less than (and maybe with equal) comparison */
-/*------------------------------------------------------------------*/
+/**************************************************************************
+ * genCmp :- greater or less than (and maybe with equal) comparison
+ *************************************************************************/
 static void
 genCmp (iCode * ic, iCode * ifx)
 {
@@ -6094,9 +6093,9 @@ genCmp (iCode * ic, iCode * ifx)
     }
 }
 
-/*-----------------------------------------------------------------*/
-/* genCmpEQorNE - equal or not equal comparison                    */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genCmpEQorNE - equal or not equal comparison
+ *************************************************************************/
 static void
 genCmpEQorNE (iCode *ic, iCode *ifx)
 {
@@ -7152,9 +7151,9 @@ expand_symbols (iCode * ic, const char *inlin)
   return dbuf_detach_c_str (&dbuf);
 }
 
-/*-----------------------------------------------------------------*/
-/* genInline - write the inline code out                           */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genInline - write the inline code out
+ *************************************************************************/
 static void
 hc08_genInline (iCode * ic)
 {
@@ -9083,9 +9082,9 @@ genMaskExtendSign (bool sign, int len)
   hc08_dirtyReg (hc08_reg_a, false);
 }
 
-/*-----------------------------------------------------------------*/
-/* genUnpackBits - generates code for unpacking bits               */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genUnpackBits - generates code for unpacking bits
+ *************************************************************************/
 static void
 genUnpackBits (operand * result, operand * left, operand * right, iCode * ifx)
 {
@@ -9216,9 +9215,9 @@ finish:
   pullOrFreeReg (hc08_reg_a, needpulla);
 }
 
-/*-----------------------------------------------------------------*/
-/* genUnpackBitsImmed - generates code for unpacking bits          */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genUnpackBitsImmed - generates code for unpacking bits
+ *************************************************************************/
 static void
 genUnpackBitsImmed (operand * left, operand *right, operand * result, iCode * ic, iCode * ifx)
 {
@@ -9424,10 +9423,9 @@ finish:
   pullOrFreeReg (hc08_reg_a, needpulla);
 }
 
-
-/*-----------------------------------------------------------------*/
-/* genDataPointerGet - generates code when ptr offset is known     */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genDataPointerGet - generates code when ptr offset is known
+ *************************************************************************/
 static void
 genDataPointerGet (operand * left, operand * right, operand * result, iCode * ic, iCode * ifx)
 {
@@ -9473,10 +9471,9 @@ genDataPointerGet (operand * left, operand * right, operand * result, iCode * ic
     }
 }
 
-
-/*-----------------------------------------------------------------*/
-/* genPointerGet - generate code for pointer get                   */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genPointerGet - generate code for pointer get
+ *************************************************************************/
 static void
 genPointerGet (iCode * ic, iCode * pi, iCode * ifx)
 {
@@ -9679,9 +9676,9 @@ release:
     }
 }
 
-/*-----------------------------------------------------------------*/
-/* genPackBits - generates code for packed bit storage             */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genPackBits - generates code for packed bit storage
+ *************************************************************************/
 static void
 genPackBits (operand * result, operand * left, sym_link * etype, operand * right)
 {
@@ -9842,9 +9839,9 @@ genPackBits (operand * result, operand * left, sym_link * etype, operand * right
   pullOrFreeReg (hc08_reg_a, needpulla);
 }
 
-/*-----------------------------------------------------------------*/
-/* genPackBitsImmed - generates code for packed bit storage        */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genPackBitsImmed - generates code for packed bit storage
+ *************************************************************************/
 static void
 genPackBitsImmed (operand * result, operand * left, sym_link * etype, operand * right, iCode * ic)
 {
@@ -10026,9 +10023,9 @@ release:
   freeAsmop (NULL, derefaop, ic, true);
 }
 
-/*-----------------------------------------------------------------*/
-/* genDataPointerSet - remat pointer to data space                 */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genDataPointerSet - remat pointer to data space
+ *************************************************************************/
 static void
 genDataPointerSet (operand * left, operand * right, operand * result, iCode * ic)
 {
@@ -10064,10 +10061,9 @@ genDataPointerSet (operand * left, operand * right, operand * result, iCode * ic
   freeAsmop (NULL, derefaop, ic, true);
 }
 
-
-/*-----------------------------------------------------------------*/
-/* genPointerSet - stores the value into a pointer location        */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genPointerSet - stores the value into a pointer location
+ *************************************************************************/
 static void
 genPointerSet (iCode * ic, iCode * pi)
 {
@@ -10200,9 +10196,9 @@ genPointerSet (iCode * ic, iCode * pi)
   pullOrFreeReg (hc08_reg_x, needpullx);
 }
 
-/*-----------------------------------------------------------------*/
-/* genIfx - generate code for Ifx statement                        */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genIfx - generate code for Ifx statement
+ *************************************************************************/
 static void
 genIfx (iCode * ic, iCode * popIc)
 {
@@ -10251,9 +10247,9 @@ genIfx (iCode * ic, iCode * popIc)
   ic->generated = 1;
 }
 
-/*-----------------------------------------------------------------*/
-/* genAddrOf - generates code for address of                       */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genAddrOf - generates code for address of
+ *************************************************************************/
 static void
 genAddrOf (iCode * ic)
 {
@@ -10341,10 +10337,10 @@ release:
   freeAsmop (IC_RESULT (ic), NULL, ic, true);
 }
 
-/*-----------------------------------------------------------------*/
-/* genAssignLit - Try to generate code for literal assignment.     */
-/*                result and right should already be asmOped       */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genAssignLit - Try to generate code for literal assignment.
+ *                result and right should already be asmOped
+ *************************************************************************/
 static bool
 genAssignLit (operand * result, operand * right)
 {
@@ -10494,10 +10490,9 @@ genAssignLit (operand * result, operand * right)
   return true;
 }
 
-
-/*-----------------------------------------------------------------*/
-/* genAssign - generate code for assignment                        */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genAssign - generate code for assignment
+ *************************************************************************/
 static void
 genAssign (iCode * ic)
 {
@@ -10518,9 +10513,9 @@ genAssign (iCode * ic)
   freeAsmop (result, NULL, ic, true);
 }
 
-/*-----------------------------------------------------------------*/
-/* genJumpTab - generates code for jump table                       */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genJumpTab - generates code for jump table
+ *************************************************************************/
 static void
 genJumpTab (iCode * ic)
 {
@@ -10594,9 +10589,9 @@ genJumpTab (iCode * ic)
     }
 }
 
-/*-----------------------------------------------------------------*/
-/* genCast - gen code for casting                                  */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genCast - generate code for casting
+ *************************************************************************/
 static void
 genCast (iCode * ic)
 {
@@ -10822,9 +10817,9 @@ genDjnz (iCode * ic, iCode * ifx)
   return 1;
 }
 
-/*-----------------------------------------------------------------*/
-/* genReceive - generate code for a receive iCode                  */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genReceive - generate code for a receive iCode
+ *************************************************************************/
 static void
 genReceive (iCode * ic)
 {
@@ -10921,9 +10916,9 @@ genDummyRead (iCode * ic)
   pullOrFreeReg (hc08_reg_a, needpulla);
 }
 
-/*-----------------------------------------------------------------*/
-/* genCritical - generate code for start of a critical sequence    */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genCritical - generate code for start of a critical sequence
+ *************************************************************************/
 static void
 genCritical (iCode * ic)
 {
@@ -10948,9 +10943,9 @@ genCritical (iCode * ic)
     freeAsmop (IC_RESULT (ic), NULL, ic, true);
 }
 
-/*-----------------------------------------------------------------*/
-/* genEndCritical - generate code for end of a critical sequence   */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genEndCritical - generate code for end of a critical sequence
+ *************************************************************************/
 static void
 genEndCritical (iCode * ic)
 {

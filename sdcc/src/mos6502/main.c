@@ -24,10 +24,10 @@
 
 #include "common.h"
 
+#include "subport.h"
 #include "ralloc.h"
 #include "gen.h"
 #include "dbuf_string.h"
-#include "m6502.h"
 #include "peep.h"
 
 #define OPTION_SMALL_MODEL      "--model-small"
@@ -43,7 +43,8 @@ extern char * iComments2;
 extern DEBUGFILE dwarf2DebugFile;
 extern int dwarf2FinalizeFile(FILE *);
 
-OPTION m6502_options[] = {
+OPTION m6502_options[] =
+{
   {0, OPTION_SMALL_MODEL, NULL, "8-bit address space for data"},
   {0, OPTION_LARGE_MODEL, NULL, "16-bit address space for data (default)"},
   //    {0, OPTION_XDATA_OVR,   &options.xdata_overlay, "place overlay segment in 16-bit address space"},
@@ -68,8 +69,9 @@ static struct
 
 MOS6502_OPTS m6502_opts;
 
-/* list of key words used by m6502 */
-char *m6502_keywords[] = {
+/* list of keywords used by m6502 */
+char *m6502_keywords[] =
+{
   "at",
   "critical",
   "interrupt",
@@ -86,6 +88,12 @@ char *m6502_keywords[] = {
   //  "generic",
   NULL
 };
+
+const char m6502_peepRules[] =
+//{
+#include "peeph.rul"
+//}
+;
 
 /** $1 is always the basename.
     $2 is always the output file.
@@ -161,15 +169,15 @@ m6502_finaliseOptions (void)
   if (options.noXinitOpt)
     port->genXINIT = 0;
 
-  if (options.model == MODEL_LARGE)
-    {
-      port->mem.default_local_map = xdata;
-      port->mem.default_globl_map = xdata;
-    }
-  else
+  if (options.model == MODEL_SMALL)
     {
       port->mem.default_local_map = data;
       port->mem.default_globl_map = data;
+    }
+  else
+    {
+      port->mem.default_local_map = xdata;
+      port->mem.default_globl_map = xdata;
     }
 
   if(options.data_loc > 240)
