@@ -24,7 +24,7 @@ PORT_SDCC = $(COMMON_SDCC) \
   sdcc_regs
 
 PORT_FLOAT = $(COMMON_FLOAT) \
-  _floatlib
+  sdcc_float
 
 PORT_LIBC = $(COMMON_LIBC) \
   $(COMMON_LIBC_STRUCT_RET) \

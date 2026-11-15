@@ -40,9 +40,9 @@ PORT_SDCC = $(COMMON_SDCC) \
 
 PORT_FLOAT = $(COMMON_FLOAT) \
   _fscmp \
-  _fsget1arg \
-  _fsget2args \
-  _fsnormalize \
+  fsget1arg \
+  fsget2args \
+  fsnormalize \
   _fsreturnval \
   _fsrshift \
   _fsswapargs \

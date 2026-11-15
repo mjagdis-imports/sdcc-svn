@@ -64,29 +64,29 @@ COMMON_SDCC = \
 
 COMMON_FLOAT = \
   atof \
-  _fs2schar \
-  _fs2sint \
-  _fs2slong \
-  _fs2slonglong \
-  _fs2uchar \
-  _fs2uint \
-  _fs2ulong \
-  _fs2ulonglong \
-  _fsadd \
-  _fsdiv \
-  _fseq \
-  _fslt \
-  _fsmul \
-  _fsneq \
-  _fssub \
-  _schar2fs \
-  _sint2fs \
-  _slong2fs \
-  _slonglong2fs \
-  _uchar2fs \
-  _uint2fs \
-  _ulong2fs \
-  _ulonglong2fs
+  __fs2schar \
+  __fs2sint \
+  __fs2slong \
+  __fs2slonglong \
+  __fs2uchar \
+  __fs2uint \
+  __fs2ulong \
+  __fs2ulonglong \
+  __fsadd \
+  __fsdiv \
+  __fseq \
+  __fslt \
+  __fsmul \
+  __fsneq \
+  __fssub \
+  __schar2fs \
+  __sint2fs \
+  __slong2fs \
+  __slonglong2fs \
+  __uchar2fs \
+  __uint2fs \
+  __ulong2fs \
+  __ulonglong2fs
 
 COMMON_LIBC = \
   abs \
