@@ -7,6 +7,8 @@
 	  Improve pointer read codegen.
 	* device/lib/z80-common/strcmp.s:
 	  Assembler strcmp implementation for z80.
+	* src/z80/main.c:
+	  Preparations for medium and large Rabbit memory models.
 
 2026-11-14 Gabriele Gorla <gorlik@yahoo.com>
 

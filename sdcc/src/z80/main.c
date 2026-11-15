@@ -49,6 +49,7 @@
 #define OPTION_ALLOW_UNDOC_INST "--allow-undocumented-instructions"
 #define OPTION_SMALL_MODEL      "--model-small"
 #define OPTION_MEDIUM_MODEL     "--model-medium"
+#define OPTION_LARGE_MODEL      "--model-large"
 
 static char _z80_defaultRules[] = {
 #include "peeph.rul"
@@ -139,7 +140,8 @@ static OPTION _rab_options[] = {
   {0, OPTION_LEGACY_BANKING,  &z80_opts.legacyBanking, "Use legacy method to call banked functions"},
   {0, OPTION_SDCCCALL,        &options.sdcccall, "Set ABI version for default calling convention", CLAT_INTEGER},
   {0, OPTION_SMALL_MODEL,     NULL, "16-bit address space for both data and code (default)"},
-  {0, OPTION_MEDIUM_MODEL,    NULL, "16-bit address space for data, 24-bit for code"},
+  {0, OPTION_MEDIUM_MODEL,    NULL, "16-bit address space for data, 24-bit (physical 20) for code"},
+  {0, OPTION_LARGE_MODEL,     NULL, "16-bit address space for data, 32-bit (physical 24) for code"},
   {0, NULL}
 };
 
@@ -939,7 +941,7 @@ _finaliseOptions (void)
     }
   else if (IS_RAB && options.model == MODEL_LARGE)
     {
-      wassertl (IS_R4K || IS_R5K || IS_R6K, "Large memory model not supported on Rabbits earlier than Rabbit 4000");
+      wassertl (IS_R4K || IS_R5K || IS_R6K, "Large memory model supported for r4k, r5k, r6k only");
       port->s.funcptr_size = 4;
       port->stack.call_overhead = 4;
       port->jumptableCost.maxCount = 0;
