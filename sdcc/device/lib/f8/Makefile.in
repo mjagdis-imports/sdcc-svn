@@ -20,8 +20,7 @@ PORT_SDCC = $(COMMON_SDCC) \
   $(COMMON_SDCC_LL) \
   _mulschar \
   __mulsint2slong \
-  __muluint2ulong \
-  _startup
+  __muluint2ulong
 
 PORT_FLOAT = $(COMMON_FLOAT)
 

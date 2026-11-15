@@ -100,6 +100,22 @@
 	  src/mos6502/gen.c,
 	  src/mos6502/ralloc.c:
 	  Hide sdcc_vregX and floatlib internal symbols from C.
+	* device/lib/hc08/_mulint.s,
+	  device/lib/hc08/atomic_flag_test_and_set.s,
+	  device/lib/hc08/config.inc,
+	  device/lib/hc08/setjmp.s,
+	  device/lib/s08/_mulint.s,
+	  device/lib/s08/atomic_flag_test_and_set.s,
+	  device/lib/s08/config.inc,
+	  device/lib/s08/setjmp.s,
+	  device/lib/s08-stack-auto/_mulint.s,
+	  device/lib/s08-stack-auto/atomic_flag_test_and_set.s,
+	  device/lib/s08-stack-auto/config.inc:
+	  Convert setjmp, _mulint and atomic_flag_test_and_set to assembly.
+	* device/lib/common_files.mk,
+	  device/lib/*/Makefile.in,
+	  device/lib/__sdcc_external_startup.c:
+	  Rename _startup.c to __sdcc_external_startup.c
 
 2026-11-15 Christopher Bazley <chris.bazley.wg14@gmail.com>
 

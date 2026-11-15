@@ -21,8 +21,7 @@ PORT_SDCC = $(COMMON_SDCC) \
   __gptrget \
   __gptrget2 \
   _mulschar \
-  _muluchar \
-  _startup
+  _muluchar
 
 PORT_FLOAT = $(COMMON_FLOAT)
 

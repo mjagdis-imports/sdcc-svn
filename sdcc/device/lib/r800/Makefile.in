@@ -23,8 +23,7 @@ PORT_SDCC = $(COMMON_SDCC) \
   __sdcc_bcall \
   __sdcc_call_hl \
   __sdcc_call_iy \
-  __sdcc_critical \
-  _startup
+  __sdcc_critical
 
 PORT_FLOAT = $(COMMON_FLOAT)
 

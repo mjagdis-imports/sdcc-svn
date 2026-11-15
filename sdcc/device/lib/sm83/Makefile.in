@@ -18,8 +18,7 @@ LIB		= sm83.lib
 PORT_SDCC = $(COMMON_SDCC) \
   $(COMMON_SDCC_LL) \
   __sdcc_call_hl \
-  __initrleblock \
-  _startup
+  __initrleblock
 
 PORT_FLOAT = $(COMMON_FLOAT)
 

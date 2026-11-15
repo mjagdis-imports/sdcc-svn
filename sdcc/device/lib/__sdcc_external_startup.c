@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-   _startup.c - startup routine for sdcc
+   __sdcc_external_startup.c - startup routine for sdcc
 
    Copyright (C) 1999, Sandeep Dutta . sandeep.dutta@usa.net
 

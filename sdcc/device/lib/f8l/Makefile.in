@@ -19,8 +19,7 @@ LIB		= f8l.lib
 PORT_SDCC = $(COMMON_SDCC) \
   $(COMMON_SDCC_LL) \
   _muluchar \
-  _mulschar \
-  _startup
+  _mulschar
 
 PORT_FLOAT = $(COMMON_FLOAT)
 

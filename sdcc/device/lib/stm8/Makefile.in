@@ -21,8 +21,7 @@ PORT_SDCC = $(COMMON_SDCC) \
   _fast_long_neg \
   _mulschar \
   __mulsint2slong \
-  __mululonguchar2ulonglong \
-  _startup
+  __mululonguchar2ulonglong
 
 PORT_FLOAT = $(COMMON_FLOAT)
 
