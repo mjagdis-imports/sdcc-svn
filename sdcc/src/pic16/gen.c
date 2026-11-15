@@ -2901,6 +2901,163 @@ inWparamList (char *s)
 
 
 /*-----------------------------------------------------------------*/
+/* genPushAggregate - push the value of an aggregate (struct)      */
+/* argument (IPUSH_VALUE_AT_ADDRESS) onto the stack.               */
+/* Like every other argument, the bytes are pushed most            */
+/* significant first, so that the aggregate ends up in memory in   */
+/* its normal (little endian) layout.  If keepw is set, byte 0 is  */
+/* left in WREG instead of being pushed (wparam convention).       */
+/* Returns the number of bytes pushed, or -1 after reporting an    */
+/* error for an unsupported case.                                  */
+/*-----------------------------------------------------------------*/
+static int
+genPushAggregate (iCode *sic, bool keepw)
+{
+  operand *ptr = IC_LEFT (sic);
+  sym_link *type = operandType (ptr);
+  int size, off = 0, i;
+
+  if (!IS_PTR (type) || !type->next)
+    {
+      werrorfl (sic->filename, sic->lineno, E_INTERNAL_ERROR, __FILE__, __LINE__,
+                "pic16: aggregate argument is not passed through a pointer");
+      return -1;
+    }
+
+  size = getSize (type->next);
+
+  if (IC_RIGHT (sic))
+    {
+      if (!IS_OP_LITERAL (IC_RIGHT (sic)))
+        {
+          werrorfl (sic->filename, sic->lineno, E_INTERNAL_ERROR, __FILE__, __LINE__,
+                    "pic16: aggregate argument with a non-constant offset is not supported");
+          return -1;
+        }
+      off = (int) operandLitValue (IC_RIGHT (sic));
+    }
+
+  if (size < 1 || size > 255 || off < 0 || off + size > 0xffff)
+    {
+      werrorfl (sic->filename, sic->lineno, E_INTERNAL_ERROR, __FILE__, __LINE__,
+                "pic16: aggregate argument of this size is not supported (1..255 bytes)");
+      return -1;
+    }
+
+  pic16_aopOp (ptr, sic, FALSE);
+
+  if (AOP_TYPE (ptr) == AOP_ACC)
+    {
+      werrorfl (sic->filename, sic->lineno, E_INTERNAL_ERROR, __FILE__, __LINE__,
+                "pic16: aggregate argument through a pointer held in WREG is not supported");
+      pic16_freeAsmop (ptr, NULL, sic, TRUE);
+      return -1;
+    }
+
+  switch (DCL_TYPE (type))
+    {
+    case POINTER:
+    case IPOINTER:
+    case PPOINTER:
+      {
+        /* data space: FSR0 = address of the last byte, copy downwards */
+        int adj = off + size - 1;
+
+        /* not pic16_loadFSR0 (): for a rematerialized address it loads
+         * only the low byte (LFSR 0, LOW(sym)) */
+        mov2fp (pic16_popCopyReg (&pic16_pc_fsr0l), AOP (ptr), 0);
+        mov2fp (pic16_popCopyReg (&pic16_pc_fsr0h), AOP (ptr), 1);
+        if (adj)
+          {
+            pic16_emitpcode (POC_MOVLW, pic16_popGetLit (adj & 0xff));
+            pic16_emitpcode (POC_ADDWF, pic16_popCopyReg (&pic16_pc_fsr0l));
+            pic16_emitpcode (POC_MOVLW, pic16_popGetLit ((adj >> 8) & 0xff));
+            pic16_emitpcode (POC_ADDWFC, pic16_popCopyReg (&pic16_pc_fsr0h));
+          }
+        for (i = size; i > (keepw ? 1 : 0); i--)
+          {
+            pic16_emitpcode (POC_MOVFF, pic16_popGet2p (pic16_popCopyReg (&pic16_pc_postdec0),
+                                                        pic16_popCopyReg (pic16_stack_postdec)));
+            if (pic16_options.gstack)
+              pic16_testStackOverflow ();
+          }
+        if (keepw)
+          pic16_emitpcode (POC_MOVFW, pic16_popCopyReg (&pic16_pc_indf0));
+      }
+      break;
+
+    case GPOINTER:
+    case CPOINTER:
+      {
+        /* generic or code space: read through _gptrload/_gptrgetN in
+         * chunks of up to 4 bytes, highest chunk first.  A code pointer
+         * has the same layout as a generic pointer to code space
+         * (bits 7 and 6 of the upper byte clear). */
+        int end, c;
+
+        for (end = size; end > 0; end -= c)
+          {
+            int start, o;
+
+            c = (end > PIC16_GENPTRRW_MAXSIZE) ? PIC16_GENPTRRW_MAXSIZE : end;
+            start = end - c;
+            o = off + start;
+
+            mov2fp (pic16_popCopyReg (&pic16_pc_tblptrl), AOP (ptr), 0);
+            mov2fp (pic16_popCopyReg (&pic16_pc_tblptrh), AOP (ptr), 1);
+            mov2fp (pic16_popCopyReg (&pic16_pc_pclath), AOP (ptr), 2);
+            if (o)
+              {
+                pic16_emitpcode (POC_MOVLW, pic16_popGetLit (o & 0xff));
+                pic16_emitpcode (POC_ADDWF, pic16_popCopyReg (&pic16_pc_tblptrl));
+                pic16_emitpcode (POC_MOVLW, pic16_popGetLit ((o >> 8) & 0xff));
+                pic16_emitpcode (POC_ADDWFC, pic16_popCopyReg (&pic16_pc_tblptrh));
+                pic16_emitpcode (POC_MOVLW, pic16_popGetLit (0));
+                pic16_emitpcode (POC_ADDWFC, pic16_popCopyReg (&pic16_pc_pclath));
+              }
+            pic16_callGenericPointerLoad ();
+            pic16_callGenericPointerRW (0, c);
+
+            /* _gptrgetN returns bytes 0..3 in WREG, PRODL, PRODH, TABLAT */
+            if (c > 3)
+              {
+                pic16_emitpcode (POC_MOVFF, pic16_popGet2p (pic16_popCopyReg (&pic16_pc_tablat),
+                                                            pic16_popCopyReg (pic16_stack_postdec)));
+                if (pic16_options.gstack)
+                  pic16_testStackOverflow ();
+              }
+            if (c > 2)
+              {
+                pic16_emitpcode (POC_MOVFF, pic16_popGet2p (pic16_popCopyReg (&pic16_pc_prodh),
+                                                            pic16_popCopyReg (pic16_stack_postdec)));
+                if (pic16_options.gstack)
+                  pic16_testStackOverflow ();
+              }
+            if (c > 1)
+              {
+                pic16_emitpcode (POC_MOVFF, pic16_popGet2p (pic16_popCopyReg (&pic16_pc_prodl),
+                                                            pic16_popCopyReg (pic16_stack_postdec)));
+                if (pic16_options.gstack)
+                  pic16_testStackOverflow ();
+              }
+            if (!(keepw && start == 0))
+              pushw ();
+          }
+      }
+      break;
+
+    default:
+      werrorfl (sic->filename, sic->lineno, E_INTERNAL_ERROR, __FILE__, __LINE__,
+                "pic16: aggregate argument through this pointer class is not supported");
+      pic16_freeAsmop (ptr, NULL, sic, TRUE);
+      return -1;
+    }
+
+  pic16_freeAsmop (ptr, NULL, sic, TRUE);
+  return keepw ? size - 1 : size;
+}
+
+/*-----------------------------------------------------------------*/
 /* genCall - generates a call statement                            */
 /*-----------------------------------------------------------------*/
 static void
@@ -2949,6 +3106,36 @@ genCall (iCode * ic)
         {
           int size;
 //          int offset = 0;
+
+          if (sic->op == IPUSH_VALUE_AT_ADDRESS)
+            {
+              /* aggregate passed by value */
+              stackParms += getSize (operandType (IC_LEFT (sic))->next);
+              if (stackParms > 255)
+                werrorfl (sic->filename, sic->lineno, E_INTERNAL_ERROR, __FILE__, __LINE__,
+                          "pic16: more than 255 bytes of stack arguments are not supported");
+              if (inwparam)
+                {
+                  /* the last byte of the last parameter stays in WREG */
+                  if (!firstTimeThruLoop)
+                    {
+                      pushw ();
+                      use_wreg = 1;
+                    }
+                  firstTimeThruLoop = 0;
+                  genPushAggregate (sic, TRUE);
+                }
+              else
+                {
+                  use_wreg = 0;
+                  if (_G.resDirect)
+                    werrorfl (sic->filename, sic->lineno, E_INTERNAL_ERROR, __FILE__, __LINE__,
+                              "pic16: aggregate argument with a directly loaded result is not supported");
+                  else
+                    genPushAggregate (sic, FALSE);
+                }
+              continue;
+            }
 
           pic16_aopOp (IC_LEFT (sic), sic, FALSE);
           size = AOP_SIZE (IC_LEFT (sic));
@@ -3108,6 +3295,17 @@ genPcall (iCode * ic)
       for (sic = setFirstItem (_G.sendSet); sic; sic = setNextItem (_G.sendSet))
         {
           int size;
+
+          if (sic->op == IPUSH_VALUE_AT_ADDRESS)
+            {
+              /* aggregate passed by value, always on the stack here */
+              stackParms += getSize (operandType (IC_LEFT (sic))->next);
+              if (stackParms > 255)
+                werrorfl (sic->filename, sic->lineno, E_INTERNAL_ERROR, __FILE__, __LINE__,
+                          "pic16: more than 255 bytes of stack arguments are not supported");
+              genPushAggregate (sic, FALSE);
+              continue;
+            }
 
           pic16_aopOp (IC_LEFT (sic), sic, FALSE);
           size = AOP_SIZE (IC_LEFT (sic));
@@ -11366,6 +11564,11 @@ genpic16Code (iCode * lic)
 
         case IPUSH:
           genIpush (ic);
+          break;
+
+        case IPUSH_VALUE_AT_ADDRESS:
+          /* aggregate argument: pushed by genCall/genPcall */
+          addSet (&_G.sendSet, ic);
           break;
 
         case IPOP:
