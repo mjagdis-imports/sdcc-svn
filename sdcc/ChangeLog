@@ -3,6 +3,10 @@
 	* device/lib/common_files.mk,
 	  device/lib/*/Makefile.in:
 	  Unify --max-allocs-per-node handling for library build.
+	* src/z80/gen.c:
+	  Improve pointer read codegen.
+	* device/lib/z80-common/strcmp.s:
+	  Assembler strcmp implementation for z80.
 
 2026-11-14 Gabriele Gorla <gorlik@yahoo.com>
 

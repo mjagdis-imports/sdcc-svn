@@ -16800,13 +16800,21 @@ genPointerGet (const iCode *ic)
           if (!regalloc_dry_run)        // Todo: More exact cost.
             {
               struct dbuf_s dbuf;
-
               dbuf_init (&dbuf, 128);
               dbuf_tprintf (&dbuf, "!mems", getPairName (left->aop));
               aopPut (result->aop, dbuf_c_str (&dbuf), 0);
               dbuf_destroy (&dbuf);
             }
           ld_cost (result->aop, 0, aopInReg(result->aop, 0, A_IDX) ? ASMOP_L : ASMOP_A, 0, true);
+        }
+      else if (!IS_SM83 && getPairId (left->aop) == PAIR_DE && surviving_a && (aopInReg(result->aop, 0, C_IDX) || aopInReg(result->aop, 0, B_IDX))) // ex is cheaper than save/restore a.
+        {
+          emit3w (A_EX, ASMOP_DE, ASMOP_HL);
+          if (!regalloc_dry_run)
+            emit2 ("ld %s, !*hl", aopGet (result->aop, 0, false));
+          cost2 (1, 2, 1, 1, 7, 6, 5, 5, 8, 6, 2, 2, 2, 2, 2);
+          if (!isRegDead (HL_IDX, ic) || !isRegDead (DE_IDX, ic))
+            emit3w (A_EX, ASMOP_DE, ASMOP_HL);
         }
       else
         {
