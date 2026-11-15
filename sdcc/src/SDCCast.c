@@ -3897,6 +3897,20 @@ hasConstMember (sym_link *type)
   return false;
 }
 
+/* Return true for an incomplete structure, union or array type.  Leave void
+   and function types to SDCC's pointer-operation extensions. */
+static bool
+isIncompleteAggregateType (sym_link *type)
+{
+  while (IS_ARRAY (type))
+    {
+      if (DCL_ARRAY_LENGTH_TYPE (type) == ARRAY_LENGTH_UNKNOWN)
+        return true;
+      type = type->next;
+    }
+  return IS_STRUCT (type) && !getSize (type);
+}
+
 /*--------------------------------------------------------------------*/
 /* decorateType - compute type for this tree, also does type checking.*/
 /* This is done bottom up, since type has to flow upwards.            */
@@ -4905,6 +4919,17 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           goto errorTreeReturn;
         }
 
+      if (((IS_PTR (LTYPE (tree)) || IS_ARRAY (LTYPE (tree))) &&
+           (!IS_INTEGRAL (RTYPE (tree)) ||
+            isIncompleteAggregateType (LTYPE (tree)->next))) ||
+          ((IS_PTR (RTYPE (tree)) || IS_ARRAY (RTYPE (tree))) &&
+           (!IS_INTEGRAL (LTYPE (tree)) ||
+            isIncompleteAggregateType (RTYPE (tree)->next))))
+        {
+          werrorfl (tree->filename, tree->lineno, E_PLUS_INVALID, "+");
+          goto errorTreeReturn;
+        }
+
       propagateConstExpr (&tree->left, resultType, reduceTypeAllowed);
       propagateConstExpr (&tree->right, resultType, reduceTypeAllowed);
 
@@ -5045,6 +5070,19 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
 
       if ((IS_PTR (LTYPE (tree)) || IS_ARRAY (LTYPE (tree))) &&
           !(IS_PTR (RTYPE (tree)) || IS_ARRAY (RTYPE (tree)) || IS_INTEGRAL (RTYPE (tree))))
+        {
+          werrorfl (tree->filename, tree->lineno, E_PLUS_INVALID, "-");
+          goto errorTreeReturn;
+        }
+
+      if (((IS_PTR (RTYPE (tree)) || IS_ARRAY (RTYPE (tree))) &&
+           !(IS_PTR (LTYPE (tree)) || IS_ARRAY (LTYPE (tree)))) ||
+          ((IS_PTR (LTYPE (tree)) || IS_ARRAY (LTYPE (tree))) &&
+           (isIncompleteAggregateType (LTYPE (tree)->next) ||
+            ((IS_PTR (RTYPE (tree)) || IS_ARRAY (RTYPE (tree))) &&
+             (isIncompleteAggregateType (RTYPE (tree)->next) ||
+              (!IS_VOID (LTYPE (tree)->next) && !IS_VOID (RTYPE (tree)->next) &&
+               compareType (LTYPE (tree)->next, RTYPE (tree)->next, false) != 1))))))
         {
           werrorfl (tree->filename, tree->lineno, E_PLUS_INVALID, "-");
           goto errorTreeReturn;
