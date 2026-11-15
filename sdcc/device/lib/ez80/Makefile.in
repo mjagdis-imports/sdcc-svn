@@ -10,7 +10,6 @@ include $(srcdir)/../common_files.mk
 # user configuration
 VPATH		= $(srcdir):$(srcdir)/../rabbit-common:$(std_lib_dirs)
 AS 		= $(top_builddir)/bin/sdasz80
-EXTRA_CFLAGS 	= --max-allocs-per-node 25000
 PORT_CRT	= crt0.rel
 LIB_TYPE	= @LIB_TYPE@
 LIB		= ez80.lib

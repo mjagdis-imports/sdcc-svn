@@ -10,7 +10,6 @@ include $(srcdir)/../common_files.mk
 # user configuration
 VPATH		= $(srcdir):$(std_lib_dirs)
 AS		= $(top_builddir)/bin/sdasstm8
-EXTRA_CFLAGS 	= --max-allocs-per-node 25000
 PORT_CRT	=
 LIB_TYPE	= @LIB_TYPE@
 LIB		= stm8.lib
