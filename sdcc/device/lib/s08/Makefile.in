@@ -1,6 +1,6 @@
 # libc/s08 Makefile
 
-srcdir = @srcdir@
+srcdir		= @srcdir@
 top_srcdir      = @top_srcdir@
 top_builddir	= @top_builddir@
 abs_top_builddir = @abs_top_builddir@
@@ -19,8 +19,7 @@ LIB		= s08.lib
 PORT_SDCC = $(COMMON_SDCC) \
   $(COMMON_SDCC_LL) \
   $(COMMON_SDCC_LL_SHIFT) \
-  _ret \
-  _startup
+  _ret
 
 PORT_FLOAT = $(COMMON_FLOAT)
 

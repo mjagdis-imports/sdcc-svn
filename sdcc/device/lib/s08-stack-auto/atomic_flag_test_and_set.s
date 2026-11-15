@@ -1,7 +1,8 @@
-/*
+;-------------------------------------------------------------------------
 ;  atomic_flag_test_and_set.s
 ;
 ;  Copyright (C) 2020, Philipp Klaus Krause
+;  Copyright (C) 2026, Gabriele Gorla
 ;
 ;  This library is free software; you can redistribute it and/or modify it
 ;  under the terms of the GNU General Public License as published by the
@@ -23,15 +24,21 @@
 ;  this library does not by itself cause the resulting executable to
 ;  be covered by the GNU General Public License. This exception does
 ;  not however invalidate any other reasons why the executable file
-;   might be covered by the GNU General Public License.
-*/
+;  might be covered by the GNU General Public License.
+;-------------------------------------------------------------------------
 
-#include <stdatomic.h>
+	.module atomic_flag_test_and_set
+	.include "config.inc"
 
-_Bool atomic_flag_test_and_set(volatile atomic_flag *object) __naked
-{
-  object; // avoid warning 85 unreferenced function argument
-__asm
+	.globl _atomic_flag_test_and_set
+
+;--------------------------------------------------------
+;_Bool atomic_flag_test_and_set(volatile atomic_flag *object)
+;--------------------------------------------------------
+
+.area CSEG
+
+_atomic_flag_test_and_set:
 	pshx
 	pulh
 	tax
@@ -40,6 +47,4 @@ __asm
 	rola
 	eor	#0x01
 	rts
-__endasm;
-}
 
