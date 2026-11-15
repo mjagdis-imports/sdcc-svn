@@ -44,7 +44,7 @@
 ; local aliases
 ;--------------------------------------------------------
 	.define ptr "DPTR"
-	.define rv "___SDCC_m6502_ret0"
+	.define rv "sdcc_vreg0"
 
 ;--------------------------------------------------------
 ; code
@@ -117,3 +117,4 @@ _longjmp:
         lda	#0x01
 ret:
         rts
+

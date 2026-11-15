@@ -39,12 +39,12 @@
 ;--------------------------------------------------------
 	.define res0 "__divslong_PARM_1+0"
 	.define res1 "__divslong_PARM_1+1"
-	.define res2 "___SDCC_m6502_ret2"
-	.define res3 "___SDCC_m6502_ret3"
+	.define res2 "sdcc_vreg2"
+	.define res3 "sdcc_vreg3"
 	.define den  "__divslong_PARM_2"
-	.define rem  "___SDCC_m6502_ret4"
-	.define s1   "___SDCC_m6502_ret0"
-	.define s2   "___SDCC_m6502_ret1"
+	.define rem  "sdcc_vreg4"
+	.define s1   "sdcc_vreg0"
+	.define s2   "sdcc_vreg1"
 
 ;--------------------------------------------------------
 ; code

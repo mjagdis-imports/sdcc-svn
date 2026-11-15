@@ -20,9 +20,8 @@ PORT_SDCC = $(COMMON_SDCC) \
   $(COMMON_SDCC_LL) \
   _muluchar \
   _mulschar \
-  __sdcc_regs \
-  __sdcc_indirect_jsr \
-  _startup
+  sdcc_indirect_jsr \
+  sdcc_regs
 
 PORT_FLOAT = $(COMMON_FLOAT)
 

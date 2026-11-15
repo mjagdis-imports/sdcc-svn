@@ -68,10 +68,10 @@ _ldiv_PARM_2:
 ;--------------------------------------------------------
 	.define res0 "__divulong_PARM_1+0"
 	.define res1 "__divulong_PARM_1+1"
-	.define res2 "___SDCC_m6502_ret2"
-	.define res3 "___SDCC_m6502_ret3"
+	.define res2 "sdcc_vreg2"
+	.define res3 "sdcc_vreg3"
 	.define den  "__divulong_PARM_2"
-	.define rem  "___SDCC_m6502_ret4"
+	.define rem  "sdcc_vreg4"
 	
 ;--------------------------------------------------------
 ; code

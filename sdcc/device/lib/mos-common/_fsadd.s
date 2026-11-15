@@ -47,16 +47,16 @@
 ;--------------------------------------------------------
 ; local aliases
 ;--------------------------------------------------------
-	.define sh1   "___SDCC_m6502_ret0"
-	.define sh2   "___SDCC_m6502_ret1"
-	.define res0  "___SDCC_m6502_ret0"
-	.define res1  "___SDCC_m6502_ret1"
-	.define res2  "___SDCC_m6502_ret2"
-	.define res3  "___SDCC_m6502_ret3"
-	.define s1    "___SDCC_m6502_ret4"
-	.define exp1  "___SDCC_m6502_ret5"
-	.define s2    "___SDCC_m6502_ret6"
-	.define exp2  "___SDCC_m6502_ret7"
+	.define sh1   "sdcc_vreg0"
+	.define sh2   "sdcc_vreg1"
+	.define res0  "sdcc_vreg0"
+	.define res1  "sdcc_vreg1"
+	.define res2  "sdcc_vreg2"
+	.define res3  "sdcc_vreg3"
+	.define s1    "sdcc_vreg4"
+	.define exp1  "sdcc_vreg5"
+	.define s2    "sdcc_vreg6"
+	.define exp2  "sdcc_vreg7"
 		
 ;--------------------------------------------------------
 ; code
@@ -76,9 +76,9 @@ ___fsadd:
 ; return PARM_2
 ret_p2:
 	lda	*(___fsadd_PARM_2 + 3)
-	sta	*___SDCC_m6502_ret3
+	sta	*sdcc_vreg3
 	lda	*(___fsadd_PARM_2 + 2)
-	sta	*___SDCC_m6502_ret2
+	sta	*sdcc_vreg2
 	ldx	*(___fsadd_PARM_2 + 1)
 	lda	*___fsadd_PARM_2
 	rts
@@ -95,9 +95,9 @@ p1_not0:
 ; return PARM_1
 ret_p1:
 	lda	*(___fsadd_PARM_1 + 3)
-	sta	*___SDCC_m6502_ret3
+	sta	*sdcc_vreg3
 	lda	*(___fsadd_PARM_1 + 2)
-	sta	*___SDCC_m6502_ret2
+	sta	*sdcc_vreg2
 	ldx	*(___fsadd_PARM_1 + 1)
 	lda	*___fsadd_PARM_1
 	rts

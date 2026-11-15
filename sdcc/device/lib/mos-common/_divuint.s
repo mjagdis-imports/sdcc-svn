@@ -55,11 +55,11 @@ _div_PARM_2:
 ;--------------------------------------------------------
 ; local aliases
 ;--------------------------------------------------------
-	.define res "___SDCC_m6502_ret0"
+	.define res "sdcc_vreg0"
 	.define den "__divuint_PARM_2"
-	.define rem "___SDCC_m6502_ret2"
-	.define s1  "___SDCC_m6502_ret4"
-	.define s2  "___SDCC_m6502_ret5"
+	.define rem "sdcc_vreg2"
+	.define s1  "sdcc_vreg4"
+	.define s2  "sdcc_vreg5"
 
 ;--------------------------------------------------------
 ; code
@@ -106,21 +106,21 @@ L1:
 
 ;div16x8:
 ;LL0:
-;	asl	*___SDCC_m6502_ret0+0
-;	rol	*___SDCC_m6502_ret0+1
+;	asl	*sdcc_vreg0+0
+;	rol	*sdcc_vreg0+1
 ;	rol	a
 ;	bcs	LL1
 ;	cmp	__divuint_PARM_2+0
 ;	bcc	LL2
 ;LL1:
 ;	sbc	__divuint_PARM_2+0
-;	inc	*___SDCC_m6502_ret0+0
+;	inc	*sdcc_vreg0+0
 ;LL2:
 ;	dey
 ;	bne	LL0
-;	sta	*___SDCC_m6502_ret2+0
+;	sta	*sdcc_vreg2+0
 ;
-;	lda	*___SDCC_m6502_ret0+0
-;	ldx	*___SDCC_m6502_ret0+1
+;	lda	*sdcc_vreg0+0
+;	ldx	*sdcc_vreg0+1
 ;	rts
 

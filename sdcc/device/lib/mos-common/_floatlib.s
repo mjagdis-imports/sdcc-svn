@@ -1,5 +1,5 @@
 ;-------------------------------------------------------------------------
-;   _floatlib.s - common code for floating point support
+;   floatlib.s - common code for floating point support
 ;
 ;   Copyright (C) 2025-2026, Gabriele Gorla 
 ;
@@ -26,13 +26,13 @@
 ;   might be covered by the GNU General Public License.
 ;-------------------------------------------------------------------------
 
-	.module _floatlib
+	.module floatlib
 	.include "config.inc"
 
 ;--------------------------------------------------------
 ; exported symbols
 ;--------------------------------------------------------
-	.globl _float_PARM_1
+	.globl float_PARM_1
 	.globl ___fsadd_PARM_1
 	.globl ___fssub_PARM_1
 	.globl ___fsmul_PARM_1
@@ -43,7 +43,7 @@
 	.globl _cosf_PARM_1
 	.globl _sinf_PARM_1
 
-	.globl _float_PARM_2
+	.globl float_PARM_2
 	.globl ___fsadd_PARM_2
 	.globl ___fssub_PARM_2
 	.globl ___fsmul_PARM_2
@@ -61,7 +61,7 @@
 ; overlayable items in ram
 ;--------------------------------------------------------
 	.area	OSEG    (PAG, OVR)
-_float_PARM_1:
+float_PARM_1:
 _fabsf_PARM_1:
 _cosf_PARM_1:
 _sinf_PARM_1:
@@ -73,7 +73,7 @@ ___fsneq_PARM_1:
 ___fslt_PARM_1:
 	.ds 4
 	
-_float_PARM_2:
+float_PARM_2:
 ___fsadd_PARM_2:
 ___fssub_PARM_2:
 ___fsmul_PARM_2:
@@ -85,14 +85,14 @@ ___fslt_PARM_2:
 ;--------------------------------------------------------
 ; local aliases
 ;--------------------------------------------------------
-	.define res0  "___SDCC_m6502_ret0"
-	.define res1  "___SDCC_m6502_ret1"
-	.define res2  "___SDCC_m6502_ret2"
-	.define res3  "___SDCC_m6502_ret3"
-	.define s1    "___SDCC_m6502_ret4"
-	.define exp1  "___SDCC_m6502_ret5"
-	.define s2    "___SDCC_m6502_ret6"
-	.define exp2  "___SDCC_m6502_ret7"
+	.define res0  "sdcc_vreg0"
+	.define res1  "sdcc_vreg1"
+	.define res2  "sdcc_vreg2"
+	.define res3  "sdcc_vreg3"
+	.define s1    "sdcc_vreg4"
+	.define exp1  "sdcc_vreg5"
+	.define s2    "sdcc_vreg6"
+	.define exp2  "sdcc_vreg7"
 
 ;--------------------------------------------------------
 ; code
@@ -100,9 +100,9 @@ ___fslt_PARM_2:
 	.area CODE
 
 ___fs_unpack_2P:	
-	lda	*(_float_PARM_2 + 2) ; get exp2
+	lda	*(float_PARM_2 + 2) ; get exp2
 	rol	a
-	lda	*(_float_PARM_2 + 3)
+	lda	*(float_PARM_2 + 3)
 	rol	a
 	sta	*exp2
 	tya			; get sign2 - sign is 0x80
@@ -110,9 +110,9 @@ ___fs_unpack_2P:
 	sta	*s2
 
 ___fs_unpack_1P:
-	lda	*(_float_PARM_1 + 2) ; get exp1
+	lda	*(float_PARM_1 + 2) ; get exp1
 	rol	a
-	lda	*(_float_PARM_1 + 3)
+	lda	*(float_PARM_1 + 3)
 	rol	a
 	sta	*exp1
 	tya			; get sign1 - sign is 0x80 
@@ -123,15 +123,15 @@ ___fs_unpack_1P:
 ___fs_ret_zero:
 	CLA
 	tax
-	sta	*___SDCC_m6502_ret2
-	sta	*___SDCC_m6502_ret3
+	sta	*sdcc_vreg2
+	sta	*sdcc_vreg3
 	rts
 	
 ___fs_ret_inf:
 	ora	#0x7f		; A contains sign
-	sta	*___SDCC_m6502_ret3
+	sta	*sdcc_vreg3
 	lda	#0x80
-	sta	*___SDCC_m6502_ret2
+	sta	*sdcc_vreg2
 	CLA
 	tax
 	rts
@@ -140,11 +140,11 @@ ___fs_pack_ret:
 	lda	*exp1
 	lsr	a
 	ora	*s1
-	sta	*___SDCC_m6502_ret3
+	sta	*sdcc_vreg3
 	CLA
 	ror	a
-	ora	*___SDCC_m6502_ret2
-	sta	*___SDCC_m6502_ret2
+	ora	*sdcc_vreg2
+	sta	*sdcc_vreg2
 	ldx	*res1
 	lda	*res0
 	rts

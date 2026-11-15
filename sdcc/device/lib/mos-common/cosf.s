@@ -51,9 +51,9 @@ _cosf:
 ;	lda	#0x00
 	tax
 	ldy	#0x80
-	sty	*___SDCC_m6502_ret2
+	sty	*sdcc_vreg2
 	ldy	#0x3f
-	sty	*___SDCC_m6502_ret3
+	sty	*sdcc_vreg3
 	rts
 
 not_zero:

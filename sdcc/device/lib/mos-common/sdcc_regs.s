@@ -1,5 +1,5 @@
 ;-------------------------------------------------------------------------
-;   __sdcc_indirect_jsr.s - SDCC support for indirect JSR 
+;   sdcc_regs.s - virtual registers used for mos6502 codegen
 ;
 ;   Copyright (C) 2023-2026, Gabriele Gorla
 ;
@@ -26,17 +26,35 @@
 ;   might be covered by the GNU General Public License.
 ;-------------------------------------------------------------------------
 
-	.module __sdcc_indirect_jsr
+	.module sdcc_regs
 	.include "config.inc"
 
 ;--------------------------------------------------------
-; exported symbols
+; exported ZP symbols
 ;--------------------------------------------------------
-	.globl __sdcc_indirect_jsr
 
-;--------------------------------------------------------
-; code
-;--------------------------------------------------------
-	.area CODE
-__sdcc_indirect_jsr:
-	jmp	[DPTR]
+; Keep this in sync with NUM_TEMP_REGS in mos6502/gen.c
+; virtual registers used by SDCC codegen
+; REGTEMP stack for temporaries
+; DPTR used for dereferencing pointers
+; sdcc_vregX used for return values of size>2
+
+	.area	ZP (PAG)
+REGTEMP::
+sdcc_vreg0::
+        .ds 1
+sdcc_vreg1::
+        .ds 1
+sdcc_vreg2::
+        .ds 1
+sdcc_vreg3::
+        .ds 1
+sdcc_vreg4::
+        .ds 1
+sdcc_vreg5::
+        .ds 1
+DPTR::
+sdcc_vreg6::
+        .ds 1
+sdcc_vreg7::
+        .ds 1

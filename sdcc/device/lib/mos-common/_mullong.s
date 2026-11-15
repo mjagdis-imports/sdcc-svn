@@ -48,10 +48,10 @@ __mullong_PARM_2:
 ;--------------------------------------------------------
 ; local aliases
 ;--------------------------------------------------------
-	.define res0 "___SDCC_m6502_ret0"
-	.define res1 "___SDCC_m6502_ret1"
-	.define res2 "___SDCC_m6502_ret2"
-	.define res3 "___SDCC_m6502_ret3"
+	.define res0 "sdcc_vreg0"
+	.define res1 "sdcc_vreg1"
+	.define res2 "sdcc_vreg2"
+	.define res3 "sdcc_vreg3"
 
 ;--------------------------------------------------------
 ; code

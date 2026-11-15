@@ -55,7 +55,7 @@ ___memcpy_PARM_3:
 ;--------------------------------------------------------
 ; local aliases
 ;--------------------------------------------------------
-	.define save  "___SDCC_m6502_ret0"
+	.define save  "sdcc_vreg0"
 	.define dst   "DPTR"
 	.define src   "___memcpy_PARM_2"
 	.define count "___memcpy_PARM_3"

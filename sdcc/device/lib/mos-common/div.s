@@ -37,10 +37,10 @@
 ;--------------------------------------------------------
 ; local aliases
 ;--------------------------------------------------------
-	.define res "___SDCC_m6502_ret0"
-	.define rem "___SDCC_m6502_ret2"
-	.define s1  "___SDCC_m6502_ret4"
-	.define s2  "___SDCC_m6502_ret5"
+	.define res "sdcc_vreg0"
+	.define rem "sdcc_vreg2"
+	.define s1  "sdcc_vreg4"
+	.define s2  "sdcc_vreg5"
 
 ;--------------------------------------------------------
 ; code

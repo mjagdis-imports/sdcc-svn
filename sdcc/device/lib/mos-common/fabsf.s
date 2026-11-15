@@ -37,8 +37,8 @@
 ; local aliases
 ;--------------------------------------------------------
 
-	.define res2  "___SDCC_m6502_ret2"
-	.define res3  "___SDCC_m6502_ret3"
+	.define res2  "sdcc_vreg2"
+	.define res3  "sdcc_vreg3"
 		
 ;--------------------------------------------------------
 ; code

@@ -4753,7 +4753,7 @@ genCall (iCode * ic)
   /* make the call */
   if (pcall && !op)
     {
-      m6502_emitOp("jsr","__sdcc_indirect_jsr");
+      m6502_emitOp("jsr","sdcc_indirect_jsr");
       m6502_updateCFA ();
     }
   else if(IS_LITERAL(etype))
@@ -8966,22 +8966,22 @@ init_aop_pass(void)
   m6502_aop_pass[1]->aopu.aop_reg[0] = m6502_reg_x;
   m6502_aop_pass[2] = newAsmop (AOP_DIR);
   m6502_aop_pass[2]->size = 1;
-  m6502_aop_pass[2]->aopu.aop_dir = "___SDCC_m6502_ret2";
+  m6502_aop_pass[2]->aopu.aop_dir = "sdcc_vreg2";
   m6502_aop_pass[3] = newAsmop (AOP_DIR);
   m6502_aop_pass[3]->size = 1;
-  m6502_aop_pass[3]->aopu.aop_dir = "___SDCC_m6502_ret3";
+  m6502_aop_pass[3]->aopu.aop_dir = "sdcc_vreg3";
   m6502_aop_pass[4] = newAsmop (AOP_DIR);
   m6502_aop_pass[4]->size = 1;
-  m6502_aop_pass[4]->aopu.aop_dir = "___SDCC_m6502_ret4";
+  m6502_aop_pass[4]->aopu.aop_dir = "sdcc_vreg4";
   m6502_aop_pass[5] = newAsmop (AOP_DIR);
   m6502_aop_pass[5]->size = 1;
-  m6502_aop_pass[5]->aopu.aop_dir = "___SDCC_m6502_ret5";
+  m6502_aop_pass[5]->aopu.aop_dir = "sdcc_vreg5";
   m6502_aop_pass[6] = newAsmop (AOP_DIR);
   m6502_aop_pass[6]->size = 1;
-  m6502_aop_pass[6]->aopu.aop_dir = "___SDCC_m6502_ret6";
+  m6502_aop_pass[6]->aopu.aop_dir = "sdcc_vreg6";
   m6502_aop_pass[7] = newAsmop (AOP_DIR);
   m6502_aop_pass[7]->size = 1;
-  m6502_aop_pass[7]->aopu.aop_dir = "___SDCC_m6502_ret7";
+  m6502_aop_pass[7]->aopu.aop_dir = "sdcc_vreg7";
 }
 
 float
@@ -9010,10 +9010,10 @@ drym6502iCode (iCode *ic)
 }
 
 /**************************************************************************
- * genm6502Code - generate code for a block of instructions
+ * m6502_genCode - generate code for a block of instructions
  *************************************************************************/
 void
-genm6502Code (iCode *lic)
+m6502_genCode (iCode *lic)
 {
   iCode *ic;
   int cln = 0;

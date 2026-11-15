@@ -38,15 +38,15 @@
 ; overlayable function parameters in zero page
 ;--------------------------------------------------------
 	
-	.define mres1 "___SDCC_m6502_ret0"
-	.define mres2 "___SDCC_m6502_ret1"
-	.define mres3 "___SDCC_m6502_ret2"
-	.define mres0 "___SDCC_m6502_ret3"
-	.define s1    "___SDCC_m6502_ret4"
-	.define exp1  "___SDCC_m6502_ret5"
-	.define exp1h "___SDCC_m6502_ret6"
-	.define s2    "___SDCC_m6502_ret6"
-	.define exp2  "___SDCC_m6502_ret7"
+	.define mres1 "sdcc_vreg0"
+	.define mres2 "sdcc_vreg1"
+	.define mres3 "sdcc_vreg2"
+	.define mres0 "sdcc_vreg3"
+	.define s1    "sdcc_vreg4"
+	.define exp1  "sdcc_vreg5"
+	.define exp1h "sdcc_vreg6"
+	.define s2    "sdcc_vreg6"
+	.define exp2  "sdcc_vreg7"
 	
 ;--------------------------------------------------------
 ; code
@@ -81,7 +81,7 @@ ___fsmul:
 	eor *s2
 	sta *s1
 	
-        ; s2 is no longer needed free ___SDCC_m6502_ret6 for exp1h
+        ; s2 is no longer needed free sdcc_vreg6 for exp1h
 	; Y is still 0
 	sec
 	lda *exp1
@@ -97,7 +97,7 @@ no_borrow:
 	bcc no_carry
 	iny
 no_carry:
-	sty *exp1h		; ___SDCC_m6502_ret6 is now the exponent msb
+	sty *exp1h		; sdcc_vreg6 is now the exponent msb
 	
 	; add hidden bit
 	lda *(___fsmul_PARM_1 + 2)

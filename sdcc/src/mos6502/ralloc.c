@@ -74,7 +74,7 @@ reg_info *m6502_reg_xy;
 reg_info *m6502_reg_sp;
 
 static void updateRegUsage (iCode * ic);
-extern void genm6502Code (iCode *);
+extern void m6502_genCode (iCode *);
 
 
 /*-----------------------------------------------------------------*/
@@ -1753,7 +1753,7 @@ m6502_assignRegisters (ebbIndex *ebbi)
   /* now get back the chain */
   ic = iCodeLabelOptimize (iCodeFromeBBlock (ebbs, count));
 
-  genm6502Code (ic);
+  m6502_genCode (ic);
 
   /* free up any _G.stackSpil locations allocated */
   applyToSet (_G.stackSpil, deallocStackSpil);

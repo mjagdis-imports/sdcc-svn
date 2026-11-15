@@ -45,10 +45,10 @@
 ;--------------------------------------------------------
 ; local aliases
 ;--------------------------------------------------------
-	.define arg1 "___SDCC_m6502_ret0"
-	.define arg2 "___SDCC_m6502_ret2"
-	.define s1 "___SDCC_m6502_ret4"
-	.define s2 "___SDCC_m6502_ret5"
+	.define arg1 "sdcc_vreg0"
+	.define arg2 "sdcc_vreg2"
+	.define s1 "sdcc_vreg4"
+	.define s2 "sdcc_vreg5"
 
 ;--------------------------------------------------------
 ; code

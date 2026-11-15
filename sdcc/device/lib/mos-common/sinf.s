@@ -46,8 +46,8 @@ _sinf:
 	ora	*_sinf_PARM_1
 	bne	not_zero
 ;	tax
-;	sta	*___SDCC_m6502_ret2
-;	sta	*___SDCC_m6502_ret3
+;	sta	*sdcc_vreg2
+;	sta	*sdcc_vreg3
 ;	rts
 	jmp ___fs_ret_zero
 

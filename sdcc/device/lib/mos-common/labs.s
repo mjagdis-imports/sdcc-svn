@@ -59,16 +59,16 @@ _labs:
 	tax
 	CLA
 	sbc	*(_labs_PARM_1+2)
-	sta	*___SDCC_m6502_ret2
+	sta	*sdcc_vreg2
 	CLA
 	sbc	*(_labs_PARM_1+3)
-	sta	*___SDCC_m6502_ret3
+	sta	*sdcc_vreg3
 	tya
 	rts
 copy:
-	sta	*___SDCC_m6502_ret3
+	sta	*sdcc_vreg3
 	lda	*(_labs_PARM_1+2)
-	sta	*___SDCC_m6502_ret2
+	sta	*sdcc_vreg2
 	ldx	*(_labs_PARM_1+1)
 	lda	*(_labs_PARM_1+0)	
 	rts
