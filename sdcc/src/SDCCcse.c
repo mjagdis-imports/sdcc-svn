@@ -432,12 +432,21 @@ DEFSETFUNC (findCheaperOp)
           return 0;
         }
 
-      /* Keep the volatile qualification of the object read through a pointer. */
-      if (IS_PTR (operandType (cop)) && IS_PTR (operandType (*opp)) &&
-          isVolatile (operandType (cop)->next) && !isVolatile (operandType (*opp)->next))
+      sym_link *type = operandType (cop);
+      sym_link *replacement_type = operandType (*opp);
+      if (IS_PTR (type) && IS_PTR (replacement_type))
         {
-          *opp = NULL;
-          return 0;
+          type = type->next;
+          replacement_type = replacement_type->next;
+
+          /* Preserve volatile qualification and bit-field access representation. */
+          if ((isVolatile (type) && !isVolatile (replacement_type)) ||
+              ((IS_BITFIELD (type) || IS_BITFIELD (replacement_type)) &&
+               !compareTypeInexact (type, replacement_type)))
+            {
+              *opp = NULL;
+              return 0;
+            }
         }
 
       *opp = operandFromOperand (*opp);
