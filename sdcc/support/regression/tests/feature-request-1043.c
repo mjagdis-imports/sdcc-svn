@@ -5,6 +5,9 @@ static int observed;
 static int *observed_pointer;
 static int replacement;
 
+/* Keep the automatic-object and aliasing cases within PDK14's 2 KiW ROM.
+   The other targets also exercise the corresponding global objects. */
+#ifndef __SDCC_pdk14
 const char global_value = 9;
 int global_pointee;
 int *const global_pointer = &global_pointee;
@@ -14,6 +17,7 @@ static int *const static_global_pointer = &global_pointee;
 
 char mutable_global_value;
 int *mutable_global_pointer;
+#endif
 
 static void
 observe_char(const char *p) __reentrant
@@ -140,6 +144,7 @@ test_repeated_initialisation(void)
 void
 test_const_globals(void)
 {
+#ifndef __SDCC_pdk14
   /* global_value stays 9 and global_pointer still points to global_pointee.
      Treating the pointee as const would reuse 10 after the write, not 23. */
   observe_char(&global_value);
@@ -152,11 +157,13 @@ test_const_globals(void)
   ASSERT(observed_pointer == &global_pointee);
   ASSERT(global_pointer == &global_pointee);
   ASSERT(*global_pointer == 23);
+#endif
 }
 
 void
 test_static_const_globals(void)
 {
+#ifndef __SDCC_pdk14
   /* static_global_value stays 11; the pointer still targets global_pointee.
      Treating the pointee as const would reuse 10 after the write, not 23. */
   observe_char(&static_global_value);
@@ -169,11 +176,13 @@ test_static_const_globals(void)
   ASSERT(observed_pointer == &global_pointee);
   ASSERT(static_global_pointer == &global_pointee);
   ASSERT(*static_global_pointer == 23);
+#endif
 }
 
 void
 test_mutable_globals(void)
 {
+#ifndef __SDCC_pdk14
   /* The calls change the globals to 17 and &replacement; reusing 9 or
      &global_pointee would fail the corresponding assertion. */
   mutable_global_value = 9;
@@ -183,6 +192,7 @@ test_mutable_globals(void)
   mutable_global_pointer = &global_pointee;
   replace_pointer(&mutable_global_pointer);
   ASSERT(mutable_global_pointer == &replacement);
+#endif
 }
 
 static int

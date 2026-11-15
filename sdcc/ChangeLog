@@ -1,5 +1,11 @@
 2026-11-15 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
+	* support/regression/tests/feature-request-1043.c: Omit the three
+	  global-object cases on PDK14 so the test fits its 2 KiW ROM.
+	  Retain the automatic-object and aliasing cases (RFE #1043).
+
+2026-11-15 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
 	* src/SDCCcse.c (findCheaperOp): Reject pointer substitutions that
 	  change the bit-field access representation (bug #4255).
 	* support/regression/tests/bug-4255.c: Test whole-object stores after
