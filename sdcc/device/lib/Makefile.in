@@ -600,34 +600,24 @@ clean_intermediate-pic:
 # Compiling and installing everything and running test
 # ---------------------------------------------------
 install: all installdirs
-	[ ! -d "$(BUILDDIR)" ] || $(CP_U) -r $(BUILDDIR)/* $(sdcc_libdir)
-	$(CP_U) -r $(srcdir)/mcs51-small $(srcdir)/mcs51-medium $(srcdir)/mcs51-large $(srcdir)/mcs51-huge \
-		$(srcdir)/ds390 $(srcdir)/ds400 \
-		$(srcdir)/z80 $(srcdir)/z180 $(srcdir)/z80n $(srcdir)/r800 \
-		$(srcdir)/r2k $(srcdir)/r2ka $(srcdir)/r3ka $(srcdir)/r4k $(srcdir)/r5k $(srcdir)/r6k $(srcdir)/tlcs90 $(srcdir)/ez80 \
-		$(srcdir)/sm83 \
-		$(srcdir)/hc08 $(srcdir)/s08 \
-		$(srcdir)/mos6502 $(srcdir)/mos65c02 $(srcdir)/huc6280 \
-		$(srcdir)/stm8 \
-		$(srcdir)/pdk13 $(srcdir)/pdk14 $(srcdir)/pdk15 \
-		$(srcdir)/f8 $(srcdir)/f8l \
-		$(srcdir)/pic14 $(srcdir)/pic16 $(srcdir)/*.c $(sdcc_libdir)/src
-	$(CP_U) -r $(RELPORTS) $(sdcc_libdir)/src
-
-	for src in $(RELPORTS); do \
-	  find $(sdcc_libdir)/src/$$src -depth \
+	for port in $(RELPORTS); do \
+	  [ -d "$(BUILDDIR)/$$port" ] && $(CP_U) -r $(BUILDDIR)/$$port $(sdcc_libdir); \
+	  [ -d "$(BUILDDIR)/$$port" ] && $(CP_U) -r $(srcdir)/$$port $(sdcc_libdir)/src; \
+	done
+	[ `ls $(BUILDDIR)| grep -c -E '(mcs51|ds390|ds400)'` != 0 ] && $(CP_U) -r $(srcdir)/mcs51-common $(sdcc_libdir)/src
+	[ `ls $(BUILDDIR)| grep -c -E '(mos|huc)'` != 0 ] && $(CP_U) -r $(srcdir)/mos-common $(sdcc_libdir)/src
+	[ `ls $(BUILDDIR)| grep -c -E '(^z80|z180|r800)'` != 0 ] && $(CP_U) -r $(srcdir)/z80-common $(sdcc_libdir)/src
+	[ `ls $(BUILDDIR)| grep -c -E '(r[2-6]k|tlcs|ez80)'` != 0 ] && $(CP_U) -r $(srcdir)/rabbit-common $(sdcc_libdir)/src
+	[ `ls $(BUILDDIR)| grep -c -E '(pdk)'` != 0 ] && $(CP_U) -r $(srcdir)/pdk-common $(sdcc_libdir)/src
+	$(CP_U) $(srcdir)/*.c $(sdcc_libdir)/src
+	find $(sdcc_libdir)/src -depth \
 	    \( -name '*.rel' -o -name '*.dump*' -o -name '*.sym' -o -name '*.o' -o -name '*.lib' -o \
 	    -name '*.lst' -o -name '*.asm' -o -name '.svn' -o -name 'autom4te.cache' -o \
 	    -name 'build' -o -name 'bin' -o -name 'Makefile*' -o -name 'config*' -o \
 	    -name 'depcomp' -o -name 'missing' -o -name 'install-sh' -o \
 	    -name 'bootstrap.sh' \) \
-	    -exec rm -rf {} + ; \
-	done
-	find $(sdcc_libdir)/src/mcs51 -depth \
-	  \( -name '*.rel' -o -name '*.dump*' -o -name '*.sym' -o -name '*.o' -o -name '*.lib' -o \
-	  -name '*.lst' -o -name '.svn' -o -name 'build' -o -name 'bin' -o \
-	  -name 'Makefile*' \) \
-	  -exec rm -rf {} +
+	    -exec rm -rf {} +
+
 
 # Deleting all the installed files
 # --------------------------------
@@ -647,11 +637,8 @@ installcheck:
 # Creating installation directories
 # ---------------------------------
 installdirs:
-	for model in $(MODELS); do \
-	  mkdir -p $(sdcc_libdir)/$$model; \
-	done
-	for libdir in $(RELPORTS); do \
-	  mkdir -p $(sdcc_libdir)/$$libdir; \
+	for port in $(RELPORTS); do \
+	  [ -d "$(BUILDDIR)/$$port" ] && mkdir -p $(sdcc_libdir)/$$port; \
 	done
 	mkdir -p $(sdcc_libdir)/src
 
@@ -693,3 +680,4 @@ checkconf:
 
 Makefile: $(srcdir)/Makefile.in
 	cd $(top_builddir); ./config.status device/lib/Makefile
+

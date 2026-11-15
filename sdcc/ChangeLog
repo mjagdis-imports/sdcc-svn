@@ -1,3 +1,9 @@
+2026-11-14 Gabriele Gorla <gorlik@yahoo.com>
+
+	* device/lib/Makefile.in,
+	  support/scripts/sdcc.nsi:
+	  Fix library source install (bug #4252)
+
 2026-11-14 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* support/regression/tests/blake2s.c:
