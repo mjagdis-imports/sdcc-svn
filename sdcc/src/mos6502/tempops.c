@@ -81,7 +81,7 @@ m6502_fastRestoreA()
 bool
 m6502_storeRegTempi(reg_info * reg, bool freereg, bool force)
 {
-  m6502_emitComment (REGOPS, "  storeRegTemp(%s) %s", reg ? reg->name : "-", freereg ? "free" : "");
+  emitComment (REGOPS, "  storeRegTemp(%s) %s", reg ? reg->name : "-", freereg ? "free" : "");
 
   int regidx = reg->rIdx;
   char storeOp[4] = "st?";
@@ -99,12 +99,12 @@ m6502_storeRegTempi(reg_info * reg, bool freereg, bool force)
       _S.tempAttr[_S.tempOfs].stackOffset=reg->stackOffset;
       if(reg->isLitConst && !force)
         {
-	  m6502_emitComment(REGOPS|VVDBG, "  %s: virtual store literal 0x%02x",__func__,
+	  emitComment(REGOPS|VVDBG, "  %s: virtual store literal 0x%02x",__func__,
 			    (unsigned char)reg->litConst);
         }
       else if(reg->aop && !force && (reg->aop->type==AOP_DIR || reg->aop->type==AOP_EXT) )
         {
-          m6502_emitComment(REGOPS|VVDBG, "  %s: virtual store %s+%d",__func__,
+          emitComment(REGOPS|VVDBG, "  %s: virtual store %s+%d",__func__,
 			    reg->aop->aopu.aop_dir, reg->aopofs);
         }
       else
@@ -167,7 +167,7 @@ m6502_loadRegTempAt (reg_info * reg, int offset)
       loadOp[2]=reg->name[0];
       if(_S.tempAttr[offset].aop && (_S.tempAttr[offset].aop->type==AOP_DIR || _S.tempAttr[offset].aop->type==AOP_EXT))
         {
-          m6502_emitComment(REGOPS|VVDBG, "  %s: should load from %s+%d", __func__,
+          emitComment(REGOPS|VVDBG, "  %s: should load from %s+%d", __func__,
 			    _S.tempAttr[offset].aop->aopu.aop_dir, _S.tempAttr[offset].aopofs);
           if(_S.tempAttr[offset].aop->type==AOP_DIR)
 	    m6502_emitOp (loadOp, "*(%s+%d)",
@@ -301,7 +301,7 @@ m6502_emitRegTempOp(const char *op, int offset)
     }
   else if(_S.tempAttr[offset].aop && (_S.tempAttr[offset].aop->type==AOP_DIR || _S.tempAttr[offset].aop->type==AOP_EXT))
     {
-      m6502_emitComment(REGOPS|VVDBG, "  %s: %s with %s+%d", __func__,
+      emitComment(REGOPS|VVDBG, "  %s: %s with %s+%d", __func__,
 			op, _S.tempAttr[offset].aop->aopu.aop_dir, _S.tempAttr[offset].aopofs);
       m6502_emitOp (op, "%s(%s+%d)", (_S.tempAttr[offset].aop->type==AOP_DIR)?"*":"",
 		    _S.tempAttr[offset].aop->aopu.aop_dir, _S.tempAttr[offset].aopofs );

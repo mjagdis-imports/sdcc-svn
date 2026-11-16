@@ -56,9 +56,9 @@ genMinusDec (iCode * ic)
 
   icount = (unsigned int) ulFromVal (AOP (right)->aopu.aop_lit);
 
-  m6502_emitComment (TRACEGEN, "  %s - size=%d  icount=%d", __func__, size, icount);
+  emitComment (TRACEGEN, "  %s - size=%d  icount=%d", __func__, size, icount);
 
-  m6502_emitComment (TRACEGEN|VVDBG, "  %s: icount = %d, m6502_sameRegs=%d",
+  emitComment (TRACEGEN|VVDBG, "  %s: icount = %d, m6502_sameRegs=%d",
 		     __func__, icount, m6502_sameRegs (AOP (left), AOP (result)));
 
   if (icount>255 && ((icount&0xff)!=0) )
@@ -149,7 +149,7 @@ genMinusDec (iCode * ic)
   if (!m6502_aopCanIncDec (AOP (result)))
     return false;
 
-  m6502_emitComment (TRACEGEN|VVDBG, "    %s - sameregs", __func__);
+  emitComment (TRACEGEN|VVDBG, "    %s - sameregs", __func__);
 
   if (size==1 && AOP(result)->type==AOP_REG)
     {
@@ -216,7 +216,7 @@ m6502_genMinus (iCode * ic)
     (0xff >> (8 - SPEC_BITINTWIDTH (resulttype) % 8)) : 0xff;
   bool maskedtopbyte = (topbytemask != 0xff);
 
-  m6502_emitComment (TRACEGEN, __func__);
+  emitComment (TRACEGEN, __func__);
 
   m6502_aopOp (left, ic);
   m6502_aopOp (right, ic);
@@ -227,7 +227,7 @@ m6502_genMinus (iCode * ic)
   if (!maskedtopbyte && genMinusDec (ic))
     goto release;
 
-  m6502_emitComment (TRACEGEN|VVDBG, "    %s - Can't %s", __func__, OPINCDEC);
+  emitComment (TRACEGEN|VVDBG, "    %s - Can't %s", __func__, OPINCDEC);
 
   size = AOP_SIZE (result);
   bool is_right_byte = (AOP_SIZE(right)==1) 
@@ -242,7 +242,7 @@ m6502_genMinus (iCode * ic)
     {
       symbol *skiplabel = m6502_safeNewiTempLabel (NULL);
 
-      m6502_emitComment (TRACEGEN|VVDBG, "    %s: size==2 && one byte", __func__);
+      emitComment (TRACEGEN|VVDBG, "    %s: size==2 && one byte", __func__);
       savea = fastSaveAIfSurv ();
       INIT_CARRY();
       m6502_loadRegFromAop (m6502_reg_a, AOP(left), 0);
@@ -348,7 +348,7 @@ m6502_genMinus (iCode * ic)
 
   savea = fastSaveAIfSurv ();
 
-  m6502_emitComment (TRACEGEN|VVDBG, "    %s - general case size=%d", __func__, size);
+  emitComment (TRACEGEN|VVDBG, "    %s - general case size=%d", __func__, size);
 
   for(offset=0; offset<size; offset++)
     {
@@ -382,7 +382,7 @@ m6502_genMinus (iCode * ic)
 	      opskip = false;
 	    }
 	  else
-	    m6502_emitComment (TRACEGEN|VVDBG, "  %s - opskip offset=%d", __func__, offset);
+	    emitComment (TRACEGEN|VVDBG, "  %s - opskip offset=%d", __func__, offset);
 	}
 
       if ( (offset==size-1) && maskedtopbyte)
@@ -390,7 +390,7 @@ m6502_genMinus (iCode * ic)
 
       if ( offset==0 && IS_AOP_XA (AOP(result)) )
 	{
-	  m6502_emitComment (TRACEGEN|VVDBG, "  %s - save offset=%d", __func__, offset);
+	  emitComment (TRACEGEN|VVDBG, "  %s - save offset=%d", __func__, offset);
  	  m6502_fastSaveA();
 
           if(savea)
@@ -400,7 +400,7 @@ m6502_genMinus (iCode * ic)
 	}
       else
 	{
-	  m6502_emitComment (TRACEGEN|VVDBG, "  %s - store offset=%d", __func__, offset);
+	  emitComment (TRACEGEN|VVDBG, "  %s - store offset=%d", __func__, offset);
 	  m6502_storeRegToAop (m6502_reg_a, AOP (result), offset);
 	}
 

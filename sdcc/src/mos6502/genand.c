@@ -52,7 +52,7 @@ m6502_genAnd (iCode * ic, iCode * ifx)
   unsigned int bytemask;
   int bitpos = -1;
 
-  m6502_emitComment (TRACEGEN, "%s - ifx:%d", 
+  emitComment (TRACEGEN, "%s - ifx:%d", 
 		     __func__, ifx?1:0);
 
   m6502_aopOp (left, ic);
@@ -80,7 +80,7 @@ m6502_genAnd (iCode * ic, iCode * ifx)
       lit = ullFromVal (AOP (right)->aopu.aop_lit);
       lit &= m6502_litmask(size);
       bitpos = m6502_isLiteralBit (lit) - 1;
-      m6502_emitComment (TRACEGEN|VVDBG, "  %s: lit=%04x bitpos=%d", __func__, lit, bitpos);
+      emitComment (TRACEGEN|VVDBG, "  %s: lit=%04x bitpos=%d", __func__, lit, bitpos);
     }
 
 #if 0
@@ -126,7 +126,7 @@ m6502_genAnd (iCode * ic, iCode * ifx)
       // special case for bit 6 and 7
       if( (bitpos >= 0) && m6502_aopCanBit(AOP(left)))
         {
-	  m6502_emitComment (TRACEGEN|VVDBG, "  %s: special case mem bit %d", __func__, bitpos);
+	  emitComment (TRACEGEN|VVDBG, "  %s: special case mem bit %d", __func__, bitpos);
 
 	  if ((bitpos & 7) == 7)
 	    {
@@ -144,7 +144,7 @@ m6502_genAnd (iCode * ic, iCode * ifx)
 
       if(AOP_TYPE(left)==AOP_REG)
 	{
-	  m6502_emitComment (TRACEGEN|VVDBG, "  %s: special case reg bit %d", __func__, bitpos);
+	  emitComment (TRACEGEN|VVDBG, "  %s: special case reg bit %d", __func__, bitpos);
 
 	  if ((bitpos >= 0) && ((bitpos & 7) == 7) )
 	    {
@@ -184,7 +184,7 @@ m6502_genAnd (iCode * ic, iCode * ifx)
       // test A for flags only
       if (IS_AOP_A (AOP (left)))
 	{
-	  m6502_emitComment (TRACEGEN|VVDBG, "  %s: test A for flags", __func__);
+	  emitComment (TRACEGEN|VVDBG, "  %s: test A for flags", __func__);
 
 	  if (m6502_reg_a->isDead)
 	    m6502_accopWithAop (OPCODE, AOP (right), 0);
@@ -284,7 +284,7 @@ m6502_genAnd (iCode * ic, iCode * ifx)
 
   if (x_const && (m6502_reg_x->litConst==0) )
     {
-      m6502_emitComment (TRACEGEN|VVDBG, "  %s: x_zero", __func__);
+      emitComment (TRACEGEN|VVDBG, "  %s: x_zero", __func__);
       if(AOP_SIZE (result)>1)
         m6502_storeConstToAop(0x00, AOP(result), 1);
 
@@ -307,7 +307,7 @@ m6502_genAnd (iCode * ic, iCode * ifx)
 
   if(IS_AOP_XA(AOP(result)))
     {
-      m6502_emitComment (TRACEGEN|VVDBG, "  %s: XA", __func__);
+      emitComment (TRACEGEN|VVDBG, "  %s: XA", __func__);
 
       if (IS_AOP_A(AOP(left)))
 	m6502_storeConstToAop(0x00, AOP(result), 1);
@@ -353,7 +353,7 @@ m6502_genAnd (iCode * ic, iCode * ifx)
   if(needpulla)
     m6502_reg_a->isDead=true;
 
-  m6502_emitComment (TRACEGEN|VVDBG, "  %s: general path", __func__);
+  emitComment (TRACEGEN|VVDBG, "  %s: general path", __func__);
 
   int incdec;
   incdec = m6502_findRegAop (AOP(left), size-1) ? -1 : 1;

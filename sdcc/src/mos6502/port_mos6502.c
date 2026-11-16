@@ -47,8 +47,8 @@ _get_model (void)
 static void
 _genAssemblerStart (FILE * of)
 {
-  fprintf(of, "\t.r6500\n");
   m6502_commonAssemblerStart (of);
+  fprintf(of, "\t.r6500\n\n");
 }
 
 /* Globals */
@@ -119,15 +119,15 @@ PORT mos6502_port =
       "XSEG",                   /* xstack_name */
       "STACK",                  /* istack_name */
       "CODE",                   /* code */
-      "ZP      (PAG)",          /* data */
+      "ZP",                     /* zero page (data) */
       NULL,                     /* idata */
       NULL,                     /* pdata */
-      "BSS",                    /* xdata */
+      "BSS",                    /* uninitialized xdata */
       NULL,                     /* xconst_name */
       NULL,                     /* bit */
       "RSEG    (ABS)",          /* reg */
       "GSINIT",                 /* static initialization */
-      "OSEG    (PAG, OVR)",     /* overlay */
+      "OSEG    (OVR)",          /* overlay */
       "GSFINAL",                /* gsfinal */
       "_CODE",                  /* home */
       "DATA",                   /* initialized xdata */

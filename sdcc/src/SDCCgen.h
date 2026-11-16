@@ -82,6 +82,22 @@ typedef struct genLine_s
   lineElem_t lineElement;
 } genLine_t;
 
+enum debug_messages
+  {
+    NEVER=0x00,
+    ALWAYS=0x01,
+    VASM=0x02,
+    TRACEGEN=0x04,
+    DEEPTRACE=0x08,
+    COST=0x10,
+    REGALLOC=0x20,
+    REGOPS=0x40,
+    TRACE_AOP=0x80,
+    TRACE_STACK=0x100,
+    VVDBG=0x80000000,
+    DEBUG_ALL=0x7fffffff
+  };
+
 extern genLine_t genLine;
 
 #ifdef __cplusplus
@@ -95,6 +111,8 @@ const char *format_opcode (const char *inst, const char *fmt, va_list ap);
 void emit_raw (const char *line);
 void va_emitcode (const char *inst, const char *fmt, va_list ap);
 void emitcode (const char *inst, const char *fmt, ...);
+void emitComment (unsigned int level, const char *fmt, ...);
+void setCommentLevel (unsigned int level);
 void emitLabel (const symbol * tlbl);
 void genInline (iCode * ic);
 void printLine (lineNode *, struct dbuf_s *);

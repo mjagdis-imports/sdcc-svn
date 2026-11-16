@@ -40,7 +40,7 @@ m6502_pushReg (reg_info * reg, bool freereg)
 {
   bool needloada = false;
 
-  m6502_emitComment (REGOPS, "  pushReg(%s) %s %s", reg->name, reg->isFree?"free":"", reg->isDead?"dead":"");
+  emitComment (REGOPS, "  pushReg(%s) %s %s", reg->name, reg->isFree?"free":"", reg->isDead?"dead":"");
 
   switch (reg->rIdx)
     {
@@ -135,7 +135,7 @@ m6502_pullReg (reg_info * reg)
 {
   int regidx = reg->rIdx;
 
-  m6502_emitComment (REGOPS, __func__ );
+  emitComment (REGOPS, __func__ );
 
   switch (regidx) {
   case A_IDX:
@@ -204,8 +204,8 @@ m6502_adjustStack (int n)
   int sx_cycle = (m6502_reg_x->isFree)?0:6;
   int abs_n = (n>0)?n:-n;
 
-  m6502_emitComment (TRACEGEN, "%s - adjust: %d", __func__, n );
-  m6502_emitComment (REGOPS, "  %s reg:  %s", __func__, m6502_regInfoStr());
+  emitComment (TRACEGEN, "%s - adjust: %d", __func__, n );
+  emitComment (REGOPS, "  %s reg:  %s", __func__, m6502_regInfoStr());
 
   // unrolled PHA      1b, 3c x n
   // unrolled PLA      1b, 4c x n + 4b, 6c if A is used
@@ -223,7 +223,7 @@ m6502_adjustStack (int n)
       incdec-=2;
     }
 
-  m6502_emitComment (REGOPS|VVDBG, "  %s : cycles stk:%d  incdec:%d  adc:%d", __func__,
+  emitComment (REGOPS|VVDBG, "  %s : cycles stk:%d  incdec:%d  adc:%d", __func__,
 		     stack, incdec, adc);
 
   if(stack<=incdec && stack<=adc)

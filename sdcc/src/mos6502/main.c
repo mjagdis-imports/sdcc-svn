@@ -90,10 +90,9 @@ char *m6502_keywords[] =
 };
 
 const char m6502_peepRules[] =
-//{
+{
 #include "peeph.rul"
-//}
-;
+};
 
 /** $1 is always the basename.
     $2 is always the output file.
@@ -231,30 +230,10 @@ m6502_getRegName (const struct reg_info *reg)
 void
 m6502_commonAssemblerStart (FILE * of)
 {
-  fprintf(of, ";; Ordering of segments for the linker.\n");
-  tfprintf (of, "\t!area\n", DATA_NAME);
-  tfprintf (of, "\t!area\n", OVERLAY_NAME);
-  //  if (options.xdata_overlay==0)
-  //      tfprintf (of, "\t!area    (PAG, OVR)\n", OVERLAY_NAME);
-
-  tfprintf (of, "\t!area\n", HOME_NAME);
-  tfprintf (of, "\t!area\n", STATIC_NAME);
-  tfprintf (of, "\t!area\n", "GSFINAL");
-  tfprintf (of, "\t!area\n", CODE_NAME);
-  tfprintf (of, "\t!area\n", CONST_NAME);
-  tfprintf (of, "\t!area\n", XINIT_NAME);
-
-  tfprintf (of, "\t!area\n", "_DATA");
-  tfprintf (of, "\t!area\n", XIDATA_NAME);
-  //  if(options.xdata_overlay)
-  //      tfprintf (of, "\t!area    (OVR)\n", OVERLAY_NAME);
-  tfprintf (of, "\t!area\n", XDATA_NAME);
-
   if (!options.noOptsdccInAsm)
     {
       fprintf (of, "\t.optsdcc -m%s\n", port->target);
     }
-  fprintf (of, "\n");
 }
 
 void
@@ -396,95 +375,95 @@ newAsmLineNode (void)
 /* These must be kept sorted by opcode name */
 const m6502opcodedata m6502opcodeDataTable[] =
   {
-    {".db",   M6502OP_INH, -1,       0 },    // used by the code generator only in the jump table
-    {"adc",   M6502OP_REG, A_IDX,    0xc3 },
-    {"and",   M6502OP_REG, A_IDX,    0x82 },
-    {"asl",   M6502OP_RMW, -1,       0x83 },
+    {".db",   M6502OP_INH, -1,       0,    0 },    // used by the code generator only in the jump table
+    {"adc",   M6502OP_STD, A_IDX,    0xc3, 2 },
+    {"and",   M6502OP_STD, A_IDX,    0x82, 2 },
+    {"asl",   M6502OP_RMW, -1,       0x83, 2 },
     {"bbr",   M6502OP_BBR, -1,       0 },    // Rockwell and WDC only - check huc
     {"bbs",   M6502OP_BBR, -1,       0 },    // Rockwell and WDC only
-    {"bcc",   M6502OP_BR,  -1,       0 },
-    {"bcs",   M6502OP_BR,  -1,       0 },
-    {"beq",   M6502OP_BR,  -1,       0 },
-    {"bit",   M6502OP_CMP, -1,       0xc2 },
-    {"bmi",   M6502OP_BR,  -1,       0 },
-    {"bne",   M6502OP_BR,  -1,       0 },
-    {"bpl",   M6502OP_BR,  -1,       0 },
-    {"bra",   M6502OP_BR,  -1,       0 },    // 65C02 and 6280
+    {"bcc",   M6502OP_BR,  -1,       0,    2 },
+    {"bcs",   M6502OP_BR,  -1,       0,    2 },
+    {"beq",   M6502OP_BR,  -1,       0,    2 },
+    {"bit",   M6502OP_CMP, -1,       0xc2, 2 },
+    {"bmi",   M6502OP_BR,  -1,       0,    2 },
+    {"bne",   M6502OP_BR,  -1,       0,    2 },
+    {"bpl",   M6502OP_BR,  -1,       0,    2 },
+    {"bra",   M6502OP_BR,  -1,       0,    3 },    // 65C02 and 6280
     {"brk",   M6502OP_INH, -1,       0 },
     {"bsr",   M6502OP_BR,  -1,       0 },    // 6280 only
-    {"bvc",   M6502OP_BR,  -1,       0 },
-    {"bvs",   M6502OP_BR,  -1,       0 },
-    {"cla",   M6502OP_INH,  1,       0 },    // 6280 only - clears A no flags affected
-    {"clc",   M6502OP_INH, -1,       0x01 },
-    {"cld",   M6502OP_INH, -1,       0x08 },
-    {"cli",   M6502OP_INH, -1,       0x04 },
-    {"clv",   M6502OP_INH, -1,       0x40 },
-    {"clx",   M6502OP_INH, -1,       0 },    // 6280 only - clears X no flags affected
-    {"cly",   M6502OP_INH, -1,       0 },    // 6280 only - clears Y no flags affected
-    {"cmp",   M6502OP_CMP, -1,       0x83 },
-    {"cpx",   M6502OP_CMP, -1,       0x83 },
-    {"cpy",   M6502OP_CMP, -1,       0x83 },
-    {"dec",   M6502OP_RMW, -1,       0x82 },
-    {"dex",   M6502OP_IDD, X_IDX,    0x82 },
-    {"dey",   M6502OP_IDD, Y_IDX,    0x82 },
-    {"eor",   M6502OP_REG, A_IDX,    0x82 },
-    {"inc",   M6502OP_RMW, -1,       0x82 },
-    {"inx",   M6502OP_IDI, X_IDX,    0x82 },
-    {"iny",   M6502OP_IDI, Y_IDX,    0x82 },
-    {"jmp",   M6502OP_JMP, -1,       0 },
-    {"jsr",   M6502OP_JMP, -1,       0 },
-    {"lda",   M6502OP_LD , A_IDX,    0x82 },
-    {"ldx",   M6502OP_LD , X_IDX,    0x82 },
-    {"ldy",   M6502OP_LD , Y_IDX,    0x82 },
-    {"lsr",   M6502OP_RMW, -1,       0x83 },
-    {"nop",   M6502OP_INH, -1,       0 },
-    {"ora",   M6502OP_REG, A_IDX,    0x82 },
-    {"pha",   M6502OP_SPH, -1,       0 },
-    {"php",   M6502OP_SPH, -1,       0 },
-    {"phx",   M6502OP_SPH, -1,       0 },    // 65C02 and 6280
-    {"phy",   M6502OP_SPH, -1,       0 },    // 65C02 and 6280
-    {"pla",   M6502OP_SPL, A_IDX,    0x82 },
-    {"plp",   M6502OP_SPL, -1,       0xdf },
-    {"plx",   M6502OP_SPL, X_IDX,    0x82 }, // 65C02 and 6280
-    {"ply",   M6502OP_SPL, Y_IDX,    0x82 }, // 65C02 and 6280
-    {"rmb",   M6502OP_REG, -1,       0 },    // Rockwell, WDC and 6280 only
-    {"rol",   M6502OP_RMW, -1,       0x83 },
-    {"ror",   M6502OP_RMW, -1,       0x83 },
-    {"rti",   M6502OP_INH, -1,       0xdf },
-    {"rts",   M6502OP_INH, -1,       0 },
-    {"sax",   M6502OP_INH, -1,       0 },    // 6280 only - no flags
-    {"say",   M6502OP_INH, -1,       0 },    // 6280 only - no flags
-    {"sbc",   M6502OP_REG, A_IDX,    0xc3 },
-    {"sec",   M6502OP_INH, -1,       0x01 },
-    {"sed",   M6502OP_INH, -1,       0x08 },
-    {"sei",   M6502OP_INH, -1,       0x04 },
-    {"set",   M6502OP_INH, -1,       0 },    // 6280 only - set T=1
-    {"smb",   M6502OP_REG, -1,       0 },    // Rockwell, WDC only and 6280
+    {"bvc",   M6502OP_BR,  -1,       0,    2 },
+    {"bvs",   M6502OP_BR,  -1,       0,    2 },
+    {"cla",   M6502OP_INH, A_IDX,    0,    2 },    // 6280 only - clears A no flags affected
+    {"clc",   M6502OP_INH, -1,       0x01, 2 },
+    {"cld",   M6502OP_INH, -1,       0x08, 2 },
+    {"cli",   M6502OP_INH, -1,       0x04, 2 },
+    {"clv",   M6502OP_INH, -1,       0x40, 2 },
+    {"clx",   M6502OP_INH, X_IDX,    0,    2 },    // 6280 only - clears X no flags affected
+    {"cly",   M6502OP_INH, Y_IDX,    0,    2 },    // 6280 only - clears Y no flags affected
+    {"cmp",   M6502OP_CMP, -1,       0x83, 2 },
+    {"cpx",   M6502OP_CMP, -1,       0x83, 2 },
+    {"cpy",   M6502OP_CMP, -1,       0x83, 2 },
+    {"dec",   M6502OP_RMW, -1,       0x82, 2 },
+    {"dex",   M6502OP_IDD, X_IDX,    0x82, 2 },
+    {"dey",   M6502OP_IDD, Y_IDX,    0x82, 2 },
+    {"eor",   M6502OP_STD, A_IDX,    0x82, 2 },
+    {"inc",   M6502OP_RMW, -1,       0x82, 2 },
+    {"inx",   M6502OP_IDI, X_IDX,    0x82, 2 },
+    {"iny",   M6502OP_IDI, Y_IDX,    0x82, 2 },
+    {"jmp",   M6502OP_JMP, -1,       0,    3 },
+    {"jsr",   M6502OP_JMP, -1,       0,    6 },
+    {"lda",   M6502OP_LD , A_IDX,    0x82, 2 },
+    {"ldx",   M6502OP_LD , X_IDX,    0x82, 2 },
+    {"ldy",   M6502OP_LD , Y_IDX,    0x82, 2 },
+    {"lsr",   M6502OP_RMW, -1,       0x83, 2 },
+    {"nop",   M6502OP_INH, -1,       0,    2 },
+    {"ora",   M6502OP_STD, A_IDX,    0x82, 2 },
+    {"pha",   M6502OP_SPH, -1,       0,    3 },
+    {"php",   M6502OP_SPH, -1,       0,    3 },
+    {"phx",   M6502OP_SPH, -1,       0,    3 },    // 65C02 and 6280
+    {"phy",   M6502OP_SPH, -1,       0,    3 },    // 65C02 and 6280
+    {"pla",   M6502OP_SPL, A_IDX,    0x82, 4 },
+    {"plp",   M6502OP_SPL, -1,       0xdf, 4 },
+    {"plx",   M6502OP_SPL, X_IDX,    0x82, 4 }, // 65C02 and 6280
+    {"ply",   M6502OP_SPL, Y_IDX,    0x82, 4 }, // 65C02 and 6280
+    {"rmb",   M6502OP_STD, -1,       0 },    // Rockwell, WDC and 6280 only
+    {"rol",   M6502OP_RMW, -1,       0x83, 2 },
+    {"ror",   M6502OP_RMW, -1,       0x83, 2 },
+    {"rti",   M6502OP_INH, -1,       0xdf, 6 },
+    {"rts",   M6502OP_INH, -1,       0,    6 },
+    {"sax",   M6502OP_INH, -1,       0,    3 },    // 6280 only - no flags
+    {"say",   M6502OP_INH, -1,       0,    3 },    // 6280 only - no flags
+    {"sbc",   M6502OP_STD, A_IDX,    0xc3, 2 },
+    {"sec",   M6502OP_INH, -1,       0x01, 2 },
+    {"sed",   M6502OP_INH, -1,       0x08, 2 },
+    {"sei",   M6502OP_INH, -1,       0x04, 2 },
+    {"set",   M6502OP_INH, -1,       0,    2 },    // 6280 only - set T=1
+    {"smb",   M6502OP_STD, -1,       0 },    // Rockwell, WDC only and 6280
 //    {"st0",   M6502OP_INH, -1,       0 },    // 6280 only
 //    {"st1",   M6502OP_INH, -1,       0 },    // 6280 only
 //    {"st2",   M6502OP_INH, -1,       0 },    // 6280 only
-    {"sta",   M6502OP_ST , -1,       0 },
+    {"sta",   M6502OP_ST , -1,       0,    3 },
     {"stp",   M6502OP_INH, -1,       0 },    // WDC only
-    {"stx",   M6502OP_ST , -1,       0 },
-    {"sty",   M6502OP_ST , -1,       0 },
-    {"stz",   M6502OP_ST , -1,       0 },    // 65C02 and 6280
-    {"sxy",   M6502OP_INH, -1,       0 },    // 6280 only - no flags
+    {"stx",   M6502OP_ST , -1,       0,    3 },
+    {"sty",   M6502OP_ST , -1,       0,    3 },
+    {"stz",   M6502OP_ST , -1,       0,    3 },    // 65C02 and 6280
+    {"sxy",   M6502OP_INH, -1,       0,    3 },    // 6280 only - no flags
     {"tai",   M6502OP_MT,  -1,       0 },    // 6280 only - no flags
-//    {"tam",   M6502OP_INH, -1,       0 },    // 6280 only - no flags
-    {"tax",   M6502OP_INH, X_IDX,    0x82 },
-    {"tay",   M6502OP_INH, Y_IDX,    0x82 },
+//    {"tam",   M6502OP_INH, -1,       0,   5 },    // 6280 only - no flags
+    {"tax",   M6502OP_INH, X_IDX,    0x82,  2 },
+    {"tay",   M6502OP_INH, Y_IDX,    0x82,  2 },
     {"tdd",   M6502OP_MT,  -1,       0 },    // 6280 only - no flags
     {"tia",   M6502OP_MT,  -1,       0 },    // 6280 only - no flags
     {"tii",   M6502OP_MT,  -1,       0 },    // 6280 only - no flags
     {"tin",   M6502OP_MT,  -1,       0 },    // 6280 only - no flags
 //    {"tma",   M6502OP_INH, -1,       0 },    // 6280 only - no flags
-    {"trb",   M6502OP_REG, -1,       0 },    // 65C02 and 6280
-    {"tsb",   M6502OP_REG, -1,       0 },    // 65C02 and 6280
+    {"trb",   M6502OP_STD, -1,       0 },    // 65C02 and 6280
+    {"tsb",   M6502OP_STD, -1,       0 },    // 65C02 and 6280
 //    {"tst",   M6502OP_INH, -1,       0xc2 },    // 6280 only - weird format
-    {"tsx",   M6502OP_INH, X_IDX,    0x82 },
-    {"txa",   M6502OP_INH, A_IDX,    0x82 },
-    {"txs",   M6502OP_INH, -1,       0 },
-    {"tya",   M6502OP_INH, A_IDX,    0x82 },
+    {"tsx",   M6502OP_INH, X_IDX,    0x82,  2 },
+    {"txa",   M6502OP_INH, A_IDX,    0x82,  2 },
+    {"txs",   M6502OP_INH, -1,       0,     2 },
+    {"tya",   M6502OP_INH, A_IDX,    0x82,  2 },
     {"wai",   M6502OP_INH, -1,       0 },    // WDC only
     {"zzz",   0,           -1,       0 }     // end of table
   };
@@ -494,7 +473,6 @@ m6502_opcodeCompare (const void *key, const void *member)
 {
   return strncmp((const char *)key, ((m6502opcodedata *)member)->name,3);
 }
-
 
 const m6502opcodedata *m6502_getOpcodeData (const char *inst)
 {
@@ -528,7 +506,7 @@ m6502_opcodeSize (const m6502opcodedata *opcode, const char *arg)
 	return 2;
       return 3;  /* absolute */
 
-    case M6502OP_REG: /* standard instruction */
+    case M6502OP_STD: /* standard instruction */
     case M6502OP_CMP:
     case M6502OP_LD:
     case M6502OP_ST:

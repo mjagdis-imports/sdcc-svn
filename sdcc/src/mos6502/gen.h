@@ -25,28 +25,6 @@
 // keep this in sync with __sdcc_regs.s in the library
 #define NUM_TEMP_REGS 6
 
-enum debug_messages
-  {
-    ALWAYS=0x01,
-    VASM=0x02,
-    TRACEGEN=0x04,
-    DEEPTRACE=0x08,
-    COST=0x10,
-    REGALLOC=0x20,
-    REGOPS=0x40,
-    TRACE_AOP=0x80,
-    TRACE_STACK=0x100,
-    VVDBG=0x80000000,
-    DEBUG_ALL=0x7fffffff
-  };
-
-//#define DBG_MSG (REGALLOC)
-#define DBG_MSG (REGALLOC|TRACEGEN/*|COST*/)
-//#define DBG_MSG (REGALLOC|TRACEGEN|REGOPS/*|COST*/)
-//#define DBG_MSG (REGALLOC|TRACEGEN|TRACE_STACK/*|COST*/)
-//#define DBG_MSG (DEBUG_ALL/*|VVDBG*/)
-//#define DBG_MSG ((DEBUG_ALL|VVDBG)&~COST)
-
 #define DEBUG_UNIMPLEMENTED
 
 #define LSB     0
@@ -182,7 +160,6 @@ bool m6502_tsxUseful();
 // code emit
 void m6502_emitDebuggerSymbol (const char *);
 void m6502_emitOp (const char *inst, const char *fmt, ...);
-void m6502_emitComment (unsigned int level, const char *fmt, ...);
 bool m6502_emitCmp (reg_info *reg, unsigned char v);
 void m6502_emitBranch (const char *branchop, symbol * tlbl);
 void m6502_emitTSX(void);

@@ -74,7 +74,7 @@ typedef struct reg_info
 
 typedef enum
   {
-    M6502OP_REG,
+    M6502OP_STD,
     M6502OP_LD,
     M6502OP_ST,
     M6502OP_RMW,
@@ -97,6 +97,7 @@ typedef struct m6502opcodedata
   m6505_op_type type;
   int  dest;
   unsigned char flags;
+  unsigned char cycles;
   /* info for registers used and/or modified by an instruction will be added here */
 } m6502opcodedata;
 

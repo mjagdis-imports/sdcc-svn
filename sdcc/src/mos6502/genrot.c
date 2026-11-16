@@ -42,7 +42,7 @@ genRRC (iCode * ic)
   bool resultInA = false;
   char *shift;
 
-  m6502_emitComment (TRACEGEN, __func__);
+  emitComment (TRACEGEN, __func__);
 
   /* rotate right with carry */
   m6502_aopOp (left, ic);
@@ -133,7 +133,7 @@ genRLC (iCode * ic)
   bool resultInA = false;
   bool needpulla = false;
 
-  m6502_emitComment (TRACEGEN, __func__);
+  emitComment (TRACEGEN, __func__);
 
   /* rotate right with carry */
   m6502_aopOp (left, ic);
@@ -204,14 +204,14 @@ genRotX(iCode *ic, int shCount)
   bool needpulla = false;
   int i, size;
 
-  //m6502_emitComment (TRACEGEN, __func__);
+  //emitComment (TRACEGEN, __func__);
   m6502_aopOp (left, ic);
   m6502_aopOp (result, ic);
   m6502_printIC(ic);
 
   size = AOP_SIZE (result);
 
-  m6502_emitComment (TRACEGEN, "%s - size=%d shCount=%d",__func__, size, shCount);
+  emitComment (TRACEGEN, "%s - size=%d shCount=%d",__func__, size, shCount);
 
   // special case swap16
   if(shCount==8 && size==2)
@@ -268,7 +268,7 @@ genRotX(iCode *ic, int shCount)
     {
       if(shCount<8)
 	{
-	  m6502_emitComment (TRACEGEN|VVDBG, "%s - in A",__func__);
+	  emitComment (TRACEGEN|VVDBG, "%s - in A",__func__);
 	  m6502_loadRegFromAop (m6502_reg_a, AOP (left), 0);
 	  storeRegTempAlways(m6502_reg_a, true);
 	  m6502_dirtyRegTemp (m6502_getLastTempOfs());
@@ -277,7 +277,7 @@ genRotX(iCode *ic, int shCount)
       else
 	{
 	  shCount-=8;
-	  m6502_emitComment (TRACEGEN|VVDBG, "%s - shCount>=8",__func__);
+	  emitComment (TRACEGEN|VVDBG, "%s - shCount>=8",__func__);
 	  // try reversing
 #if 0
 	  m6502_loadRegFromAop (m6502_reg_x, AOP (left), 1);
@@ -312,7 +312,7 @@ genRotX(iCode *ic, int shCount)
       int ror = false;
       if((shCount%8)>4)
         {
-	  m6502_emitComment (TRACEGEN|VVDBG, "%s - enable ROR",__func__);
+	  emitComment (TRACEGEN|VVDBG, "%s - enable ROR",__func__);
           shCount+=8;
           shCount%=(8*size);
           ror=true;
@@ -421,8 +421,8 @@ genRot8(iCode *ic, int shCount)
   bool resultInA = false;
   bool needpulla = false;
 
-  m6502_emitComment (TRACEGEN, __func__);
-  m6502_emitComment (TRACEGEN, "%s - size=1 shCount=%d",__func__, shCount);
+  emitComment (TRACEGEN, __func__);
+  emitComment (TRACEGEN, "%s - size=1 shCount=%d",__func__, shCount);
 
   m6502_aopOp (left, ic);
   m6502_aopOp (result, ic);

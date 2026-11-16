@@ -256,7 +256,7 @@ genrsh8 (operand * result, operand * left, int shCount, int sign)
   if(AOP_TYPE(left)==AOP_SOF || AOP_TYPE(result)==AOP_SOF)
     needpullx=storeRegTempIfSurv(m6502_reg_x);
 
-  m6502_emitComment (TRACEGEN, "  %s - shift=%d", __func__, shCount);
+  emitComment (TRACEGEN, "  %s - shift=%d", __func__, shCount);
   if (shCount==0)
     return;
 
@@ -289,12 +289,12 @@ genrsh16 (operand * result, operand * left, int shCount, int sign)
   bool needpulla = false;
   bool needpullx = false;
 
-  m6502_emitComment (TRACEGEN, "  %s - shift=%d  sign:%c",
+  emitComment (TRACEGEN, "  %s - shift=%d  sign:%c",
                      __func__, shCount, sign?'y':'n');
 
   if (shCount >= 8)
     {
-      m6502_emitComment (TRACEGEN, "  %s - shCount>=8", __func__);
+      emitComment (TRACEGEN, "  %s - shCount>=8", __func__);
 
       if (shCount != 8 || sign)
 	{
@@ -349,7 +349,7 @@ genrsh16 (operand * result, operand * left, int shCount, int sign)
       if ( m6502_sameRegs (AOP (left), AOP (result))
            && shCount<=countLimit)
         {
-	  //m6502_emitComment (TRACEGEN, "  %s - non register path in place shCount==%d", __func__, shCount);
+	  //emitComment (TRACEGEN, "  %s - non register path in place shCount==%d", __func__, shCount);
           if(!sign)
             {
 	      while (shCount--)
@@ -397,7 +397,7 @@ genrsh16 (operand * result, operand * left, int shCount, int sign)
 	}
       else if( !sign )
 	{
-	  //     m6502_emitComment (TRACEGEN, "  %s - non register path generic", __func__);
+	  //     emitComment (TRACEGEN, "  %s - non register path generic", __func__);
 
           needpulla = storeRegTempIfSurv (m6502_reg_a);
 
@@ -1075,7 +1075,7 @@ shiftRLong4 (operand * left, operand * result, int shift, int sign)
 static void
 genrsh32 (operand * result, operand * left, int shCount, int sign)
 {
-  m6502_emitComment (TRACEGEN, "  %s - shift=%d", __func__, shCount);
+  emitComment (TRACEGEN, "  %s - shift=%d", __func__, shCount);
   bool needpullx = false;
 
   if(AOP_TYPE(left)==AOP_SOF || AOP_TYPE(result)==AOP_SOF)
@@ -1109,12 +1109,12 @@ genRightShiftLiteral (operand * left, operand * result, int shCount, int sign)
 {
   int size, offset;
 
-  m6502_emitComment (TRACEGEN, __func__);
+  emitComment (TRACEGEN, __func__);
 
   //  size = AOP_SIZE (left);
   /* test the LEFT size !!! */
   size = AOP_SIZE (result);
-  m6502_emitComment (TRACEGEN|VVDBG, "  %s - result size=%d, left size=%d",
+  emitComment (TRACEGEN|VVDBG, "  %s - result size=%d, left size=%d",
 		     __func__, size, AOP_SIZE (left));
 
   if (shCount == 0)
@@ -1201,7 +1201,7 @@ m6502_genRightShift (iCode * ic)
   bool minus = false;
   bool sign;
 
-  m6502_emitComment (TRACEGEN, __func__);
+  emitComment (TRACEGEN, __func__);
 
   m6502_aopOp (right, ic);
   m6502_aopOp (left, ic);
@@ -1294,7 +1294,7 @@ m6502_genRightShift (iCode * ic)
   if(AOP_TYPE (left) == AOP_SOF || AOP_TYPE (right) == AOP_SOF || AOP_TYPE (result) == AOP_SOF)
     restore_x = storeRegTempIfSurv(m6502_reg_x);
 
-  m6502_emitComment (TRACEGEN, "  %s - enter size:%d src_x:%d dst_x:%d tmsb:%d countreg:%s",
+  emitComment (TRACEGEN, "  %s - enter size:%d src_x:%d dst_x:%d tmsb:%d countreg:%s",
 		     __func__, size, src_x, dst_x, msb_in_x, countreg->name);
 
   if(size==1)
@@ -1310,13 +1310,13 @@ m6502_genRightShift (iCode * ic)
 
   if(early_load_count)
     {
-      m6502_emitComment (TRACEGEN, "  %s - early count", __func__);
+      emitComment (TRACEGEN, "  %s - early count", __func__);
       m6502_loadRegFromAop (countreg, AOP (right), 0);
     }
 
   if(src_x)
     {
-      m6502_emitComment (TRACEGEN, "  %s - src op has x", __func__);
+      emitComment (TRACEGEN, "  %s - src op has x", __func__);
 
       late_x = src_x && dst_x && !IS_AOP_A (AOP (right)) && AOP_TYPE(right)!=AOP_SOF;  
 
@@ -1344,7 +1344,7 @@ m6502_genRightShift (iCode * ic)
     }
   else if(dst_x)
     {
-      m6502_emitComment (TRACEGEN, "  %s - dst op has x", __func__);
+      emitComment (TRACEGEN, "  %s - dst op has x", __func__);
       m6502_loadRegFromAop (m6502_reg_xa, AOP (left), 0);
       late_x = true;
     }
@@ -1361,13 +1361,13 @@ m6502_genRightShift (iCode * ic)
 
   if(!early_load_count)
     {
-      m6502_emitComment (TRACEGEN, "%s: late countreg", __func__);
+      emitComment (TRACEGEN, "%s: late countreg", __func__);
       m6502_loadRegFromAop (countreg, AOP (right), 0);
     }
 
   if(src_x || dst_x)
     {
-      m6502_emitComment (TRACEGEN, "  %s - src or dst op has x", __func__);
+      emitComment (TRACEGEN, "  %s - src or dst op has x", __func__);
       
       // FIXME: optimize if X is literal (sign is known)
       if(m6502_reg_x->isLitConst)
