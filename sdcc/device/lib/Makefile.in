@@ -517,14 +517,16 @@ clean_intermediate-pic:
 # ---------------------------------------------------
 install: all installdirs
 	for port in $(RELPORTS); do \
-	  [ -d "$(BUILDDIR)/$$port" ] && $(CP_U) -r $(BUILDDIR)/$$port $(sdcc_libdir); \
-	  [ -d "$(BUILDDIR)/$$port" ] && $(CP_U) -r $(srcdir)/$$port $(sdcc_libdir)/src; \
+	  if [ -d "$(BUILDDIR)/$$port" ]; then \
+	    $(CP_U) -r $(BUILDDIR)/$$port $(sdcc_libdir); \
+	    $(CP_U) -r $(srcdir)/$$port $(sdcc_libdir)/src; \
+	  fi; \
 	done
-	[ `ls $(BUILDDIR)| grep -c -E '(mcs51|ds390|ds400)'` != 0 ] && $(CP_U) -r $(srcdir)/mcs51-common $(sdcc_libdir)/src
-	[ `ls $(BUILDDIR)| grep -c -E '(mos|huc)'` != 0 ] && $(CP_U) -r $(srcdir)/mos-common $(sdcc_libdir)/src
-	[ `ls $(BUILDDIR)| grep -c -E '(^z80|z180|r800)'` != 0 ] && $(CP_U) -r $(srcdir)/z80-common $(sdcc_libdir)/src
-	[ `ls $(BUILDDIR)| grep -c -E '(r[2-6]k|tlcs|ez80)'` != 0 ] && $(CP_U) -r $(srcdir)/rabbit-common $(sdcc_libdir)/src
-	[ `ls $(BUILDDIR)| grep -c -E '(pdk)'` != 0 ] && $(CP_U) -r $(srcdir)/pdk-common $(sdcc_libdir)/src
+	if ls $(BUILDDIR) | grep -q -E '(mcs51|ds390|ds400)'; then $(CP_U) -r $(srcdir)/mcs51-common $(sdcc_libdir)/src; fi
+	if ls $(BUILDDIR) | grep -q -E '(mos|huc)'; then $(CP_U) -r $(srcdir)/mos-common $(sdcc_libdir)/src; fi
+	if ls $(BUILDDIR) | grep -q -E '(^z80|z180|r800)'; then $(CP_U) -r $(srcdir)/z80-common $(sdcc_libdir)/src; fi
+	if ls $(BUILDDIR) | grep -q -E '(r[2-6]k|tlcs|ez80)'; then $(CP_U) -r $(srcdir)/rabbit-common $(sdcc_libdir)/src; fi
+	if ls $(BUILDDIR) | grep -q -E '(pdk)'; then $(CP_U) -r $(srcdir)/pdk-common $(sdcc_libdir)/src; fi
 	$(CP_U) $(srcdir)/*.c $(sdcc_libdir)/src
 	find $(sdcc_libdir)/src -depth \
 	    \( -name '*.rel' -o -name '*.dump*' -o -name '*.sym' -o -name '*.o' -o -name '*.lib' -o \
@@ -554,7 +556,7 @@ installcheck:
 # ---------------------------------
 installdirs:
 	for port in $(RELPORTS); do \
-	  [ -d "$(BUILDDIR)/$$port" ] && mkdir -p $(sdcc_libdir)/$$port; \
+	  if [ -d "$(BUILDDIR)/$$port" ]; then mkdir -p $(sdcc_libdir)/$$port; fi; \
 	done
 	mkdir -p $(sdcc_libdir)/src
 
