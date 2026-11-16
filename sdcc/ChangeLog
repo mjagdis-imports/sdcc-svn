@@ -244,6 +244,9 @@
 	  src/mcs51/peeph.def,
 	  device/lib/mcs51-common/spx.s:
 	  Hide spx from C namespace.
+	* device/lib/ds390/Makefile.in,
+	  device/lib/ds400/Makefile.in:
+	  Fix DSxxx build.
 
 2026-11-15 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
