@@ -43,6 +43,27 @@ COMMON_LIBC_STRUCT_RET = \
   lldiv \
   imaxdiv
 
+# common files for MCS-51
+COMMON_SDCC_MCS51 = \
+  bp \
+  bpx \
+  crtbank \
+  crtcall \
+  crtclear \
+  crtpagesfr \
+  crtstart \
+  crtxclear \
+  crtxinit \
+  crtxpop \
+  crtxpush \
+  crtxstack \
+  _decdptr \
+  gptr_cmp \
+  _gptrget \
+  _gptrgetc \
+  _gptrput \
+  _spx
+
 COMMON_SDCC = \
   _divmixchar \
   _divschar \
@@ -61,6 +82,16 @@ COMMON_SDCC = \
   _modulong \
   _mullong \
   __sdcc_external_startup
+
+COMMON_FLOAT_MCS51 = \
+  _fscmp \
+  fsget1arg \
+  fsget2args \
+  fsnormalize \
+  _fsreturnval \
+  _fsrshift \
+  _fsswapargs \
+  _logexpf
 
 COMMON_FLOAT = \
   atof \

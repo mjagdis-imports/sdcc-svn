@@ -19,34 +19,10 @@ LIB		= mcs51.lib
 PORT_SDCC = $(COMMON_SDCC) \
   $(COMMON_SDCC_LL) \
   $(COMMON_SDCC_LL_SHIFT) \
-  bp \
-  bpx \
-  crtbank \
-  crtcall \
-  crtclear \
-  crtpagesfr \
-  crtstart \
-  crtxclear \
-  crtxinit \
-  crtxpop \
-  crtxpush \
-  crtxstack \
-  _decdptr \
-  gptr_cmp \
-  _gptrget \
-  _gptrgetc \
-  _gptrput \
-  _spx
+  $(COMMON_SDCC_MCS51)
 
 PORT_FLOAT = $(COMMON_FLOAT) \
-  _fscmp \
-  fsget1arg \
-  fsget2args \
-  fsnormalize \
-  _fsreturnval \
-  _fsrshift \
-  _fsswapargs \
-  _logexpf
+  $(COMMON_FLOAT_MCS51)
 
 PORT_LIBC = $(COMMON_LIBC) \
   $(COMMON_LIBC_STRUCT_RET) \

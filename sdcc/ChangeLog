@@ -15,7 +15,7 @@
 	  src/pic16/glue.c:
 	  pic16 struct parameter support, patch #520 by zeynelsagcan.
 
-2026-11-14 Gabriele Gorla <gorlik@yahoo.com>
+2026-11-15 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/hc08/gen.c,
 	  src/hc08/gen.h,
@@ -179,6 +179,16 @@
 	  device/lib/mos-common/__fssub.s,
 	  device/lib/mos-common/sdcc_float.s:
 	  Rename FP library files.
+	* device/lib/Makefile.in,
+	  device/lib/common_files.mk,
+	  device/lib/mcs51-huge/Makefile.in,
+	  device/lib/mcs51-large/Makefile.in,
+	  device/lib/mcs51-large-stack-auto/Makefile.in,
+	  device/lib/mcs51-medium/Makefile.in,
+	  device/lib/mcs51-small/Makefile.in,
+	  device/lib/mcs51-small-stack-auto/Makefile.in,
+	  device/lib/mcs51-small-xstack-auto/Makefile.in:
+	  Group mcs51 common files in common_files.mk
 
 2026-11-15 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
