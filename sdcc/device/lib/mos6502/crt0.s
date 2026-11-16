@@ -32,8 +32,8 @@
 ;--------------------------------------------------------
 ;  Ordering of segments for the linker.
 ;--------------------------------------------------------
-	.area ZP      (PAG)
-	.area OSEG    (PAG, OVR)
+	.area ZP
+	.area OSEG    (OVR)
 
 	.area _DATA
 	.area DATA
@@ -77,13 +77,13 @@ __sdcc_init_data:
 	lda	#0x00
 	ldx	#<s_ZP
 	ldy	#<l_ZP
-	beq	00101$
-00100$:
+	beq	skipZP
+ZPloop:
 	sta	*0,x
 	inx
 	dey
-	bne	00100$
-00101$:
+	bne	ZPloop
+skipZP:
 
 ; initialize DATA
 	lda	#>l_XINIT

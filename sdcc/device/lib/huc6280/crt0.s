@@ -33,8 +33,8 @@
 ;--------------------------------------------------------
 ;  Ordering of segments for the linker.
 ;--------------------------------------------------------
-	.area ZP      (PAG)
-	.area OSEG    (PAG, OVR)
+	.area ZP
+	.area OSEG    (OVR)
 
 	.area _DATA
 	.area DATA

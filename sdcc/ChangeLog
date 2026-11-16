@@ -1,4 +1,4 @@
-2026-11-15 Gabriele Gorla <gorlik@yahoo.com>
+2026-11-16 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/SDCCgen.c,
 	  src/SDCCgen.h,
@@ -22,6 +22,12 @@
 	  src/mos6502/tempops.c:
 	  Moved emitComment to SDCCgen.c.
 	  Corrected a bug in cycles calculation.
+	* device/lib/huc6280/crt0.s,
+	  device/lib/mos6502/crt0.s,
+	  device/lib/mos6502-stack-auto/crt0.s,
+	  device/lib/mos65c02/crt0.s,
+	  device/lib/mos65c02-stack-auto/crt0.s:
+	  Remove unnecessay area modifiers from crt0.
 
 2026-11-15 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
