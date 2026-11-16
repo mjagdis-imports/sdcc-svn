@@ -233,6 +233,9 @@
 	  device/lib/mcs51-small-stack-auto/Makefile.in,
 	  device/lib/mcs51-small-xstack-auto/Makefile.in:
 	  Group mcs51 common files in common_files.mk
+	  Add probability in the branc cycle calculations.
+	* doc/sdccman.lyx:
+	  Improve library documentation.
 
 2026-11-15 Christopher Bazley <chris.bazley.wg14@gmail.com>
 

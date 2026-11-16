@@ -92,19 +92,15 @@ End
 \use_indices false
 \paperorientation portrait
 \suppress_date false
-\justification default
-\crossref_package prettyref
+\justification false
+\use_refstyle 1
 \use_formatted_ref 0
 \use_minted 0
 \use_lineno 0
-\backgroundcolor none
-\fontcolor none
-\notefontcolor lightgray
-\boxbgcolor red
-\table_border_color default
-\table_odd_row_color default
-\table_even_row_color default
-\table_alt_row_colors_start 1
+\backgroundcolor #000000
+\fontcolor #000000
+\notefontcolor #000000
+\boxbgcolor #000000
 \branch test
 \selected 0
 \filename_suffix 0
@@ -139,7 +135,6 @@ End
 \html_be_strict false
 \docbook_table_output 0
 \docbook_mathml_prefix 1
-\docbook_mathml_version 0
 \end_header
 
 \begin_body
@@ -157,6 +152,7 @@ Please note:
 status collapsed
 
 \begin_layout Plain Layout
+
 
 \backslash
 /
@@ -390,6 +386,7 @@ You might also want to have a look at the wiki
 status open
 
 \begin_layout Plain Layout
+
 https://sourceforge.net/p/sdcc/wiki/
 \end_layout
 
@@ -1078,6 +1075,7 @@ status collapsed
 
 \begin_layout Plain Layout
 
+
 \backslash
 /
 \end_layout
@@ -1109,6 +1107,7 @@ The latest SDCC version can be downloaded from
 status collapsed
 
 \begin_layout Plain Layout
+
 http://sdcc.sourceforge.net/snap.php
 \end_layout
 
@@ -1186,6 +1185,7 @@ derived from GCC cpp preprocessor
 status collapsed
 
 \begin_layout Plain Layout
+
 http://gcc.gnu.org/
 \end_layout
 
@@ -1205,6 +1205,7 @@ derived from ASXXXX
 status collapsed
 
 \begin_layout Plain Layout
+
 https://shop-pdp.net/ashtml/
 \end_layout
 
@@ -1247,6 +1248,7 @@ status collapsed
 
 \begin_layout Plain Layout
 
+
 \backslash
 /
 \end_layout
@@ -1269,6 +1271,7 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
+
 
 \backslash
 /
@@ -1300,6 +1303,7 @@ derived from GNU Binutils
 status collapsed
 
 \begin_layout Plain Layout
+
 http://www.gnu.org/software/binutils/
 \end_layout
 
@@ -1398,6 +1402,7 @@ Boost C++ libraries:
 status collapsed
 
 \begin_layout Plain Layout
+
 http://www.boost.org/
 \end_layout
 
@@ -1431,6 +1436,7 @@ GPLv2 license
 status collapsed
 
 \begin_layout Plain Layout
+
 http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 \end_layout
 
@@ -1458,6 +1464,7 @@ LGPLv2.1 license
 status collapsed
 
 \begin_layout Plain Layout
+
 http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
 \end_layout
 
@@ -1485,6 +1492,7 @@ GPLv3 license
 status collapsed
 
 \begin_layout Plain Layout
+
 http://www.gnu.org/licenses/gpl.html
 \end_layout
 
@@ -1512,6 +1520,7 @@ zlib/libpng License
 status collapsed
 
 \begin_layout Plain Layout
+
 http://www.opensource.org/licenses/Zlib
 \end_layout
 
@@ -1539,6 +1548,7 @@ Boost Software License 1.0 (BSL-1.0)
 status collapsed
 
 \begin_layout Plain Layout
+
 http://www.opensource.org/licenses/BSL-1.0
 \end_layout
 
@@ -1558,6 +1568,7 @@ This documentation is maintained using a free open source word processor (\Speci
 status collapsed
 
 \begin_layout Plain Layout
+
 http://www.lyx.org/
 \end_layout
 
@@ -1676,6 +1687,7 @@ status collapsed
 
 \begin_layout Plain Layout
 
+
 \backslash
 /
 \end_layout
@@ -1705,6 +1717,7 @@ status collapsed
 
 \begin_layout Plain Layout
 
+
 \backslash
 _
 \end_layout
@@ -1724,6 +1737,7 @@ status collapsed
 
 \begin_layout Plain Layout
 
+
 \backslash
 /
 \end_layout
@@ -1742,6 +1756,7 @@ status open
 status collapsed
 
 \begin_layout Plain Layout
+
 
 \backslash
 /
@@ -1764,6 +1779,7 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
+
 
 \backslash
 /
@@ -3925,6 +3941,7 @@ status collapsed
 
 \begin_layout Plain Layout
 
+
 \backslash
 /
 \end_layout
@@ -3941,6 +3958,7 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
+
 
 \backslash
 /
@@ -3959,6 +3977,7 @@ status collapsed
 
 \begin_layout Plain Layout
 
+
 \backslash
 /
 \end_layout
@@ -3975,6 +3994,7 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
+
 
 \backslash
 /
@@ -3993,6 +4013,7 @@ status collapsed
 
 \begin_layout Plain Layout
 
+
 \backslash
 /
 \end_layout
@@ -4009,6 +4030,7 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
+
 
 \backslash
 /
@@ -4027,6 +4049,7 @@ status collapsed
 
 \begin_layout Plain Layout
 
+
 \backslash
 /
 \end_layout
@@ -4043,6 +4066,7 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
+
 
 \backslash
 /
@@ -4061,6 +4085,7 @@ status collapsed
 
 \begin_layout Plain Layout
 
+
 \backslash
 /
 \end_layout
@@ -4077,6 +4102,7 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
+
 
 \backslash
 /
@@ -4095,6 +4121,7 @@ status collapsed
 
 \begin_layout Plain Layout
 
+
 \backslash
 /
 \end_layout
@@ -4111,6 +4138,7 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
+
 
 \backslash
 /
@@ -4165,6 +4193,7 @@ status collapsed
 
 \begin_layout Plain Layout
 
+
 \backslash
 /
 \end_layout
@@ -4182,6 +4211,7 @@ status collapsed
 
 \begin_layout Plain Layout
 
+
 \backslash
 /
 \end_layout
@@ -4198,6 +4228,7 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
+
 
 \backslash
 /
@@ -4916,6 +4947,7 @@ status collapsed
 
 \begin_layout Plain Layout
 
+
 \backslash
 /
 \end_layout
@@ -4935,6 +4967,7 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
+
 
 \backslash
 /
@@ -4960,6 +4993,7 @@ status collapsed
 
 \begin_layout Plain Layout
 
+
 \backslash
 /
 \end_layout
@@ -4971,6 +5005,7 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
+
 
 \backslash
 /
@@ -5048,6 +5083,7 @@ status collapsed
 
 \begin_layout Plain Layout
 
+
 \backslash
 /
 \end_layout
@@ -5073,6 +5109,7 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
+
 
 \backslash
 /
@@ -10370,10 +10407,7 @@ union
 \end_layout
 
 \begin_layout Itemize
-hc08,
- s08,
- mos6502,
- pic14,
+pic14,
  pic16:
  they cannot be a return value
 \begin_inset Index idx
@@ -10491,6 +10525,14 @@ return rets;
 \end_layout
 
 \end_deeper
+\begin_layout Itemize
+hc08,
+ s08,
+ mos6502-stack-auto:
+ struct return is limited to 8 bytes or less.
+ 
+\end_layout
+
 \begin_layout Itemize
 mcs51,
  ds390,
@@ -12983,7 +13025,7 @@ status collapsed
 \emph on
 libsdcc.lib
 \emph default
- in the directory <installdir>/share/lib/small.
+ in the directory <installdir>/share/lib/<target>.
 \end_layout
 
 \begin_layout Subsection
@@ -14539,6 +14581,28 @@ status collapsed
  
 \end_layout
 
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+-mhuc6280
+\begin_inset Index idx
+range none
+pageformat default
+status collapsed
+
+\begin_layout Plain Layout
+-mhuc6280
+\end_layout
+
+\end_inset
+
+
+\series default
+ Generate code for the Hudson Soft HuC6280.
+ 
+\end_layout
+
 \begin_layout Standard
 SDCC inspects the program name it was called with so the processor family can also be selected by renaming the sdcc binary (to f.e.
  z80-sdcc) or by calling SDCC from a suitable link.
@@ -15334,6 +15398,7 @@ status collapsed
 
 \begin_layout Plain Layout
 
+
 \backslash
 /
 \end_layout
@@ -15352,6 +15417,7 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
+
 
 \backslash
 /
@@ -15385,6 +15451,7 @@ status collapsed
 
 \begin_layout Plain Layout
 
+
 \backslash
 #
 \end_layout
@@ -15409,6 +15476,7 @@ status collapsed
 
 \begin_layout Plain Layout
 
+
 \backslash
 /
 \end_layout
@@ -15427,6 +15495,7 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
+
 
 \backslash
 /
@@ -15624,6 +15693,7 @@ status collapsed
 
 \begin_layout Plain Layout
 
+
 \backslash
 /
 \end_layout
@@ -15642,6 +15712,7 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
+
 
 \backslash
 /
@@ -15669,6 +15740,7 @@ status collapsed
 
 \begin_layout Plain Layout
 
+
 \backslash
 /
 \end_layout
@@ -15689,6 +15761,7 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
+
 
 \backslash
 /
@@ -15730,6 +15803,7 @@ Peep Hole optimizations for details on how to write these rules.
 status collapsed
 
 \begin_layout Plain Layout
+
 
 \backslash
 /
@@ -16357,6 +16431,7 @@ status collapsed
 
 \begin_layout Plain Layout
 
+
 \backslash
 /
 \end_layout
@@ -16375,6 +16450,7 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
+
 
 \backslash
 /
@@ -16418,6 +16494,7 @@ status collapsed
 
 \begin_layout Plain Layout
 
+
 \backslash
 /
 \end_layout
@@ -16436,6 +16513,7 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
+
 
 \backslash
 /
@@ -16478,6 +16556,7 @@ status collapsed
 
 \begin_layout Plain Layout
 
+
 \backslash
 /
 \end_layout
@@ -16498,6 +16577,7 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
+
 
 \backslash
 /
@@ -16763,6 +16843,7 @@ status collapsed
 
 \begin_layout Plain Layout
 
+
 \backslash
 /
 \end_layout
@@ -16781,6 +16862,7 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
+
 
 \backslash
 /
@@ -16847,6 +16929,7 @@ status collapsed
 
 \begin_layout Plain Layout
 
+
 \backslash
 /
 \end_layout
@@ -16862,6 +16945,7 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
+
 
 \backslash
 /
@@ -21924,7 +22008,8 @@ MOS6502 options
 \end_inset
 
  (apply to mos6502,
- mos65c02)
+ mos65c02,
+ huc6280)
 \end_layout
 
 \begin_layout Labeling
@@ -22071,7 +22156,7 @@ status collapsed
 \series default
  Force the compiler to spill registers to 16-bit addressable memory (xdata) instead of Page Zero.
  When running out of Page Zero space,
- this option will allow to free many Page Zero locations at the expense of slightly larger and slower code
+ this option will allow to free many Page Zero locations at the expense of slightly larger and slower code.
 \end_layout
 
 \begin_layout Subsection
@@ -36671,12 +36756,73 @@ In other words inline assembly code can access labels defined in inline assembly
 \end_layout
 
 \begin_layout Section
-Support routines for integer multiplicative operators
+Included Libraries
+\begin_inset Index idx
+range none
+pageformat default
+status collapsed
+
+\begin_layout Plain Layout
+Libraries
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Starting with SDCC 4.7.0 the libraries have been reorganized in 4 files:
+\end_layout
+
+\begin_layout Itemize
+libsdcc.lib - Compiler support routines
+\end_layout
+
+\begin_layout Itemize
+libsdccf.lib - Floating point support
+\end_layout
+
+\begin_layout Itemize
+libc.lib - Standard C library
+\end_layout
+
+\begin_layout Itemize
+libm.lib - Standard FP math library
+\end_layout
+
+\begin_layout Standard
+
+\emph on
+<pending:
+ this is messy and incomplete - a little more information is at 
+\emph default
+
+\begin_inset Flex URL
+status open
+
+\begin_layout Plain Layout
+
+http://sdcc.sourceforge.net/wiki/index.php/List_of_the_SDCC_library
+\end_layout
+
+\end_inset
+
+>
+\end_layout
+
+\begin_layout Subsection
+Compiler support routines
+\end_layout
+
+\begin_layout Standard
+The libsdcc.lib library is required to implement the base C language.
+ It includes port specific code that the compiler needs internally and and the integer math completion routines.
 \end_layout
 
 \begin_layout Standard
 Depending on the target architecture,
- some integer multiplicative operators might be implemented by support routines.
+ some integer multiplicative operators and long long shifts might be implemented by support routines.
  These support routines exist in portable C versions to facilitate porting to other MCUs,
  although depending on the target,
  assembler routines might be used instead.
@@ -36757,7 +36903,7 @@ _divsint.c
 \begin_inset Text
 
 \begin_layout Plain Layout
- signed 16 bit division (calls _divuint)
+signed 16 bit division (calls _divuint)
 \end_layout
 
 \end_inset
@@ -36777,7 +36923,7 @@ _divuint.c
 \begin_inset Text
 
 \begin_layout Plain Layout
- unsigned 16 bit division
+unsigned 16 bit division
 \end_layout
 
 \end_inset
@@ -36857,7 +37003,7 @@ _divslong.c
 \begin_inset Text
 
 \begin_layout Plain Layout
- signed 32 division (calls _divulong)
+signed 32 division (calls _divulong)
 \end_layout
 
 \end_inset
@@ -36897,7 +37043,7 @@ _modslong.c
 \begin_inset Text
 
 \begin_layout Plain Layout
- signed 32 bit modulus (calls _modulong)
+signed 32 bit modulus (calls _modulong)
 \end_layout
 
 \end_inset
@@ -36939,6 +37085,8 @@ In the mcs51,
  ds390,
  hc08,
  s08,
+ mos6502,
+ huc6280,
  pdk13,
  pdk14,
  pdk15,
@@ -37063,7 +37211,7 @@ status collapsed
  The compiler will use them automatically every time an integer operation is required.
 \end_layout
 
-\begin_layout Section
+\begin_layout Subsection
 Floating Point Support
 \begin_inset Index idx
 range none
@@ -37084,7 +37232,7 @@ SDCC supports (single precision 4 bytes) floating point numbers;
  the format is somewhat similar to IEEE,
  but it is not IEEE;
  in particular,
- denormalized floating -point numbers are not supported.
+ denormalized floating-point numbers are not supported.
  The floating point support routines are derived from gcc's floatlib.c and consist of the following routines:
 \begin_inset Newline newline
 \end_inset
@@ -37801,51 +37949,17 @@ convert singed long long to floating point
 
 \end_layout
 
-\begin_layout Section
-Library Routines
-\begin_inset Index idx
-range none
-pageformat default
-status collapsed
-
-\begin_layout Plain Layout
-Libraries
+\begin_layout Standard
+The mcs51 and the mos6502 ports have a fairly complete assembly implementation of the basic FP operations.
+ 
 \end_layout
 
-\end_inset
-
-
+\begin_layout Subsection
+Standard C Library
 \end_layout
 
 \begin_layout Standard
-
-\emph on
-<pending:
- this is messy and incomplete - a little more information is at 
-\emph default
-
-\begin_inset Flex URL
-status collapsed
-
-\begin_layout Plain Layout
-
-http://sdcc.sourceforge.net/wiki/index.php/List_of_the_SDCC_library
-\end_layout
-
-\end_inset
-
->
-\end_layout
-
-\begin_layout Subsection
-Compiler support routines (_gptrget,
- _mulint etc.)
-\end_layout
-
-\begin_layout Subsection
-Stdclib functions (puts,
- printf,
- strcat etc.)
+The libc.lib library implements the standard C library.
 \end_layout
 
 \begin_layout Subsubsection
@@ -39701,9 +39815,17 @@ sdcc main.rel _heap.rel
 \end_layout
 
 \begin_layout Subsection
-Math functions (sinf,
+Standard Floating Point Math Library
+\end_layout
+
+\begin_layout Standard
+The libm.lib library implements the standard floating point math library (sinf,
  powf,
  sqrtf etc.)
+\end_layout
+
+\begin_layout Standard
+There is no double support as SDCC currently does not have support for it.
 \end_layout
 
 \begin_layout Subsubsection
@@ -71564,6 +71686,7 @@ Changelog
 status collapsed
 
 \begin_layout Plain Layout
+
 http://svn.code.sf.net/p/sdcc/code/trunk/sdcc/ChangeLog
 \end_layout
 
@@ -71587,6 +71710,7 @@ sdcc -
 status collapsed
 
 \begin_layout Plain Layout
+
 
 \backslash
 /
@@ -71617,6 +71741,7 @@ Subversion code repository
 status collapsed
 
 \begin_layout Plain Layout
+
 http://sourceforge.net/p/sdcc/code/8805/tree/
 \end_layout
 
@@ -71652,6 +71777,7 @@ The last digit of an official release is zero.
 status collapsed
 
 \begin_layout Plain Layout
+
 http://sdcc.sourceforge.net/snap.php
 \end_layout
 
@@ -71663,6 +71789,7 @@ http://sdcc.sourceforge.net/snap.php
 status collapsed
 
 \begin_layout Plain Layout
+
 http://sdcc.sourceforge.net/snap.php#Source
 \end_layout
 
@@ -71698,6 +71825,7 @@ SDCC Wiki
 status collapsed
 
 \begin_layout Plain Layout
+
 http://sdcc.sourceforge.net/wiki/
 \end_layout
 
@@ -71764,6 +71892,7 @@ Regression test
 status collapsed
 
 \begin_layout Plain Layout
+
 http://sdcc.sourceforge.net/snap.php
 \end_layout
 
@@ -71875,6 +72004,7 @@ The SDCC Open Knowledge Resource
 status collapsed
 
 \begin_layout Plain Layout
+
 http://sdccokr.dl9sec.de/
 \end_layout
 
@@ -71887,6 +72017,7 @@ http://sdccokr.dl9sec.de/
 status collapsed
 
 \begin_layout Plain Layout
+
 http://www.pjrc.com/tech/8051/
 \end_layout
 
@@ -71959,6 +72090,7 @@ have a curriculum that can be extended for years.
 status collapsed
 
 \begin_layout Plain Layout
+
 opencores.org
 \end_layout
 
@@ -71970,6 +72102,7 @@ opencores.org
 status collapsed
 
 \begin_layout Plain Layout
+
 http://www.oregano.at/ip/ip01.htm
 \end_layout
 
@@ -71982,6 +72115,7 @@ http://www.oregano.at/ip/ip01.htm
 status collapsed
 
 \begin_layout Plain Layout
+
 http://sourceforge.net/projects/fpgac/
 \end_layout
 
@@ -72001,6 +72135,7 @@ be able to insert excursions about skills like using a revision control system,
 status collapsed
 
 \begin_layout Plain Layout
+
 http://sourceforge.net/
 \end_layout
 
@@ -72012,6 +72147,7 @@ http://sourceforge.net/
 status collapsed
 
 \begin_layout Plain Layout
+
 http://en.wikipedia.org/wiki/Netiquette
 \end_layout
 
@@ -72043,6 +72179,7 @@ And if there should be a shortage of ideas then you can always point students to
 status collapsed
 
 \begin_layout Plain Layout
+
 http://sourceforge.net/p/sdcc/feature-requests/
 \end_layout
 
@@ -72067,6 +72204,7 @@ their
 status collapsed
 
 \begin_layout Plain Layout
+
 http://www.laptop.org
 \end_layout
 
@@ -72619,6 +72757,7 @@ status collapsed
 
 \begin_layout Plain Layout
 
+
 \backslash
 /
 \end_layout
@@ -72640,6 +72779,7 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
+
 
 \backslash
 #
@@ -79760,6 +79900,7 @@ status collapsed
 
 \begin_layout Plain Layout
 
+
 \backslash
 /
 \end_layout
@@ -79778,6 +79919,7 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
+
 
 \backslash
 /
@@ -79920,6 +80062,7 @@ status collapsed
 
 \begin_layout Plain Layout
 
+
 \backslash
 /
 \end_layout
@@ -79989,6 +80132,7 @@ status collapsed
 
 \begin_layout Plain Layout
 
+
 \backslash
 /
 \end_layout
@@ -80009,6 +80153,7 @@ status collapsed
 status collapsed
 
 \begin_layout Plain Layout
+
 
 \backslash
 /
@@ -80512,6 +80657,7 @@ status collapsed
 
 \begin_layout Plain Layout
 
+
 \backslash
 /
 \end_layout
@@ -80603,6 +80749,7 @@ The second phase involves generating an intermediate code which can be easy mani
 status collapsed
 
 \begin_layout Plain Layout
+
 
 \backslash
 /
@@ -80730,6 +80877,7 @@ wiki
 status open
 
 \begin_layout Plain Layout
+
 https://sourceforge.net/p/sdcc/wiki/Adding%20a%20port/
 \end_layout
 
@@ -80740,6 +80888,7 @@ https://sourceforge.net/p/sdcc/wiki/Adding%20a%20port/
 status collapsed
 
 \begin_layout Plain Layout
+
 http://sourceforge.net/mailarchive/message.php?msg_id=13954144
 \end_layout
 
@@ -83016,6 +83165,7 @@ status collapsed
 
 \begin_layout Plain Layout
 
+
 \backslash
 /
 \end_layout
@@ -84937,6 +85087,7 @@ Acknowledgments
 status collapsed
 
 \begin_layout Plain Layout
+
 http://sdcc.sourceforge.net/#Who
 \end_layout
 
@@ -84974,6 +85125,7 @@ Thanks to Sourceforge
 status collapsed
 
 \begin_layout Plain Layout
+
 http://sourceforge.net/
 \end_layout
 
