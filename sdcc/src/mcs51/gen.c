@@ -5009,9 +5009,9 @@ genFunction (iCode * ic)
 
       if (xadjust > 3 && accIsFree)
         {
-          emitcode ("mov", "a,_spx");
+          emitcode ("mov", "a,spx");
           emitcode ("add", "a,#!constbyte", xadjust);
-          emitcode ("mov", "_spx,a");
+          emitcode ("mov", "spx,a");
         }
       else if (xadjust > 4)
         {
@@ -5019,9 +5019,9 @@ genFunction (iCode * ic)
             emitcode ("xch", "a,%s", freereg);
           else
             emitpush ("acc");
-          emitcode ("mov", "a,_spx");
+          emitcode ("mov", "a,spx");
           emitcode ("add", "a,#0x%02x", xadjust);
-          emitcode ("mov", "_spx,a");
+          emitcode ("mov", "spx,a");
           if (freereg)
             emitcode ("xch", "a,%s", freereg);
           else
@@ -5030,7 +5030,7 @@ genFunction (iCode * ic)
       else
         {
           while (xadjust--)
-            emitcode ("inc", "_spx");
+            emitcode ("inc", "spx");
         }
     }
 
@@ -5125,15 +5125,15 @@ genEndFunction (iCode * ic)
                   acc_in_r0 = TRUE;
                 }
 
-              emitcode ("mov", "a,_spx");
+              emitcode ("mov", "a,spx");
               emitcode ("add", "a,#!constbyte", (-sym->xstack) & 0xffu);
-              emitcode ("mov", "_spx,a");
+              emitcode ("mov", "spx,a");
             }
           else
             {
               int i = sym->xstack;
               while (i--)
-                emitcode ("dec", "_spx");
+                emitcode ("dec", "spx");
             }
 
           if (acc_in_r0)
@@ -13552,7 +13552,7 @@ gen51Code (iCode * lic)
     }
   /* stack pointer name */
   if (options.useXstack)
-    spname = "_spx";
+    spname = "spx";
   else
     spname = "sp";
 

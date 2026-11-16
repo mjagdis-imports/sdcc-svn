@@ -62,7 +62,7 @@ COMMON_SDCC_MCS51 = \
   _gptrget \
   _gptrgetc \
   _gptrput \
-  _spx
+  spx
 
 COMMON_SDCC = \
   _divmixchar \

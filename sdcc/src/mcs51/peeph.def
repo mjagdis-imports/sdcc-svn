@@ -2246,11 +2246,11 @@ replace {
 }
 
 replace {
-	mov	r%1,_spx
+	mov	r%1,spx
 	lcall	%2
-	mov	r%1,_spx
+	mov	r%1,spx
 } by {
-	;	Peephole 203	removed mov  r%1,_spx
+	;	Peephole 203	removed mov  r%1,spx
 	lcall	%2
 }
 

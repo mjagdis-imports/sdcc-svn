@@ -233,9 +233,17 @@
 	  device/lib/mcs51-small-stack-auto/Makefile.in,
 	  device/lib/mcs51-small-xstack-auto/Makefile.in:
 	  Group mcs51 common files in common_files.mk
-	  Add probability in the branc cycle calculations.
+	  Add probability in the branch cycle calculations.
 	* doc/sdccman.lyx:
 	  Improve library documentation.
+	* device/lib/common_files.mk,
+	  src/ds390/gen.c,
+	  src/ds390/main.c,
+	  src/ds390/peeph.def,
+	  src/mcs51/gen.c,
+	  src/mcs51/peeph.def,
+	  device/lib/mcs51-common/spx.s:
+	  Hide spx from C namespace.
 
 2026-11-15 Christopher Bazley <chris.bazley.wg14@gmail.com>
 

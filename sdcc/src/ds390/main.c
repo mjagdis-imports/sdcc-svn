@@ -534,7 +534,7 @@ _ds390_genInitStartup (FILE *of)
     {
       fprintf (of, "\tmov\tP2,#0x%02x\n",
                (((unsigned int) options.xdata_loc) >> 8) & 0xff);
-      fprintf (of, "\tmov\t_spx,#0x%02x\n",
+      fprintf (of, "\tmov\tspx,#0x%02x\n",
                (unsigned int) options.xdata_loc & 0xff);
     }
 

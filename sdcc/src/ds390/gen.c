@@ -2807,17 +2807,17 @@ genXpush (iCode * ic)
   if (size == 1)
     {
       MOVA (aopGet (IC_LEFT (ic), 0, FALSE, FALSE, NULL));
-      emitcode ("mov", "%s,_spx", r->name);
-      emitcode ("inc", "_spx"); // allocate space first
+      emitcode ("mov", "%s,spx", r->name);
+      emitcode ("inc", "spx"); // allocate space first
       emitcode ("movx", "@%s,a", r->name);
     }
   else
     {
       // allocate space first
-      emitcode ("mov", "%s,_spx", r->name);
+      emitcode ("mov", "%s,spx", r->name);
       MOVA (r->name);
       emitcode ("add", "a,#%d", size);
-      emitcode ("mov", "_spx,a");
+      emitcode ("mov", "spx,a");
 
       _startLazyDPSEvaluation ();
       while (size--)
@@ -3072,10 +3072,10 @@ saveRBank (int bank, iCode * ic, bool pushPsw)
           r = getFreePtr (ic, &aop, FALSE);
         }
       // allocate space first
-      emitcode ("mov", "%s,_spx", r->name);
+      emitcode ("mov", "%s,spx", r->name);
       MOVA (r->name);
       emitcode ("add", "a,#!constbyte", (unsigned)count);
-      emitcode ("mov", "_spx,a");
+      emitcode ("mov", "spx,a");
     }
 
   for (i = 0; i < 8; i++)       /* only R0-R7 needs saving */
@@ -3155,7 +3155,7 @@ unsaveRBank (int bank, iCode * ic, bool popPsw)
           aop = newAsmop (0);
           r = getFreePtr (ic, &aop, FALSE);
         }
-      emitcode ("mov", "%s,_spx", r->name);
+      emitcode ("mov", "%s,spx", r->name);
     }
 
   if (popPsw)
@@ -3204,7 +3204,7 @@ unsaveRBank (int bank, iCode * ic, bool popPsw)
 
   if (options.useXstack)
     {
-      emitcode ("mov", "_spx,%s", r->name);
+      emitcode ("mov", "spx,%s", r->name);
     }
 
   if (aop)
@@ -4119,9 +4119,9 @@ genFunction (iCode * ic)
       if (sym->xstack > 256)
         werror (W_STACK_OVERFLOW, sym->name);
 
-      emitcode ("mov", "a,_spx");
+      emitcode ("mov", "a,spx");
       emitcode ("add", "a,#!constbyte", xadjust);
-      emitcode ("mov", "_spx,a");
+      emitcode ("mov", "spx,a");
     }
 
   /* if critical function then turn interrupts off */
@@ -14600,7 +14600,7 @@ gen390Code (iCode * lic)
     }
   /* stack pointer name */
   if (options.useXstack)
-    spname = "_spx";
+    spname = "spx";
   else
     spname = "sp";
 
