@@ -98,7 +98,7 @@ genMinusDec (iCode * ic)
 	  tlbl = m6502_safeNewiTempLabel (NULL);
 	  INIT_CARRY();
 	  m6502_accopWithAop (OPCODE, AOP (right), 0);
-	  m6502_emitBranch ("bcs", tlbl);
+	  m6502_emitBranch ("bcs", tlbl, BR_DEFAULT);
 	  m6502_rmwWithReg (OPINCDEC, m6502_reg_x);
 	  m6502_safeEmitLabel (tlbl);
 	  m6502_dirtyReg(m6502_reg_x);
@@ -178,7 +178,7 @@ genMinusDec (iCode * ic)
 
           tlbl = m6502_safeNewiTempLabel (NULL);
           m6502_loadRegFromAop (reg, AOP (left), 0);
-          m6502_emitBranch ("bne", tlbl);
+          m6502_emitBranch ("bne", tlbl, BR_DEFAULT);
           m6502_rmwWithAop (OPINCDEC, AOP (result), 1);
           m6502_safeEmitLabel (tlbl);
           m6502_rmwWithAop (OPINCDEC, AOP (result), 0);
@@ -248,7 +248,7 @@ m6502_genMinus (iCode * ic)
       m6502_loadRegFromAop (m6502_reg_a, AOP(left), 0);
       m6502_accopWithAop (OPCODE, AOP(right), 0);
       m6502_storeRegToAop (m6502_reg_a, AOP (result), 0);
-      m6502_emitBranch ("bcs", skiplabel);
+      m6502_emitBranch ("bcs", skiplabel, BR_DEFAULT);
       m6502_rmwWithAop (OPINCDEC, AOP(result), 1);
       if(IS_AOP_WITH_X(AOP(result)))
 	m6502_dirtyReg(m6502_reg_x);

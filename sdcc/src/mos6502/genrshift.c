@@ -851,7 +851,7 @@ shiftRLong3 (operand * left, operand * result, int shift, int sign)
       symbol *tlbl = m6502_safeNewiTempLabel (NULL);
 
       m6502_emitCmp(m6502_reg_a, 0x80);
-      m6502_emitBranch ("bcc", tlbl);
+      m6502_emitBranch ("bcc", tlbl, BR_DEFAULT);
       m6502_rmwWithReg ("dec", m6502_reg_x);
       m6502_safeEmitLabel(tlbl);
       m6502_rmwWithReg ("ror", m6502_reg_a);
@@ -1392,7 +1392,7 @@ m6502_genRightShift (iCode * ic)
       m6502_storeRegToAop (m6502_reg_a, AOP(result) , a_loc);
 
       m6502_emitCmp(countreg, 8);
-      m6502_emitBranch ("bcc", byteskip);
+      m6502_emitBranch ("bcc", byteskip, BR_DEFAULT);
       m6502_safeEmitLabel (byteloop);
       m6502_dirtyReg(m6502_reg_a);
       m6502_dirtyReg(m6502_reg_y);
@@ -1433,14 +1433,14 @@ m6502_genRightShift (iCode * ic)
       //if(size==8)
       {
 	m6502_emitCmp(countreg, 8);
-        m6502_emitBranch ("bcs", byteloop);
+        m6502_emitBranch ("bcs", byteloop, BR_DEFAULT);
       }
       m6502_loadRegFromAop (m6502_reg_a, AOP (result), a_loc);
       m6502_safeEmitLabel (byteskip);
     }
 
   m6502_emitCmp(countreg, 0);
-  m6502_emitBranch ("beq", endlabel);
+  m6502_emitBranch ("beq", endlabel, BR_DEFAULT);
 
   if(msb_in_x && late_x)
     {
@@ -1492,7 +1492,7 @@ m6502_genRightShift (iCode * ic)
     }
 
   m6502_rmwWithReg ("dec", countreg);
-  m6502_emitBranch ("bne", bitloop);
+  m6502_emitBranch ("bne", bitloop, BR_DEFAULT);
 
   if (msb_in_x && countreg!=m6502_reg_x)
     m6502_loadRegTemp(m6502_reg_x);

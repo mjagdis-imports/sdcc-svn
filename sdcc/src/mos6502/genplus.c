@@ -101,7 +101,7 @@ genPlusInc (iCode * ic)
           tlbl = m6502_safeNewiTempLabel (NULL);
 	  INIT_CARRY();
           m6502_accopWithAop (OPCODE, AOP (right), 0);
-          m6502_emitBranch ("bcc", tlbl);
+          m6502_emitBranch ("bcc", tlbl, BR_DEFAULT);
 	  m6502_rmwWithReg (OPINCDEC, m6502_reg_x);
           m6502_safeEmitLabel (tlbl);
           m6502_dirtyReg(m6502_reg_x);
@@ -116,7 +116,7 @@ genPlusInc (iCode * ic)
         {
           tlbl = m6502_safeNewiTempLabel (NULL);
 	  m6502_rmwWithReg (OPINCDEC, m6502_reg_y);
-          m6502_emitBranch ("bne", tlbl);
+          m6502_emitBranch ("bne", tlbl, 0.9);
 	  m6502_rmwWithReg (OPINCDEC, m6502_reg_x);
           m6502_safeEmitLabel (tlbl);
           m6502_dirtyReg(m6502_reg_x);
@@ -132,7 +132,7 @@ genPlusInc (iCode * ic)
           tlbl = m6502_safeNewiTempLabel (NULL);
 	  INIT_CARRY();
           m6502_accopWithAop (OPCODE, AOP (right), 0);
-          m6502_emitBranch ("bcc", tlbl);
+          m6502_emitBranch ("bcc", tlbl, BR_DEFAULT);
 	  m6502_rmwWithReg (OPINCDEC, m6502_reg_x);
           m6502_safeEmitLabel (tlbl);
           m6502_transferRegReg(m6502_reg_a, m6502_reg_y, true);
@@ -206,7 +206,7 @@ genPlusInc (iCode * ic)
     {
       m6502_rmwWithAop (OPINCDEC, AOP (result), 0);
       if (size > 1)
-	m6502_emitBranch ("bne", tlbl);
+	m6502_emitBranch ("bne", tlbl, 0.9);
     }
   else
     {
@@ -217,7 +217,7 @@ genPlusInc (iCode * ic)
       m6502_accopWithAop (OPCODE, AOP (right), 0);
       m6502_storeRegToAop (m6502_reg_a, AOP (result), 0);
       if (size > 1)
-	m6502_emitBranch ("bcc", tlbl);
+	m6502_emitBranch ("bcc", tlbl, BR_DEFAULT);
     }
 
   for (offset = 1; offset < size; offset++)
@@ -226,7 +226,7 @@ genPlusInc (iCode * ic)
       if(AOP(result)->type==AOP_REG)
         m6502_dirtyReg(AOP(result)->aopu.aop_reg[offset]);
       if ((offset + 1) < size)
-	m6502_emitBranch ("bne", tlbl);
+	m6502_emitBranch ("bne", tlbl, 0.9);
     }
 
   if (size > 1)
@@ -301,7 +301,7 @@ m6502_genPlus (iCode * ic)
       m6502_loadRegFromAop (m6502_reg_a, AOP(left), 0);
       m6502_accopWithAop (OPCODE, AOP(right), 0);
       m6502_storeRegToAop (m6502_reg_a, AOP (result), 0);
-      m6502_emitBranch ("bcc", skiplabel);
+      m6502_emitBranch ("bcc", skiplabel, BR_DEFAULT);
       m6502_rmwWithAop (OPINCDEC, AOP(result), 1);
       if(IS_AOP_WITH_X(AOP(result)))
 	m6502_dirtyReg(m6502_reg_x);
@@ -321,7 +321,7 @@ m6502_genPlus (iCode * ic)
       m6502_loadRegFromAop (m6502_reg_xa, AOP(left), 0);
       INIT_CARRY();
       m6502_accopWithAop (OPCODE, AOP(right), 0);
-      m6502_emitBranch ("bcc", skipInc);
+      m6502_emitBranch ("bcc", skipInc, BR_DEFAULT);
       m6502_rmwWithAop (OPINCDEC, AOP(result), 1);
       m6502_dirtyReg(m6502_reg_x);
       m6502_safeEmitLabel (skipInc);
@@ -335,7 +335,7 @@ m6502_genPlus (iCode * ic)
       INIT_CARRY();
       m6502_accopWithAop (OPCODE, AOP(right), 0);
       m6502_loadRegFromAop (m6502_reg_x, AOP(right), 1);
-      m6502_emitBranch ("bcc", skipInc);
+      m6502_emitBranch ("bcc", skipInc, BR_DEFAULT);
       m6502_rmwWithAop (OPINCDEC, AOP(result), 1);
       m6502_dirtyReg(m6502_reg_x);
       m6502_safeEmitLabel (skipInc);

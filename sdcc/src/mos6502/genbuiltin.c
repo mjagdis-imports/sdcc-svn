@@ -102,7 +102,7 @@ genBuiltInMemset(const iCode *ic, int nparams, operand **pparams)
   else
     m6502_emitOp ("sta", INDFMT_IY, AOP(dst)->aopu.aop_dir);
 
-  m6502_emitBranch ("bne", loop_label);
+  m6502_emitBranch ("bne", loop_label, 0.8 );
 
   m6502_loadOrFreeRegTemp(m6502_reg_y, needpully);
   m6502_loadOrFreeRegTemp(m6502_reg_a, needpulla);

@@ -141,7 +141,7 @@ m6502_genOr (iCode * ic, iCode * ifx)
 	    m6502_accopWithAop (OPCODE, AOP(right), offset);
 
 	  if(((offset+1)%2)==0)
-	    m6502_emitBranch ("bne", tlbl);
+	    m6502_emitBranch ("bne", tlbl, BR_DEFAULT);
 	}
 
       m6502_freeReg (m6502_reg_a);

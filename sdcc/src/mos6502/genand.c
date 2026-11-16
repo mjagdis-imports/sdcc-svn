@@ -95,17 +95,17 @@ m6502_genAnd (iCode * ic, iCode * ifx)
 	{
 	  // FIXME: unimplemented
 	  m6502_emitOp ("brclr", "#%d,%s,%05d$", bitpos & 7, aopAdrStr (AOP (left), bitpos >> 3, false), safeLabelKey2num ((tlbl->key)));
-	  m6502_emitBranch ("jmp", IC_TRUE (ifx));
+	  m6502_emitBranch ("jmp", IC_TRUE (ifx), 1);
 	  m6502_safeEmitLabel (tlbl);
 	  if (IC_FALSE (ifx))
-	    m6502_emitBranch ("jmp", IC_FALSE (ifx));
+	    m6502_emitBranch ("jmp", IC_FALSE (ifx), 1);
 	}
       else
 	{
 	  // FIXME: unimplemented
 	  if (!regalloc_dry_run)
 	    m6502_emitOp ("brset", "#%d,%s,%05d$", bitpos & 7, aopAdrStr (AOP (left), bitpos >> 3, false), safeLabelKey2num ((tlbl->key)));
-	  m6502_emitBranch ("jmp", IC_FALSE (ifx));
+	  m6502_emitBranch ("jmp", IC_FALSE (ifx), 1);
 	  m6502_safeEmitLabel (tlbl);
 	}
       ifx->generated = true;
@@ -236,7 +236,7 @@ m6502_genAnd (iCode * ic, iCode * ifx)
 		m6502_accopWithAop (OPCODE, AOP(right), offset);
 	  
 	      if (offset<size-1)
-		m6502_emitBranch ("bne", tlbl);
+		m6502_emitBranch ("bne", tlbl, BR_DEFAULT);
 	    }
 	}
 

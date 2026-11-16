@@ -128,7 +128,7 @@ m6502_genXor (iCode * ic, iCode * ifx)
 	    m6502_accopWithAop (OPCODE, AOP (right), offset);
 
 	  if (offset<size-1)
-	    m6502_emitBranch ("bne", tlbl);
+	    m6502_emitBranch ("bne", tlbl, BR_DEFAULT);
         }
       // FIXME: check bug1875933.c
       m6502_freeReg (m6502_reg_a);

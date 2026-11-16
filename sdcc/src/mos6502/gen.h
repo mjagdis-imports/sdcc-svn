@@ -48,6 +48,8 @@
 #define IS_AOP_WITH_X(x) (((x)->regmask & M6502MASK_X) != 0)
 #define IS_AOP_WITH_Y(x) (((x)->regmask & M6502MASK_Y) != 0)
 
+#define BR_DEFAULT 0.5
+
 typedef enum
   {
     AOP_INVALID,
@@ -72,8 +74,8 @@ typedef struct asmop
   AOP_TYPE type;		
   short coff;			/* current offset */
   short size;			/* total size */    	
-  short regmask;              /* register mask if AOP_REG */
-  operand *op;		/* originating operand */
+  short regmask;                /* register mask if AOP_REG */
+  operand *op;		        /* originating operand */
   unsigned freed:1;		/* already freed    */
   unsigned stacked:1;		/* partial results stored on stack */
   struct asmop *stk_aop[4];	/* asmops for the results on the stack */
@@ -161,7 +163,7 @@ bool m6502_tsxUseful();
 void m6502_emitDebuggerSymbol (const char *);
 void m6502_emitOp (const char *inst, const char *fmt, ...);
 bool m6502_emitCmp (reg_info *reg, unsigned char v);
-void m6502_emitBranch (const char *branchop, symbol * tlbl);
+void m6502_emitBranch (const char *branchop, symbol * tlbl, float probability);
 void m6502_emitTSX(void);
 void m6502_emitSetCarry(int c);
 
