@@ -130,21 +130,21 @@ am__objects_1 = ../libsdcc_a-_divschar.$(OBJEXT) \
 	../libsdcc_a-_mulschar.$(OBJEXT) \
 	../libsdcc_a-_muluchar.$(OBJEXT) \
 	../libsdcc_a-_mulint.$(OBJEXT) ../libsdcc_a-_mullong.$(OBJEXT) \
-	../libsdcc_a-_fs2schar.$(OBJEXT) \
-	../libsdcc_a-_fs2sint.$(OBJEXT) \
-	../libsdcc_a-_fs2slong.$(OBJEXT) \
-	../libsdcc_a-_fs2uchar.$(OBJEXT) \
-	../libsdcc_a-_fs2uint.$(OBJEXT) \
-	../libsdcc_a-_fs2ulong.$(OBJEXT) ../libsdcc_a-_fsadd.$(OBJEXT) \
-	../libsdcc_a-_fsdiv.$(OBJEXT) ../libsdcc_a-_fseq.$(OBJEXT) \
-	../libsdcc_a-_fslt.$(OBJEXT) ../libsdcc_a-_fsmul.$(OBJEXT) \
-	../libsdcc_a-_fsneq.$(OBJEXT) ../libsdcc_a-_fssub.$(OBJEXT) \
-	../libsdcc_a-_schar2fs.$(OBJEXT) \
-	../libsdcc_a-_sint2fs.$(OBJEXT) \
-	../libsdcc_a-_slong2fs.$(OBJEXT) \
-	../libsdcc_a-_uchar2fs.$(OBJEXT) \
-	../libsdcc_a-_uint2fs.$(OBJEXT) \
-	../libsdcc_a-_ulong2fs.$(OBJEXT) ../libsdcc_a-idata.$(OBJEXT)
+	../libsdcc_a-__fs2schar.$(OBJEXT) \
+	../libsdcc_a-__fs2sint.$(OBJEXT) \
+	../libsdcc_a-__fs2slong.$(OBJEXT) \
+	../libsdcc_a-__fs2uchar.$(OBJEXT) \
+	../libsdcc_a-__fs2uint.$(OBJEXT) \
+	../libsdcc_a-__fs2ulong.$(OBJEXT) ../libsdcc_a-__fsadd.$(OBJEXT) \
+	../libsdcc_a-__fsdiv.$(OBJEXT) ../libsdcc_a-__fseq.$(OBJEXT) \
+	../libsdcc_a-__fslt.$(OBJEXT) ../libsdcc_a-__fsmul.$(OBJEXT) \
+	../libsdcc_a-__fsneq.$(OBJEXT) ../libsdcc_a-__fssub.$(OBJEXT) \
+	../libsdcc_a-__schar2fs.$(OBJEXT) \
+	../libsdcc_a-__sint2fs.$(OBJEXT) \
+	../libsdcc_a-__slong2fs.$(OBJEXT) \
+	../libsdcc_a-__uchar2fs.$(OBJEXT) \
+	../libsdcc_a-__uint2fs.$(OBJEXT) \
+	../libsdcc_a-__ulong2fs.$(OBJEXT) ../libsdcc_a-idata.$(OBJEXT)
 am_libsdcc_a_OBJECTS = $(am__objects_1) _gptrget1.$(OBJEXT) \
 	_gptrget2.$(OBJEXT) _gptrget3.$(OBJEXT) _gptrget4.$(OBJEXT) \
 	_gptrput1.$(OBJEXT) _gptrput2.$(OBJEXT) _gptrput3.$(OBJEXT) \
@@ -157,11 +157,11 @@ am__libsdcco_a_SOURCES_DIST = ../_divschar.c ../_divsint.c \
 	../_divslong.c ../_divuchar.c ../_divuint.c ../_divulong.c \
 	../_modschar.c ../_modsint.c ../_modslong.c ../_moduchar.c \
 	../_moduint.c ../_modulong.c ../_mulschar.c ../_muluchar.c \
-	../_mulint.c ../_mullong.c ../_fs2schar.c ../_fs2sint.c \
-	../_fs2slong.c ../_fs2uchar.c ../_fs2uint.c ../_fs2ulong.c \
-	../_fsadd.c ../_fsdiv.c ../_fseq.c ../_fslt.c ../_fsmul.c \
-	../_fsneq.c ../_fssub.c ../_schar2fs.c ../_sint2fs.c \
-	../_slong2fs.c ../_uchar2fs.c ../_uint2fs.c ../_ulong2fs.c \
+	../_mulint.c ../_mullong.c ../__fs2schar.c ../__fs2sint.c \
+	../__fs2slong.c ../__fs2uchar.c ../__fs2uint.c ../__fs2ulong.c \
+	../__fsadd.c ../__fsdiv.c ../__fseq.c ../__fslt.c ../__fsmul.c \
+	../__fsneq.c ../__fssub.c ../__schar2fs.c ../__sint2fs.c \
+	../__slong2fs.c ../__uchar2fs.c ../__uint2fs.c ../__ulong2fs.c \
 	../idata.c _gptrget1.S _gptrget2.S _gptrget3.S _gptrget4.S \
 	_gptrput1.S _gptrput2.S _gptrput3.S _gptrput4.S macros.inc \
 	shadowregs.c
@@ -181,22 +181,22 @@ am__objects_2 = ../libsdcco_a-_divschar.$(OBJEXT) \
 	../libsdcco_a-_muluchar.$(OBJEXT) \
 	../libsdcco_a-_mulint.$(OBJEXT) \
 	../libsdcco_a-_mullong.$(OBJEXT) \
-	../libsdcco_a-_fs2schar.$(OBJEXT) \
-	../libsdcco_a-_fs2sint.$(OBJEXT) \
-	../libsdcco_a-_fs2slong.$(OBJEXT) \
-	../libsdcco_a-_fs2uchar.$(OBJEXT) \
-	../libsdcco_a-_fs2uint.$(OBJEXT) \
-	../libsdcco_a-_fs2ulong.$(OBJEXT) \
-	../libsdcco_a-_fsadd.$(OBJEXT) ../libsdcco_a-_fsdiv.$(OBJEXT) \
-	../libsdcco_a-_fseq.$(OBJEXT) ../libsdcco_a-_fslt.$(OBJEXT) \
-	../libsdcco_a-_fsmul.$(OBJEXT) ../libsdcco_a-_fsneq.$(OBJEXT) \
-	../libsdcco_a-_fssub.$(OBJEXT) \
-	../libsdcco_a-_schar2fs.$(OBJEXT) \
-	../libsdcco_a-_sint2fs.$(OBJEXT) \
-	../libsdcco_a-_slong2fs.$(OBJEXT) \
-	../libsdcco_a-_uchar2fs.$(OBJEXT) \
-	../libsdcco_a-_uint2fs.$(OBJEXT) \
-	../libsdcco_a-_ulong2fs.$(OBJEXT) \
+	../libsdcco_a-__fs2schar.$(OBJEXT) \
+	../libsdcco_a-__fs2sint.$(OBJEXT) \
+	../libsdcco_a-__fs2slong.$(OBJEXT) \
+	../libsdcco_a-__fs2uchar.$(OBJEXT) \
+	../libsdcco_a-__fs2uint.$(OBJEXT) \
+	../libsdcco_a-__fs2ulong.$(OBJEXT) \
+	../libsdcco_a-__fsadd.$(OBJEXT) ../libsdcco_a-__fsdiv.$(OBJEXT) \
+	../libsdcco_a-__fseq.$(OBJEXT) ../libsdcco_a-__fslt.$(OBJEXT) \
+	../libsdcco_a-__fsmul.$(OBJEXT) ../libsdcco_a-__fsneq.$(OBJEXT) \
+	../libsdcco_a-__fssub.$(OBJEXT) \
+	../libsdcco_a-__schar2fs.$(OBJEXT) \
+	../libsdcco_a-__sint2fs.$(OBJEXT) \
+	../libsdcco_a-__slong2fs.$(OBJEXT) \
+	../libsdcco_a-__uchar2fs.$(OBJEXT) \
+	../libsdcco_a-__uint2fs.$(OBJEXT) \
+	../libsdcco_a-__ulong2fs.$(OBJEXT) \
 	../libsdcco_a-idata.$(OBJEXT)
 am__objects_3 = $(am__objects_2) _gptrget1.$(OBJEXT) \
 	_gptrget2.$(OBJEXT) _gptrget3.$(OBJEXT) _gptrget4.$(OBJEXT) \
@@ -211,11 +211,11 @@ am__libsdccox_a_SOURCES_DIST = ../_divschar.c ../_divsint.c \
 	../_divslong.c ../_divuchar.c ../_divuint.c ../_divulong.c \
 	../_modschar.c ../_modsint.c ../_modslong.c ../_moduchar.c \
 	../_moduint.c ../_modulong.c ../_mulschar.c ../_muluchar.c \
-	../_mulint.c ../_mullong.c ../_fs2schar.c ../_fs2sint.c \
-	../_fs2slong.c ../_fs2uchar.c ../_fs2uint.c ../_fs2ulong.c \
-	../_fsadd.c ../_fsdiv.c ../_fseq.c ../_fslt.c ../_fsmul.c \
-	../_fsneq.c ../_fssub.c ../_schar2fs.c ../_sint2fs.c \
-	../_slong2fs.c ../_uchar2fs.c ../_uint2fs.c ../_ulong2fs.c \
+	../_mulint.c ../_mullong.c ../__fs2schar.c ../__fs2sint.c \
+	../__fs2slong.c ../__fs2uchar.c ../__fs2uint.c ../__fs2ulong.c \
+	../__fsadd.c ../__fsdiv.c ../__fseq.c ../__fslt.c ../__fsmul.c \
+	../__fsneq.c ../__fssub.c ../__schar2fs.c ../__sint2fs.c \
+	../__slong2fs.c ../__uchar2fs.c ../__uint2fs.c ../__ulong2fs.c \
 	../idata.c _gptrget1.S _gptrget2.S _gptrget3.S _gptrget4.S \
 	_gptrput1.S _gptrput2.S _gptrput3.S _gptrput4.S macros.inc \
 	shadowregs.c
@@ -235,23 +235,23 @@ am__objects_4 = ../libsdccox_a-_divschar.$(OBJEXT) \
 	../libsdccox_a-_muluchar.$(OBJEXT) \
 	../libsdccox_a-_mulint.$(OBJEXT) \
 	../libsdccox_a-_mullong.$(OBJEXT) \
-	../libsdccox_a-_fs2schar.$(OBJEXT) \
-	../libsdccox_a-_fs2sint.$(OBJEXT) \
-	../libsdccox_a-_fs2slong.$(OBJEXT) \
-	../libsdccox_a-_fs2uchar.$(OBJEXT) \
-	../libsdccox_a-_fs2uint.$(OBJEXT) \
-	../libsdccox_a-_fs2ulong.$(OBJEXT) \
-	../libsdccox_a-_fsadd.$(OBJEXT) \
-	../libsdccox_a-_fsdiv.$(OBJEXT) ../libsdccox_a-_fseq.$(OBJEXT) \
-	../libsdccox_a-_fslt.$(OBJEXT) ../libsdccox_a-_fsmul.$(OBJEXT) \
-	../libsdccox_a-_fsneq.$(OBJEXT) \
-	../libsdccox_a-_fssub.$(OBJEXT) \
-	../libsdccox_a-_schar2fs.$(OBJEXT) \
-	../libsdccox_a-_sint2fs.$(OBJEXT) \
-	../libsdccox_a-_slong2fs.$(OBJEXT) \
-	../libsdccox_a-_uchar2fs.$(OBJEXT) \
-	../libsdccox_a-_uint2fs.$(OBJEXT) \
-	../libsdccox_a-_ulong2fs.$(OBJEXT) \
+	../libsdccox_a-__fs2schar.$(OBJEXT) \
+	../libsdccox_a-__fs2sint.$(OBJEXT) \
+	../libsdccox_a-__fs2slong.$(OBJEXT) \
+	../libsdccox_a-__fs2uchar.$(OBJEXT) \
+	../libsdccox_a-__fs2uint.$(OBJEXT) \
+	../libsdccox_a-__fs2ulong.$(OBJEXT) \
+	../libsdccox_a-__fsadd.$(OBJEXT) \
+	../libsdccox_a-__fsdiv.$(OBJEXT) ../libsdccox_a-__fseq.$(OBJEXT) \
+	../libsdccox_a-__fslt.$(OBJEXT) ../libsdccox_a-__fsmul.$(OBJEXT) \
+	../libsdccox_a-__fsneq.$(OBJEXT) \
+	../libsdccox_a-__fssub.$(OBJEXT) \
+	../libsdccox_a-__schar2fs.$(OBJEXT) \
+	../libsdccox_a-__sint2fs.$(OBJEXT) \
+	../libsdccox_a-__slong2fs.$(OBJEXT) \
+	../libsdccox_a-__uchar2fs.$(OBJEXT) \
+	../libsdccox_a-__uint2fs.$(OBJEXT) \
+	../libsdccox_a-__ulong2fs.$(OBJEXT) \
 	../libsdccox_a-idata.$(OBJEXT)
 am__objects_5 = $(am__objects_4) _gptrget1.$(OBJEXT) \
 	_gptrget2.$(OBJEXT) _gptrget3.$(OBJEXT) _gptrget4.$(OBJEXT) \
@@ -266,11 +266,11 @@ am__libsdccx_a_SOURCES_DIST = ../_divschar.c ../_divsint.c \
 	../_divslong.c ../_divuchar.c ../_divuint.c ../_divulong.c \
 	../_modschar.c ../_modsint.c ../_modslong.c ../_moduchar.c \
 	../_moduint.c ../_modulong.c ../_mulschar.c ../_muluchar.c \
-	../_mulint.c ../_mullong.c ../_fs2schar.c ../_fs2sint.c \
-	../_fs2slong.c ../_fs2uchar.c ../_fs2uint.c ../_fs2ulong.c \
-	../_fsadd.c ../_fsdiv.c ../_fseq.c ../_fslt.c ../_fsmul.c \
-	../_fsneq.c ../_fssub.c ../_schar2fs.c ../_sint2fs.c \
-	../_slong2fs.c ../_uchar2fs.c ../_uint2fs.c ../_ulong2fs.c \
+	../_mulint.c ../_mullong.c ../__fs2schar.c ../__fs2sint.c \
+	../__fs2slong.c ../__fs2uchar.c ../__fs2uint.c ../__fs2ulong.c \
+	../__fsadd.c ../__fsdiv.c ../__fseq.c ../__fslt.c ../__fsmul.c \
+	../__fsneq.c ../__fssub.c ../__schar2fs.c ../__sint2fs.c \
+	../__slong2fs.c ../__uchar2fs.c ../__uint2fs.c ../__ulong2fs.c \
 	../idata.c _gptrget1.S _gptrget2.S _gptrget3.S _gptrget4.S \
 	_gptrput1.S _gptrput2.S _gptrput3.S _gptrput4.S macros.inc \
 	shadowregs.c
@@ -290,22 +290,22 @@ am__objects_6 = ../libsdccx_a-_divschar.$(OBJEXT) \
 	../libsdccx_a-_muluchar.$(OBJEXT) \
 	../libsdccx_a-_mulint.$(OBJEXT) \
 	../libsdccx_a-_mullong.$(OBJEXT) \
-	../libsdccx_a-_fs2schar.$(OBJEXT) \
-	../libsdccx_a-_fs2sint.$(OBJEXT) \
-	../libsdccx_a-_fs2slong.$(OBJEXT) \
-	../libsdccx_a-_fs2uchar.$(OBJEXT) \
-	../libsdccx_a-_fs2uint.$(OBJEXT) \
-	../libsdccx_a-_fs2ulong.$(OBJEXT) \
-	../libsdccx_a-_fsadd.$(OBJEXT) ../libsdccx_a-_fsdiv.$(OBJEXT) \
-	../libsdccx_a-_fseq.$(OBJEXT) ../libsdccx_a-_fslt.$(OBJEXT) \
-	../libsdccx_a-_fsmul.$(OBJEXT) ../libsdccx_a-_fsneq.$(OBJEXT) \
-	../libsdccx_a-_fssub.$(OBJEXT) \
-	../libsdccx_a-_schar2fs.$(OBJEXT) \
-	../libsdccx_a-_sint2fs.$(OBJEXT) \
-	../libsdccx_a-_slong2fs.$(OBJEXT) \
-	../libsdccx_a-_uchar2fs.$(OBJEXT) \
-	../libsdccx_a-_uint2fs.$(OBJEXT) \
-	../libsdccx_a-_ulong2fs.$(OBJEXT) \
+	../libsdccx_a-__fs2schar.$(OBJEXT) \
+	../libsdccx_a-__fs2sint.$(OBJEXT) \
+	../libsdccx_a-__fs2slong.$(OBJEXT) \
+	../libsdccx_a-__fs2uchar.$(OBJEXT) \
+	../libsdccx_a-__fs2uint.$(OBJEXT) \
+	../libsdccx_a-__fs2ulong.$(OBJEXT) \
+	../libsdccx_a-__fsadd.$(OBJEXT) ../libsdccx_a-__fsdiv.$(OBJEXT) \
+	../libsdccx_a-__fseq.$(OBJEXT) ../libsdccx_a-__fslt.$(OBJEXT) \
+	../libsdccx_a-__fsmul.$(OBJEXT) ../libsdccx_a-__fsneq.$(OBJEXT) \
+	../libsdccx_a-__fssub.$(OBJEXT) \
+	../libsdccx_a-__schar2fs.$(OBJEXT) \
+	../libsdccx_a-__sint2fs.$(OBJEXT) \
+	../libsdccx_a-__slong2fs.$(OBJEXT) \
+	../libsdccx_a-__uchar2fs.$(OBJEXT) \
+	../libsdccx_a-__uint2fs.$(OBJEXT) \
+	../libsdccx_a-__ulong2fs.$(OBJEXT) \
 	../libsdccx_a-idata.$(OBJEXT)
 am__objects_7 = $(am__objects_6) _gptrget1.$(OBJEXT) \
 	_gptrget2.$(OBJEXT) _gptrget3.$(OBJEXT) _gptrget4.$(OBJEXT) \
@@ -496,11 +496,11 @@ LIBSDCC_SOURCES_COMMON = ../_divschar.c ../_divsint.c ../_divslong.c \
 	../_divuchar.c ../_divuint.c ../_divulong.c ../_modschar.c \
 	../_modsint.c ../_modslong.c ../_moduchar.c ../_moduint.c \
 	../_modulong.c ../_mulschar.c ../_muluchar.c ../_mulint.c \
-	../_mullong.c ../_fs2schar.c ../_fs2sint.c ../_fs2slong.c \
-	../_fs2uchar.c ../_fs2uint.c ../_fs2ulong.c ../_fsadd.c \
-	../_fsdiv.c ../_fseq.c ../_fslt.c ../_fsmul.c ../_fsneq.c \
-	../_fssub.c ../_schar2fs.c ../_sint2fs.c ../_slong2fs.c \
-	../_uchar2fs.c ../_uint2fs.c ../_ulong2fs.c ../idata.c
+	../_mullong.c ../__fs2schar.c ../__fs2sint.c ../__fs2slong.c \
+	../__fs2uchar.c ../__fs2uint.c ../__fs2ulong.c ../__fsadd.c \
+	../__fsdiv.c ../__fseq.c ../__fslt.c ../__fsmul.c ../__fsneq.c \
+	../__fssub.c ../__schar2fs.c ../__sint2fs.c ../__slong2fs.c \
+	../__uchar2fs.c ../__uint2fs.c ../__ulong2fs.c ../idata.c
 
 ############################################################
 # Directories when building from the sdcc sources
@@ -613,25 +613,25 @@ clean-noinstLIBRARIES:
 ../libsdcc_a-_muluchar.$(OBJEXT): ../$(am__dirstamp)
 ../libsdcc_a-_mulint.$(OBJEXT): ../$(am__dirstamp)
 ../libsdcc_a-_mullong.$(OBJEXT): ../$(am__dirstamp)
-../libsdcc_a-_fs2schar.$(OBJEXT): ../$(am__dirstamp)
-../libsdcc_a-_fs2sint.$(OBJEXT): ../$(am__dirstamp)
-../libsdcc_a-_fs2slong.$(OBJEXT): ../$(am__dirstamp)
-../libsdcc_a-_fs2uchar.$(OBJEXT): ../$(am__dirstamp)
-../libsdcc_a-_fs2uint.$(OBJEXT): ../$(am__dirstamp)
-../libsdcc_a-_fs2ulong.$(OBJEXT): ../$(am__dirstamp)
-../libsdcc_a-_fsadd.$(OBJEXT): ../$(am__dirstamp)
-../libsdcc_a-_fsdiv.$(OBJEXT): ../$(am__dirstamp)
-../libsdcc_a-_fseq.$(OBJEXT): ../$(am__dirstamp)
-../libsdcc_a-_fslt.$(OBJEXT): ../$(am__dirstamp)
-../libsdcc_a-_fsmul.$(OBJEXT): ../$(am__dirstamp)
-../libsdcc_a-_fsneq.$(OBJEXT): ../$(am__dirstamp)
-../libsdcc_a-_fssub.$(OBJEXT): ../$(am__dirstamp)
-../libsdcc_a-_schar2fs.$(OBJEXT): ../$(am__dirstamp)
-../libsdcc_a-_sint2fs.$(OBJEXT): ../$(am__dirstamp)
-../libsdcc_a-_slong2fs.$(OBJEXT): ../$(am__dirstamp)
-../libsdcc_a-_uchar2fs.$(OBJEXT): ../$(am__dirstamp)
-../libsdcc_a-_uint2fs.$(OBJEXT): ../$(am__dirstamp)
-../libsdcc_a-_ulong2fs.$(OBJEXT): ../$(am__dirstamp)
+../libsdcc_a-__fs2schar.$(OBJEXT): ../$(am__dirstamp)
+../libsdcc_a-__fs2sint.$(OBJEXT): ../$(am__dirstamp)
+../libsdcc_a-__fs2slong.$(OBJEXT): ../$(am__dirstamp)
+../libsdcc_a-__fs2uchar.$(OBJEXT): ../$(am__dirstamp)
+../libsdcc_a-__fs2uint.$(OBJEXT): ../$(am__dirstamp)
+../libsdcc_a-__fs2ulong.$(OBJEXT): ../$(am__dirstamp)
+../libsdcc_a-__fsadd.$(OBJEXT): ../$(am__dirstamp)
+../libsdcc_a-__fsdiv.$(OBJEXT): ../$(am__dirstamp)
+../libsdcc_a-__fseq.$(OBJEXT): ../$(am__dirstamp)
+../libsdcc_a-__fslt.$(OBJEXT): ../$(am__dirstamp)
+../libsdcc_a-__fsmul.$(OBJEXT): ../$(am__dirstamp)
+../libsdcc_a-__fsneq.$(OBJEXT): ../$(am__dirstamp)
+../libsdcc_a-__fssub.$(OBJEXT): ../$(am__dirstamp)
+../libsdcc_a-__schar2fs.$(OBJEXT): ../$(am__dirstamp)
+../libsdcc_a-__sint2fs.$(OBJEXT): ../$(am__dirstamp)
+../libsdcc_a-__slong2fs.$(OBJEXT): ../$(am__dirstamp)
+../libsdcc_a-__uchar2fs.$(OBJEXT): ../$(am__dirstamp)
+../libsdcc_a-__uint2fs.$(OBJEXT): ../$(am__dirstamp)
+../libsdcc_a-__ulong2fs.$(OBJEXT): ../$(am__dirstamp)
 ../libsdcc_a-idata.$(OBJEXT): ../$(am__dirstamp)
 
 libsdcc.a: $(libsdcc_a_OBJECTS) $(libsdcc_a_DEPENDENCIES) $(EXTRA_libsdcc_a_DEPENDENCIES) 
@@ -654,25 +654,25 @@ libsdcc.a: $(libsdcc_a_OBJECTS) $(libsdcc_a_DEPENDENCIES) $(EXTRA_libsdcc_a_DEPE
 ../libsdcco_a-_muluchar.$(OBJEXT): ../$(am__dirstamp)
 ../libsdcco_a-_mulint.$(OBJEXT): ../$(am__dirstamp)
 ../libsdcco_a-_mullong.$(OBJEXT): ../$(am__dirstamp)
-../libsdcco_a-_fs2schar.$(OBJEXT): ../$(am__dirstamp)
-../libsdcco_a-_fs2sint.$(OBJEXT): ../$(am__dirstamp)
-../libsdcco_a-_fs2slong.$(OBJEXT): ../$(am__dirstamp)
-../libsdcco_a-_fs2uchar.$(OBJEXT): ../$(am__dirstamp)
-../libsdcco_a-_fs2uint.$(OBJEXT): ../$(am__dirstamp)
-../libsdcco_a-_fs2ulong.$(OBJEXT): ../$(am__dirstamp)
-../libsdcco_a-_fsadd.$(OBJEXT): ../$(am__dirstamp)
-../libsdcco_a-_fsdiv.$(OBJEXT): ../$(am__dirstamp)
-../libsdcco_a-_fseq.$(OBJEXT): ../$(am__dirstamp)
-../libsdcco_a-_fslt.$(OBJEXT): ../$(am__dirstamp)
-../libsdcco_a-_fsmul.$(OBJEXT): ../$(am__dirstamp)
-../libsdcco_a-_fsneq.$(OBJEXT): ../$(am__dirstamp)
-../libsdcco_a-_fssub.$(OBJEXT): ../$(am__dirstamp)
-../libsdcco_a-_schar2fs.$(OBJEXT): ../$(am__dirstamp)
-../libsdcco_a-_sint2fs.$(OBJEXT): ../$(am__dirstamp)
-../libsdcco_a-_slong2fs.$(OBJEXT): ../$(am__dirstamp)
-../libsdcco_a-_uchar2fs.$(OBJEXT): ../$(am__dirstamp)
-../libsdcco_a-_uint2fs.$(OBJEXT): ../$(am__dirstamp)
-../libsdcco_a-_ulong2fs.$(OBJEXT): ../$(am__dirstamp)
+../libsdcco_a-__fs2schar.$(OBJEXT): ../$(am__dirstamp)
+../libsdcco_a-__fs2sint.$(OBJEXT): ../$(am__dirstamp)
+../libsdcco_a-__fs2slong.$(OBJEXT): ../$(am__dirstamp)
+../libsdcco_a-__fs2uchar.$(OBJEXT): ../$(am__dirstamp)
+../libsdcco_a-__fs2uint.$(OBJEXT): ../$(am__dirstamp)
+../libsdcco_a-__fs2ulong.$(OBJEXT): ../$(am__dirstamp)
+../libsdcco_a-__fsadd.$(OBJEXT): ../$(am__dirstamp)
+../libsdcco_a-__fsdiv.$(OBJEXT): ../$(am__dirstamp)
+../libsdcco_a-__fseq.$(OBJEXT): ../$(am__dirstamp)
+../libsdcco_a-__fslt.$(OBJEXT): ../$(am__dirstamp)
+../libsdcco_a-__fsmul.$(OBJEXT): ../$(am__dirstamp)
+../libsdcco_a-__fsneq.$(OBJEXT): ../$(am__dirstamp)
+../libsdcco_a-__fssub.$(OBJEXT): ../$(am__dirstamp)
+../libsdcco_a-__schar2fs.$(OBJEXT): ../$(am__dirstamp)
+../libsdcco_a-__sint2fs.$(OBJEXT): ../$(am__dirstamp)
+../libsdcco_a-__slong2fs.$(OBJEXT): ../$(am__dirstamp)
+../libsdcco_a-__uchar2fs.$(OBJEXT): ../$(am__dirstamp)
+../libsdcco_a-__uint2fs.$(OBJEXT): ../$(am__dirstamp)
+../libsdcco_a-__ulong2fs.$(OBJEXT): ../$(am__dirstamp)
 ../libsdcco_a-idata.$(OBJEXT): ../$(am__dirstamp)
 
 libsdcco.a: $(libsdcco_a_OBJECTS) $(libsdcco_a_DEPENDENCIES) $(EXTRA_libsdcco_a_DEPENDENCIES) 
@@ -695,25 +695,25 @@ libsdcco.a: $(libsdcco_a_OBJECTS) $(libsdcco_a_DEPENDENCIES) $(EXTRA_libsdcco_a_
 ../libsdccox_a-_muluchar.$(OBJEXT): ../$(am__dirstamp)
 ../libsdccox_a-_mulint.$(OBJEXT): ../$(am__dirstamp)
 ../libsdccox_a-_mullong.$(OBJEXT): ../$(am__dirstamp)
-../libsdccox_a-_fs2schar.$(OBJEXT): ../$(am__dirstamp)
-../libsdccox_a-_fs2sint.$(OBJEXT): ../$(am__dirstamp)
-../libsdccox_a-_fs2slong.$(OBJEXT): ../$(am__dirstamp)
-../libsdccox_a-_fs2uchar.$(OBJEXT): ../$(am__dirstamp)
-../libsdccox_a-_fs2uint.$(OBJEXT): ../$(am__dirstamp)
-../libsdccox_a-_fs2ulong.$(OBJEXT): ../$(am__dirstamp)
-../libsdccox_a-_fsadd.$(OBJEXT): ../$(am__dirstamp)
-../libsdccox_a-_fsdiv.$(OBJEXT): ../$(am__dirstamp)
-../libsdccox_a-_fseq.$(OBJEXT): ../$(am__dirstamp)
-../libsdccox_a-_fslt.$(OBJEXT): ../$(am__dirstamp)
-../libsdccox_a-_fsmul.$(OBJEXT): ../$(am__dirstamp)
-../libsdccox_a-_fsneq.$(OBJEXT): ../$(am__dirstamp)
-../libsdccox_a-_fssub.$(OBJEXT): ../$(am__dirstamp)
-../libsdccox_a-_schar2fs.$(OBJEXT): ../$(am__dirstamp)
-../libsdccox_a-_sint2fs.$(OBJEXT): ../$(am__dirstamp)
-../libsdccox_a-_slong2fs.$(OBJEXT): ../$(am__dirstamp)
-../libsdccox_a-_uchar2fs.$(OBJEXT): ../$(am__dirstamp)
-../libsdccox_a-_uint2fs.$(OBJEXT): ../$(am__dirstamp)
-../libsdccox_a-_ulong2fs.$(OBJEXT): ../$(am__dirstamp)
+../libsdccox_a-__fs2schar.$(OBJEXT): ../$(am__dirstamp)
+../libsdccox_a-__fs2sint.$(OBJEXT): ../$(am__dirstamp)
+../libsdccox_a-__fs2slong.$(OBJEXT): ../$(am__dirstamp)
+../libsdccox_a-__fs2uchar.$(OBJEXT): ../$(am__dirstamp)
+../libsdccox_a-__fs2uint.$(OBJEXT): ../$(am__dirstamp)
+../libsdccox_a-__fs2ulong.$(OBJEXT): ../$(am__dirstamp)
+../libsdccox_a-__fsadd.$(OBJEXT): ../$(am__dirstamp)
+../libsdccox_a-__fsdiv.$(OBJEXT): ../$(am__dirstamp)
+../libsdccox_a-__fseq.$(OBJEXT): ../$(am__dirstamp)
+../libsdccox_a-__fslt.$(OBJEXT): ../$(am__dirstamp)
+../libsdccox_a-__fsmul.$(OBJEXT): ../$(am__dirstamp)
+../libsdccox_a-__fsneq.$(OBJEXT): ../$(am__dirstamp)
+../libsdccox_a-__fssub.$(OBJEXT): ../$(am__dirstamp)
+../libsdccox_a-__schar2fs.$(OBJEXT): ../$(am__dirstamp)
+../libsdccox_a-__sint2fs.$(OBJEXT): ../$(am__dirstamp)
+../libsdccox_a-__slong2fs.$(OBJEXT): ../$(am__dirstamp)
+../libsdccox_a-__uchar2fs.$(OBJEXT): ../$(am__dirstamp)
+../libsdccox_a-__uint2fs.$(OBJEXT): ../$(am__dirstamp)
+../libsdccox_a-__ulong2fs.$(OBJEXT): ../$(am__dirstamp)
 ../libsdccox_a-idata.$(OBJEXT): ../$(am__dirstamp)
 
 libsdccox.a: $(libsdccox_a_OBJECTS) $(libsdccox_a_DEPENDENCIES) $(EXTRA_libsdccox_a_DEPENDENCIES) 
@@ -736,25 +736,25 @@ libsdccox.a: $(libsdccox_a_OBJECTS) $(libsdccox_a_DEPENDENCIES) $(EXTRA_libsdcco
 ../libsdccx_a-_muluchar.$(OBJEXT): ../$(am__dirstamp)
 ../libsdccx_a-_mulint.$(OBJEXT): ../$(am__dirstamp)
 ../libsdccx_a-_mullong.$(OBJEXT): ../$(am__dirstamp)
-../libsdccx_a-_fs2schar.$(OBJEXT): ../$(am__dirstamp)
-../libsdccx_a-_fs2sint.$(OBJEXT): ../$(am__dirstamp)
-../libsdccx_a-_fs2slong.$(OBJEXT): ../$(am__dirstamp)
-../libsdccx_a-_fs2uchar.$(OBJEXT): ../$(am__dirstamp)
-../libsdccx_a-_fs2uint.$(OBJEXT): ../$(am__dirstamp)
-../libsdccx_a-_fs2ulong.$(OBJEXT): ../$(am__dirstamp)
-../libsdccx_a-_fsadd.$(OBJEXT): ../$(am__dirstamp)
-../libsdccx_a-_fsdiv.$(OBJEXT): ../$(am__dirstamp)
-../libsdccx_a-_fseq.$(OBJEXT): ../$(am__dirstamp)
-../libsdccx_a-_fslt.$(OBJEXT): ../$(am__dirstamp)
-../libsdccx_a-_fsmul.$(OBJEXT): ../$(am__dirstamp)
-../libsdccx_a-_fsneq.$(OBJEXT): ../$(am__dirstamp)
-../libsdccx_a-_fssub.$(OBJEXT): ../$(am__dirstamp)
-../libsdccx_a-_schar2fs.$(OBJEXT): ../$(am__dirstamp)
-../libsdccx_a-_sint2fs.$(OBJEXT): ../$(am__dirstamp)
-../libsdccx_a-_slong2fs.$(OBJEXT): ../$(am__dirstamp)
-../libsdccx_a-_uchar2fs.$(OBJEXT): ../$(am__dirstamp)
-../libsdccx_a-_uint2fs.$(OBJEXT): ../$(am__dirstamp)
-../libsdccx_a-_ulong2fs.$(OBJEXT): ../$(am__dirstamp)
+../libsdccx_a-__fs2schar.$(OBJEXT): ../$(am__dirstamp)
+../libsdccx_a-__fs2sint.$(OBJEXT): ../$(am__dirstamp)
+../libsdccx_a-__fs2slong.$(OBJEXT): ../$(am__dirstamp)
+../libsdccx_a-__fs2uchar.$(OBJEXT): ../$(am__dirstamp)
+../libsdccx_a-__fs2uint.$(OBJEXT): ../$(am__dirstamp)
+../libsdccx_a-__fs2ulong.$(OBJEXT): ../$(am__dirstamp)
+../libsdccx_a-__fsadd.$(OBJEXT): ../$(am__dirstamp)
+../libsdccx_a-__fsdiv.$(OBJEXT): ../$(am__dirstamp)
+../libsdccx_a-__fseq.$(OBJEXT): ../$(am__dirstamp)
+../libsdccx_a-__fslt.$(OBJEXT): ../$(am__dirstamp)
+../libsdccx_a-__fsmul.$(OBJEXT): ../$(am__dirstamp)
+../libsdccx_a-__fsneq.$(OBJEXT): ../$(am__dirstamp)
+../libsdccx_a-__fssub.$(OBJEXT): ../$(am__dirstamp)
+../libsdccx_a-__schar2fs.$(OBJEXT): ../$(am__dirstamp)
+../libsdccx_a-__sint2fs.$(OBJEXT): ../$(am__dirstamp)
+../libsdccx_a-__slong2fs.$(OBJEXT): ../$(am__dirstamp)
+../libsdccx_a-__uchar2fs.$(OBJEXT): ../$(am__dirstamp)
+../libsdccx_a-__uint2fs.$(OBJEXT): ../$(am__dirstamp)
+../libsdccx_a-__ulong2fs.$(OBJEXT): ../$(am__dirstamp)
 ../libsdccx_a-idata.$(OBJEXT): ../$(am__dirstamp)
 
 libsdccx.a: $(libsdccx_a_OBJECTS) $(libsdccx_a_DEPENDENCIES) $(EXTRA_libsdccx_a_DEPENDENCIES) 
@@ -877,119 +877,119 @@ distclean-compile:
 ../libsdcc_a-_mullong.obj: ../_mullong.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-_mullong.obj `if test -f '../_mullong.c'; then $(CYGPATH_W) '../_mullong.c'; else $(CYGPATH_W) '$(srcdir)/../_mullong.c'; fi`
 
-../libsdcc_a-_fs2schar.o: ../_fs2schar.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-_fs2schar.o `test -f '../_fs2schar.c' || echo '$(srcdir)/'`../_fs2schar.c
+../libsdcc_a-__fs2schar.o: ../__fs2schar.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-__fs2schar.o `test -f '../__fs2schar.c' || echo '$(srcdir)/'`../__fs2schar.c
 
-../libsdcc_a-_fs2schar.obj: ../_fs2schar.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-_fs2schar.obj `if test -f '../_fs2schar.c'; then $(CYGPATH_W) '../_fs2schar.c'; else $(CYGPATH_W) '$(srcdir)/../_fs2schar.c'; fi`
+../libsdcc_a-__fs2schar.obj: ../__fs2schar.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-__fs2schar.obj `if test -f '../__fs2schar.c'; then $(CYGPATH_W) '../__fs2schar.c'; else $(CYGPATH_W) '$(srcdir)/../__fs2schar.c'; fi`
 
-../libsdcc_a-_fs2sint.o: ../_fs2sint.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-_fs2sint.o `test -f '../_fs2sint.c' || echo '$(srcdir)/'`../_fs2sint.c
+../libsdcc_a-__fs2sint.o: ../__fs2sint.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-__fs2sint.o `test -f '../__fs2sint.c' || echo '$(srcdir)/'`../__fs2sint.c
 
-../libsdcc_a-_fs2sint.obj: ../_fs2sint.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-_fs2sint.obj `if test -f '../_fs2sint.c'; then $(CYGPATH_W) '../_fs2sint.c'; else $(CYGPATH_W) '$(srcdir)/../_fs2sint.c'; fi`
+../libsdcc_a-__fs2sint.obj: ../__fs2sint.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-__fs2sint.obj `if test -f '../__fs2sint.c'; then $(CYGPATH_W) '../__fs2sint.c'; else $(CYGPATH_W) '$(srcdir)/../__fs2sint.c'; fi`
 
-../libsdcc_a-_fs2slong.o: ../_fs2slong.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-_fs2slong.o `test -f '../_fs2slong.c' || echo '$(srcdir)/'`../_fs2slong.c
+../libsdcc_a-__fs2slong.o: ../__fs2slong.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-__fs2slong.o `test -f '../__fs2slong.c' || echo '$(srcdir)/'`../__fs2slong.c
 
-../libsdcc_a-_fs2slong.obj: ../_fs2slong.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-_fs2slong.obj `if test -f '../_fs2slong.c'; then $(CYGPATH_W) '../_fs2slong.c'; else $(CYGPATH_W) '$(srcdir)/../_fs2slong.c'; fi`
+../libsdcc_a-__fs2slong.obj: ../__fs2slong.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-__fs2slong.obj `if test -f '../__fs2slong.c'; then $(CYGPATH_W) '../__fs2slong.c'; else $(CYGPATH_W) '$(srcdir)/../__fs2slong.c'; fi`
 
-../libsdcc_a-_fs2uchar.o: ../_fs2uchar.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-_fs2uchar.o `test -f '../_fs2uchar.c' || echo '$(srcdir)/'`../_fs2uchar.c
+../libsdcc_a-__fs2uchar.o: ../__fs2uchar.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-__fs2uchar.o `test -f '../__fs2uchar.c' || echo '$(srcdir)/'`../__fs2uchar.c
 
-../libsdcc_a-_fs2uchar.obj: ../_fs2uchar.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-_fs2uchar.obj `if test -f '../_fs2uchar.c'; then $(CYGPATH_W) '../_fs2uchar.c'; else $(CYGPATH_W) '$(srcdir)/../_fs2uchar.c'; fi`
+../libsdcc_a-__fs2uchar.obj: ../__fs2uchar.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-__fs2uchar.obj `if test -f '../__fs2uchar.c'; then $(CYGPATH_W) '../__fs2uchar.c'; else $(CYGPATH_W) '$(srcdir)/../__fs2uchar.c'; fi`
 
-../libsdcc_a-_fs2uint.o: ../_fs2uint.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-_fs2uint.o `test -f '../_fs2uint.c' || echo '$(srcdir)/'`../_fs2uint.c
+../libsdcc_a-__fs2uint.o: ../__fs2uint.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-__fs2uint.o `test -f '../__fs2uint.c' || echo '$(srcdir)/'`../__fs2uint.c
 
-../libsdcc_a-_fs2uint.obj: ../_fs2uint.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-_fs2uint.obj `if test -f '../_fs2uint.c'; then $(CYGPATH_W) '../_fs2uint.c'; else $(CYGPATH_W) '$(srcdir)/../_fs2uint.c'; fi`
+../libsdcc_a-__fs2uint.obj: ../__fs2uint.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-__fs2uint.obj `if test -f '../__fs2uint.c'; then $(CYGPATH_W) '../__fs2uint.c'; else $(CYGPATH_W) '$(srcdir)/../__fs2uint.c'; fi`
 
-../libsdcc_a-_fs2ulong.o: ../_fs2ulong.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-_fs2ulong.o `test -f '../_fs2ulong.c' || echo '$(srcdir)/'`../_fs2ulong.c
+../libsdcc_a-__fs2ulong.o: ../__fs2ulong.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-__fs2ulong.o `test -f '../__fs2ulong.c' || echo '$(srcdir)/'`../__fs2ulong.c
 
-../libsdcc_a-_fs2ulong.obj: ../_fs2ulong.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-_fs2ulong.obj `if test -f '../_fs2ulong.c'; then $(CYGPATH_W) '../_fs2ulong.c'; else $(CYGPATH_W) '$(srcdir)/../_fs2ulong.c'; fi`
+../libsdcc_a-__fs2ulong.obj: ../__fs2ulong.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-__fs2ulong.obj `if test -f '../__fs2ulong.c'; then $(CYGPATH_W) '../__fs2ulong.c'; else $(CYGPATH_W) '$(srcdir)/../__fs2ulong.c'; fi`
 
-../libsdcc_a-_fsadd.o: ../_fsadd.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-_fsadd.o `test -f '../_fsadd.c' || echo '$(srcdir)/'`../_fsadd.c
+../libsdcc_a-__fsadd.o: ../__fsadd.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-__fsadd.o `test -f '../__fsadd.c' || echo '$(srcdir)/'`../__fsadd.c
 
-../libsdcc_a-_fsadd.obj: ../_fsadd.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-_fsadd.obj `if test -f '../_fsadd.c'; then $(CYGPATH_W) '../_fsadd.c'; else $(CYGPATH_W) '$(srcdir)/../_fsadd.c'; fi`
+../libsdcc_a-__fsadd.obj: ../__fsadd.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-__fsadd.obj `if test -f '../__fsadd.c'; then $(CYGPATH_W) '../__fsadd.c'; else $(CYGPATH_W) '$(srcdir)/../__fsadd.c'; fi`
 
-../libsdcc_a-_fsdiv.o: ../_fsdiv.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-_fsdiv.o `test -f '../_fsdiv.c' || echo '$(srcdir)/'`../_fsdiv.c
+../libsdcc_a-__fsdiv.o: ../__fsdiv.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-__fsdiv.o `test -f '../__fsdiv.c' || echo '$(srcdir)/'`../__fsdiv.c
 
-../libsdcc_a-_fsdiv.obj: ../_fsdiv.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-_fsdiv.obj `if test -f '../_fsdiv.c'; then $(CYGPATH_W) '../_fsdiv.c'; else $(CYGPATH_W) '$(srcdir)/../_fsdiv.c'; fi`
+../libsdcc_a-__fsdiv.obj: ../__fsdiv.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-__fsdiv.obj `if test -f '../__fsdiv.c'; then $(CYGPATH_W) '../__fsdiv.c'; else $(CYGPATH_W) '$(srcdir)/../__fsdiv.c'; fi`
 
-../libsdcc_a-_fseq.o: ../_fseq.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-_fseq.o `test -f '../_fseq.c' || echo '$(srcdir)/'`../_fseq.c
+../libsdcc_a-__fseq.o: ../__fseq.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-__fseq.o `test -f '../__fseq.c' || echo '$(srcdir)/'`../__fseq.c
 
-../libsdcc_a-_fseq.obj: ../_fseq.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-_fseq.obj `if test -f '../_fseq.c'; then $(CYGPATH_W) '../_fseq.c'; else $(CYGPATH_W) '$(srcdir)/../_fseq.c'; fi`
+../libsdcc_a-__fseq.obj: ../__fseq.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-__fseq.obj `if test -f '../__fseq.c'; then $(CYGPATH_W) '../__fseq.c'; else $(CYGPATH_W) '$(srcdir)/../__fseq.c'; fi`
 
-../libsdcc_a-_fslt.o: ../_fslt.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-_fslt.o `test -f '../_fslt.c' || echo '$(srcdir)/'`../_fslt.c
+../libsdcc_a-__fslt.o: ../__fslt.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-__fslt.o `test -f '../__fslt.c' || echo '$(srcdir)/'`../__fslt.c
 
-../libsdcc_a-_fslt.obj: ../_fslt.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-_fslt.obj `if test -f '../_fslt.c'; then $(CYGPATH_W) '../_fslt.c'; else $(CYGPATH_W) '$(srcdir)/../_fslt.c'; fi`
+../libsdcc_a-__fslt.obj: ../__fslt.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-__fslt.obj `if test -f '../__fslt.c'; then $(CYGPATH_W) '../__fslt.c'; else $(CYGPATH_W) '$(srcdir)/../__fslt.c'; fi`
 
-../libsdcc_a-_fsmul.o: ../_fsmul.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-_fsmul.o `test -f '../_fsmul.c' || echo '$(srcdir)/'`../_fsmul.c
+../libsdcc_a-__fsmul.o: ../__fsmul.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-__fsmul.o `test -f '../__fsmul.c' || echo '$(srcdir)/'`../__fsmul.c
 
-../libsdcc_a-_fsmul.obj: ../_fsmul.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-_fsmul.obj `if test -f '../_fsmul.c'; then $(CYGPATH_W) '../_fsmul.c'; else $(CYGPATH_W) '$(srcdir)/../_fsmul.c'; fi`
+../libsdcc_a-__fsmul.obj: ../__fsmul.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-__fsmul.obj `if test -f '../__fsmul.c'; then $(CYGPATH_W) '../__fsmul.c'; else $(CYGPATH_W) '$(srcdir)/../__fsmul.c'; fi`
 
-../libsdcc_a-_fsneq.o: ../_fsneq.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-_fsneq.o `test -f '../_fsneq.c' || echo '$(srcdir)/'`../_fsneq.c
+../libsdcc_a-__fsneq.o: ../__fsneq.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-__fsneq.o `test -f '../__fsneq.c' || echo '$(srcdir)/'`../__fsneq.c
 
-../libsdcc_a-_fsneq.obj: ../_fsneq.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-_fsneq.obj `if test -f '../_fsneq.c'; then $(CYGPATH_W) '../_fsneq.c'; else $(CYGPATH_W) '$(srcdir)/../_fsneq.c'; fi`
+../libsdcc_a-__fsneq.obj: ../__fsneq.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-__fsneq.obj `if test -f '../__fsneq.c'; then $(CYGPATH_W) '../__fsneq.c'; else $(CYGPATH_W) '$(srcdir)/../__fsneq.c'; fi`
 
-../libsdcc_a-_fssub.o: ../_fssub.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-_fssub.o `test -f '../_fssub.c' || echo '$(srcdir)/'`../_fssub.c
+../libsdcc_a-__fssub.o: ../__fssub.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-__fssub.o `test -f '../__fssub.c' || echo '$(srcdir)/'`../__fssub.c
 
-../libsdcc_a-_fssub.obj: ../_fssub.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-_fssub.obj `if test -f '../_fssub.c'; then $(CYGPATH_W) '../_fssub.c'; else $(CYGPATH_W) '$(srcdir)/../_fssub.c'; fi`
+../libsdcc_a-__fssub.obj: ../__fssub.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-__fssub.obj `if test -f '../__fssub.c'; then $(CYGPATH_W) '../__fssub.c'; else $(CYGPATH_W) '$(srcdir)/../__fssub.c'; fi`
 
-../libsdcc_a-_schar2fs.o: ../_schar2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-_schar2fs.o `test -f '../_schar2fs.c' || echo '$(srcdir)/'`../_schar2fs.c
+../libsdcc_a-__schar2fs.o: ../__schar2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-__schar2fs.o `test -f '../__schar2fs.c' || echo '$(srcdir)/'`../__schar2fs.c
 
-../libsdcc_a-_schar2fs.obj: ../_schar2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-_schar2fs.obj `if test -f '../_schar2fs.c'; then $(CYGPATH_W) '../_schar2fs.c'; else $(CYGPATH_W) '$(srcdir)/../_schar2fs.c'; fi`
+../libsdcc_a-__schar2fs.obj: ../__schar2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-__schar2fs.obj `if test -f '../__schar2fs.c'; then $(CYGPATH_W) '../__schar2fs.c'; else $(CYGPATH_W) '$(srcdir)/../__schar2fs.c'; fi`
 
-../libsdcc_a-_sint2fs.o: ../_sint2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-_sint2fs.o `test -f '../_sint2fs.c' || echo '$(srcdir)/'`../_sint2fs.c
+../libsdcc_a-__sint2fs.o: ../__sint2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-__sint2fs.o `test -f '../__sint2fs.c' || echo '$(srcdir)/'`../__sint2fs.c
 
-../libsdcc_a-_sint2fs.obj: ../_sint2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-_sint2fs.obj `if test -f '../_sint2fs.c'; then $(CYGPATH_W) '../_sint2fs.c'; else $(CYGPATH_W) '$(srcdir)/../_sint2fs.c'; fi`
+../libsdcc_a-__sint2fs.obj: ../__sint2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-__sint2fs.obj `if test -f '../__sint2fs.c'; then $(CYGPATH_W) '../__sint2fs.c'; else $(CYGPATH_W) '$(srcdir)/../__sint2fs.c'; fi`
 
-../libsdcc_a-_slong2fs.o: ../_slong2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-_slong2fs.o `test -f '../_slong2fs.c' || echo '$(srcdir)/'`../_slong2fs.c
+../libsdcc_a-__slong2fs.o: ../__slong2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-__slong2fs.o `test -f '../__slong2fs.c' || echo '$(srcdir)/'`../__slong2fs.c
 
-../libsdcc_a-_slong2fs.obj: ../_slong2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-_slong2fs.obj `if test -f '../_slong2fs.c'; then $(CYGPATH_W) '../_slong2fs.c'; else $(CYGPATH_W) '$(srcdir)/../_slong2fs.c'; fi`
+../libsdcc_a-__slong2fs.obj: ../__slong2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-__slong2fs.obj `if test -f '../__slong2fs.c'; then $(CYGPATH_W) '../__slong2fs.c'; else $(CYGPATH_W) '$(srcdir)/../__slong2fs.c'; fi`
 
-../libsdcc_a-_uchar2fs.o: ../_uchar2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-_uchar2fs.o `test -f '../_uchar2fs.c' || echo '$(srcdir)/'`../_uchar2fs.c
+../libsdcc_a-__uchar2fs.o: ../__uchar2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-__uchar2fs.o `test -f '../__uchar2fs.c' || echo '$(srcdir)/'`../__uchar2fs.c
 
-../libsdcc_a-_uchar2fs.obj: ../_uchar2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-_uchar2fs.obj `if test -f '../_uchar2fs.c'; then $(CYGPATH_W) '../_uchar2fs.c'; else $(CYGPATH_W) '$(srcdir)/../_uchar2fs.c'; fi`
+../libsdcc_a-__uchar2fs.obj: ../__uchar2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-__uchar2fs.obj `if test -f '../__uchar2fs.c'; then $(CYGPATH_W) '../__uchar2fs.c'; else $(CYGPATH_W) '$(srcdir)/../__uchar2fs.c'; fi`
 
-../libsdcc_a-_uint2fs.o: ../_uint2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-_uint2fs.o `test -f '../_uint2fs.c' || echo '$(srcdir)/'`../_uint2fs.c
+../libsdcc_a-__uint2fs.o: ../__uint2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-__uint2fs.o `test -f '../__uint2fs.c' || echo '$(srcdir)/'`../__uint2fs.c
 
-../libsdcc_a-_uint2fs.obj: ../_uint2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-_uint2fs.obj `if test -f '../_uint2fs.c'; then $(CYGPATH_W) '../_uint2fs.c'; else $(CYGPATH_W) '$(srcdir)/../_uint2fs.c'; fi`
+../libsdcc_a-__uint2fs.obj: ../__uint2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-__uint2fs.obj `if test -f '../__uint2fs.c'; then $(CYGPATH_W) '../__uint2fs.c'; else $(CYGPATH_W) '$(srcdir)/../__uint2fs.c'; fi`
 
-../libsdcc_a-_ulong2fs.o: ../_ulong2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-_ulong2fs.o `test -f '../_ulong2fs.c' || echo '$(srcdir)/'`../_ulong2fs.c
+../libsdcc_a-__ulong2fs.o: ../__ulong2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-__ulong2fs.o `test -f '../__ulong2fs.c' || echo '$(srcdir)/'`../__ulong2fs.c
 
-../libsdcc_a-_ulong2fs.obj: ../_ulong2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-_ulong2fs.obj `if test -f '../_ulong2fs.c'; then $(CYGPATH_W) '../_ulong2fs.c'; else $(CYGPATH_W) '$(srcdir)/../_ulong2fs.c'; fi`
+../libsdcc_a-__ulong2fs.obj: ../__ulong2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-__ulong2fs.obj `if test -f '../__ulong2fs.c'; then $(CYGPATH_W) '../__ulong2fs.c'; else $(CYGPATH_W) '$(srcdir)/../__ulong2fs.c'; fi`
 
 ../libsdcc_a-idata.o: ../idata.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcc_a_CFLAGS) $(CFLAGS) -c -o ../libsdcc_a-idata.o `test -f '../idata.c' || echo '$(srcdir)/'`../idata.c
@@ -1099,119 +1099,119 @@ libsdcc_a-shadowregs.obj: shadowregs.c
 ../libsdcco_a-_mullong.obj: ../_mullong.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-_mullong.obj `if test -f '../_mullong.c'; then $(CYGPATH_W) '../_mullong.c'; else $(CYGPATH_W) '$(srcdir)/../_mullong.c'; fi`
 
-../libsdcco_a-_fs2schar.o: ../_fs2schar.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-_fs2schar.o `test -f '../_fs2schar.c' || echo '$(srcdir)/'`../_fs2schar.c
+../libsdcco_a-__fs2schar.o: ../__fs2schar.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-__fs2schar.o `test -f '../__fs2schar.c' || echo '$(srcdir)/'`../__fs2schar.c
 
-../libsdcco_a-_fs2schar.obj: ../_fs2schar.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-_fs2schar.obj `if test -f '../_fs2schar.c'; then $(CYGPATH_W) '../_fs2schar.c'; else $(CYGPATH_W) '$(srcdir)/../_fs2schar.c'; fi`
+../libsdcco_a-__fs2schar.obj: ../__fs2schar.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-__fs2schar.obj `if test -f '../__fs2schar.c'; then $(CYGPATH_W) '../__fs2schar.c'; else $(CYGPATH_W) '$(srcdir)/../__fs2schar.c'; fi`
 
-../libsdcco_a-_fs2sint.o: ../_fs2sint.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-_fs2sint.o `test -f '../_fs2sint.c' || echo '$(srcdir)/'`../_fs2sint.c
+../libsdcco_a-__fs2sint.o: ../__fs2sint.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-__fs2sint.o `test -f '../__fs2sint.c' || echo '$(srcdir)/'`../__fs2sint.c
 
-../libsdcco_a-_fs2sint.obj: ../_fs2sint.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-_fs2sint.obj `if test -f '../_fs2sint.c'; then $(CYGPATH_W) '../_fs2sint.c'; else $(CYGPATH_W) '$(srcdir)/../_fs2sint.c'; fi`
+../libsdcco_a-__fs2sint.obj: ../__fs2sint.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-__fs2sint.obj `if test -f '../__fs2sint.c'; then $(CYGPATH_W) '../__fs2sint.c'; else $(CYGPATH_W) '$(srcdir)/../__fs2sint.c'; fi`
 
-../libsdcco_a-_fs2slong.o: ../_fs2slong.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-_fs2slong.o `test -f '../_fs2slong.c' || echo '$(srcdir)/'`../_fs2slong.c
+../libsdcco_a-__fs2slong.o: ../__fs2slong.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-__fs2slong.o `test -f '../__fs2slong.c' || echo '$(srcdir)/'`../__fs2slong.c
 
-../libsdcco_a-_fs2slong.obj: ../_fs2slong.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-_fs2slong.obj `if test -f '../_fs2slong.c'; then $(CYGPATH_W) '../_fs2slong.c'; else $(CYGPATH_W) '$(srcdir)/../_fs2slong.c'; fi`
+../libsdcco_a-__fs2slong.obj: ../__fs2slong.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-__fs2slong.obj `if test -f '../__fs2slong.c'; then $(CYGPATH_W) '../__fs2slong.c'; else $(CYGPATH_W) '$(srcdir)/../__fs2slong.c'; fi`
 
-../libsdcco_a-_fs2uchar.o: ../_fs2uchar.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-_fs2uchar.o `test -f '../_fs2uchar.c' || echo '$(srcdir)/'`../_fs2uchar.c
+../libsdcco_a-__fs2uchar.o: ../__fs2uchar.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-__fs2uchar.o `test -f '../__fs2uchar.c' || echo '$(srcdir)/'`../__fs2uchar.c
 
-../libsdcco_a-_fs2uchar.obj: ../_fs2uchar.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-_fs2uchar.obj `if test -f '../_fs2uchar.c'; then $(CYGPATH_W) '../_fs2uchar.c'; else $(CYGPATH_W) '$(srcdir)/../_fs2uchar.c'; fi`
+../libsdcco_a-__fs2uchar.obj: ../__fs2uchar.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-__fs2uchar.obj `if test -f '../__fs2uchar.c'; then $(CYGPATH_W) '../__fs2uchar.c'; else $(CYGPATH_W) '$(srcdir)/../__fs2uchar.c'; fi`
 
-../libsdcco_a-_fs2uint.o: ../_fs2uint.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-_fs2uint.o `test -f '../_fs2uint.c' || echo '$(srcdir)/'`../_fs2uint.c
+../libsdcco_a-__fs2uint.o: ../__fs2uint.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-__fs2uint.o `test -f '../__fs2uint.c' || echo '$(srcdir)/'`../__fs2uint.c
 
-../libsdcco_a-_fs2uint.obj: ../_fs2uint.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-_fs2uint.obj `if test -f '../_fs2uint.c'; then $(CYGPATH_W) '../_fs2uint.c'; else $(CYGPATH_W) '$(srcdir)/../_fs2uint.c'; fi`
+../libsdcco_a-__fs2uint.obj: ../__fs2uint.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-__fs2uint.obj `if test -f '../__fs2uint.c'; then $(CYGPATH_W) '../__fs2uint.c'; else $(CYGPATH_W) '$(srcdir)/../__fs2uint.c'; fi`
 
-../libsdcco_a-_fs2ulong.o: ../_fs2ulong.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-_fs2ulong.o `test -f '../_fs2ulong.c' || echo '$(srcdir)/'`../_fs2ulong.c
+../libsdcco_a-__fs2ulong.o: ../__fs2ulong.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-__fs2ulong.o `test -f '../__fs2ulong.c' || echo '$(srcdir)/'`../__fs2ulong.c
 
-../libsdcco_a-_fs2ulong.obj: ../_fs2ulong.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-_fs2ulong.obj `if test -f '../_fs2ulong.c'; then $(CYGPATH_W) '../_fs2ulong.c'; else $(CYGPATH_W) '$(srcdir)/../_fs2ulong.c'; fi`
+../libsdcco_a-__fs2ulong.obj: ../__fs2ulong.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-__fs2ulong.obj `if test -f '../__fs2ulong.c'; then $(CYGPATH_W) '../__fs2ulong.c'; else $(CYGPATH_W) '$(srcdir)/../__fs2ulong.c'; fi`
 
-../libsdcco_a-_fsadd.o: ../_fsadd.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-_fsadd.o `test -f '../_fsadd.c' || echo '$(srcdir)/'`../_fsadd.c
+../libsdcco_a-__fsadd.o: ../__fsadd.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-__fsadd.o `test -f '../__fsadd.c' || echo '$(srcdir)/'`../__fsadd.c
 
-../libsdcco_a-_fsadd.obj: ../_fsadd.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-_fsadd.obj `if test -f '../_fsadd.c'; then $(CYGPATH_W) '../_fsadd.c'; else $(CYGPATH_W) '$(srcdir)/../_fsadd.c'; fi`
+../libsdcco_a-__fsadd.obj: ../__fsadd.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-__fsadd.obj `if test -f '../__fsadd.c'; then $(CYGPATH_W) '../__fsadd.c'; else $(CYGPATH_W) '$(srcdir)/../__fsadd.c'; fi`
 
-../libsdcco_a-_fsdiv.o: ../_fsdiv.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-_fsdiv.o `test -f '../_fsdiv.c' || echo '$(srcdir)/'`../_fsdiv.c
+../libsdcco_a-__fsdiv.o: ../__fsdiv.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-__fsdiv.o `test -f '../__fsdiv.c' || echo '$(srcdir)/'`../__fsdiv.c
 
-../libsdcco_a-_fsdiv.obj: ../_fsdiv.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-_fsdiv.obj `if test -f '../_fsdiv.c'; then $(CYGPATH_W) '../_fsdiv.c'; else $(CYGPATH_W) '$(srcdir)/../_fsdiv.c'; fi`
+../libsdcco_a-__fsdiv.obj: ../__fsdiv.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-__fsdiv.obj `if test -f '../__fsdiv.c'; then $(CYGPATH_W) '../__fsdiv.c'; else $(CYGPATH_W) '$(srcdir)/../__fsdiv.c'; fi`
 
-../libsdcco_a-_fseq.o: ../_fseq.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-_fseq.o `test -f '../_fseq.c' || echo '$(srcdir)/'`../_fseq.c
+../libsdcco_a-__fseq.o: ../__fseq.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-__fseq.o `test -f '../__fseq.c' || echo '$(srcdir)/'`../__fseq.c
 
-../libsdcco_a-_fseq.obj: ../_fseq.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-_fseq.obj `if test -f '../_fseq.c'; then $(CYGPATH_W) '../_fseq.c'; else $(CYGPATH_W) '$(srcdir)/../_fseq.c'; fi`
+../libsdcco_a-__fseq.obj: ../__fseq.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-__fseq.obj `if test -f '../__fseq.c'; then $(CYGPATH_W) '../__fseq.c'; else $(CYGPATH_W) '$(srcdir)/../__fseq.c'; fi`
 
-../libsdcco_a-_fslt.o: ../_fslt.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-_fslt.o `test -f '../_fslt.c' || echo '$(srcdir)/'`../_fslt.c
+../libsdcco_a-__fslt.o: ../__fslt.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-__fslt.o `test -f '../__fslt.c' || echo '$(srcdir)/'`../__fslt.c
 
-../libsdcco_a-_fslt.obj: ../_fslt.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-_fslt.obj `if test -f '../_fslt.c'; then $(CYGPATH_W) '../_fslt.c'; else $(CYGPATH_W) '$(srcdir)/../_fslt.c'; fi`
+../libsdcco_a-__fslt.obj: ../__fslt.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-__fslt.obj `if test -f '../__fslt.c'; then $(CYGPATH_W) '../__fslt.c'; else $(CYGPATH_W) '$(srcdir)/../__fslt.c'; fi`
 
-../libsdcco_a-_fsmul.o: ../_fsmul.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-_fsmul.o `test -f '../_fsmul.c' || echo '$(srcdir)/'`../_fsmul.c
+../libsdcco_a-__fsmul.o: ../__fsmul.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-__fsmul.o `test -f '../__fsmul.c' || echo '$(srcdir)/'`../__fsmul.c
 
-../libsdcco_a-_fsmul.obj: ../_fsmul.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-_fsmul.obj `if test -f '../_fsmul.c'; then $(CYGPATH_W) '../_fsmul.c'; else $(CYGPATH_W) '$(srcdir)/../_fsmul.c'; fi`
+../libsdcco_a-__fsmul.obj: ../__fsmul.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-__fsmul.obj `if test -f '../__fsmul.c'; then $(CYGPATH_W) '../__fsmul.c'; else $(CYGPATH_W) '$(srcdir)/../__fsmul.c'; fi`
 
-../libsdcco_a-_fsneq.o: ../_fsneq.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-_fsneq.o `test -f '../_fsneq.c' || echo '$(srcdir)/'`../_fsneq.c
+../libsdcco_a-__fsneq.o: ../__fsneq.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-__fsneq.o `test -f '../__fsneq.c' || echo '$(srcdir)/'`../__fsneq.c
 
-../libsdcco_a-_fsneq.obj: ../_fsneq.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-_fsneq.obj `if test -f '../_fsneq.c'; then $(CYGPATH_W) '../_fsneq.c'; else $(CYGPATH_W) '$(srcdir)/../_fsneq.c'; fi`
+../libsdcco_a-__fsneq.obj: ../__fsneq.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-__fsneq.obj `if test -f '../__fsneq.c'; then $(CYGPATH_W) '../__fsneq.c'; else $(CYGPATH_W) '$(srcdir)/../__fsneq.c'; fi`
 
-../libsdcco_a-_fssub.o: ../_fssub.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-_fssub.o `test -f '../_fssub.c' || echo '$(srcdir)/'`../_fssub.c
+../libsdcco_a-__fssub.o: ../__fssub.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-__fssub.o `test -f '../__fssub.c' || echo '$(srcdir)/'`../__fssub.c
 
-../libsdcco_a-_fssub.obj: ../_fssub.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-_fssub.obj `if test -f '../_fssub.c'; then $(CYGPATH_W) '../_fssub.c'; else $(CYGPATH_W) '$(srcdir)/../_fssub.c'; fi`
+../libsdcco_a-__fssub.obj: ../__fssub.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-__fssub.obj `if test -f '../__fssub.c'; then $(CYGPATH_W) '../__fssub.c'; else $(CYGPATH_W) '$(srcdir)/../__fssub.c'; fi`
 
-../libsdcco_a-_schar2fs.o: ../_schar2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-_schar2fs.o `test -f '../_schar2fs.c' || echo '$(srcdir)/'`../_schar2fs.c
+../libsdcco_a-__schar2fs.o: ../__schar2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-__schar2fs.o `test -f '../__schar2fs.c' || echo '$(srcdir)/'`../__schar2fs.c
 
-../libsdcco_a-_schar2fs.obj: ../_schar2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-_schar2fs.obj `if test -f '../_schar2fs.c'; then $(CYGPATH_W) '../_schar2fs.c'; else $(CYGPATH_W) '$(srcdir)/../_schar2fs.c'; fi`
+../libsdcco_a-__schar2fs.obj: ../__schar2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-__schar2fs.obj `if test -f '../__schar2fs.c'; then $(CYGPATH_W) '../__schar2fs.c'; else $(CYGPATH_W) '$(srcdir)/../__schar2fs.c'; fi`
 
-../libsdcco_a-_sint2fs.o: ../_sint2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-_sint2fs.o `test -f '../_sint2fs.c' || echo '$(srcdir)/'`../_sint2fs.c
+../libsdcco_a-__sint2fs.o: ../__sint2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-__sint2fs.o `test -f '../__sint2fs.c' || echo '$(srcdir)/'`../__sint2fs.c
 
-../libsdcco_a-_sint2fs.obj: ../_sint2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-_sint2fs.obj `if test -f '../_sint2fs.c'; then $(CYGPATH_W) '../_sint2fs.c'; else $(CYGPATH_W) '$(srcdir)/../_sint2fs.c'; fi`
+../libsdcco_a-__sint2fs.obj: ../__sint2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-__sint2fs.obj `if test -f '../__sint2fs.c'; then $(CYGPATH_W) '../__sint2fs.c'; else $(CYGPATH_W) '$(srcdir)/../__sint2fs.c'; fi`
 
-../libsdcco_a-_slong2fs.o: ../_slong2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-_slong2fs.o `test -f '../_slong2fs.c' || echo '$(srcdir)/'`../_slong2fs.c
+../libsdcco_a-__slong2fs.o: ../__slong2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-__slong2fs.o `test -f '../__slong2fs.c' || echo '$(srcdir)/'`../__slong2fs.c
 
-../libsdcco_a-_slong2fs.obj: ../_slong2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-_slong2fs.obj `if test -f '../_slong2fs.c'; then $(CYGPATH_W) '../_slong2fs.c'; else $(CYGPATH_W) '$(srcdir)/../_slong2fs.c'; fi`
+../libsdcco_a-__slong2fs.obj: ../__slong2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-__slong2fs.obj `if test -f '../__slong2fs.c'; then $(CYGPATH_W) '../__slong2fs.c'; else $(CYGPATH_W) '$(srcdir)/../__slong2fs.c'; fi`
 
-../libsdcco_a-_uchar2fs.o: ../_uchar2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-_uchar2fs.o `test -f '../_uchar2fs.c' || echo '$(srcdir)/'`../_uchar2fs.c
+../libsdcco_a-__uchar2fs.o: ../__uchar2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-__uchar2fs.o `test -f '../__uchar2fs.c' || echo '$(srcdir)/'`../__uchar2fs.c
 
-../libsdcco_a-_uchar2fs.obj: ../_uchar2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-_uchar2fs.obj `if test -f '../_uchar2fs.c'; then $(CYGPATH_W) '../_uchar2fs.c'; else $(CYGPATH_W) '$(srcdir)/../_uchar2fs.c'; fi`
+../libsdcco_a-__uchar2fs.obj: ../__uchar2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-__uchar2fs.obj `if test -f '../__uchar2fs.c'; then $(CYGPATH_W) '../__uchar2fs.c'; else $(CYGPATH_W) '$(srcdir)/../__uchar2fs.c'; fi`
 
-../libsdcco_a-_uint2fs.o: ../_uint2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-_uint2fs.o `test -f '../_uint2fs.c' || echo '$(srcdir)/'`../_uint2fs.c
+../libsdcco_a-__uint2fs.o: ../__uint2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-__uint2fs.o `test -f '../__uint2fs.c' || echo '$(srcdir)/'`../__uint2fs.c
 
-../libsdcco_a-_uint2fs.obj: ../_uint2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-_uint2fs.obj `if test -f '../_uint2fs.c'; then $(CYGPATH_W) '../_uint2fs.c'; else $(CYGPATH_W) '$(srcdir)/../_uint2fs.c'; fi`
+../libsdcco_a-__uint2fs.obj: ../__uint2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-__uint2fs.obj `if test -f '../__uint2fs.c'; then $(CYGPATH_W) '../__uint2fs.c'; else $(CYGPATH_W) '$(srcdir)/../__uint2fs.c'; fi`
 
-../libsdcco_a-_ulong2fs.o: ../_ulong2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-_ulong2fs.o `test -f '../_ulong2fs.c' || echo '$(srcdir)/'`../_ulong2fs.c
+../libsdcco_a-__ulong2fs.o: ../__ulong2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-__ulong2fs.o `test -f '../__ulong2fs.c' || echo '$(srcdir)/'`../__ulong2fs.c
 
-../libsdcco_a-_ulong2fs.obj: ../_ulong2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-_ulong2fs.obj `if test -f '../_ulong2fs.c'; then $(CYGPATH_W) '../_ulong2fs.c'; else $(CYGPATH_W) '$(srcdir)/../_ulong2fs.c'; fi`
+../libsdcco_a-__ulong2fs.obj: ../__ulong2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-__ulong2fs.obj `if test -f '../__ulong2fs.c'; then $(CYGPATH_W) '../__ulong2fs.c'; else $(CYGPATH_W) '$(srcdir)/../__ulong2fs.c'; fi`
 
 ../libsdcco_a-idata.o: ../idata.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdcco_a_CFLAGS) $(CFLAGS) -c -o ../libsdcco_a-idata.o `test -f '../idata.c' || echo '$(srcdir)/'`../idata.c
@@ -1321,119 +1321,119 @@ libsdcco_a-shadowregs.obj: shadowregs.c
 ../libsdccox_a-_mullong.obj: ../_mullong.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-_mullong.obj `if test -f '../_mullong.c'; then $(CYGPATH_W) '../_mullong.c'; else $(CYGPATH_W) '$(srcdir)/../_mullong.c'; fi`
 
-../libsdccox_a-_fs2schar.o: ../_fs2schar.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-_fs2schar.o `test -f '../_fs2schar.c' || echo '$(srcdir)/'`../_fs2schar.c
+../libsdccox_a-__fs2schar.o: ../__fs2schar.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-__fs2schar.o `test -f '../__fs2schar.c' || echo '$(srcdir)/'`../__fs2schar.c
 
-../libsdccox_a-_fs2schar.obj: ../_fs2schar.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-_fs2schar.obj `if test -f '../_fs2schar.c'; then $(CYGPATH_W) '../_fs2schar.c'; else $(CYGPATH_W) '$(srcdir)/../_fs2schar.c'; fi`
+../libsdccox_a-__fs2schar.obj: ../__fs2schar.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-__fs2schar.obj `if test -f '../__fs2schar.c'; then $(CYGPATH_W) '../__fs2schar.c'; else $(CYGPATH_W) '$(srcdir)/../__fs2schar.c'; fi`
 
-../libsdccox_a-_fs2sint.o: ../_fs2sint.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-_fs2sint.o `test -f '../_fs2sint.c' || echo '$(srcdir)/'`../_fs2sint.c
+../libsdccox_a-__fs2sint.o: ../__fs2sint.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-__fs2sint.o `test -f '../__fs2sint.c' || echo '$(srcdir)/'`../__fs2sint.c
 
-../libsdccox_a-_fs2sint.obj: ../_fs2sint.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-_fs2sint.obj `if test -f '../_fs2sint.c'; then $(CYGPATH_W) '../_fs2sint.c'; else $(CYGPATH_W) '$(srcdir)/../_fs2sint.c'; fi`
+../libsdccox_a-__fs2sint.obj: ../__fs2sint.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-__fs2sint.obj `if test -f '../__fs2sint.c'; then $(CYGPATH_W) '../__fs2sint.c'; else $(CYGPATH_W) '$(srcdir)/../__fs2sint.c'; fi`
 
-../libsdccox_a-_fs2slong.o: ../_fs2slong.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-_fs2slong.o `test -f '../_fs2slong.c' || echo '$(srcdir)/'`../_fs2slong.c
+../libsdccox_a-__fs2slong.o: ../__fs2slong.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-__fs2slong.o `test -f '../__fs2slong.c' || echo '$(srcdir)/'`../__fs2slong.c
 
-../libsdccox_a-_fs2slong.obj: ../_fs2slong.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-_fs2slong.obj `if test -f '../_fs2slong.c'; then $(CYGPATH_W) '../_fs2slong.c'; else $(CYGPATH_W) '$(srcdir)/../_fs2slong.c'; fi`
+../libsdccox_a-__fs2slong.obj: ../__fs2slong.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-__fs2slong.obj `if test -f '../__fs2slong.c'; then $(CYGPATH_W) '../__fs2slong.c'; else $(CYGPATH_W) '$(srcdir)/../__fs2slong.c'; fi`
 
-../libsdccox_a-_fs2uchar.o: ../_fs2uchar.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-_fs2uchar.o `test -f '../_fs2uchar.c' || echo '$(srcdir)/'`../_fs2uchar.c
+../libsdccox_a-__fs2uchar.o: ../__fs2uchar.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-__fs2uchar.o `test -f '../__fs2uchar.c' || echo '$(srcdir)/'`../__fs2uchar.c
 
-../libsdccox_a-_fs2uchar.obj: ../_fs2uchar.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-_fs2uchar.obj `if test -f '../_fs2uchar.c'; then $(CYGPATH_W) '../_fs2uchar.c'; else $(CYGPATH_W) '$(srcdir)/../_fs2uchar.c'; fi`
+../libsdccox_a-__fs2uchar.obj: ../__fs2uchar.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-__fs2uchar.obj `if test -f '../__fs2uchar.c'; then $(CYGPATH_W) '../__fs2uchar.c'; else $(CYGPATH_W) '$(srcdir)/../__fs2uchar.c'; fi`
 
-../libsdccox_a-_fs2uint.o: ../_fs2uint.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-_fs2uint.o `test -f '../_fs2uint.c' || echo '$(srcdir)/'`../_fs2uint.c
+../libsdccox_a-__fs2uint.o: ../__fs2uint.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-__fs2uint.o `test -f '../__fs2uint.c' || echo '$(srcdir)/'`../__fs2uint.c
 
-../libsdccox_a-_fs2uint.obj: ../_fs2uint.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-_fs2uint.obj `if test -f '../_fs2uint.c'; then $(CYGPATH_W) '../_fs2uint.c'; else $(CYGPATH_W) '$(srcdir)/../_fs2uint.c'; fi`
+../libsdccox_a-__fs2uint.obj: ../__fs2uint.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-__fs2uint.obj `if test -f '../__fs2uint.c'; then $(CYGPATH_W) '../__fs2uint.c'; else $(CYGPATH_W) '$(srcdir)/../__fs2uint.c'; fi`
 
-../libsdccox_a-_fs2ulong.o: ../_fs2ulong.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-_fs2ulong.o `test -f '../_fs2ulong.c' || echo '$(srcdir)/'`../_fs2ulong.c
+../libsdccox_a-__fs2ulong.o: ../__fs2ulong.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-__fs2ulong.o `test -f '../__fs2ulong.c' || echo '$(srcdir)/'`../__fs2ulong.c
 
-../libsdccox_a-_fs2ulong.obj: ../_fs2ulong.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-_fs2ulong.obj `if test -f '../_fs2ulong.c'; then $(CYGPATH_W) '../_fs2ulong.c'; else $(CYGPATH_W) '$(srcdir)/../_fs2ulong.c'; fi`
+../libsdccox_a-__fs2ulong.obj: ../__fs2ulong.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-__fs2ulong.obj `if test -f '../__fs2ulong.c'; then $(CYGPATH_W) '../__fs2ulong.c'; else $(CYGPATH_W) '$(srcdir)/../__fs2ulong.c'; fi`
 
-../libsdccox_a-_fsadd.o: ../_fsadd.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-_fsadd.o `test -f '../_fsadd.c' || echo '$(srcdir)/'`../_fsadd.c
+../libsdccox_a-__fsadd.o: ../__fsadd.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-__fsadd.o `test -f '../__fsadd.c' || echo '$(srcdir)/'`../__fsadd.c
 
-../libsdccox_a-_fsadd.obj: ../_fsadd.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-_fsadd.obj `if test -f '../_fsadd.c'; then $(CYGPATH_W) '../_fsadd.c'; else $(CYGPATH_W) '$(srcdir)/../_fsadd.c'; fi`
+../libsdccox_a-__fsadd.obj: ../__fsadd.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-__fsadd.obj `if test -f '../__fsadd.c'; then $(CYGPATH_W) '../__fsadd.c'; else $(CYGPATH_W) '$(srcdir)/../__fsadd.c'; fi`
 
-../libsdccox_a-_fsdiv.o: ../_fsdiv.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-_fsdiv.o `test -f '../_fsdiv.c' || echo '$(srcdir)/'`../_fsdiv.c
+../libsdccox_a-__fsdiv.o: ../__fsdiv.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-__fsdiv.o `test -f '../__fsdiv.c' || echo '$(srcdir)/'`../__fsdiv.c
 
-../libsdccox_a-_fsdiv.obj: ../_fsdiv.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-_fsdiv.obj `if test -f '../_fsdiv.c'; then $(CYGPATH_W) '../_fsdiv.c'; else $(CYGPATH_W) '$(srcdir)/../_fsdiv.c'; fi`
+../libsdccox_a-__fsdiv.obj: ../__fsdiv.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-__fsdiv.obj `if test -f '../__fsdiv.c'; then $(CYGPATH_W) '../__fsdiv.c'; else $(CYGPATH_W) '$(srcdir)/../__fsdiv.c'; fi`
 
-../libsdccox_a-_fseq.o: ../_fseq.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-_fseq.o `test -f '../_fseq.c' || echo '$(srcdir)/'`../_fseq.c
+../libsdccox_a-__fseq.o: ../__fseq.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-__fseq.o `test -f '../__fseq.c' || echo '$(srcdir)/'`../__fseq.c
 
-../libsdccox_a-_fseq.obj: ../_fseq.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-_fseq.obj `if test -f '../_fseq.c'; then $(CYGPATH_W) '../_fseq.c'; else $(CYGPATH_W) '$(srcdir)/../_fseq.c'; fi`
+../libsdccox_a-__fseq.obj: ../__fseq.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-__fseq.obj `if test -f '../__fseq.c'; then $(CYGPATH_W) '../__fseq.c'; else $(CYGPATH_W) '$(srcdir)/../__fseq.c'; fi`
 
-../libsdccox_a-_fslt.o: ../_fslt.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-_fslt.o `test -f '../_fslt.c' || echo '$(srcdir)/'`../_fslt.c
+../libsdccox_a-__fslt.o: ../__fslt.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-__fslt.o `test -f '../__fslt.c' || echo '$(srcdir)/'`../__fslt.c
 
-../libsdccox_a-_fslt.obj: ../_fslt.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-_fslt.obj `if test -f '../_fslt.c'; then $(CYGPATH_W) '../_fslt.c'; else $(CYGPATH_W) '$(srcdir)/../_fslt.c'; fi`
+../libsdccox_a-__fslt.obj: ../__fslt.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-__fslt.obj `if test -f '../__fslt.c'; then $(CYGPATH_W) '../__fslt.c'; else $(CYGPATH_W) '$(srcdir)/../__fslt.c'; fi`
 
-../libsdccox_a-_fsmul.o: ../_fsmul.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-_fsmul.o `test -f '../_fsmul.c' || echo '$(srcdir)/'`../_fsmul.c
+../libsdccox_a-__fsmul.o: ../__fsmul.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-__fsmul.o `test -f '../__fsmul.c' || echo '$(srcdir)/'`../__fsmul.c
 
-../libsdccox_a-_fsmul.obj: ../_fsmul.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-_fsmul.obj `if test -f '../_fsmul.c'; then $(CYGPATH_W) '../_fsmul.c'; else $(CYGPATH_W) '$(srcdir)/../_fsmul.c'; fi`
+../libsdccox_a-__fsmul.obj: ../__fsmul.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-__fsmul.obj `if test -f '../__fsmul.c'; then $(CYGPATH_W) '../__fsmul.c'; else $(CYGPATH_W) '$(srcdir)/../__fsmul.c'; fi`
 
-../libsdccox_a-_fsneq.o: ../_fsneq.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-_fsneq.o `test -f '../_fsneq.c' || echo '$(srcdir)/'`../_fsneq.c
+../libsdccox_a-__fsneq.o: ../__fsneq.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-__fsneq.o `test -f '../__fsneq.c' || echo '$(srcdir)/'`../__fsneq.c
 
-../libsdccox_a-_fsneq.obj: ../_fsneq.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-_fsneq.obj `if test -f '../_fsneq.c'; then $(CYGPATH_W) '../_fsneq.c'; else $(CYGPATH_W) '$(srcdir)/../_fsneq.c'; fi`
+../libsdccox_a-__fsneq.obj: ../__fsneq.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-__fsneq.obj `if test -f '../__fsneq.c'; then $(CYGPATH_W) '../__fsneq.c'; else $(CYGPATH_W) '$(srcdir)/../__fsneq.c'; fi`
 
-../libsdccox_a-_fssub.o: ../_fssub.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-_fssub.o `test -f '../_fssub.c' || echo '$(srcdir)/'`../_fssub.c
+../libsdccox_a-__fssub.o: ../__fssub.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-__fssub.o `test -f '../__fssub.c' || echo '$(srcdir)/'`../__fssub.c
 
-../libsdccox_a-_fssub.obj: ../_fssub.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-_fssub.obj `if test -f '../_fssub.c'; then $(CYGPATH_W) '../_fssub.c'; else $(CYGPATH_W) '$(srcdir)/../_fssub.c'; fi`
+../libsdccox_a-__fssub.obj: ../__fssub.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-__fssub.obj `if test -f '../__fssub.c'; then $(CYGPATH_W) '../__fssub.c'; else $(CYGPATH_W) '$(srcdir)/../__fssub.c'; fi`
 
-../libsdccox_a-_schar2fs.o: ../_schar2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-_schar2fs.o `test -f '../_schar2fs.c' || echo '$(srcdir)/'`../_schar2fs.c
+../libsdccox_a-__schar2fs.o: ../__schar2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-__schar2fs.o `test -f '../__schar2fs.c' || echo '$(srcdir)/'`../__schar2fs.c
 
-../libsdccox_a-_schar2fs.obj: ../_schar2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-_schar2fs.obj `if test -f '../_schar2fs.c'; then $(CYGPATH_W) '../_schar2fs.c'; else $(CYGPATH_W) '$(srcdir)/../_schar2fs.c'; fi`
+../libsdccox_a-__schar2fs.obj: ../__schar2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-__schar2fs.obj `if test -f '../__schar2fs.c'; then $(CYGPATH_W) '../__schar2fs.c'; else $(CYGPATH_W) '$(srcdir)/../__schar2fs.c'; fi`
 
-../libsdccox_a-_sint2fs.o: ../_sint2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-_sint2fs.o `test -f '../_sint2fs.c' || echo '$(srcdir)/'`../_sint2fs.c
+../libsdccox_a-__sint2fs.o: ../__sint2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-__sint2fs.o `test -f '../__sint2fs.c' || echo '$(srcdir)/'`../__sint2fs.c
 
-../libsdccox_a-_sint2fs.obj: ../_sint2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-_sint2fs.obj `if test -f '../_sint2fs.c'; then $(CYGPATH_W) '../_sint2fs.c'; else $(CYGPATH_W) '$(srcdir)/../_sint2fs.c'; fi`
+../libsdccox_a-__sint2fs.obj: ../__sint2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-__sint2fs.obj `if test -f '../__sint2fs.c'; then $(CYGPATH_W) '../__sint2fs.c'; else $(CYGPATH_W) '$(srcdir)/../__sint2fs.c'; fi`
 
-../libsdccox_a-_slong2fs.o: ../_slong2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-_slong2fs.o `test -f '../_slong2fs.c' || echo '$(srcdir)/'`../_slong2fs.c
+../libsdccox_a-__slong2fs.o: ../__slong2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-__slong2fs.o `test -f '../__slong2fs.c' || echo '$(srcdir)/'`../__slong2fs.c
 
-../libsdccox_a-_slong2fs.obj: ../_slong2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-_slong2fs.obj `if test -f '../_slong2fs.c'; then $(CYGPATH_W) '../_slong2fs.c'; else $(CYGPATH_W) '$(srcdir)/../_slong2fs.c'; fi`
+../libsdccox_a-__slong2fs.obj: ../__slong2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-__slong2fs.obj `if test -f '../__slong2fs.c'; then $(CYGPATH_W) '../__slong2fs.c'; else $(CYGPATH_W) '$(srcdir)/../__slong2fs.c'; fi`
 
-../libsdccox_a-_uchar2fs.o: ../_uchar2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-_uchar2fs.o `test -f '../_uchar2fs.c' || echo '$(srcdir)/'`../_uchar2fs.c
+../libsdccox_a-__uchar2fs.o: ../__uchar2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-__uchar2fs.o `test -f '../__uchar2fs.c' || echo '$(srcdir)/'`../__uchar2fs.c
 
-../libsdccox_a-_uchar2fs.obj: ../_uchar2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-_uchar2fs.obj `if test -f '../_uchar2fs.c'; then $(CYGPATH_W) '../_uchar2fs.c'; else $(CYGPATH_W) '$(srcdir)/../_uchar2fs.c'; fi`
+../libsdccox_a-__uchar2fs.obj: ../__uchar2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-__uchar2fs.obj `if test -f '../__uchar2fs.c'; then $(CYGPATH_W) '../__uchar2fs.c'; else $(CYGPATH_W) '$(srcdir)/../__uchar2fs.c'; fi`
 
-../libsdccox_a-_uint2fs.o: ../_uint2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-_uint2fs.o `test -f '../_uint2fs.c' || echo '$(srcdir)/'`../_uint2fs.c
+../libsdccox_a-__uint2fs.o: ../__uint2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-__uint2fs.o `test -f '../__uint2fs.c' || echo '$(srcdir)/'`../__uint2fs.c
 
-../libsdccox_a-_uint2fs.obj: ../_uint2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-_uint2fs.obj `if test -f '../_uint2fs.c'; then $(CYGPATH_W) '../_uint2fs.c'; else $(CYGPATH_W) '$(srcdir)/../_uint2fs.c'; fi`
+../libsdccox_a-__uint2fs.obj: ../__uint2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-__uint2fs.obj `if test -f '../__uint2fs.c'; then $(CYGPATH_W) '../__uint2fs.c'; else $(CYGPATH_W) '$(srcdir)/../__uint2fs.c'; fi`
 
-../libsdccox_a-_ulong2fs.o: ../_ulong2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-_ulong2fs.o `test -f '../_ulong2fs.c' || echo '$(srcdir)/'`../_ulong2fs.c
+../libsdccox_a-__ulong2fs.o: ../__ulong2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-__ulong2fs.o `test -f '../__ulong2fs.c' || echo '$(srcdir)/'`../__ulong2fs.c
 
-../libsdccox_a-_ulong2fs.obj: ../_ulong2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-_ulong2fs.obj `if test -f '../_ulong2fs.c'; then $(CYGPATH_W) '../_ulong2fs.c'; else $(CYGPATH_W) '$(srcdir)/../_ulong2fs.c'; fi`
+../libsdccox_a-__ulong2fs.obj: ../__ulong2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-__ulong2fs.obj `if test -f '../__ulong2fs.c'; then $(CYGPATH_W) '../__ulong2fs.c'; else $(CYGPATH_W) '$(srcdir)/../__ulong2fs.c'; fi`
 
 ../libsdccox_a-idata.o: ../idata.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccox_a_CFLAGS) $(CFLAGS) -c -o ../libsdccox_a-idata.o `test -f '../idata.c' || echo '$(srcdir)/'`../idata.c
@@ -1543,119 +1543,119 @@ libsdccox_a-shadowregs.obj: shadowregs.c
 ../libsdccx_a-_mullong.obj: ../_mullong.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-_mullong.obj `if test -f '../_mullong.c'; then $(CYGPATH_W) '../_mullong.c'; else $(CYGPATH_W) '$(srcdir)/../_mullong.c'; fi`
 
-../libsdccx_a-_fs2schar.o: ../_fs2schar.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-_fs2schar.o `test -f '../_fs2schar.c' || echo '$(srcdir)/'`../_fs2schar.c
+../libsdccx_a-__fs2schar.o: ../__fs2schar.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-__fs2schar.o `test -f '../__fs2schar.c' || echo '$(srcdir)/'`../__fs2schar.c
 
-../libsdccx_a-_fs2schar.obj: ../_fs2schar.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-_fs2schar.obj `if test -f '../_fs2schar.c'; then $(CYGPATH_W) '../_fs2schar.c'; else $(CYGPATH_W) '$(srcdir)/../_fs2schar.c'; fi`
+../libsdccx_a-__fs2schar.obj: ../__fs2schar.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-__fs2schar.obj `if test -f '../__fs2schar.c'; then $(CYGPATH_W) '../__fs2schar.c'; else $(CYGPATH_W) '$(srcdir)/../__fs2schar.c'; fi`
 
-../libsdccx_a-_fs2sint.o: ../_fs2sint.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-_fs2sint.o `test -f '../_fs2sint.c' || echo '$(srcdir)/'`../_fs2sint.c
+../libsdccx_a-__fs2sint.o: ../__fs2sint.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-__fs2sint.o `test -f '../__fs2sint.c' || echo '$(srcdir)/'`../__fs2sint.c
 
-../libsdccx_a-_fs2sint.obj: ../_fs2sint.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-_fs2sint.obj `if test -f '../_fs2sint.c'; then $(CYGPATH_W) '../_fs2sint.c'; else $(CYGPATH_W) '$(srcdir)/../_fs2sint.c'; fi`
+../libsdccx_a-__fs2sint.obj: ../__fs2sint.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-__fs2sint.obj `if test -f '../__fs2sint.c'; then $(CYGPATH_W) '../__fs2sint.c'; else $(CYGPATH_W) '$(srcdir)/../__fs2sint.c'; fi`
 
-../libsdccx_a-_fs2slong.o: ../_fs2slong.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-_fs2slong.o `test -f '../_fs2slong.c' || echo '$(srcdir)/'`../_fs2slong.c
+../libsdccx_a-__fs2slong.o: ../__fs2slong.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-__fs2slong.o `test -f '../__fs2slong.c' || echo '$(srcdir)/'`../__fs2slong.c
 
-../libsdccx_a-_fs2slong.obj: ../_fs2slong.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-_fs2slong.obj `if test -f '../_fs2slong.c'; then $(CYGPATH_W) '../_fs2slong.c'; else $(CYGPATH_W) '$(srcdir)/../_fs2slong.c'; fi`
+../libsdccx_a-__fs2slong.obj: ../__fs2slong.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-__fs2slong.obj `if test -f '../__fs2slong.c'; then $(CYGPATH_W) '../__fs2slong.c'; else $(CYGPATH_W) '$(srcdir)/../__fs2slong.c'; fi`
 
-../libsdccx_a-_fs2uchar.o: ../_fs2uchar.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-_fs2uchar.o `test -f '../_fs2uchar.c' || echo '$(srcdir)/'`../_fs2uchar.c
+../libsdccx_a-__fs2uchar.o: ../__fs2uchar.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-__fs2uchar.o `test -f '../__fs2uchar.c' || echo '$(srcdir)/'`../__fs2uchar.c
 
-../libsdccx_a-_fs2uchar.obj: ../_fs2uchar.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-_fs2uchar.obj `if test -f '../_fs2uchar.c'; then $(CYGPATH_W) '../_fs2uchar.c'; else $(CYGPATH_W) '$(srcdir)/../_fs2uchar.c'; fi`
+../libsdccx_a-__fs2uchar.obj: ../__fs2uchar.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-__fs2uchar.obj `if test -f '../__fs2uchar.c'; then $(CYGPATH_W) '../__fs2uchar.c'; else $(CYGPATH_W) '$(srcdir)/../__fs2uchar.c'; fi`
 
-../libsdccx_a-_fs2uint.o: ../_fs2uint.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-_fs2uint.o `test -f '../_fs2uint.c' || echo '$(srcdir)/'`../_fs2uint.c
+../libsdccx_a-__fs2uint.o: ../__fs2uint.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-__fs2uint.o `test -f '../__fs2uint.c' || echo '$(srcdir)/'`../__fs2uint.c
 
-../libsdccx_a-_fs2uint.obj: ../_fs2uint.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-_fs2uint.obj `if test -f '../_fs2uint.c'; then $(CYGPATH_W) '../_fs2uint.c'; else $(CYGPATH_W) '$(srcdir)/../_fs2uint.c'; fi`
+../libsdccx_a-__fs2uint.obj: ../__fs2uint.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-__fs2uint.obj `if test -f '../__fs2uint.c'; then $(CYGPATH_W) '../__fs2uint.c'; else $(CYGPATH_W) '$(srcdir)/../__fs2uint.c'; fi`
 
-../libsdccx_a-_fs2ulong.o: ../_fs2ulong.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-_fs2ulong.o `test -f '../_fs2ulong.c' || echo '$(srcdir)/'`../_fs2ulong.c
+../libsdccx_a-__fs2ulong.o: ../__fs2ulong.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-__fs2ulong.o `test -f '../__fs2ulong.c' || echo '$(srcdir)/'`../__fs2ulong.c
 
-../libsdccx_a-_fs2ulong.obj: ../_fs2ulong.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-_fs2ulong.obj `if test -f '../_fs2ulong.c'; then $(CYGPATH_W) '../_fs2ulong.c'; else $(CYGPATH_W) '$(srcdir)/../_fs2ulong.c'; fi`
+../libsdccx_a-__fs2ulong.obj: ../__fs2ulong.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-__fs2ulong.obj `if test -f '../__fs2ulong.c'; then $(CYGPATH_W) '../__fs2ulong.c'; else $(CYGPATH_W) '$(srcdir)/../__fs2ulong.c'; fi`
 
-../libsdccx_a-_fsadd.o: ../_fsadd.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-_fsadd.o `test -f '../_fsadd.c' || echo '$(srcdir)/'`../_fsadd.c
+../libsdccx_a-__fsadd.o: ../__fsadd.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-__fsadd.o `test -f '../__fsadd.c' || echo '$(srcdir)/'`../__fsadd.c
 
-../libsdccx_a-_fsadd.obj: ../_fsadd.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-_fsadd.obj `if test -f '../_fsadd.c'; then $(CYGPATH_W) '../_fsadd.c'; else $(CYGPATH_W) '$(srcdir)/../_fsadd.c'; fi`
+../libsdccx_a-__fsadd.obj: ../__fsadd.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-__fsadd.obj `if test -f '../__fsadd.c'; then $(CYGPATH_W) '../__fsadd.c'; else $(CYGPATH_W) '$(srcdir)/../__fsadd.c'; fi`
 
-../libsdccx_a-_fsdiv.o: ../_fsdiv.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-_fsdiv.o `test -f '../_fsdiv.c' || echo '$(srcdir)/'`../_fsdiv.c
+../libsdccx_a-__fsdiv.o: ../__fsdiv.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-__fsdiv.o `test -f '../__fsdiv.c' || echo '$(srcdir)/'`../__fsdiv.c
 
-../libsdccx_a-_fsdiv.obj: ../_fsdiv.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-_fsdiv.obj `if test -f '../_fsdiv.c'; then $(CYGPATH_W) '../_fsdiv.c'; else $(CYGPATH_W) '$(srcdir)/../_fsdiv.c'; fi`
+../libsdccx_a-__fsdiv.obj: ../__fsdiv.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-__fsdiv.obj `if test -f '../__fsdiv.c'; then $(CYGPATH_W) '../__fsdiv.c'; else $(CYGPATH_W) '$(srcdir)/../__fsdiv.c'; fi`
 
-../libsdccx_a-_fseq.o: ../_fseq.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-_fseq.o `test -f '../_fseq.c' || echo '$(srcdir)/'`../_fseq.c
+../libsdccx_a-__fseq.o: ../__fseq.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-__fseq.o `test -f '../__fseq.c' || echo '$(srcdir)/'`../__fseq.c
 
-../libsdccx_a-_fseq.obj: ../_fseq.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-_fseq.obj `if test -f '../_fseq.c'; then $(CYGPATH_W) '../_fseq.c'; else $(CYGPATH_W) '$(srcdir)/../_fseq.c'; fi`
+../libsdccx_a-__fseq.obj: ../__fseq.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-__fseq.obj `if test -f '../__fseq.c'; then $(CYGPATH_W) '../__fseq.c'; else $(CYGPATH_W) '$(srcdir)/../__fseq.c'; fi`
 
-../libsdccx_a-_fslt.o: ../_fslt.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-_fslt.o `test -f '../_fslt.c' || echo '$(srcdir)/'`../_fslt.c
+../libsdccx_a-__fslt.o: ../__fslt.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-__fslt.o `test -f '../__fslt.c' || echo '$(srcdir)/'`../__fslt.c
 
-../libsdccx_a-_fslt.obj: ../_fslt.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-_fslt.obj `if test -f '../_fslt.c'; then $(CYGPATH_W) '../_fslt.c'; else $(CYGPATH_W) '$(srcdir)/../_fslt.c'; fi`
+../libsdccx_a-__fslt.obj: ../__fslt.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-__fslt.obj `if test -f '../__fslt.c'; then $(CYGPATH_W) '../__fslt.c'; else $(CYGPATH_W) '$(srcdir)/../__fslt.c'; fi`
 
-../libsdccx_a-_fsmul.o: ../_fsmul.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-_fsmul.o `test -f '../_fsmul.c' || echo '$(srcdir)/'`../_fsmul.c
+../libsdccx_a-__fsmul.o: ../__fsmul.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-__fsmul.o `test -f '../__fsmul.c' || echo '$(srcdir)/'`../__fsmul.c
 
-../libsdccx_a-_fsmul.obj: ../_fsmul.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-_fsmul.obj `if test -f '../_fsmul.c'; then $(CYGPATH_W) '../_fsmul.c'; else $(CYGPATH_W) '$(srcdir)/../_fsmul.c'; fi`
+../libsdccx_a-__fsmul.obj: ../__fsmul.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-__fsmul.obj `if test -f '../__fsmul.c'; then $(CYGPATH_W) '../__fsmul.c'; else $(CYGPATH_W) '$(srcdir)/../__fsmul.c'; fi`
 
-../libsdccx_a-_fsneq.o: ../_fsneq.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-_fsneq.o `test -f '../_fsneq.c' || echo '$(srcdir)/'`../_fsneq.c
+../libsdccx_a-__fsneq.o: ../__fsneq.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-__fsneq.o `test -f '../__fsneq.c' || echo '$(srcdir)/'`../__fsneq.c
 
-../libsdccx_a-_fsneq.obj: ../_fsneq.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-_fsneq.obj `if test -f '../_fsneq.c'; then $(CYGPATH_W) '../_fsneq.c'; else $(CYGPATH_W) '$(srcdir)/../_fsneq.c'; fi`
+../libsdccx_a-__fsneq.obj: ../__fsneq.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-__fsneq.obj `if test -f '../__fsneq.c'; then $(CYGPATH_W) '../__fsneq.c'; else $(CYGPATH_W) '$(srcdir)/../__fsneq.c'; fi`
 
-../libsdccx_a-_fssub.o: ../_fssub.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-_fssub.o `test -f '../_fssub.c' || echo '$(srcdir)/'`../_fssub.c
+../libsdccx_a-__fssub.o: ../__fssub.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-__fssub.o `test -f '../__fssub.c' || echo '$(srcdir)/'`../__fssub.c
 
-../libsdccx_a-_fssub.obj: ../_fssub.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-_fssub.obj `if test -f '../_fssub.c'; then $(CYGPATH_W) '../_fssub.c'; else $(CYGPATH_W) '$(srcdir)/../_fssub.c'; fi`
+../libsdccx_a-__fssub.obj: ../__fssub.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-__fssub.obj `if test -f '../__fssub.c'; then $(CYGPATH_W) '../__fssub.c'; else $(CYGPATH_W) '$(srcdir)/../__fssub.c'; fi`
 
-../libsdccx_a-_schar2fs.o: ../_schar2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-_schar2fs.o `test -f '../_schar2fs.c' || echo '$(srcdir)/'`../_schar2fs.c
+../libsdccx_a-__schar2fs.o: ../__schar2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-__schar2fs.o `test -f '../__schar2fs.c' || echo '$(srcdir)/'`../__schar2fs.c
 
-../libsdccx_a-_schar2fs.obj: ../_schar2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-_schar2fs.obj `if test -f '../_schar2fs.c'; then $(CYGPATH_W) '../_schar2fs.c'; else $(CYGPATH_W) '$(srcdir)/../_schar2fs.c'; fi`
+../libsdccx_a-__schar2fs.obj: ../__schar2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-__schar2fs.obj `if test -f '../__schar2fs.c'; then $(CYGPATH_W) '../__schar2fs.c'; else $(CYGPATH_W) '$(srcdir)/../__schar2fs.c'; fi`
 
-../libsdccx_a-_sint2fs.o: ../_sint2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-_sint2fs.o `test -f '../_sint2fs.c' || echo '$(srcdir)/'`../_sint2fs.c
+../libsdccx_a-__sint2fs.o: ../__sint2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-__sint2fs.o `test -f '../__sint2fs.c' || echo '$(srcdir)/'`../__sint2fs.c
 
-../libsdccx_a-_sint2fs.obj: ../_sint2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-_sint2fs.obj `if test -f '../_sint2fs.c'; then $(CYGPATH_W) '../_sint2fs.c'; else $(CYGPATH_W) '$(srcdir)/../_sint2fs.c'; fi`
+../libsdccx_a-__sint2fs.obj: ../__sint2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-__sint2fs.obj `if test -f '../__sint2fs.c'; then $(CYGPATH_W) '../__sint2fs.c'; else $(CYGPATH_W) '$(srcdir)/../__sint2fs.c'; fi`
 
-../libsdccx_a-_slong2fs.o: ../_slong2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-_slong2fs.o `test -f '../_slong2fs.c' || echo '$(srcdir)/'`../_slong2fs.c
+../libsdccx_a-__slong2fs.o: ../__slong2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-__slong2fs.o `test -f '../__slong2fs.c' || echo '$(srcdir)/'`../__slong2fs.c
 
-../libsdccx_a-_slong2fs.obj: ../_slong2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-_slong2fs.obj `if test -f '../_slong2fs.c'; then $(CYGPATH_W) '../_slong2fs.c'; else $(CYGPATH_W) '$(srcdir)/../_slong2fs.c'; fi`
+../libsdccx_a-__slong2fs.obj: ../__slong2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-__slong2fs.obj `if test -f '../__slong2fs.c'; then $(CYGPATH_W) '../__slong2fs.c'; else $(CYGPATH_W) '$(srcdir)/../__slong2fs.c'; fi`
 
-../libsdccx_a-_uchar2fs.o: ../_uchar2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-_uchar2fs.o `test -f '../_uchar2fs.c' || echo '$(srcdir)/'`../_uchar2fs.c
+../libsdccx_a-__uchar2fs.o: ../__uchar2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-__uchar2fs.o `test -f '../__uchar2fs.c' || echo '$(srcdir)/'`../__uchar2fs.c
 
-../libsdccx_a-_uchar2fs.obj: ../_uchar2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-_uchar2fs.obj `if test -f '../_uchar2fs.c'; then $(CYGPATH_W) '../_uchar2fs.c'; else $(CYGPATH_W) '$(srcdir)/../_uchar2fs.c'; fi`
+../libsdccx_a-__uchar2fs.obj: ../__uchar2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-__uchar2fs.obj `if test -f '../__uchar2fs.c'; then $(CYGPATH_W) '../__uchar2fs.c'; else $(CYGPATH_W) '$(srcdir)/../__uchar2fs.c'; fi`
 
-../libsdccx_a-_uint2fs.o: ../_uint2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-_uint2fs.o `test -f '../_uint2fs.c' || echo '$(srcdir)/'`../_uint2fs.c
+../libsdccx_a-__uint2fs.o: ../__uint2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-__uint2fs.o `test -f '../__uint2fs.c' || echo '$(srcdir)/'`../__uint2fs.c
 
-../libsdccx_a-_uint2fs.obj: ../_uint2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-_uint2fs.obj `if test -f '../_uint2fs.c'; then $(CYGPATH_W) '../_uint2fs.c'; else $(CYGPATH_W) '$(srcdir)/../_uint2fs.c'; fi`
+../libsdccx_a-__uint2fs.obj: ../__uint2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-__uint2fs.obj `if test -f '../__uint2fs.c'; then $(CYGPATH_W) '../__uint2fs.c'; else $(CYGPATH_W) '$(srcdir)/../__uint2fs.c'; fi`
 
-../libsdccx_a-_ulong2fs.o: ../_ulong2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-_ulong2fs.o `test -f '../_ulong2fs.c' || echo '$(srcdir)/'`../_ulong2fs.c
+../libsdccx_a-__ulong2fs.o: ../__ulong2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-__ulong2fs.o `test -f '../__ulong2fs.c' || echo '$(srcdir)/'`../__ulong2fs.c
 
-../libsdccx_a-_ulong2fs.obj: ../_ulong2fs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-_ulong2fs.obj `if test -f '../_ulong2fs.c'; then $(CYGPATH_W) '../_ulong2fs.c'; else $(CYGPATH_W) '$(srcdir)/../_ulong2fs.c'; fi`
+../libsdccx_a-__ulong2fs.obj: ../__ulong2fs.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-__ulong2fs.obj `if test -f '../__ulong2fs.c'; then $(CYGPATH_W) '../__ulong2fs.c'; else $(CYGPATH_W) '$(srcdir)/../__ulong2fs.c'; fi`
 
 ../libsdccx_a-idata.o: ../idata.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsdccx_a_CFLAGS) $(CFLAGS) -c -o ../libsdccx_a-idata.o `test -f '../idata.c' || echo '$(srcdir)/'`../idata.c

@@ -500,11 +500,11 @@ LIBSDCC_SOURCES_COMMON = ../_divschar.c ../_divsint.c ../_divslong.c \
 	../_divuchar.c ../_divuint.c ../_divulong.c ../_modschar.c \
 	../_modsint.c ../_modslong.c ../_moduchar.c ../_moduint.c \
 	../_modulong.c ../_mulschar.c ../_muluchar.c ../_mulint.c \
-	../_mullong.c ../_fs2schar.c ../_fs2sint.c ../_fs2slong.c \
-	../_fs2uchar.c ../_fs2uint.c ../_fs2ulong.c ../_fsadd.c \
-	../_fsdiv.c ../_fseq.c ../_fslt.c ../_fsmul.c ../_fsneq.c \
-	../_fssub.c ../_schar2fs.c ../_sint2fs.c ../_slong2fs.c \
-	../_uchar2fs.c ../_uint2fs.c ../_ulong2fs.c ../idata.c
+	../_mullong.c ../__fs2schar.c ../__fs2sint.c ../__fs2slong.c \
+	../__fs2uchar.c ../__fs2uint.c ../__fs2ulong.c ../__fsadd.c \
+	../__fsdiv.c ../__fseq.c ../__fslt.c ../__fsmul.c ../__fsneq.c \
+	../__fssub.c ../__schar2fs.c ../__sint2fs.c ../__slong2fs.c \
+	../__uchar2fs.c ../__uint2fs.c ../__ulong2fs.c ../idata.c
 
 ############################################################
 # Directories when building from the sdcc sources

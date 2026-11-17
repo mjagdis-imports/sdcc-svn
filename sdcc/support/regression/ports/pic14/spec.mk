@@ -27,7 +27,7 @@ ifdef CROSSCOMPILING
 endif
 
 SDCCFLAGS += -mpic14 -pp16f877 --less-pedantic
-SDCCFLAGS += --no-warn-non-free
+SDCCFLAGS += --no-warn-non-free -Wl-C
 LINKFLAGS += libsdcc.lib libc.lib libm.lib
 
 OBJEXT = .o
