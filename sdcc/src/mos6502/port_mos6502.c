@@ -26,7 +26,7 @@
 #include "subport.h"
 #include "peep.h"
 
-static const char *const _libs[] = { "mos6502",  NULL };
+static const char *const _libs[] = { "libsdcc", "libsdccf", "libc", "libm", NULL };
 
 static void
 _init (void)

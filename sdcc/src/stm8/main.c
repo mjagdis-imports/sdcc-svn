@@ -450,7 +450,8 @@ static const char *stm8AsmCmd[] =
   "sdasstm8", "$l", "$3", "\"$1.asm\"", NULL
 };
 
-static const char *const _libs_stm8[] = { "stm8", NULL, };
+static const char *const _libs[] = { "libsdcc", "libsdccf", "libc", "libm", NULL };
+
 
 PORT stm8_port =
 {
@@ -480,7 +481,7 @@ PORT stm8_port =
     ".rel",
     1,
     NULL,                       /* crt */
-    _libs_stm8,                 /* libs */
+    _libs,                      /* libs */
   },
   {                             /* Peephole optimizer */
     stm8_defaultRules,

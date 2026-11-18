@@ -257,7 +257,7 @@ static const char *pdk13AsmCmd[] =
   "sdaspdk13", "$l", "$3", "\"$1.asm\"", NULL
 };
 
-static const char *const _libs_pdk13[] = { "pdk13", NULL, };
+static const char *const _libs[] = { "libsdcc", "libsdccf", "libc", "libm", NULL };
 
 PORT pdk13_port =
 {
@@ -287,7 +287,7 @@ PORT pdk13_port =
     ".rel",
     1,
     0,                          /* crt */
-    _libs_pdk13,                /* libs */
+    _libs,                      /* libs */
   },
   {                             /* Peephole optimizer */
     pdk_defaultRules,
@@ -431,8 +431,6 @@ static const char *pdk14AsmCmd[] =
   "sdaspdk14", "$l", "$3", "\"$1.asm\"", NULL
 };
 
-static const char *const _libs_pdk14[] = { "pdk14", NULL, };
-
 PORT pdk14_port =
 {
   TARGET_ID_PDK14,
@@ -461,7 +459,7 @@ PORT pdk14_port =
     ".rel",
     1,
     0,                          /* crt */
-    _libs_pdk14,                /* libs */
+    _libs,                      /* libs */
   },
   {                             /* Peephole optimizer */
     pdk_defaultRules,
@@ -603,8 +601,6 @@ static const char *pdk15AsmCmd[] =
   "sdaspdk15", "$l", "$3", "\"$1.asm\"", NULL
 };
 
-static const char *const _libs_pdk15[] = { "pdk15", NULL, };
-
 PORT pdk15_port =
 {
   TARGET_ID_PDK15,
@@ -633,7 +629,7 @@ PORT pdk15_port =
     ".rel",
     1,
     0,                          /* crt */
-    _libs_pdk15,                /* libs */
+    _libs,                      /* libs */
   },
   {                             /* Peephole optimizer */
     pdk_defaultRules,

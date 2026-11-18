@@ -9,6 +9,18 @@
 	  device/lib/pic14/libsdcc/regular/Makefile.in,
 	  support/regression/ports/pic14/spec.mk:
 	  Fix pic14 build.
+	* src/ds390/main.c,
+	  src/f8/main.c,
+	  src/hc08/port_hc08.c,
+	  src/hc08/port_s08.c,
+	  src/mcs51/main.c,
+	  src/mos6502/port_huc6280.c,
+	  src/mos6502/port_mos6502.c,
+	  src/mos6502/port_mos65c02.c,
+	  src/pdk/main.c,
+	  src/stm8/main.c,
+	  src/z80/main.c:
+	  Make all supported ports use the split libraries (libsdcc, libsdccf, libc, libm).
 
 2026-11-16 Gabriele Gorla <gorlik@yahoo.com>
 

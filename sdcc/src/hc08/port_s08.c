@@ -22,7 +22,7 @@
 #include "common.h"
 #include "subport.h"
 
-static const char * const _libs[] = { "s08", NULL, };
+static const char *const _libs[] = { "libsdcc", "libsdccf", "libc", "libm", NULL };
 
 static void
 _init (void)

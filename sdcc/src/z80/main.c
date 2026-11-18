@@ -1280,19 +1280,7 @@ static const char *_GnuAsmCmd[] = {
 };
 */
 static const char *const _crt[] = { "crt0.rel", NULL, };
-static const char *const _libs_z80[] = { "z80", NULL, };
-static const char *const _libs_z180[] = { "z180", NULL, };
-static const char *const _libs_r2k[] = { "r2k", NULL, };
-static const char *const _libs_r2ka[] = { "r2ka", NULL, };
-static const char *const _libs_r3ka[] = { "r3ka", NULL, };
-static const char *const _libs_r4k[] = { "r4k", NULL, };
-static const char *const _libs_r5k[] = { "r5k", NULL, };
-static const char *const _libs_r6k[] = { "r6k", NULL, };
-static const char *const _libs_tlcs90[] = { "tlcs90", NULL, };
-static const char *const _libs_sm83[] = { "sm83", NULL, };
-static const char *const _libs_ez80[] = { "ez80", NULL, };
-static const char *const _libs_z80n[] = { "z80n", NULL, };
-static const char *const _libs_r800[] = { "r800", NULL, };
+static const char *const _libs[] = { "libsdcc", "libsdccf", "libc", "libm", NULL };
 
 /* Globals */
 PORT z80_port =
@@ -1323,7 +1311,7 @@ PORT z80_port =
     ".rel",
     1,                          /* needLinkerScript */
     _crt,                       /* crt */
-    _libs_z80,                  /* libs */
+    _libs,                      /* libs */
   },
   {                             /* Peephole optimizer */
     _z80_defaultRules,
@@ -1460,7 +1448,7 @@ PORT z80n_port =
     ".rel",
     1,
     _crt,                       /* crt */
-    _libs_z80n,                 /* libs */
+    _libs,                      /* libs */
   },
   {                             /* Peephole optimizer */
     _z80n_defaultRules,
@@ -1597,7 +1585,7 @@ PORT z180_port =
     ".rel",
     1,
     _crt,                       /* crt */
-    _libs_z180,                 /* libs */
+    _libs,                      /* libs */
   },
   {                             /* Peephole optimizer */
     _z80_defaultRules,
@@ -1733,7 +1721,7 @@ PORT r2k_port =
     ".rel",
     1,
     _crt,                       /* crt */
-    _libs_r2k,                  /* libs */
+    _libs,                      /* libs */
   },
   {                             /* Peephole optimizer */
     _r2k_defaultRules,
@@ -1870,7 +1858,7 @@ PORT r2ka_port =
     ".rel",
     1,
     _crt,                       /* crt */
-    _libs_r2ka,                 /* libs */
+    _libs,                      /* libs */
   },
   {                             /* Peephole optimizer */
     _r2k_defaultRules,
@@ -2007,7 +1995,7 @@ PORT r3ka_port =
     ".rel",
     1,
     _crt,                       /* crt */
-    _libs_r3ka,                 /* libs */
+    _libs,                      /* libs */
   },
   {                             /* Peephole optimizer */
     _r2k_defaultRules,
@@ -2144,7 +2132,7 @@ PORT r4k_port =
     ".rel",
     1,
     _crt,                       /* crt */
-    _libs_r4k,                  // libs
+    _libs,                      /* libs */
   },
   {                             /* Peephole optimizer */
     _r2k_defaultRules,
@@ -2281,7 +2269,7 @@ PORT r5k_port =
     ".rel",
     1,
     _crt,                       /* crt */
-    _libs_r5k,                  // libs
+    _libs,                      /* libs */
   },
   {                             /* Peephole optimizer */
     _r2k_defaultRules,
@@ -2418,7 +2406,7 @@ PORT r6k_port =
     ".rel",
     1,
     _crt,                       /* crt */
-    _libs_r6k,                  // libs
+    _libs,                      /* libs */
   },
   {                             /* Peephole optimizer */
     _r2k_defaultRules,
@@ -2557,7 +2545,7 @@ PORT sm83_port =
     ".rel",
     1,
     _crt,                       /* crt */
-    _libs_sm83,                 /* libs */
+    _libs,                      /* libs */
   },
   {                             /* Peephole optimizer */
     _sm83_defaultRules,
@@ -2694,7 +2682,7 @@ PORT tlcs90_port =
     ".rel",
     1,
     _crt,                       /* crt */
-    _libs_tlcs90,               /* libs */
+    _libs,                      /* libs */
   },
   {                             /* Peephole optimizer */
     _tlcs90_defaultRules,
@@ -2831,7 +2819,7 @@ PORT ez80_port =
     ".rel",
     1,
     _crt,                       /* crt */
-    _libs_ez80,             /* libs */
+    _libs,                      /* libs */
   },
   {                             /* Peephole optimizer */
     _ez80_defaultRules,
@@ -2968,7 +2956,7 @@ PORT r800_port =
     ".rel",
     1,
     _crt,                       /* crt */
-    _libs_r800,                 /* libs */
+    _libs,                      /* libs */
   },
   {                             /* Peephole optimizer */
     _z80_defaultRules,

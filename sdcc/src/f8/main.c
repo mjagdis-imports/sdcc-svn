@@ -403,7 +403,7 @@ static const char *f8AsmCmd[] =
   "sdasf8", "$l", "$3", "\"$1.asm\"", NULL
 };
 
-static const char *const _libs_f8[] = { "f8", NULL, };
+static const char *const _libs[] = { "libsdcc", "libsdccf", "libc", "libm", NULL };
 
 PORT f8_port =
 {
@@ -433,7 +433,7 @@ PORT f8_port =
     ".rel",
     1,
     NULL,                       // crt
-    _libs_f8,                   // libs
+    _libs,                      // libs
   },
   {                             /* Peephole optimizer */
     f8_defaultRules,
@@ -574,8 +574,6 @@ PORT f8_port =
   PORT_MAGIC
 };
 
-static const char *const _libs_f8l[] = { "f8l", NULL, };
-
 PORT f8l_port =
 {
   TARGET_ID_F8L,
@@ -604,7 +602,7 @@ PORT f8l_port =
     ".rel",
     1,
     NULL,                       // crt
-    _libs_f8l,                  // libs
+    _libs,                      // libs
   },
   {                             /* Peephole optimizer */
     f8_defaultRules,
