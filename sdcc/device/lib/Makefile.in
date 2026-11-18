@@ -473,7 +473,7 @@ model-pic16:
 
 model-pic14:
 	if grep '^pic14$$' $(top_builddir)/ports.build > /dev/null; then \
-	  $(MAKE) MODELFLAGS="-mpic14 -p16f877" PORT=pic14 objects; \
+	  $(MAKE) PORT=pic14 objects-pic14; \
 	fi
 
 build-dir:
