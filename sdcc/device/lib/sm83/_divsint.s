@@ -1,5 +1,5 @@
 ;--------------------------------------------------------------------------
-;  __divsint.s
+;  ___divsint.s
 ;
 ;  Copyright (C) 2000, Michael Hope
 ;  Copyright (C) 2021, Sebastian 'basxto' Riedel (sdcc@basxto.de)
@@ -28,15 +28,15 @@
 ;   might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-	.module __divsint
+	.module ___divsint
 	.optsdcc -msm83 sdcccall(1)
 
         ;; Originally from GBDK by Pascal Felber.
-.globl	__divsint
+.globl	___divsint
 
         .area   _CODE
 
-__divsint:
+___divsint:
         ld	a, e
         ld	e, c
         ld	c, a

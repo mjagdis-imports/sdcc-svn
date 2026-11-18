@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-   _divulong.c - routine for division of 32 bit unsigned long
+   __divulong.c - routine for division of 32 bit unsigned long
 
    Copyright (C) 1999, Jean-Louis Vern <jlvern AT gmail.com>
 
@@ -33,7 +33,7 @@
 #define MSB_SET(x) ((x >> (8*sizeof(x)-1)) & 1)
 
 unsigned long
-_divulong (unsigned long x, unsigned long y) __SDCC_NONBANKED
+__divulong (unsigned long x, unsigned long y) __SDCC_NONBANKED
 {
   unsigned long reste = 0L;
   unsigned char count = 32;

@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-   _mulint.c - routine for (unsigned) int (16 bit) multiplication
+   __mulint.c - routine for (unsigned) int (16 bit) multiplication
 
    Copyright (C) 1999, Sandeep Dutta . sandeep.dutta@usa.net
 
@@ -42,7 +42,7 @@ union uu {
 #endif
 
 int
-_mulint (int a, int b) __SDCC_NONBANKED
+__mulint (int a, int b) __SDCC_NONBANKED
 {
 #if !defined(__SDCC_STACK_AUTO) && (defined(__SDCC_MODEL_LARGE) || defined(__SDCC_ds390))	// still needed for large
 	union uu __xdata *x;

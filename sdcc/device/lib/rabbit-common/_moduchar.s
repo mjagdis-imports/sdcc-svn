@@ -26,18 +26,18 @@
 ;   might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-	.module __moduchar
+	.module ___moduchar
 	.include "config.inc"
 
 .area   _CODE
 
-.globl	__moduchar
+.globl	___moduchar
 
-__moduchar:
+___moduchar:
 	ld	e, l
 	ld	l, a
 
-	call    __divu8
+	call    ___divu8
 
 	ex	de, hl
 	ret

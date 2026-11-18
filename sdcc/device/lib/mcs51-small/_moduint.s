@@ -1,5 +1,5 @@
 ;-------------------------------------------------------------------------
-;  _moduint.s - routine for unsigned int (16 bit) modulus
+;  __moduint.s - routine for unsigned int (16 bit) modulus
 ;
 ;  Copyright (C) 1999, Sandeep Dutta . sandeep.dutta@usa.net
 ;  Bug fixes by Martijn van Balen, aed@iae.nl
@@ -27,13 +27,13 @@
 ;  might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-	.module _moduint
+	.module __moduint
 	.include "config.inc"
 
-	.globl	__moduint
-	.globl __modint
-	.globl __moduint_PARM_2
-	.globl __modsint_PARM_2
+	.globl	___moduint
+	.globl ___modint
+	.globl ___moduint_PARM_2
+	.globl ___modsint_PARM_2
 
 .define al      "dpl"
 .define ah      "dph"
@@ -48,10 +48,10 @@
 	.define bl 	"b1_0"
 	.define bh 	"b1_1"
 .else
-	.define bl 	"__moduint_PARM_2"
-	.define bh 	"__moduint_PARM_2 + 1"
-__moduint_PARM_2:
-__modsint_PARM_2:
+	.define bl 	"___moduint_PARM_2"
+	.define bh 	"___moduint_PARM_2 + 1"
+___moduint_PARM_2:
+___modsint_PARM_2:
 	.ds	2
 .endif
 
@@ -59,8 +59,8 @@ __modsint_PARM_2:
 
 	.area CSEG    (CODE)
 
-__moduint:
-__modint:			; entry point for __modsint
+___moduint:
+___modint:			; entry point for ___modsint
 
 	mov	a,bl		; avoid endless loop
 	orl	a,bh

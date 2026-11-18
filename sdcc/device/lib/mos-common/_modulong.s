@@ -1,5 +1,5 @@
 ;-------------------------------------------------------------------------
-;   _modulong.s - routine for remainder of 32 bit unsigned long division
+;   __modulong.s - routine for remainder of 32 bit unsigned long division
 ;
 ;   Copyright (C) 2022-2026, Gabriele Gorla
 ;
@@ -26,22 +26,22 @@
 ;   might be covered by the GNU General Public License.
 ;-------------------------------------------------------------------------
 
-	.module _modulong
+	.module __modulong
 	
 ;--------------------------------------------------------
 ; exported symbols
 ;--------------------------------------------------------
-	.globl __modulong
+	.globl ___modulong
 	.include "config.inc"
 	
 ;--------------------------------------------------------
 ; local aliases
 ;--------------------------------------------------------
-	.define res0 "__modulong_PARM_1+0"
-	.define res1 "__modulong_PARM_1+1"
+	.define res0 "___modulong_PARM_1+0"
+	.define res1 "___modulong_PARM_1+1"
 	.define res2 "sdcc_vreg2"
 	.define res3 "sdcc_vreg3"
-	.define den  "__modulong_PARM_2"
+	.define den  "___modulong_PARM_2"
 	.define rem  "sdcc_vreg4"
 	.define s1   "sdcc_vreg0"
 	.define s2   "sdcc_vreg1"
@@ -51,7 +51,7 @@
 ;--------------------------------------------------------
 	.area CODE
 
-__modulong:
+___modulong:
 	jsr	___udivmod32
 	lda	*rem+3
 	sta	*res3

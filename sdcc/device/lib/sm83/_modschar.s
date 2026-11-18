@@ -1,5 +1,5 @@
 ;--------------------------------------------------------------------------
-;  __modschar.s
+;  ___modschar.s
 ;
 ;  Copyright (C) 2000, Michael Hope
 ;  Copyright (C) 2021, Sebastian 'basxto' Riedel (sdcc@basxto.de)
@@ -28,15 +28,15 @@
 ;   might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-	.module __modschar
+	.module ___modschar
 	.optsdcc -msm83 sdcccall(1)
 
         ;; Originally from GBDK by Pascal Felber.
-.globl	__modschar
+.globl	___modschar
 
         .area   _CODE
 
-__modschar:
+___modschar:
         ld      c, a
 
 	call	.divmods8

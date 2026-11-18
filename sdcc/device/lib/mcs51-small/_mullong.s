@@ -1,5 +1,5 @@
 ;-------------------------------------------------------------------------
-;  _mullong.s - routine for multiplication of 32 bit (unsigned) long
+;  __mullong.s - routine for multiplication of 32 bit (unsigned) long
 ;
 ;  Copyright (C) 1999, Sandeep Dutta . sandeep.dutta@usa.net
 ;  Copyright (C) 1999, Jean Louis VERN jlvern@writeme.com
@@ -27,14 +27,14 @@
 ;  might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-	.module _mullong
+	.module __mullong
 	.include "config.inc"
 
 ; Signed and unsigned multiplication are the same - as long as the output
 ; has the same precision as the input.
 
-	.globl	__mullong
-	.globl __mullong_PARM_2
+	.globl	___mullong
+	.globl ___mullong_PARM_2
 
 
 				; the result c will be stored in r4...r7
@@ -59,23 +59,23 @@
 	.define b2  "b1_2"
 	.define b3  "b1_3"
 .else
-	b0 =  __mullong_PARM_2
-	b1 = (__mullong_PARM_2+1)
-	b2 = (__mullong_PARM_2+2)
-	b3 = (__mullong_PARM_2+3)
+	b0 =  ___mullong_PARM_2
+	b1 = (___mullong_PARM_2+1)
+	b2 = (___mullong_PARM_2+2)
+	b3 = (___mullong_PARM_2+3)
 
 .ifdef __SDCC_NOOVERLAY
 	.area DSEG    (DATA)
 .else
 	.area OSEG    (OVR,DATA)
 .endif
-__mullong_PARM_2:
+___mullong_PARM_2:
 	.ds	4
 .endif
 
 	.area CSEG    (CODE)
 
-__mullong:
+___mullong:
 				; parameter a comes in a, b, dph, dpl
 	mov	r2,b		; save parameter a
 	mov	r3,a

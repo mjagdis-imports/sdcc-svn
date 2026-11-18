@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-   _divslonglong.c - routine for division of 64 bit unsigned long long
+   __divslonglong.c - routine for division of 64 bit unsigned long long
 
    Copyright (C) 2012, Philipp Klaus Krause . pkk@spth.de
 
@@ -33,7 +33,7 @@
 
 #ifdef __SDCC_LONGLONG
 long long
-_divslonglong (long long numerator, long long denominator) __SDCC_NONBANKED
+__divslonglong (long long numerator, long long denominator) __SDCC_NONBANKED
 {
   bool numeratorneg = (numerator < 0);
   bool denominatorneg = (denominator < 0);

@@ -1,5 +1,5 @@
 ;--------------------------------------------------------------------------
-;  __divuchar.s
+;  ___divuchar.s
 ;
 ;  Copyright (C) 2000, Michael Hope
 ;  Copyright (C) 2021, Sebastian 'basxto' Riedel (sdcc@basxto.de)
@@ -28,17 +28,17 @@
 ;   might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-	.module __divuchar
+	.module ___divuchar
 	.optsdcc -msm83 sdcccall(1)
 
         ;; Originally from GBDK by Pascal Felber.
-.globl	__divuchar
+.globl	___divuchar
 
         .area   _CODE
 
-.globl	__divuchar
+.globl	___divuchar
 
-__divuchar:
+___divuchar:
         ld      c, a
 
 	call	.divmodu8

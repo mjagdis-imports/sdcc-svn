@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-   _modschar.c :- routine for signed char (8 bit) division. just calls
+   __modschar.c :- routine for signed char (8 bit) division. just calls
                  routine for signed int division after sign extension
 
    Copyright (C) 2013, Philipp Klaus Krause . pkk@spth.de
@@ -28,7 +28,7 @@
 -------------------------------------------------------------------------*/
 
 signed int
-_modschar (signed char x, signed char y)
+__modschar (signed char x, signed char y)
 {
   return ((int)x % (int)y);
 }

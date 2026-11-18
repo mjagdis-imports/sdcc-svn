@@ -1,5 +1,5 @@
 ;--------------------------------------------------------------------------
-;  __modsint.s
+;  ___modsint.s
 ;
 ;  Copyright (C) 2000, Michael Hope
 ;  Copyright (C) 2021, Sebastian 'basxto' Riedel (sdcc@basxto.de)
@@ -28,15 +28,15 @@
 ;   might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-	.module __modsint
+	.module ___modsint
 	.optsdcc -msm83 sdcccall(1)
 
         ;; Originally from GBDK by Pascal Felber.
-.globl	__modsint
+.globl	___modsint
 
         .area   _CODE
 
-__modsint:
+___modsint:
         ld	a, e
         ld	e, c
         ld	c, a

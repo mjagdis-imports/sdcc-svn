@@ -1,5 +1,5 @@
 ;-------------------------------------------------------------------------
-;  _modslong.c - routine for modulus of 32 bit signed long
+;  __modslong.c - routine for modulus of 32 bit signed long
 ;
 ;  Copyright (C) 1999, Sandeep Dutta . sandeep.dutta@usa.net
 ;
@@ -26,10 +26,10 @@
 ;  might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-	.module _divulong
+	.module __divulong
 	.include "config.inc"
 
-	.globl __modslong
+	.globl ___modslong
 
 	.define a0	"dpl"
 	.define a1	"dph"
@@ -48,7 +48,7 @@
 
 	.area	CSEG (CODE)
 
-__modslong:
+___modslong:
 				; a3 in acc
 	mov	a3,a		; save a3
 
@@ -105,7 +105,7 @@ a_not_negative:
 
 b_not_negative:
 
-	lcall	__modlong
+	lcall	___modlong
 
 	jnb	F0,not_negative
 

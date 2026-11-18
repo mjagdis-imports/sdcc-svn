@@ -1,5 +1,5 @@
 ;-------------------------------------------------------------------------
-;   _mulint.s - routine for multiplication of 16 bit (unsigned) int
+;   __mulint.s - routine for multiplication of 16 bit (unsigned) int
 ;
 ;   Copyright (C) 2025-2026, Gabriele Gorla
 ;
@@ -26,20 +26,20 @@
 ;   might be covered by the GNU General Public License.
 ;-------------------------------------------------------------------------
 
-	.module _mulint
+	.module __mulint
 	.include "config.inc"
 
 ;--------------------------------------------------------
 ; exported symbols
 ;--------------------------------------------------------
-	.globl __mulint_PARM_2
-	.globl __mulint
+	.globl ___mulint_PARM_2
+	.globl ___mulint
 
 ;--------------------------------------------------------
 ; overlayable function parameters in zero page
 ;--------------------------------------------------------
 	.area	OSEG    (PAG, OVR)
-__mulint_PARM_2:
+___mulint_PARM_2:
 	.ds 2
 
 ;--------------------------------------------------------
@@ -54,7 +54,7 @@ __mulint_PARM_2:
 ;--------------------------------------------------------
 	.area CODE
 
-__mulint:
+___mulint:
 	eor #0xff	; invert P1 to avoid clc in the add loops
 	sta *P1+0
 	txa
@@ -70,22 +70,22 @@ loop1:
 	bcs skip1	; add if necessary
 	tax
 	lda *res0
-	adc *__mulint_PARM_2+0
+	adc *___mulint_PARM_2+0
 	sta *res0
 	txa
-	adc *__mulint_PARM_2+1
+	adc *___mulint_PARM_2+1
 skip1:
-	asl *__mulint_PARM_2+0 ; shift P2
-	rol *__mulint_PARM_2+1
+	asl *___mulint_PARM_2+0 ; shift P2
+	rol *___mulint_PARM_2+1
 	dey
 	bne loop1
 
 loop2:
 	lsr *P1+1
 	bcs skip2
-	adc *__mulint_PARM_2+1
+	adc *___mulint_PARM_2+1
 skip2:
-	asl *__mulint_PARM_2+1
+	asl *___mulint_PARM_2+1
 	bne loop2	; second loop ends when P2 is completely shifted out
 
 	tax

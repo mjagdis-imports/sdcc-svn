@@ -32,19 +32,19 @@
 
         .area   _CODE
 
-.globl	__mulsuchar
-.globl	__muluschar
-.globl	__mulschar
-.globl	__muluchar
-.globl	__mulint
+.globl	___mulsuchar
+.globl	___muluschar
+.globl	___mulschar
+.globl	___muluchar
+.globl	___mulint
 
 ; operands with different sign
 
-__muluschar:
+___muluschar:
 	ld	c, a
         jr      signexte
 
-__mulsuchar:
+___mulsuchar:
 	ld	c, e
 	ld	e, a
 
@@ -57,7 +57,7 @@ signexte:
         xor     a
         jr      .mul8
 
-__mulschar:
+___mulschar:
 	; Sign-extend before going in.
 	ld	c,a
 
@@ -70,7 +70,7 @@ __mulschar:
         sbc     a,a
         ld      d,a
 
-__mulint:
+___mulint:
         ;; 16-bit multiplication
         ;;
         ;; Entry conditions
@@ -119,7 +119,7 @@ skip16:
 
         ret
 
-__muluchar:
+___muluchar:
 	ld	c, a
         xor     a
 	;; Clear the top

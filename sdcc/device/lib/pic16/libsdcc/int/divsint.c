@@ -29,13 +29,13 @@
 
 #include <sdcc-lib.h>
 
-unsigned unsigned _divuint (unsigned a, unsigned b);
+unsigned unsigned __divuint (unsigned a, unsigned b);
 
-int _divsint (int a, int b) _IL_REENTRANT
+int __divsint (int a, int b) _IL_REENTRANT
 {
   register int r;
 
-  r = _divuint((a < 0 ? -a : a),
+  r = __divuint((a < 0 ? -a : a),
                (b < 0 ? -b : b));
   if ( (a < 0) ^ (b < 0))
     return -r;

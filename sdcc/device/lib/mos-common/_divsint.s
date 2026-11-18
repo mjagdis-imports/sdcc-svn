@@ -1,5 +1,5 @@
 ;-------------------------------------------------------------------------
-;   _divsint.s - routine for division of 16 bit signed int
+;   __divsint.s - routine for division of 16 bit signed int
 ;
 ;   Copyright (C) 1998, Ullrich von Bassewitz
 ;   Copyright (C) 2022-2026, Gabriele Gorla
@@ -27,20 +27,20 @@
 ;   might be covered by the GNU General Public License.
 ;-------------------------------------------------------------------------
 
-	.module _divsint
+	.module __divsint
 	.include "config.inc"
 
 ;--------------------------------------------------------
 ; exported symbols
 ;--------------------------------------------------------
-	.globl __divsint
+	.globl ___divsint
 	.globl ___sdivmod16
 
 ;--------------------------------------------------------
 ; local aliases
 ;--------------------------------------------------------
 	.define res "sdcc_vreg0"
-	.define den "__divsint_PARM_2"
+	.define den "___divsint_PARM_2"
 	.define rem "sdcc_vreg2"
 	.define s1  "sdcc_vreg4"
 	.define s2  "sdcc_vreg5"
@@ -50,7 +50,7 @@
 ;--------------------------------------------------------
 	.area CODE
 
-__divsint:
+___divsint:
 	jsr	___sdivmod16
 	ldx	*res+1
 	lda	*s1
@@ -66,16 +66,16 @@ ___sdivmod16:
 	stx	*s1
 	jsr	_abs
 	tay
-	lda	*__divsint_PARM_2+1
+	lda	*___divsint_PARM_2+1
 	sta	*s2
 	bpl	skip
 	sec
 	CLA
-	sbc	*__divsint_PARM_2+0
-        sta	*__divsint_PARM_2+0
+	sbc	*___divsint_PARM_2+0
+        sta	*___divsint_PARM_2+0
 	CLA
-	sbc	*__divsint_PARM_2+1
-        sta	*__divsint_PARM_2+1
+	sbc	*___divsint_PARM_2+1
+        sta	*___divsint_PARM_2+1
 skip:
 	tya
 	jmp	___udivmod16

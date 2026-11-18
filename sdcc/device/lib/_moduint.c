@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-   _moduint.c - routine for unsigned int (16 bit) modulus
+   __moduint.c - routine for unsigned int (16 bit) modulus
 
    Copyright (C) 1999, Sandeep Dutta . sandeep.dutta@usa.net
    Bug fixes by Martijn van Balen, aed@iae.nl
@@ -32,7 +32,7 @@
 #define MSB_SET(x) ((x >> (8*sizeof(x)-1)) & 1)
 
 unsigned int
-_moduint (unsigned int a, unsigned int b) __SDCC_NONBANKED
+__moduint (unsigned int a, unsigned int b) __SDCC_NONBANKED
 {
   unsigned char count = 0;
 

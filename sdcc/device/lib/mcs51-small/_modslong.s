@@ -1,5 +1,5 @@
 ;-------------------------------------------------------------------------
-;  _modslong.s - routine for modulus of 32 bit signed long
+;  __modslong.s - routine for modulus of 32 bit signed long
 ;
 ;  Copyright (C) 1999, Sandeep Dutta . sandeep.dutta@usa.net
 ;
@@ -26,13 +26,13 @@
 ;  might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-	.module _modslong
+	.module __modslong
 	.include "config.inc"
 
 ; Signed and unsigned multiplication are the same - as long as the output
 ; has the same precision as the input.
 
-	.globl __modslong
+	.globl ___modslong
 
 	.define a0	"dpl"
 	.define a1	"dph"
@@ -46,20 +46,20 @@
 	.define b2      "b1_2"
 	.define b3      "b1_3"
 .else
-	; _modslong_PARM_2 shares the same memory with _modulong_PARM_2
-	; and is defined in _modulong.s
+	; __modslong_PARM_2 shares the same memory with __modulong_PARM_2
+	; and is defined in __modulong.s
 
-	.define b0      "__modslong_PARM_2"
-	.define b1      "__modslong_PARM_2 + 1"
-	.define b2      "__modslong_PARM_2 + 2"
-	.define b3      "__modslong_PARM_2 + 3"
+	.define b0      "___modslong_PARM_2"
+	.define b1      "___modslong_PARM_2 + 1"
+	.define b2      "___modslong_PARM_2 + 2"
+	.define b3      "___modslong_PARM_2 + 3"
 .endif
 
 	.area CSEG    (CODE)
 
-__modslong:
+___modslong:
 				; a3 in acc
-				; b3 in (__modslong_PARM_2 + 3)
+				; b3 in (___modslong_PARM_2 + 3)
 	mov	a3,a		; save a3
 
 	clr	F0 		; Flag 0 in PSW
@@ -105,7 +105,7 @@ b_not_negative:
 
 	mov	a,a3		; restore a3 in acc
 
-	lcall	__modulong
+	lcall	___modulong
 
 	jnb	F0,not_negative
 

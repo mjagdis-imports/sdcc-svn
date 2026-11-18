@@ -1,5 +1,5 @@
 ;-------------------------------------------------------------------------
-;  _mullong.s - routine for multiplication of 32 bit (unsigned) long
+;  __mullong.s - routine for multiplication of 32 bit (unsigned) long
 ;
 ;  Copyright (C) 1999, Sandeep Dutta . sandeep.dutta@usa.net
 ;  Copyright (C) 1999, Jean Louis VERN jlvern@writeme.com
@@ -27,14 +27,14 @@
 ;  might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-	.module _mullong
+	.module __mullong
 	.include "config.inc"
 
 ; Signed and unsigned multiplication are the same - as long as the output
 ; has the same precision as the input.
 
-	.globl	__mullong
-	.globl __mullong_PARM_2
+	.globl	___mullong
+	.globl ___mullong_PARM_2
 
 
 				; the result c will be stored in r4...r7
@@ -55,13 +55,13 @@
 
 .ifndef __SDCC_PARMS_IN_BANK1
 	.area XSEG    (XDATA)
-__mullong_PARM_2:
+___mullong_PARM_2:
 	.ds	4
 .endif
 
 	.area CSEG    (CODE)
 
-__mullong:
+___mullong:
 				; parameter a comes in a, b, dph, dpl
 	mov	r0,dpl		; save parameter a
 	mov	r1,dph
@@ -73,7 +73,7 @@ __mullong:
 .ifdef __SDCC_PARMS_IN_BANK1
 	mov	a,b1_0		; b0
 .else
-	mov	dptr,#__mullong_PARM_2
+	mov	dptr,#___mullong_PARM_2
 	movx	a,@dptr		; b0
 .endif
 	mul	ab		; a0 * b0
@@ -143,7 +143,7 @@ __mullong:
 .ifdef __SDCC_PARMS_IN_BANK1
 	mov	a,b1_0		; b0
 .else
-	mov	dptr,#__mullong_PARM_2
+	mov	dptr,#___mullong_PARM_2
 	movx	a,@dptr		; b0
 .endif
 	mul	ab		; a2 * b0

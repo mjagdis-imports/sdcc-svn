@@ -1,5 +1,5 @@
 ;--------------------------------------------------------------------------
-;  _mullong.s
+;  __mullong.s
 ;
 ;  Copyright (C) 2014, Ben Shi
 ;
@@ -26,20 +26,20 @@
 ;   might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-	.globl __mullong
+	.globl ___mullong
 
 	.area CODE
-__mullong:
+___mullong:
 	clrw	x
 	pushw	x
 	pushw	x
-__mullong_0:
+___mullong_0:
 	ld	a, (#10, sp)
 	ld	xl, a
 	ld	a, (#14, sp)
 	mul	x, a
 	ldw	(#3, sp), x
-__mullong_1:
+___mullong_1:
 	ld	a, (#9, sp)
 	ld	xl, a
 	ld	a, (#14, sp)
@@ -59,7 +59,7 @@ __mullong_1:
 	clr	a
 	adc	a, (#1, sp)
 	ld	(#1, sp), a
-__mullong_2:
+___mullong_2:
 	ld	a, (#10, sp)
 	ld	xl, a
 	ld	a, (#12, sp)
@@ -80,7 +80,7 @@ __mullong_2:
 	mul	x, a
 	addw	x, (#1, sp)
 	ldw	(#1, sp), x
-__mullong_3:
+___mullong_3:
 	ld	a, (#7, sp)
 	ld	xl, a
 	ld	a, (#14, sp)
@@ -112,7 +112,7 @@ __mullong_3:
 	ld	a, xl
 	add	a, (#1, sp)
 	ld	(#1, sp), a
-__mullong_4:
+___mullong_4:
 	popw	y
 	popw	x
 	ret

@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-   _divuchar.c :- routine for unsigned char (8 bit) division. just calls
+   __divuchar.c :- routine for unsigned char (8 bit) division. just calls
                   routine for unsigned int division
 
    Copyright (C) 2017, Philipp Klaus Krause . pkk@spth.de
@@ -30,7 +30,7 @@
 #include <sdcc-lib.h>
 
 unsigned int
-_divuchar (unsigned char x, unsigned char y) __SDCC_NONBANKED
+__divuchar (unsigned char x, unsigned char y) __SDCC_NONBANKED
 {
   // If we don't go via volatile, optimizations will just convert the / to an 8x8 one, implemented by this very function, so we get endless recursion.
   volatile unsigned int tx = x;

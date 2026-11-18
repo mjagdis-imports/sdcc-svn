@@ -1,5 +1,5 @@
 ;-------------------------------------------------------------------------
-;   _divuint.s - routine for division of 16 bit unsigned int
+;   __divuint.s - routine for division of 16 bit unsigned int
 ;
 ;   Copyright (C) 1998, Ullrich von Bassewitz
 ;   Copyright (C) 2022-2026, Gabriele Gorla
@@ -27,28 +27,28 @@
 ;   might be covered by the GNU General Public License.
 ;-------------------------------------------------------------------------
 
-	.module _divuint
+	.module __divuint
 	.include "config.inc"
 
 ;--------------------------------------------------------
 ; exported symbols
 ;--------------------------------------------------------
-	.globl __divuint_PARM_2
-	.globl __divsint_PARM_2
-	.globl __moduint_PARM_2
-	.globl __modsint_PARM_2
+	.globl ___divuint_PARM_2
+	.globl ___divsint_PARM_2
+	.globl ___moduint_PARM_2
+	.globl ___modsint_PARM_2
 	.globl _div_PARM_2
-	.globl __divuint
+	.globl ___divuint
 	.globl ___udivmod16
 
 ;--------------------------------------------------------
 ; overlayable function parameters in zero page
 ;--------------------------------------------------------
 	.area	OSEG    (PAG, OVR)
-__divuint_PARM_2:
-__divsint_PARM_2:
-__moduint_PARM_2:
-__modsint_PARM_2:
+___divuint_PARM_2:
+___divsint_PARM_2:
+___moduint_PARM_2:
+___modsint_PARM_2:
 _div_PARM_2:
 	.ds 2
 
@@ -56,7 +56,7 @@ _div_PARM_2:
 ; local aliases
 ;--------------------------------------------------------
 	.define res "sdcc_vreg0"
-	.define den "__divuint_PARM_2"
+	.define den "___divuint_PARM_2"
 	.define rem "sdcc_vreg2"
 	.define s1  "sdcc_vreg4"
 	.define s2  "sdcc_vreg5"
@@ -66,7 +66,7 @@ _div_PARM_2:
 ;--------------------------------------------------------
 	.area CODE
 
-__divuint:
+___divuint:
 	jsr	___udivmod16
 	lda	*res+0
 	ldx	*res+1
@@ -79,7 +79,7 @@ ___udivmod16:
 	CLA
 	sta	*rem+1
 	ldy	#16
-;	ldx	__divuint_PARM_2+1
+;	ldx	___divuint_PARM_2+1
 ;	beq	div16x8
 next_bit:
 	asl	*res+0
@@ -110,10 +110,10 @@ L1:
 ;	rol	*sdcc_vreg0+1
 ;	rol	a
 ;	bcs	LL1
-;	cmp	__divuint_PARM_2+0
+;	cmp	___divuint_PARM_2+0
 ;	bcc	LL2
 ;LL1:
-;	sbc	__divuint_PARM_2+0
+;	sbc	___divuint_PARM_2+0
 ;	inc	*sdcc_vreg0+0
 ;LL2:
 ;	dey

@@ -28,13 +28,13 @@
 
 #include <sdcc-lib.h>
 
-unsigned unsigned _moduint (unsigned a, unsigned b);
+unsigned unsigned __moduint (unsigned a, unsigned b);
 
-int _modsint (int a, int b) _IL_REENTRANT
+int __modsint (int a, int b) _IL_REENTRANT
 {
        register int r;
 
-       r = _moduint((a < 0 ? -a : a),
+       r = __moduint((a < 0 ? -a : a),
 	            (b < 0 ? -b : b));
 
        if (a < 0)

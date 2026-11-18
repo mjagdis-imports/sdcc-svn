@@ -1,5 +1,5 @@
 ;-------------------------------------------------------------------------
-;  _divulong.s - routine for division of 32 bit unsigned long
+;  __divulong.s - routine for division of 32 bit unsigned long
 ;
 ;  Copyright (C) 1999, Jean-Louis Vern <jlvern AT gmail.com>
 ;
@@ -26,13 +26,13 @@
 ;  might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-	.module _divulong
+	.module __divulong
 	.include "config.inc"
 
 ; Signed and unsigned multiplication are the same - as long as the output
 ; has the same precision as the input.
 
-	.globl __divulong
+	.globl ___divulong
 
 	.define count   "r2"
 
@@ -52,13 +52,13 @@
 	.define y2      "b1_2"
 	.define y3      "b1_3"
 .else
-	.globl __divulong_PARM_2
-	.globl __divslong_PARM_2
+	.globl ___divulong_PARM_2
+	.globl ___divslong_PARM_2
 
-	.define y0      "__divulong_PARM_2"
-	.define y1      "__divulong_PARM_2 + 1"
-	.define y2      "__divulong_PARM_2 + 2"
-	.define y3      "__divulong_PARM_2 + 3"
+	.define y0      "___divulong_PARM_2"
+	.define y1      "___divulong_PARM_2 + 1"
+	.define y2      "___divulong_PARM_2 + 2"
+	.define y3      "___divulong_PARM_2 + 3"
 
 .ifdef __SDCC_NOOVERLAY
 	.area DSEG    (DATA)
@@ -66,14 +66,14 @@
 	.area OSEG    (OVR,DATA)
 .endif
 
-__divulong_PARM_2:
-__divslong_PARM_2:
+___divulong_PARM_2:
+___divslong_PARM_2:
 	.ds	4
 .endif
 
 	.area CSEG    (CODE)
 
-__divulong:
+___divulong:
 		; parameter x comes in a, b, dph, dpl
 	mov	x3,a		; save parameter x3
 

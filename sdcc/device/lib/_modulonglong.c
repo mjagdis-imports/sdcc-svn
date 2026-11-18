@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-   _modulonglong.c - routine for modulus of 64 bit unsigned long long
+   __modulonglong.c - routine for modulus of 64 bit unsigned long long
 
    Copyright (C) 1999, Sandeep Dutta . sandeep.dutta@usa.net
    Bug fixes by Martijn van Balen, aed@iae.nl
@@ -37,7 +37,7 @@
 #define MSB_SET(x) ((x >> (8*sizeof(x)-1)) & 1)
 
 unsigned long long
-_modulonglong (unsigned long long a, unsigned long long b) __SDCC_NONBANKED
+__modulonglong (unsigned long long a, unsigned long long b) __SDCC_NONBANKED
 {
   unsigned char count = 0;
 

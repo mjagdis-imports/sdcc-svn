@@ -31,13 +31,13 @@
 
 ; 16 x 16 -> 16 multiplication.
 
-.globl	__mulint
+.globl	___mulint
 
-__mulint:
+___mulint:
         pop     iy
         ex	de, hl
         pop	bc
-        call	__mul16
+        call	___mul16
         jp	(iy)
 
 	;; 16-bit multiplication
@@ -51,7 +51,7 @@ __mulint:
 	;;
 	;; Register used: AF,BC,DE,HL
 
-__mul16::
+___mul16::
 
 	; Swap lower bytes while also copying them into hl
 	ld	l, c

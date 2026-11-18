@@ -1,5 +1,5 @@
 ;-------------------------------------------------------------------------
-;  _modsint.s - routine for signed int (16 bit) modulus
+;  __modsint.s - routine for signed int (16 bit) modulus
 ;
 ;  Copyright (C) 1999, Sandeep Dutta . sandeep.dutta@usa.net
 ;
@@ -26,23 +26,23 @@
 ;  might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-	.module _modsint
+	.module __modsint
 	.include "config.inc"
 
-	.globl __modsint
+	.globl ___modsint
 
 	.define a0	"dpl"
 	.define a1	"dph"
 
-	; _modsint_PARM_2 shares the same memory with _moduint_PARM_2
-	; and is defined in _moduint.s
-	.define b0      "(__modsint_PARM_2)"
-	.define b1      "(__modsint_PARM_2 + 1)"
+	; __modsint_PARM_2 shares the same memory with __moduint_PARM_2
+	; and is defined in __moduint.s
+	.define b0      "(___modsint_PARM_2)"
+	.define b1      "(___modsint_PARM_2 + 1)"
 
 	.area	CSEG (CODE)
-__modsint:
+___modsint:
 				; a1 in dph
-				; b1 in (__modsint_PARM_2 + 1)
+				; b1 in (___modsint_PARM_2 + 1)
 
 	clr	F0 		; Flag 0 in PSW
 				; available to user for general purpose
@@ -74,7 +74,7 @@ a_not_negative:
 
 b_not_negative:
 
-	lcall	__moduint
+	lcall	___moduint
 
 	jnb	F0,not_negative
 

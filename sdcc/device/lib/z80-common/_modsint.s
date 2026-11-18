@@ -31,10 +31,10 @@
 
 .area   _CODE
 
-.globl	__modsint
+.globl	___modsint
 
-__modsint:
-	call    __div16
+___modsint:
+	call    ___div16
 
-	jp	__get_remainder
+	jp	___get_remainder
 

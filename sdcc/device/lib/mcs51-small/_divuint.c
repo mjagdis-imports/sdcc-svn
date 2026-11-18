@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-   _divuint.c - routine for unsigned int (16 bit) division
+   __divuint.c - routine for unsigned int (16 bit) division
 
    Copyright (C) 1999, Jean-Louis Vern <jlvern AT gmail.com>
 
@@ -31,13 +31,13 @@
 #include <sdcc-lib.h>
 
 static void
-_divuint_dummy (void) __naked
+__divuint_dummy (void) __naked
 {
 	__asm
 
-	.globl __divuint
+	.globl ___divuint
 
-__divuint:
+___divuint:
 
 	#define count   r2
 	#define reste_l r3
@@ -56,17 +56,17 @@ __divuint:
 	.area OSEG    (OVR,DATA)
     #endif
 
-	.globl __divuint_PARM_2
-	.globl __divsint_PARM_2
+	.globl ___divuint_PARM_2
+	.globl ___divsint_PARM_2
 
-__divuint_PARM_2:
-__divsint_PARM_2:
+___divuint_PARM_2:
+___divsint_PARM_2:
 	.ds	2
 
 	.area CSEG    (CODE)
 
-	#define yl      (__divuint_PARM_2)
-	#define yh      (__divuint_PARM_2 + 1)
+	#define yl      (___divuint_PARM_2)
+	#define yh      (___divuint_PARM_2 + 1)
 
 #endif // __SDCC_PARMS_IN_BANK1
 

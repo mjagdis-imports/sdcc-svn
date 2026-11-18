@@ -1,5 +1,5 @@
 ;--------------------------------------------------------------------------
-;  _divsint.s
+;  __divsint.s
 ;
 ;  Copyright (C) 2023-2025, Philipp Klaus Krause
 ;
@@ -26,14 +26,14 @@
 ;   might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-	.globl __divsint
-	.globl __divuint
+	.globl ___divsint
+	.globl ___divuint
 
 	.area CODE
 
-; _divsint (int x, int y)
+; __divsint (int x, int y)
 ; Return quotient in y, remainder in z.
-__divsint:
+___divsint:
 	ld	xl, yh
 	tst	xl
 	jrnn	x_nonnegative
@@ -52,7 +52,7 @@ y_nonnegative:
 
 	push	xl
 	pushw	z
-	call	#__divuint
+	call	#___divuint
 	tst	(2, sp)
 	jrnn	return_nonnegative
 	xor	yl, #0xff

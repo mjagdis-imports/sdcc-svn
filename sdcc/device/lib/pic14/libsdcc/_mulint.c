@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-   _mulint.c - routine for (unsigned) int (16 bit) multiplication
+   __mulint.c - routine for (unsigned) int (16 bit) multiplication
 
    Copyright (C) 1999, Sandeep Dutta . sandeep.dutta@usa.net
 
@@ -64,7 +64,7 @@
 #pragma save
 #pragma less_pedantic
 int
-_mulint (int a, int b)
+__mulint (int a, int b)
 {
   a*b; // hush the compiler
 
@@ -82,7 +82,7 @@ _mulint (int a, int b)
 #if defined(__SDCC_PARMS_IN_BANK1)
     mov a,b1_0
 #else
-    mov dptr,#__mulint_PARM_2
+    mov dptr,#___mulint_PARM_2
     movx a,@dptr ; lsb_b
 #endif
     mul ab ; lsb_a*lsb_b
@@ -121,13 +121,13 @@ _mulint (int a, int b)
 #pragma save
 #pragma less_pedantic
 int
-_mulint_dummy (void) __naked
+__mulint_dummy (void) __naked
 {
 	__asm
 
-__mulint:
+___mulint:
 
-	.globl __mulint
+	.globl ___mulint
 
 #if !defined(__SDCC_STACK_AUTO) || defined(__SDCC_PARMS_IN_BANK1)
 
@@ -140,11 +140,11 @@ __mulint:
 	#define bl 	(b1_0)
 	#define bh 	(b1_1)
 #else
-	#define bl 	(__mulint_PARM_2)
-	#define bh 	(__mulint_PARM_2 + 1)
-__mulint_PARM_2:
+	#define bl 	(___mulint_PARM_2)
+	#define bh 	(___mulint_PARM_2 + 1)
+___mulint_PARM_2:
 
-	.globl __mulint_PARM_2
+	.globl ___mulint_PARM_2
 
 	.ds	2
 #endif
@@ -226,7 +226,7 @@ union uu {
 #endif
 
 int
-_mulint (int a, int b)
+__mulint (int a, int b)
 {
 #if !defined(__SDCC_STACK_AUTO) && (defined(__SDCC_MODEL_LARGE) || defined(__SDCC_ds390))	// still needed for large
 	union uu __xdata *x;

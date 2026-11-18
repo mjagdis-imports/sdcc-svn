@@ -1,5 +1,5 @@
 ;-------------------------------------------------------------------------
-;  _modulong.s - routine for modulus of 32 bit unsigned long
+;  __modulong.s - routine for modulus of 32 bit unsigned long
 ;
 ;  Copyright (C) 1999, Sandeep Dutta . sandeep.dutta@usa.net
 ;  Bug fixes by Martijn van Balen, aed@iae.nl
@@ -27,13 +27,13 @@
 ;  might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-	.module _modulong
+	.module __modulong
 	.include "config.inc"
 
 ; Signed and unsigned multiplication are the same - as long as the output
 ; has the same precision as the input.
 
-	.globl __modulong
+	.globl ___modulong
 
 	.define a0	"dpl"
 	.define a1	"dph"
@@ -48,13 +48,13 @@
 	.define b2      "b1_2"
 	.define b3      "b1_3"
 .else
-	.globl __modulong_PARM_2
-	.globl __modslong_PARM_2
+	.globl ___modulong_PARM_2
+	.globl ___modslong_PARM_2
 
-	.define b0      "__modulong_PARM_2"
-	.define b1      "__modulong_PARM_2 + 1"
-	.define b2      "__modulong_PARM_2 + 2"
-	.define b3      "__modulong_PARM_2 + 3"
+	.define b0      "___modulong_PARM_2"
+	.define b1      "___modulong_PARM_2 + 1"
+	.define b2      "___modulong_PARM_2 + 2"
+	.define b3      "___modulong_PARM_2 + 3"
 
 .ifdef __SDCC_NOOVERLAY
 	.area DSEG    (DATA)
@@ -62,14 +62,14 @@
 	.area OSEG    (OVR,DATA)
 .endif
 
-__modulong_PARM_2:
-__modslong_PARM_2:
+___modulong_PARM_2:
+___modslong_PARM_2:
 	.ds	4
 .endif
 
 	.area CSEG    (CODE)
 
-__modulong:				; parameter a comes in a, b, dph, dpl
+___modulong:				; parameter a comes in a, b, dph, dpl
 	mov	a3,a		; save parameter a3
 
 	mov	a,b0		; b == 0? avoid endless loop

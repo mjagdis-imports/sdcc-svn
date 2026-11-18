@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-   _modulong.c - routine for modulus of 32 bit unsigned long
+   __modulong.c - routine for modulus of 32 bit unsigned long
 
    Copyright (C) 1999, Sandeep Dutta <sandeep.dutta AT usa.net>
    Bug fixes by Martijn van Balen, <aed AT iae.nl>
@@ -31,7 +31,7 @@
 
 #define MSB_SET(x) ((x >> (8*sizeof(x)-1)) & 1)
 
-unsigned long _modulong (unsigned long a, unsigned long b) _IL_REENTRANT
+unsigned long __modulong (unsigned long a, unsigned long b) _IL_REENTRANT
 {
   unsigned char count = 0;
 

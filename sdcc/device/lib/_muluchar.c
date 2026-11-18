@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-   _muluchar.c :- routine for unsigned char (8 bit) multiplication.
+   __muluchar.c :- routine for unsigned char (8 bit) multiplication.
 
    Copyright (C) 2017, Philipp Klaus Krause . pkk@spth.de
 
@@ -27,7 +27,7 @@
 -------------------------------------------------------------------------*/
 
 unsigned int
-_muluchar (unsigned char x, unsigned char y)
+__muluchar (unsigned char x, unsigned char y)
 {
   unsigned int result = 0;
   unsigned char i = 8;

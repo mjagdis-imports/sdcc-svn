@@ -1,5 +1,5 @@
 ;--------------------------------------------------------------------------
-;  _divulong.s
+;  __divulong.s
 ;
 ;  Copyright (C) 2014, Ben Shi
 ;
@@ -26,49 +26,49 @@
 ;   might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-	.globl __divulong
+	.globl ___divulong
 
 	.area CODE
-__divulong:
+___divulong:
 	sub	sp, #6
-;	device/lib/_divulong.c: 333: unsigned long reste = 0L;
+;	device/lib/__divulong.c: 333: unsigned long reste = 0L;
 	clrw	x
 	ldw	(0x05, sp), x
 	ldw	(0x03, sp), x
-;	device/lib/_divulong.c: 334: unsigned char count = 32;
+;	device/lib/__divulong.c: 334: unsigned char count = 32;
 	ld	a, #0x20
 	ld	(0x02, sp), a
-;	device/lib/_divulong.c: 337: do
-__divulong_00105:
-;	device/lib/_divulong.c: 340: c = MSB_SET(x);
+;	device/lib/__divulong.c: 337: do
+___divulong_00105:
+;	device/lib/__divulong.c: 340: c = MSB_SET(x);
 	ld	a, (0x0a, sp)
 	sll	a
 	clr	a
 	rlc	a
 	ld	(0x01, sp), a
-;	device/lib/_divulong.c: 341: x <<= 1;
+;	device/lib/__divulong.c: 341: x <<= 1;
 	ldw	y, (0x0c, sp)
 	ldw	x, (0x0a, sp)
 	sllw	y
 	rlcw	x
 	ldw	(0x0c, sp), y
 	ldw	(0x0a, sp), x
-;	device/lib/_divulong.c: 342: reste <<= 1;
+;	device/lib/__divulong.c: 342: reste <<= 1;
 	ldw	y, (0x05, sp)
 	ldw	x, (0x03, sp)
 	sllw	y
 	rlcw	x
 	ldw	(0x05, sp), y
 	ldw	(0x03, sp), x
-;	device/lib/_divulong.c: 343: if (c)
+;	device/lib/__divulong.c: 343: if (c)
 	tnz	(0x01, sp)
-	jreq	__divulong_00102
-;	device/lib/_divulong.c: 344: reste |= 1L;
+	jreq	___divulong_00102
+;	device/lib/__divulong.c: 344: reste |= 1L;
 	ld	a, (0x06, sp)
 	or	a, #0x01
 	ld	(0x06, sp), a
-__divulong_00102:
-;	device/lib/_divulong.c: 346: if (reste >= y)
+___divulong_00102:
+;	device/lib/__divulong.c: 346: if (reste >= y)
 	ldw	x, (0x05, sp)
 	subw	x, (0x10, sp)
 	ld	a, (0x04, sp)
@@ -76,20 +76,20 @@ __divulong_00102:
 	ld	yl, a
 	ld	a, (0x03, sp)
 	sbc	a, (0x0e, sp)
-	jrc	__divulong_00106
-;	device/lib/_divulong.c: 348: reste -= y;
+	jrc	___divulong_00106
+;	device/lib/__divulong.c: 348: reste -= y;
 	ldw	(0x05, sp), x
 	ld	yh, a
 	ldw	(0x03, sp), y
-;	device/lib/_divulong.c: 350: x |= 1L;
+;	device/lib/__divulong.c: 350: x |= 1L;
 	ld	a, (0x0d, sp)
 	or	a, #0x01
 	ld	(0x0d, sp), a
-__divulong_00106:
-;	device/lib/_divulong.c: 353: while (--count);
+___divulong_00106:
+;	device/lib/__divulong.c: 353: while (--count);
 	dec	(0x02, sp)
-	jrne	__divulong_00105
-;	device/lib/_divulong.c: 354: return x;
+	jrne	___divulong_00105
+;	device/lib/__divulong.c: 354: return x;
 	ldw	x, (0x0c, sp)
 	ldw	y, (0x0a, sp)
 	addw	sp, #6

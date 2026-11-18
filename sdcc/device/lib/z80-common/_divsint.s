@@ -26,29 +26,29 @@
 ;   might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-	.module _divsint
+	.module __divsint
 	.include "config.inc"
 
 .area	_CODE
 
-.globl	__divsint
-;.globl	__divschar
+.globl	___divsint
+;.globl	___divschar
 
-;__divschar:
+;___divschar:
 ;	ld	e, l
 ;	ld	l, a
 
-__div8::
+___div8::
         ld      a, l            ; Sign extend
         rlca
         sbc     a,a
         ld      h, a
-__div_signexte::
+___div_signexte::
 	ld      a, e            ; Sign extend
 	rlca
 	sbc     a, a
 	ld      d, a
-	; Fall through to __div16
+	; Fall through to ___div16
 
         ;; signed 16-bit division
         ;;
@@ -61,8 +61,8 @@ __div_signexte::
         ;;   HL = remainder
         ;;
         ;; Register used: AF,B,DE,HL
-__divsint:
-__div16::
+___divsint:
+___div16::
         ;; Determine sign of quotient by xor-ing high bytes of dividend
         ;;  and divisor. Quotient is positive if signs are the same, negative
         ;;  if signs are different
@@ -96,7 +96,7 @@ __div16::
 
         ; Divide absolute values
 .dodiv:
-        call    __divu16
+        call    ___divu16
 
 .fix_quotient:
         ; Negate quotient if it is negative
@@ -112,7 +112,7 @@ __div16::
         ld      a, b
 	ret
 
-__get_remainder::
+___get_remainder::
         ; Negate remainder if it is negative.
         rla
         ex	de, hl

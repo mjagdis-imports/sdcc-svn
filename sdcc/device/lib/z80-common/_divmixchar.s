@@ -29,17 +29,17 @@
 	.module divmixchar
 	.include "config.inc"
 
-.globl	__divsuchar
-.globl	__divuschar
+.globl	___divsuchar
+.globl	___divuschar
 
-__divuschar:
+___divuschar:
 	ld	e, l
 	ld	l, a
 	ld	h, #0
 
-	jp	__div_signexte
+	jp	___div_signexte
 
-__divsuchar:
+___divsuchar:
 	ld	e, l
 	ld	d, #0
 	ld	l, a
@@ -48,5 +48,5 @@ __divsuchar:
 	sbc	a, a
 	ld	h, a
 
-	jp	__div16
+	jp	___div16
 

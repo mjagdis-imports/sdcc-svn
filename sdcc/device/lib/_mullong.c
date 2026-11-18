@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-   _mullong.c - routine for multiplication of 32 bit (unsigned) long
+   __mullong.c - routine for multiplication of 32 bit (unsigned) long
 
    Copyright (C) 1999, Sandeep Dutta . sandeep.dutta@usa.net
    Copyright (C) 1999, Jean Louis VERN jlvern@writeme.com
@@ -84,7 +84,7 @@ union bil {
 // currently the original code without u fails with --xstack
 // it runs out of pointer registers
 long
-_mullong (long a, long b) __SDCC_NONBANKED
+__mullong (long a, long b) __SDCC_NONBANKED
 {
         union bil t, u;
 
@@ -118,7 +118,7 @@ _mullong (long a, long b) __SDCC_NONBANKED
    but on r2k it is affected by a hardware bug, and not used by sdcc.
  */
 long
-_mullong (long a, long b) __SDCC_NONBANKED
+__mullong (long a, long b) __SDCC_NONBANKED
 {
   unsigned short i12;
 
@@ -142,7 +142,7 @@ _mullong (long a, long b) __SDCC_NONBANKED
 }
 #else
 long
-_mullong (long a, long b) __SDCC_NONBANKED
+__mullong (long a, long b) __SDCC_NONBANKED
 {
         union bil t;
 

@@ -5498,7 +5498,7 @@ initCSupport (void)
               struct dbuf_s dbuf;
 
               dbuf_init (&dbuf, 128);
-              dbuf_printf (&dbuf, "_%s%s%s", smuldivmod[muldivmod], ssu[su], sbwd[bwd]);
+              dbuf_printf (&dbuf, "__%s%s%s", smuldivmod[muldivmod], ssu[su], sbwd[bwd]);
               muldiv[muldivmod][bwd][su] = funcOfType (_mangleFunctionName(dbuf_c_str (&dbuf)), multypes[bwd][su], multypes[bwd][su], 2, options.intlong_rent);
               dbuf_destroy (&dbuf);
               FUNC_NONBANKED (muldiv[muldivmod][bwd][su]->type) = 1;
@@ -5512,7 +5512,7 @@ initCSupport (void)
 
   /* byte */
 
-  /* _divschar/_modschar return int, so that both
+  /* __divschar/__modschar return int, so that both
    * 100 / -4 = -25 and -128 / -1 = 128 can be handled correctly
    * (first one would have to be sign extended, second one must not be). */
   bwd = 0;
@@ -5525,7 +5525,7 @@ initCSupport (void)
           struct dbuf_s dbuf;
 
           dbuf_init (&dbuf, 128);
-          dbuf_printf (&dbuf, "_%s%s%s", smuldivmod[muldivmod], ssu[su], sbwd[bwd]);
+          dbuf_printf (&dbuf, "__%s%s%s", smuldivmod[muldivmod], ssu[su], sbwd[bwd]);
           muldiv[muldivmod][bwd][su] =
             funcOfType2 (_mangleFunctionName (dbuf_c_str (&dbuf)),
               multypes[1][(bool)su],
@@ -5545,7 +5545,7 @@ initCSupport (void)
               struct dbuf_s dbuf;
 
               dbuf_init (&dbuf, 128);
-              dbuf_printf (&dbuf, "_%s%s%s", smuldivmod[muldivmod], ssu[su], sbwd[bwd]);
+              dbuf_printf (&dbuf, "__%s%s%s", smuldivmod[muldivmod], ssu[su], sbwd[bwd]);
               muldiv[muldivmod][bwd][su] =
                 funcOfType (_mangleFunctionName (dbuf_c_str (&dbuf)),
                   multypes[(TARGET_IS_PIC16 && muldivmod == 1 && bwd == 0 && su == 0 || (TARGET_IS_STM8 || TARGET_Z80_LIKE || TARGET_PDK_LIKE || TARGET_F8_LIKE) && bwd == 0) ? 1 : bwd][su],
@@ -5568,7 +5568,7 @@ initCSupport (void)
       struct dbuf_s dbuf;
 
       dbuf_init (&dbuf, 128);
-      dbuf_printf (&dbuf, "_%s%s", smuldivmod[muldivmod], sbwd[bwd]);
+      dbuf_printf (&dbuf, "__%s%s", smuldivmod[muldivmod], sbwd[bwd]);
       muldiv[muldivmod][bwd][0] =
         funcOfType (_mangleFunctionName (dbuf_c_str (&dbuf)), multypes[bwd][su], multypes[bwd][su], 2, options.intlong_rent);
       dbuf_destroy (&dbuf);

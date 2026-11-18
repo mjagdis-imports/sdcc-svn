@@ -1,5 +1,5 @@
 ;-------------------------------------------------------------------------
-;   _moduint.s - routine for remainder of 16 bit unsigned division
+;   __moduint.s - routine for remainder of 16 bit unsigned division
 ;
 ;   Copyright (C) 2022-2026, Gabriele Gorla
 ;
@@ -26,19 +26,19 @@
 ;   might be covered by the GNU General Public License.
 ;-------------------------------------------------------------------------
 
-	.module _moduint
+	.module __moduint
 
 ;--------------------------------------------------------
 ; exported symbols
 ;--------------------------------------------------------
-	.globl __moduint
+	.globl ___moduint
 	.include "config.inc"
 	
 ;--------------------------------------------------------
 ; local aliases
 ;--------------------------------------------------------
 	.define res "sdcc_vreg0"
-	.define div "__moduint_PARM_2"
+	.define div "___moduint_PARM_2"
 	.define rem "sdcc_vreg2"
 	.define s1  "sdcc_vreg4"
 	.define s2  "sdcc_vreg5"
@@ -48,7 +48,7 @@
 ;--------------------------------------------------------
 	.area CODE
 	
-__moduint:
+___moduint:
 	jsr	___udivmod16
 	lda	*rem+0
 	ldx	*rem+1

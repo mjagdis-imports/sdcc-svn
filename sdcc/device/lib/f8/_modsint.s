@@ -1,5 +1,5 @@
 ;--------------------------------------------------------------------------
-;  _modsint.s
+;  __modsint.s
 ;
 ;  Copyright (C) 2023-2024, Philipp Klaus Krause
 ;
@@ -26,13 +26,13 @@
 ;   might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-	.globl __modsint
-	.globl __divuint
+	.globl ___modsint
+	.globl ___divuint
 
 	.area CODE
 
-; _modsint (int x, int y)
-__modsint:
+; __modsint (int x, int y)
+___modsint:
 	ld	xl, yh
 	tst	xl
 	jrnn	x_nonnegative
@@ -46,7 +46,7 @@ y_nonnegative:
 
 	push	xl
 	pushw	z
-	call	#__divuint
+	call	#___divuint
 	ldw	y, z
 	tst	(2, sp)
 	jrnn	return_nonnegative

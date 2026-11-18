@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-   _divslong.c - routine for division of 32 bit long
+   __divslong.c - routine for division of 32 bit long
 
    Copyright (C) 1999, Sandeep Dutta . sandeep.dutta@usa.net
 
@@ -30,11 +30,11 @@
 #include <sdcc-lib.h>
 
 #if _SDCC_MANGLES_SUPPORT_FUNS
-unsigned long _divulong (unsigned long x, unsigned long y);
+unsigned long __divulong (unsigned long x, unsigned long y);
 #endif
 
 long
-_divslong (long x, long y) __SDCC_NONBANKED
+__divslong (long x, long y) __SDCC_NONBANKED
 {
   long r;
 

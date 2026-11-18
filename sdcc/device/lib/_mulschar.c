@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-   _mulschar.c :- routine for signed char (8 bit) multiplication. just calls
+   __mulschar.c :- routine for signed char (8 bit) multiplication. just calls
                   routine for signed int multiplication after sign extension
 
    Copyright (C) 2013, Philipp Klaus Krause . pkk@spth.de
@@ -28,19 +28,19 @@
 -------------------------------------------------------------------------*/
 
 signed int
-_mulschar (signed char x, signed char y)
+__mulschar (signed char x, signed char y)
 {
   return ((int)x * (int)y);
 }
 
 signed int
-_muluschar (unsigned char x, signed char y)
+__muluschar (unsigned char x, signed char y)
 {
   return ((int)x * (int)y);
 }
 
 signed int
-_mulsuchar (signed char x, unsigned char y)
+__mulsuchar (signed char x, unsigned char y)
 {
   return ((int)x * (int)y);
 }

@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-   _divulonglong.c - routine for division of 64 bit unsigned long long
+   __divulonglong.c - routine for division of 64 bit unsigned long long
 
    Copyright (C) 1999, Jean-Louis Vern <jlvern AT gmail.com>
    Copyright (C) 2012, Philipp Klaus Krause . pkk@spth.de
@@ -36,7 +36,7 @@
 #define MSB_SET(x) ((x >> (8*sizeof(x)-1)) & 1)
 
 unsigned long long
-_divulonglong (unsigned long long x, unsigned long long y) __SDCC_NONBANKED
+__divulonglong (unsigned long long x, unsigned long long y) __SDCC_NONBANKED
 {
   unsigned long long reste = 0L;
   unsigned char count = 64;

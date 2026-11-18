@@ -31,7 +31,7 @@
 #define MSB_SET(x) ((x >> (8*sizeof(x)-1)) & 1)
 
 unsigned long
-_divulong (unsigned long a, unsigned long b) _IL_REENTRANT
+__divulong (unsigned long a, unsigned long b) _IL_REENTRANT
 {
   unsigned long reste = 0L;
   unsigned char count = 32;

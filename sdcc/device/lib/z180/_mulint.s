@@ -31,9 +31,9 @@
 
 ; 16 x 16 -> 16 multiplication.
 
-.globl	__mulint
+.globl	___mulint
 
-__mulint:
+___mulint:
 	;; 16-bit multiplication
 	;;
 	;; Entry conditions
@@ -45,7 +45,7 @@ __mulint:
 	;;
 	;; Register used: AF,BC,DE,HL
 
-__mul16::
+___mul16::
 
 	; Swap lower bytes while also copying them.
 	ld	c, e

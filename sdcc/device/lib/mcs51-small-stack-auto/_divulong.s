@@ -1,5 +1,5 @@
 ;-------------------------------------------------------------------------
-;  _divulong.s - routine for division of 32 bit unsigned long
+;  __divulong.s - routine for division of 32 bit unsigned long
 ;
 ;  Copyright (C) 1999, Sandeep Dutta . sandeep.dutta@usa.net
 ;
@@ -26,14 +26,14 @@
 ;  might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-	.module _divulong
+	.module __divulong
 	.include "config.inc"
 
 ; Signed and unsigned multiplication are the same - as long as the output
 ; has the same precision as the input.
 
-	.globl __divulong
-	.globl __divlong
+	.globl ___divulong
+	.globl ___divlong
 
 	.define x0	"dpl"
 	.define x1	"dph"
@@ -48,11 +48,11 @@
 	.define y0	"r1"
 	.define count   "r2"
 
-; unsigned long _divulong (unsigned long a, unsigned long b) __SDCC_NONBANKED
+; unsigned long __divulong (unsigned long a, unsigned long b) __SDCC_NONBANKED
 
 	.area	CSEG (CODE)
 
-__divulong:
+___divulong:
 				; parameter x comes in a, b, dph, dpl
 	mov	x3,a		; save parameter x3
 
@@ -60,7 +60,7 @@ __divulong:
 	add	a,#-2-3		; 2 bytes return address, 3 bytes param y
 	mov	r0,a		; r0 points to y0
 
-__divlong:			; entry point for __divslong
+___divlong:			; entry point for ___divslong
 
 	mov	a,@r0		; load y0
 	mov	y0,a

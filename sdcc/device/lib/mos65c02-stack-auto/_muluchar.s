@@ -1,5 +1,5 @@
 ;-------------------------------------------------------------------------
-;   _muluchar.s - routine for multiplication of 8 bit (unsigned char)
+;   __muluchar.s - routine for multiplication of 8 bit (unsigned char)
 ;
 ;   Copyright (C) 2009, Ullrich von Bassewitz
 ;   Copyright (C) 2026, Gabriele Gorla
@@ -27,13 +27,13 @@
 ;   might be covered by the GNU General Public License.
 ;-------------------------------------------------------------------------
 
-	.module _muluchar
+	.module __muluchar
 	.r65c02
 
 ;--------------------------------------------------------
 ; exported symbols
 ;--------------------------------------------------------
-	.globl __muluchar   ; arguments in A and X, result in AX
+	.globl ___muluchar   ; arguments in A and X, result in AX
 	.globl ___umul8     ; arguments in ret0 and ret1, result in AX
 
 ;--------------------------------------------------------
@@ -52,7 +52,7 @@
 ;--------------------------------------------------------
 	.area CODE
 
-__muluchar:
+___muluchar:
         pha			; arg1 is in 0x102,x
         phx			; arg2 is in 0x101,x
         tsx

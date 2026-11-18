@@ -30,31 +30,31 @@
 
 .area	_CODE
 
-.globl	__divsint
+.globl	___divsint
 
-__divsint:
+___divsint:
         pop     iy
         pop     de
 
-	call	__div16
+	call	___div16
 
 	jp	(iy)
 
-;__divschar:
+;___divschar:
 ;	ld	e, l
 ;	ld	l, a
 
-__div8::
+___div8::
         ld      a, l            ; Sign extend
         rlca
         sbc     a,a
         ld      h, a
-__div_signexte::
+___div_signexte::
         ld      a, e            ; Sign extend
         rlca
         sbc     a, a
         ld      d, a
-        ; Fall through to __div16
+        ; Fall through to ___div16
 
         ;; signed 16-bit division
         ;;
@@ -67,7 +67,7 @@ __div_signexte::
         ;;   DE = remainder
         ;;
         ;; Register used: AF,B,DE,HL
-__div16::
+___div16::
         ;; Determine sign of quotient by xor-ing high bytes of dividend
         ;;  and divisor. Quotient is positive if signs are the same, negative
         ;;  if signs are different
@@ -101,7 +101,7 @@ __div16::
 
         ; Divide absolute values
 .dodiv:
-        call    __divu16
+        call    ___divu16
 
 .fix_quotient:
         ; Negate quotient if it is negative
@@ -117,7 +117,7 @@ __div16::
         ld      a, b
 	ret
 
-__get_remainder::
+___get_remainder::
         ; Negate remainder if it is negative and move it into hl
         rla
 	ex	de, hl

@@ -29,19 +29,19 @@
 	.module modmixchar
 	.include "config.inc"
 
-.globl	__modsuchar
-.globl	__moduschar
+.globl	___modsuchar
+.globl	___moduschar
 
-__moduschar:
+___moduschar:
 	ld	e, l
 	ld	l, a
 	ld	h, #0
 
-	call    __div_signexte
+	call    ___div_signexte
 
-	jp	__get_remainder
+	jp	___get_remainder
 
-__modsuchar:
+___modsuchar:
 	ld	e, l
 	ld	d, #0
 	ld	l, a
@@ -50,7 +50,7 @@ __modsuchar:
 	sbc	a, a
 	ld	h, a
 
-	call	__div16
+	call	___div16
 
-	jp	__get_remainder
+	jp	___get_remainder
 

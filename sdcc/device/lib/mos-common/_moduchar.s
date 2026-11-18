@@ -1,5 +1,5 @@
 ;-------------------------------------------------------------------------
-;   _moduchar.s - routine for 8 bit (unsigned char) modulo
+;   __moduchar.s - routine for 8 bit (unsigned char) modulo
 ;
 ;   Copyright (C) 2023-2026, Gabriele Gorla
 ;
@@ -26,13 +26,13 @@
 ;   might be covered by the GNU General Public License.
 ;-------------------------------------------------------------------------
 
-	.module _moduchar
+	.module __moduchar
 	.include "config.inc"
 
 ;--------------------------------------------------------
 ; exported symbols
 ;--------------------------------------------------------
-	.globl __moduchar   ; arguments in A and X, result in AX
+	.globl ___moduchar   ; arguments in A and X, result in AX
 	
 ;--------------------------------------------------------
 ; overlayable function parameters in zero page
@@ -48,9 +48,9 @@
 ;--------------------------------------------------------
 	.area CODE
 
-__moduchar:
-	stx	*__moduint_PARM_2
+___moduchar:
+	stx	*___moduint_PARM_2
 	CLX
-	stx	*(__moduint_PARM_2 + 1)
-	jmp	__moduint
+	stx	*(___moduint_PARM_2 + 1)
+	jmp	___moduint
 

@@ -1,5 +1,5 @@
 ;--------------------------------------------------------------------------
-;  __moduint.s
+;  ___moduint.s
 ;
 ;  Copyright (C) 2000, Michael Hope
 ;  Copyright (C) 2021, Sebastian 'basxto' Riedel (sdcc@basxto.de)
@@ -28,15 +28,15 @@
 ;   might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-	.module __moduint
+	.module ___moduint
 	.optsdcc -msm83 sdcccall(1)
 
         ;; Originally from GBDK by Pascal Felber.
-.globl	__moduint
+.globl	___moduint
 
         .area   _CODE
 
-__moduint:
+___moduint:
         ld	a, e
         ld	e, c
         ld	c, a

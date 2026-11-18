@@ -33,19 +33,19 @@
 
 .area   _CODE
 
-.globl	__divuint
-.globl	__divuchar
+.globl	___divuint
+.globl	___divuchar
 
 
-__divuchar:
+___divuchar:
 	ld	e, l
 	ld	l, a
 
         ;; Fall through
-__divu8::
+___divu8::
         ld      h,#0x00
         ld      d,h
-        ; Fall through to __divu16
+        ; Fall through to ___divu16
 
         ;; unsigned 16-bit division
         ;;
@@ -60,8 +60,8 @@ __divu8::
         ;;   If divisor is 0, quotient is set to "infinity", i.e HL = 0xFFFF.
         ;;
         ;; Register used: AF,B,DE,HL
-__divuint:
-__divu16::
+___divuint:
+___divu16::
         ;; Two algorithms: one assumes divisor <2^7, the second
         ;; assumes divisor >=2^7; choose the applicable one.
         ld      a,e

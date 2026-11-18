@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-   _moduchar.c :- routine for signed char (8 bit) division.
+   __moduchar.c :- routine for signed char (8 bit) division.
 
    Copyright (C) 2013, Philipp Klaus Krause . pkk@spth.de
 
@@ -27,7 +27,7 @@
 -------------------------------------------------------------------------*/
 
 unsigned int
-_moduchar (unsigned char x, unsigned char y)
+__moduchar (unsigned char x, unsigned char y)
 {
   // If we don't go via volatile, optimizations will just convert the % to an 8x8 one, implemented by this very function, so we get endless recursion.
   volatile unsigned int tx = x;

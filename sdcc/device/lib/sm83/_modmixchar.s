@@ -32,12 +32,12 @@
 	.optsdcc -msm83 sdcccall(1)
 
         ;; Originally from GBDK by Pascal Felber.
-.globl	__moduschar
-.globl	__modsuchar
+.globl	___moduschar
+.globl	___modsuchar
 
         .area   _CODE
 
-__moduschar:
+___moduschar:
 	ld	c, a
 	ld	b, #0
 
@@ -50,7 +50,7 @@ __moduschar:
 
 
 
-__modsuchar:
+___modsuchar:
 	ld	d, #0
 
 	ld	c, a             ; Sign extend

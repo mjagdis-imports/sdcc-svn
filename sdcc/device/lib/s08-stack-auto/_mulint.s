@@ -1,5 +1,5 @@
 ;-------------------------------------------------------------------------
-;   _mulint.c - routine for (unsigned) int (16 bit) multiplication
+;   __mulint.c - routine for (unsigned) int (16 bit) multiplication
 ;
 ;   Copyright (C) 1999, Sandeep Dutta . sandeep.dutta@usa.net
 ;   Copyright (C) 2026, Gabriele Gorla
@@ -27,19 +27,19 @@
 ;   might be covered by the GNU General Public License.
 ;-------------------------------------------------------------------------
 
-	.module _mulint
+	.module __mulint
 	.include "config.inc"
 
-	.globl __mulint
+	.globl ___mulint
 
 
 ;--------------------------------------------------------
-;int _mulint (int a, int b)
+;int __mulint (int a, int b)
 ;--------------------------------------------------------
 
 .area CSEG
 
-__mulint:
+___mulint:
    	ais #-2
 	psha
 	pshx

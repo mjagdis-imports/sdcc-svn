@@ -1,5 +1,5 @@
 ;--------------------------------------------------------------------------
-;  _modsint.s
+;  __modsint.s
 ;
 ;  Copyright (C) 2014, Krzysztof Nikiel, Ben Shi
 ;
@@ -26,24 +26,24 @@
 ;   might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-	.globl __modsint
+	.globl ___modsint
 
 	.area CODE
-__modsint:
+___modsint:
 	ldw	y, (#3, sp)
 	ld	a, xh
-	jrpl	__modsint_1
+	jrpl	___modsint_1
 	negw	y
-__modsint_1:
+___modsint_1:
 	tnzw	x
-	jrpl	__modsint_2
+	jrpl	___modsint_2
 	negw	x
-__modsint_2:
+___modsint_2:
 	divw	x, y
 	tnz	a
-	jrpl	__modsint_3
+	jrpl	___modsint_3
 	negw	y
-__modsint_3:
+___modsint_3:
 	ldw	x, y
 	popw	y
 	addw	sp, #2

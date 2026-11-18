@@ -1,5 +1,5 @@
 ;-------------------------------------------------------------------------
-;   _mulschar.s - routine for multiplication of 8 bit signed char
+;   __mulschar.s - routine for multiplication of 8 bit signed char
 ;
 ;   Copyright (C) 2009, Ullrich von Bassewitz
 ;   Copyright (C) 2022-2026, Gabriele Gorla
@@ -27,15 +27,15 @@
 ;   might be covered by the GNU General Public License.
 ;-------------------------------------------------------------------------
 
-	.module _mulschar
+	.module __mulschar
 	.include "config.inc"
 
 ;--------------------------------------------------------
 ; exported symbols
 ;--------------------------------------------------------
-	.globl __mulschar
-	.globl __muluschar
-	.globl __mulsuchar
+	.globl ___mulschar
+	.globl ___muluschar
+	.globl ___mulsuchar
 
 ;--------------------------------------------------------
 ; overlayable function parameters in zero page
@@ -55,7 +55,7 @@
 ;--------------------------------------------------------
 	.area CODE
 
-__mulschar:
+___mulschar:
 	sta	*s1
 	cmp	#0x00
 	bpl 	pos1
@@ -83,23 +83,23 @@ pos2:
 skip:	lda 	arg2
 	rts
 
-__mulsuchar:
-	stx	*__mulint_PARM_2
+___mulsuchar:
+	stx	*___mulint_PARM_2
 	CLX
-	stx	*__mulint_PARM_2+1
+	stx	*___mulint_PARM_2+1
 	cmp	#0x00
 	bpl	pos1m
 	ldx 	#0xff
 pos1m:
-	jmp	__mulint
+	jmp	___mulint
 	
-__muluschar:
-	sta	*__mulint_PARM_2
+___muluschar:
+	sta	*___mulint_PARM_2
 	txa
 	CLX
-	stx	*__mulint_PARM_2+1
+	stx	*___mulint_PARM_2+1
 	cmp	#0x00
 	bpl	pos2m
 	ldx 	#0xff
 pos2m:
-	jmp	__mulint
+	jmp	___mulint

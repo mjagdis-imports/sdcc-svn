@@ -1,5 +1,5 @@
 ;-------------------------------------------------------------------------
-;  _mulint.s - routine for (unsigned) int (16 bit) multiplication
+;  __mulint.s - routine for (unsigned) int (16 bit) multiplication
 ;
 ;  Copyright (C) 1999, Sandeep Dutta . sandeep.dutta@usa.net
 ;
@@ -26,31 +26,31 @@
 ;  might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-	.module _mulint
+	.module __mulint
 	.include "config.inc"
 
 ; Signed and unsigned multiplication are the same - as long as the output
 ; has the same precision as the input.
 
-	.globl	__mulint
-	.globl __mulint_PARM_2
+	.globl	___mulint
+	.globl ___mulint_PARM_2
 
 .ifdef __SDCC_PARMS_IN_BANK1
 	.define bl 	"b1_0"
 	.define bh 	"b1_1"
 .else
-	.define bl 	"__mulint_PARM_2"
-	.define bh 	"__mulint_PARM_2 + 1"
+	.define bl 	"___mulint_PARM_2"
+	.define bh 	"___mulint_PARM_2 + 1"
 .ifdef __SDCC_NOOVERLAY
 	.area DSEG    (DATA)
 .else
 	.area OSEG    (OVR,DATA)
 .endif
-__mulint_PARM_2:
+___mulint_PARM_2:
 	.ds	2
 .endif
 
-; int _mulint (int a, int b) __SDCC_NONBANKED
+; int __mulint (int a, int b) __SDCC_NONBANKED
 
 ; mulint=
 ;     (int)(lsb_a*lsb_b) +
@@ -59,7 +59,7 @@ __mulint_PARM_2:
 
 	.area CSEG    (CODE)
 
-__mulint:
+___mulint:
 	; clobbered registers none
 
 	mov	a,dpl			;  1  al

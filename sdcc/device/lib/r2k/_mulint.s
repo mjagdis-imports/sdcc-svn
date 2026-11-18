@@ -29,13 +29,13 @@
 
 .area   _CODE
 
-.globl	__mulint
+.globl	___mulint
 
-__mulint:
+___mulint:
         pop	iy
         pop	bc
         ex	de, hl
-        call	__mul16
+        call	___mul16
        	jp	(iy)
 
 	;; 16-bit multiplication
@@ -48,7 +48,7 @@ __mulint:
 	;; hl = less significant word of product
 	;;
 	;; Register used: AF,BC,DE,HL
-__mul16::
+___mul16::
 	xor	a,a
 	ld	l,a
 	or	a,b

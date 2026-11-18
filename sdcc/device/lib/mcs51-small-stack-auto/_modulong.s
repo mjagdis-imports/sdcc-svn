@@ -1,5 +1,5 @@
 ;-------------------------------------------------------------------------
-;  _modulong.c - routine for modulus of 32 bit unsigned long
+;  __modulong.c - routine for modulus of 32 bit unsigned long
 ;
 ;  Copyright (C) 1999, Sandeep Dutta . sandeep.dutta@usa.net
 ;  Bug fixes by Martijn van Balen, aed@iae.nl
@@ -29,11 +29,11 @@
 ;  might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-	.module _divulong
+	.module __divulong
 	.include "config.inc"
 
-	.globl __modulong
-	.globl __modlong
+	.globl ___modulong
+	.globl ___modlong
 
 	.define a0	"dpl"
 	.define a1	"dph"
@@ -54,7 +54,7 @@
 
 	.area	CSEG (CODE)
 
-__modulong:
+___modulong:
 				; parameter a comes in a, b, dph, dpl
 	mov	a3,a		; save parameter a3
 
@@ -70,7 +70,7 @@ __modulong:
 	inc	r0
 	mov	ar5,@r0		; b3
 
-__modlong:			; entry point for __modslong
+___modlong:			; entry point for ___modslong
 				; a in r1, b, dph, dpl
 				; b in r5, r4, r3, r2
 

@@ -30,13 +30,13 @@
 #include <sdcc-lib.h>
 
 signed int
-_moduschar (unsigned char x, signed char y) __SDCC_NONBANKED
+__moduschar (unsigned char x, signed char y) __SDCC_NONBANKED
 {
   return ((int)x % (int)y);
 }
 
 signed int
-_modsuchar (signed char x, unsigned char y) __SDCC_NONBANKED
+__modsuchar (signed char x, unsigned char y) __SDCC_NONBANKED
 {
   return ((int)x % (int)y);
 }

@@ -31,13 +31,13 @@
 
 .area   _CODE
 
-.globl	__modschar
+.globl	___modschar
 
-__modschar:
+___modschar:
 	ld	e, l
 	ld	l, a
 
-	call    __div8
+	call    ___div8
 
-	jp	__get_remainder
+	jp	___get_remainder
 

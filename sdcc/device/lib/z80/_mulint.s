@@ -1,5 +1,5 @@
 ;--------------------------------------------------------------------------
-;  _mulint.s
+;  __mulint.s
 ;
 ;  Copyright (C) 2000, Michael Hope
 ;  Copyright (C) 2021, Philipp Klaus Krause
@@ -27,14 +27,14 @@
 ;   might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-	.module __mulint
+	.module ___mulint
 	.optsdcc -mz80 sdcccall(1)
 
 .area   _CODE
 
-.globl	__mulint
+.globl	___mulint
 
-__mulint:
+___mulint:
         ld	c, l
         ld	b, h
 
@@ -48,7 +48,7 @@ __mulint:
 	;; de = less significant word of product
 	;;
 	;; Register used: AF,BC,DE,HL
-__mul16::
+___mul16::
 	xor	a,a
 	ld	l,a
 	or	a,b

@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-   _modsint.c - routine for signed int (16 bit) modulus
+   __modsint.c - routine for signed int (16 bit) modulus
 
    Copyright (C) 1999, Sandeep Dutta . sandeep.dutta@usa.net
 
@@ -30,10 +30,10 @@
 #include <sdcc-lib.h>
 
 #if _SDCC_MANGLES_SUPPORT_FUNS
-unsigned unsigned _moduint (unsigned a, unsigned b);
+unsigned unsigned __moduint (unsigned a, unsigned b);
 #endif
 
-int _modsint (int a, int b) __SDCC_NONBANKED
+int __modsint (int a, int b) __SDCC_NONBANKED
 {
   register int r;
 

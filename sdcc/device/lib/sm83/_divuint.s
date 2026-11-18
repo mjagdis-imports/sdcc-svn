@@ -1,5 +1,5 @@
 ;--------------------------------------------------------------------------
-;  __divuint.s
+;  ___divuint.s
 ;
 ;  Copyright (C) 2000, Michael Hope
 ;  Copyright (C) 2021, Sebastian 'basxto' Riedel (sdcc@basxto.de)
@@ -28,15 +28,15 @@
 ;   might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-	.module __divuint
+	.module ___divuint
 	.optsdcc -msm83 sdcccall(1)
 
         ;; Originally from GBDK by Pascal Felber.
-.globl	__divuint
+.globl	___divuint
 
         .area   _CODE
 
-__divuint:      
+___divuint:      
         ld	a, e
         ld	e, c
         ld	c, a
@@ -47,7 +47,7 @@ __divuint:
 
         jp	.divmodu16
 
-__moduint:
+___moduint:
         ld	a, e
         ld	e, c
         ld	c, a

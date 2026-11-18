@@ -28,24 +28,24 @@
 
 .area   _CODE
 
-.globl	__modschar
-.globl	__modsint
+.globl	___modschar
+.globl	___modsint
 
-__modschar:
+___modschar:
         ld	e, l
 	ld	l, a
 
-        call    __div8
+        call    ___div8
 
-        jp	__get_remainder
+        jp	___get_remainder
 
-__modsint:
+___modsint:
  	pop     iy
 	pop     de
 
-	call    __div16
+	call    ___div16
 
-	call	__get_remainder
+	call	___get_remainder
 
 	jp	(iy)
 

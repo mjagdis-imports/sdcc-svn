@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-   _divschar.c - routine for signed char (8 bit) division. just calls
+   __divschar.c - routine for signed char (8 bit) division. just calls
                  routine for unsigned division after sign adjustment
 
    Copyright (C) 1999, Sandeep Dutta <sandeep.dutta AT usa.net> 
@@ -31,9 +31,9 @@
 
 #include <sdcc-lib.h>
 
-unsigned int _divuchar (unsigned char a, unsigned char b);
+unsigned int __divuchar (unsigned char a, unsigned char b);
 
-int _divschar (signed char a, signed char b) _IL_REENTRANT
+int __divschar (signed char a, signed char b) _IL_REENTRANT
 {
   register unsigned char r;
   char ta, tb;
@@ -41,7 +41,7 @@ int _divschar (signed char a, signed char b) _IL_REENTRANT
     if(a<0)ta = -a; else ta = a;
     if(b<0)tb = -b; else tb = b;
 	
-    r = _divuchar(ta, tb);
+    r = __divuchar(ta, tb);
     
     if ((a < 0) ^ (b < 0)) return -r;
     else return r;

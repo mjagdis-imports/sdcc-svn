@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-   _divsint.c :- routine for signed int (16 bit) division. just calls
+   __divsint.c :- routine for signed int (16 bit) division. just calls
                  routine for unsigned division after sign adjustment
 
    Copyright (C) 1999, Sandeep Dutta . sandeep.dutta@usa.net
@@ -31,31 +31,31 @@
 #include <sdcc-lib.h>
 
 #if _SDCC_MANGLES_SUPPORT_FUNS
-unsigned unsigned _divuint (unsigned x, unsigned y);
+unsigned unsigned __divuint (unsigned x, unsigned y);
 #endif
 
 static void
-_divsint_dummy (void) __naked
+__divsint_dummy (void) __naked
 {
 	__asm
 
 	#define xl	dpl
 	#define xh	dph
 
-	.globl __divsint
+	.globl ___divsint
 
-	// _divsint_PARM_2 shares the same memory with _divuint_PARM_2
-	// and is defined in _divuint.c
+	// __divsint_PARM_2 shares the same memory with __divuint_PARM_2
+	// and is defined in __divuint.c
 #if defined(__SDCC_PARMS_IN_BANK1)
 	#define yl      (b1_0)
 	#define yh      (b1_1)
 #else
-	#define yl      (__divsint_PARM_2)
-	#define yh      (__divsint_PARM_2 + 1)
+	#define yl      (___divsint_PARM_2)
+	#define yh      (___divsint_PARM_2 + 1)
 #endif
-__divsint:
+___divsint:
 				; xh in dph
-				; yh in (__divsint_PARM_2 + 1)
+				; yh in (___divsint_PARM_2 + 1)
 
 	clr	F0 		; Flag 0 in PSW
 				; available to user for general purpose
@@ -89,7 +89,7 @@ a_not_negative:
 
 b_not_negative:
 
-	lcall	__divuint
+	lcall	___divuint
 
 	jnb	F0,not_negative
 

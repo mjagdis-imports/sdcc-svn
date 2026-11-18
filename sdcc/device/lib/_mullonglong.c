@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-   _mullonglong.c - routine for multiplication of 64 bit long long
+   __mullonglong.c - routine for multiplication of 64 bit long long
 
    Copyright (C) 2012, Philipp Klaus Krause . philipp@informatik.uni-frankfurt.de
 
@@ -48,7 +48,7 @@
 
 #if defined(__SDCC_s08) || defined(__SDCC_hc08)
 
-long long _mullonglong(long long ll, long long lr) __SDCC_NONBANKED
+long long __mullonglong(long long ll, long long lr) __SDCC_NONBANKED
 {
   unsigned long long ret = 0ull;
   unsigned char i, j, k;
@@ -82,7 +82,7 @@ long long _mullonglong(long long ll, long long lr) __SDCC_NONBANKED
 
 #else
 
-long long _mullonglong(long long x, long long y) __SDCC_NONBANKED
+long long __mullonglong(long long x, long long y) __SDCC_NONBANKED
 {
   long long result = 0ull;
   unsigned char i = sizeof(long long) * 8;

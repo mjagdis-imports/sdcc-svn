@@ -1,5 +1,5 @@
 ;--------------------------------------------------------------------------
-;  _divsint.s
+;  __divsint.s
 ;
 ;  Copyright (C) 2014-2021, Philipp Klaus Krause
 ;
@@ -26,11 +26,11 @@
 ;   might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-	.globl __divsint
+	.globl ___divsint
 
 	.area CODE
 
-__divsint:
+___divsint:
 	ld	a, xh
 	ldw	y, (#4, sp)
 	jrpl	y_nonnegative

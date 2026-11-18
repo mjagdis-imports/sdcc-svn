@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-   _mullong.c - routine for multiplication of 32 bit (unsigned) long
+   __mullong.c - routine for multiplication of 32 bit (unsigned) long
 
    Copyright (C) 1999, Sandeep Dutta . sandeep.dutta@usa.net
    Copyright (C) 1999, Jean Louis VERN jlvern@writeme.com
@@ -57,13 +57,13 @@
 #if defined(_MULLONG_ASM_SMALL) || defined(_MULLONG_ASM_SMALL_AUTO)
 
 void
-_mullong_dummy (void) __naked
+__mullong_dummy (void) __naked
 {
 	__asm
 
-__mullong:
+___mullong:
 
-	.globl __mullong
+	.globl ___mullong
 
 				; the result c will be stored in r4...r7
 	#define c0 r4
@@ -94,16 +94,16 @@ __mullong:
 	.area OSEG    (OVR,DATA)
 #endif
 
-__mullong_PARM_2:
+___mullong_PARM_2:
 
-	.globl __mullong_PARM_2
+	.globl ___mullong_PARM_2
 
 	.ds	4
 
-	b0 =  __mullong_PARM_2
-	b1 = (__mullong_PARM_2+1)
-	b2 = (__mullong_PARM_2+2)
-	b3 = (__mullong_PARM_2+3)
+	b0 =  ___mullong_PARM_2
+	b1 = (___mullong_PARM_2+1)
+	b2 = (___mullong_PARM_2+2)
+	b3 = (___mullong_PARM_2+3)
 
 #endif
 	.area CSEG    (CODE)
@@ -316,13 +316,13 @@ __mullong_PARM_2:
 #elif defined(_MULLONG_ASM_LARGE)
 
 void
-_mullong_dummy (void) __naked
+__mullong_dummy (void) __naked
 {
 	__asm
 
-__mullong:
+___mullong:
 
-	.globl __mullong
+	.globl ___mullong
 
 				; the result c will be stored in r4...r7
 	#define c0 r4
@@ -338,9 +338,9 @@ __mullong:
 #if !defined(__SDCC_PARMS_IN_BANK1)
 	.area XSEG    (XDATA)
 
-__mullong_PARM_2:
+___mullong_PARM_2:
 
-	.globl __mullong_PARM_2
+	.globl ___mullong_PARM_2
 
 	.ds	4
 #endif
@@ -362,7 +362,7 @@ __mullong_PARM_2:
 #if defined(__SDCC_PARMS_IN_BANK1)
 	mov	a,b1_0		; b0
 #else
-	mov	dptr,#__mullong_PARM_2
+	mov	dptr,#___mullong_PARM_2
 	movx	a,@dptr		; b0
 #endif
 	mul	ab		; a0 * b0
@@ -432,7 +432,7 @@ __mullong_PARM_2:
 #if defined(__SDCC_PARMS_IN_BANK1)
 	mov	a,b1_0		; b0
 #else
-	mov	dptr,#__mullong_PARM_2
+	mov	dptr,#___mullong_PARM_2
 	movx	a,@dptr		; b0
 #endif
 	mul	ab		; a2 * b0
@@ -496,13 +496,13 @@ __mullong_PARM_2:
 #elif defined(__SDCC_USE_XSTACK) && defined(__SDCC_STACK_AUTO)
 
 void
-_mullong_dummy (void) __naked
+__mullong_dummy (void) __naked
 {
 	__asm
 
-__mullong:
+___mullong:
 
-	.globl __mullong
+	.globl ___mullong
 
 				; the result c will be stored in r4...r7
 	#define c0 r4
@@ -678,7 +678,7 @@ union bil {
 // currently the original code without u fails with --xstack
 // it runs out of pointer registers
 long
-_mullong (long a, long b)
+__mullong (long a, long b)
 {
         union bil t, u;
 
@@ -710,7 +710,7 @@ _mullong (long a, long b)
    r2k and r3k have 16x16 hardware multiplication.
  */
 long
-_mullong (long a, long b)
+__mullong (long a, long b)
 {
   unsigned short i12;
 
@@ -734,7 +734,7 @@ _mullong (long a, long b)
 }
 #elif defined(__SDCC_pic14)
 long
-_mullong (long a, long b)
+__mullong (long a, long b)
 {
         union bil x;
         union bil y;
@@ -764,7 +764,7 @@ _mullong (long a, long b)
 }
 #else
 long
-_mullong (long a, long b)
+__mullong (long a, long b)
 {
         union bil t;
 

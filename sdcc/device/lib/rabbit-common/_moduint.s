@@ -26,18 +26,18 @@
 ;   might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-	.module __moduint
+	.module ___moduint
 	.include "config.inc"
 
 .area   _CODE
 
-.globl	__moduint
+.globl	___moduint
 
-__moduint:
+___moduint:
 	pop     iy
 	pop     de
 
-	call    __divu16
+	call    ___divu16
 
 	ex	de, hl
 

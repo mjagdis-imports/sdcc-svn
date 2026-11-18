@@ -1,5 +1,5 @@
 ;-------------------------------------------------------------------------
-;   _divulong.s - routine for 32 bit unsigned long division
+;   __divulong.s - routine for 32 bit unsigned long division
 ;
 ;   Copyright (C) 1998, Ullrich von Bassewitz
 ;   Copyright (C) 2022-2026, Gabriele Gorla
@@ -27,50 +27,50 @@
 ;   might be covered by the GNU General Public License.
 ;-------------------------------------------------------------------------
 
-	.module _divulong
+	.module __divulong
 	.include "config.inc"
 
 ;--------------------------------------------------------
 ; exported symbols
 ;--------------------------------------------------------
-	.globl __divulong_PARM_1
-	.globl __divulong_PARM_2
-	.globl __divslong_PARM_1
-	.globl __divslong_PARM_2
-	.globl __modulong_PARM_1
-	.globl __modulong_PARM_2
-	.globl __modslong_PARM_1
-	.globl __modslong_PARM_2
+	.globl ___divulong_PARM_1
+	.globl ___divulong_PARM_2
+	.globl ___divslong_PARM_1
+	.globl ___divslong_PARM_2
+	.globl ___modulong_PARM_1
+	.globl ___modulong_PARM_2
+	.globl ___modslong_PARM_1
+	.globl ___modslong_PARM_2
 	.globl _ldiv_PARM_1
 	.globl _ldiv_PARM_2
-	.globl __divulong
+	.globl ___divulong
 	.globl ___udivmod32
 
 ;--------------------------------------------------------
 ; overlayable function parameters in zero page
 ;--------------------------------------------------------
 	.area	OSEG    (PAG, OVR)
-__divulong_PARM_1:
-__divslong_PARM_1:
-__modulong_PARM_1:
-__modslong_PARM_1:
+___divulong_PARM_1:
+___divslong_PARM_1:
+___modulong_PARM_1:
+___modslong_PARM_1:
 _ldiv_PARM_1:
 	.ds 4
-__divulong_PARM_2:
-__divslong_PARM_2:
-__modulong_PARM_2:
-__modslong_PARM_2:
+___divulong_PARM_2:
+___divslong_PARM_2:
+___modulong_PARM_2:
+___modslong_PARM_2:
 _ldiv_PARM_2:
 	.ds 4
 
 ;--------------------------------------------------------
 ; local aliases
 ;--------------------------------------------------------
-	.define res0 "__divulong_PARM_1+0"
-	.define res1 "__divulong_PARM_1+1"
+	.define res0 "___divulong_PARM_1+0"
+	.define res1 "___divulong_PARM_1+1"
 	.define res2 "sdcc_vreg2"
 	.define res3 "sdcc_vreg3"
-	.define den  "__divulong_PARM_2"
+	.define den  "___divulong_PARM_2"
 	.define rem  "sdcc_vreg4"
 	
 ;--------------------------------------------------------
@@ -78,16 +78,16 @@ _ldiv_PARM_2:
 ;--------------------------------------------------------
 	.area CODE
 
-__divulong:
+___divulong:
 	jsr	___udivmod32
 	lda	*res0
 	ldx	*res1
 	rts
 
 ___udivmod32:
-        ldx	*__divulong_PARM_1+2
+        ldx	*___divulong_PARM_1+2
         stx	*res2
-        ldx	*__divulong_PARM_1+3
+        ldx	*___divulong_PARM_1+3
         stx	*res3
 
 	CLA

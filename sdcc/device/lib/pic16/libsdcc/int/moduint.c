@@ -31,7 +31,7 @@
 
 #define MSB_SET(x) ((x >> (8*sizeof(x)-1)) & 1) 
 
-unsigned int _moduint (unsigned int a, unsigned int b) _IL_REENTRANT
+unsigned int __moduint (unsigned int a, unsigned int b) _IL_REENTRANT
 {
   unsigned char count = 0;
     

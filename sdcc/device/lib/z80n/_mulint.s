@@ -33,11 +33,11 @@
 
 .area   _CODE
 
-.globl	__mulint
+.globl	___mulint
 
-__mulint:
-__mul16_HL_DE_to_DE::
-        ;; unsigned _mulint (unsigned m, unsigned n) __sdcccall(1);
+___mulint:
+___mul16_HL_DE_to_DE::
+        ;; unsigned __mulint (unsigned m, unsigned n) __sdcccall(1);
         ;;
         ;; 16-bit multiplication
         ;;

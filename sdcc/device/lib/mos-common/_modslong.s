@@ -1,5 +1,5 @@
 ;-------------------------------------------------------------------------
-;   _modslong.s - routine for remainder for 32 bit signed long division
+;   __modslong.s - routine for remainder for 32 bit signed long division
 ;
 ;   Copyright (C) 1998, Ullrich von Bassewitz
 ;   Copyright (C) 2022-2026, Gabriele Gorla
@@ -27,22 +27,22 @@
 ;   might be covered by the GNU General Public License.
 ;-------------------------------------------------------------------------
 
-	.module _modslong
+	.module __modslong
 
 ;--------------------------------------------------------
 ; exported symbols
 ;--------------------------------------------------------
-	.globl __modslong
+	.globl ___modslong
 	.include "config.inc"
 
 ;--------------------------------------------------------
 ; local aliases
 ;--------------------------------------------------------
-	.define res0 "__divslong_PARM_1+0"
-	.define res1 "__divslong_PARM_1+1"
+	.define res0 "___divslong_PARM_1+0"
+	.define res1 "___divslong_PARM_1+1"
 	.define res2 "sdcc_vreg2"
 	.define res3 "sdcc_vreg3"
-	.define den  "__divslong_PARM_2"
+	.define den  "___divslong_PARM_2"
 	.define rem  "sdcc_vreg4"
 	.define s1   "sdcc_vreg0"
 	.define s2   "sdcc_vreg1"
@@ -52,7 +52,7 @@
 ;--------------------------------------------------------
 	.area CODE
 
-__modslong:
+___modslong:
 	jsr	___sdivmod32
 	lda	*s1
 	bpl	pos

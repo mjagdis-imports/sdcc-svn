@@ -1,5 +1,5 @@
 ;-------------------------------------------------------------------------
-;   _divuchar.s - routine for 8 bit (unsigned char) division
+;   __divuchar.s - routine for 8 bit (unsigned char) division
 ;
 ;   Copyright (C) 2023-2026, Gabriele Gorla
 ;
@@ -26,13 +26,13 @@
 ;   might be covered by the GNU General Public License.
 ;-------------------------------------------------------------------------
 
-	.module _divuchar
+	.module __divuchar
 	.include "config.inc"
 
 ;--------------------------------------------------------
 ; exported symbols
 ;--------------------------------------------------------
-	.globl __divuchar   ; arguments in A and X, result in AX
+	.globl ___divuchar   ; arguments in A and X, result in AX
 	
 ;--------------------------------------------------------
 ; overlayable function parameters in zero page
@@ -48,9 +48,9 @@
 ;--------------------------------------------------------
 	.area CODE
 
-__divuchar:
-	stx	*__divuint_PARM_2
+___divuchar:
+	stx	*___divuint_PARM_2
 	ldx	#0x00
-	stx	*(__divuint_PARM_2 + 1)
-	jmp	__divuint
+	stx	*(___divuint_PARM_2 + 1)
+	jmp	___divuint
 

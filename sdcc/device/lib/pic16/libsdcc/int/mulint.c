@@ -38,7 +38,7 @@ union uu {
         unsigned int t;
 } ;
 
-int _mulint (int a, int b) _IL_REENTRANT
+int __mulint (int a, int b) _IL_REENTRANT
 {
   union uu x;
   union uu y;

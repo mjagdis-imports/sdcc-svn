@@ -31,7 +31,7 @@
 #define MSB_SET(x) ((x >> (8*sizeof(x)-1)) & 1)
 
 unsigned int
-_divuint (unsigned int a, unsigned int b) _IL_REENTRANT
+__divuint (unsigned int a, unsigned int b) _IL_REENTRANT
 {
   unsigned int reste = 0;
   unsigned char count = 16;

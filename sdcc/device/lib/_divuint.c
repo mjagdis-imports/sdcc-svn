@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-   _divuint.c - routine for unsigned int (16 bit) division
+   __divuint.c - routine for unsigned int (16 bit) division
 
    Copyright (C) 1999, Jean-Louis Vern <jlvern AT gmail.com>
 
@@ -33,7 +33,7 @@
 #define MSB_SET(x) ((x >> (8*sizeof(x)-1)) & 1)
 
 unsigned int
-_divuint (unsigned int x, unsigned int y) __SDCC_NONBANKED
+__divuint (unsigned int x, unsigned int y) __SDCC_NONBANKED
 {
   unsigned int reste = 0;
   unsigned char count = 16;

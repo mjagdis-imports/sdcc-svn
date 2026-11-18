@@ -1,5 +1,5 @@
 ;--------------------------------------------------------------------------
-;  _divuint.s
+;  __divuint.s
 ;
 ;  Copyright (c) 2023, Philipp Klaus Krause
 ;
@@ -26,13 +26,13 @@
 ;   might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-.globl __divuint
+.globl ___divuint
 
 .area CODE
 
-; _divuint (int x, int y)
+; __divuint (int x, int y)
 ; Return quotient in y, remainder in z.
-__divuint:
+___divuint:
 
 	clrw	z
 	ld	xl, #0x10

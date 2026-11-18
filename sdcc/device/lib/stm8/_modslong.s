@@ -1,5 +1,5 @@
 ;--------------------------------------------------------------------------
-;  _modslong.s
+;  __modslong.s
 ;
 ;  Copyright (C) 2014, Ben Shi
 ;
@@ -26,31 +26,31 @@
 ;   might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-	.globl __modslong
+	.globl ___modslong
 
 	.area CODE
-__modslong:
+___modslong:
 	ldw x, (#0x09, sp)
 	ldw y, (#0x07, sp)
-	jrpl __modslong_0
+	jrpl ___modslong_0
 	call __fast_long_neg
-__modslong_0:
+___modslong_0:
 	pushw x
 	pushw y
-__modslong_1:
+___modslong_1:
 	ldw x, (#0x09, sp)
 	ldw y, (#0x07, sp)
-	jrpl __modslong_2
+	jrpl ___modslong_2
 	call __fast_long_neg
-__modslong_2:
+___modslong_2:
 	pushw x
 	pushw y
-__modslong_3:
-	call __modulong
+___modslong_3:
+	call ___modulong
 	addw sp, #0x08
-__modslong_4:
+___modslong_4:
 	ld a, (#0x03, sp)
-	jrpl __modslong_5
+	jrpl ___modslong_5
 	call __fast_long_neg
-__modslong_5:
+___modslong_5:
 	ret

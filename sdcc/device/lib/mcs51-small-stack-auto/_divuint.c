@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-   _divuint.c - routine for unsigned int (16 bit) division
+   __divuint.c - routine for unsigned int (16 bit) division
 
    Copyright (C) 1999, Jean-Louis Vern <jlvern AT gmail.com>
 
@@ -31,13 +31,13 @@
 #include <sdcc-lib.h>
 
 static void
-_divuint_dummy (void) __naked
+__divuint_dummy (void) __naked
 {
 	__asm
 
-	.globl __divuint
+	.globl ___divuint
 
-__divuint:
+___divuint:
 
 	#define count   r2
 	#define reste_l r3

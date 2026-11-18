@@ -29,9 +29,9 @@
 
 .area   _CODE
 
-.globl	__mulint
+.globl	___mulint
 
-__mulint:
+___mulint:
         ld	c, l
         ld	b, h
 
@@ -45,7 +45,7 @@ __mulint:
 	;; de = less significant word of product
 	;;
 	;; Register used: AF,BC,DE,HL
-__mul16::
+___mul16::
 	xor	a,a
 	ld	l,a
 	or	a,b

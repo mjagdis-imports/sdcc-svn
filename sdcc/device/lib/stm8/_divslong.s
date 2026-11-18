@@ -1,5 +1,5 @@
 ;--------------------------------------------------------------------------
-;  _divslong.s
+;  __divslong.s
 ;
 ;  Copyright (C) 2014, Ben Shi
 ;
@@ -26,32 +26,32 @@
 ;   might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-	.globl __divslong
+	.globl ___divslong
 
 	.area CODE
-__divslong:
+___divslong:
 	ldw x, (#0x09, sp)
 	ldw y, (#0x07, sp)
-	jrpl __divslong_0
+	jrpl ___divslong_0
 	call __fast_long_neg
-__divslong_0:
+___divslong_0:
 	pushw x
 	pushw y
-__divslong_1:
+___divslong_1:
 	ldw x, (#0x09, sp)
 	ldw y, (#0x07, sp)
-	jrpl __divslong_2
+	jrpl ___divslong_2
 	call __fast_long_neg
-__divslong_2:
+___divslong_2:
 	pushw x
 	pushw y
-__divslong_3:
-	call __divulong
+___divslong_3:
+	call ___divulong
 	addw sp, #0x08
-__divslong_4:
+___divslong_4:
 	ld a, (#0x03, sp)
 	xor a, (#0x07, sp)
-	jrpl __divslong_5
+	jrpl ___divslong_5
 	call __fast_long_neg
-__divslong_5:
+___divslong_5:
 	ret

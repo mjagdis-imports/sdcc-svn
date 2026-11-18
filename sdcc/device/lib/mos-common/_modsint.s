@@ -1,5 +1,5 @@
 ;-------------------------------------------------------------------------
-;   _modsint.s - routine for division of 16 bit signed int
+;   __modsint.s - routine for division of 16 bit signed int
 ;
 ;   Copyright (C) 1998, Ullrich von Bassewitz
 ;   Copyright (C) 2022-2026, Gabriele Gorla
@@ -27,19 +27,19 @@
 ;   might be covered by the GNU General Public License.
 ;-------------------------------------------------------------------------
 
-	.module _modsint
+	.module __modsint
 	.include "config.inc"
 
 ;--------------------------------------------------------
 ; exported symbols
 ;--------------------------------------------------------
-	.globl __modsint
+	.globl ___modsint
 
 ;--------------------------------------------------------
 ; local aliases
 ;--------------------------------------------------------
 	.define res "sdcc_vreg0"
-	.define den "__divsint_PARM_2"
+	.define den "___divsint_PARM_2"
 	.define rem "sdcc_vreg2"
 	.define s1  "sdcc_vreg4"
 	.define s2  "sdcc_vreg5"
@@ -49,7 +49,7 @@
 ;--------------------------------------------------------
 	.area CODE
 
-__modsint:
+___modsint:
 	jsr	___sdivmod16
 	lda	*rem+0
 	ldx	*rem+1

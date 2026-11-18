@@ -4416,7 +4416,7 @@ genDiv (iCode * ic)
   int negated = 0;
   int leftVal = 0, rightVal = 0;
   int signedLits = 0;
-  char *functions[2][2] = { {"__divschar", "__divuchar"}, {"__modschar", "__moduchar"} };
+  char *functions[2][2] = { {"___divschar", "___divuchar"}, {"___modschar", "___moduchar"} };
   int op = 0;
 
   /* Division is a very lengthy algorithm, so it is better
@@ -4467,12 +4467,12 @@ genDiv (iCode * ic)
     {
       if ((!IS_UNSIGNED (operandType (right)) || rightVal < 0) && (!IS_UNSIGNED (operandType (left)) || leftVal < 0))
         {
-          /* Both operands are signed or negative, use _divschar
-           * instead of _divuchar */
+          /* Both operands are signed or negative, use __divschar
+           * instead of __divuchar */
           pushaop (AOP (right), 0);
           pushaop (AOP (left), 0);
 
-          /* call _divschar */
+          /* call __divschar */
           pic16_emitpcode (POC_CALL, pic16_popGetWithString (functions[op][0]));
 
           {
@@ -4551,7 +4551,7 @@ genDiv (iCode * ic)
           pushaop (AOP (left), 0);
         }
 
-      /* call _divuchar */
+      /* call __divuchar */
       pic16_emitpcode (POC_CALL, pic16_popGetWithString (functions[op][1]));
 
       {

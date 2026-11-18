@@ -1,5 +1,5 @@
 ;-------------------------------------------------------------------------
-;  _moduint.s - routine for unsigned int (16 bit) modulus
+;  __moduint.s - routine for unsigned int (16 bit) modulus
 ;
 ;  Copyright (C) 1999, Sandeep Dutta . sandeep.dutta@usa.net
 ;  Bug fixes by Martijn van Balen, aed@iae.nl
@@ -27,12 +27,12 @@
 ;  might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-	.module _moduint
+	.module __moduint
 	.include "config.inc"
 
 
-	.globl	__moduint
-	.globl __modint
+	.globl	___moduint
+	.globl ___modint
 
 .define bl      "r0"
 .define bh      "r1"
@@ -43,7 +43,7 @@
 
 	.area CSEG    (CODE)
 
-__moduint:
+___moduint:
 
 	ar0 = 0			; BUG register set is not considered
 	ar1 = 1
@@ -57,7 +57,7 @@ __moduint:
 
 
 
-__modint:			; entry point for __modsint
+___modint:			; entry point for ___modsint
 	mov	a,bl		; avoid endless loop
 	orl	a,bh
 	jz	div_by_0

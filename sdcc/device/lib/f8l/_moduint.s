@@ -1,5 +1,5 @@
 ;--------------------------------------------------------------------------
-;  _moduint.s
+;  __moduint.s
 ;
 ;  Copyright (c) 2024, Philipp Klaus Krause
 ;
@@ -26,16 +26,16 @@
 ;   might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-	.globl __moduint
-	.globl __divuint
+	.globl ___moduint
+	.globl ___divuint
 
 .area CODE
 
-; _moduint (int x, int y)
-__moduint:
+; __moduint (int x, int y)
+___moduint:
 
 	pushw	(2, sp)
-	call	#__divuint
+	call	#___divuint
 	ldw	y, x
 	addw	sp, #2
 	ret

@@ -1,5 +1,5 @@
 ;-------------------------------------------------------------------------
-;   _mullong.s - routine for multiplication of 32 bit (unsigned) long
+;   __mullong.s - routine for multiplication of 32 bit (unsigned) long
 ;
 ;   Copyright (C) 2025-2026, Gabriele Gorla
 ;
@@ -26,23 +26,23 @@
 ;   might be covered by the GNU General Public License.
 ;-------------------------------------------------------------------------
 
-	.module _mullong
+	.module __mullong
 	.include "config.inc"
 
 ;--------------------------------------------------------
 ; exported symbols
 ;--------------------------------------------------------
-	.globl __mullong_PARM_2
-	.globl __mullong_PARM_1
-	.globl __mullong
+	.globl ___mullong_PARM_2
+	.globl ___mullong_PARM_1
+	.globl ___mullong
 
 ;--------------------------------------------------------
 ; overlayable function parameters in zero page
 ;--------------------------------------------------------
 	.area	OSEG    (PAG, OVR)
-__mullong_PARM_1:
+___mullong_PARM_1:
 	.ds 4
-__mullong_PARM_2:
+___mullong_PARM_2:
 	.ds 4
 
 ;--------------------------------------------------------
@@ -58,7 +58,7 @@ __mullong_PARM_2:
 ;--------------------------------------------------------
 	.area CODE
 
-__mullong:
+___mullong:
 	CLX
 	stx     *res0
 	stx     *res1
@@ -67,79 +67,79 @@ __mullong:
 
 	ldy     #8
 loop0:
-	lsr	*__mullong_PARM_1+0
+	lsr	*___mullong_PARM_1+0
 	bcc	skip0
 	clc
 	lda	*res0
-	adc	*__mullong_PARM_2+0
+	adc	*___mullong_PARM_2+0
 	sta	*res0
 	lda	*res1
-	adc	*__mullong_PARM_2+1
+	adc	*___mullong_PARM_2+1
 	sta	*res1
 	lda	*res2
-	adc	*__mullong_PARM_2+2
+	adc	*___mullong_PARM_2+2
 	sta	*res2
 ;	lda	*res3
 	txa
-	adc	*__mullong_PARM_2+3
+	adc	*___mullong_PARM_2+3
 	tax
 ;	sta	*res3
 skip0:
-	asl	*__mullong_PARM_2+0
-	rol	*__mullong_PARM_2+1
-	rol	*__mullong_PARM_2+2
-	rol	*__mullong_PARM_2+3
+	asl	*___mullong_PARM_2+0
+	rol	*___mullong_PARM_2+1
+	rol	*___mullong_PARM_2+2
+	rol	*___mullong_PARM_2+3
 	dey
 	bne	loop0
 
         ldy     #8
 loop1:
-	lsr 	*__mullong_PARM_1+1
+	lsr 	*___mullong_PARM_1+1
 	bcc 	skip1
 	clc
 	lda 	*res1
-	adc	*__mullong_PARM_2+1
+	adc	*___mullong_PARM_2+1
 	sta 	*res1
 	lda 	*res2
-	adc 	*__mullong_PARM_2+2
+	adc 	*___mullong_PARM_2+2
 	sta 	*res2
 ;	lda 	*res3
 	txa
-	adc	*__mullong_PARM_2+3
+	adc	*___mullong_PARM_2+3
 ;	sta 	*res3
 	tax
 skip1:
-	asl	*__mullong_PARM_2+1
-	rol	*__mullong_PARM_2+2
-	rol	*__mullong_PARM_2+3
+	asl	*___mullong_PARM_2+1
+	rol	*___mullong_PARM_2+2
+	rol	*___mullong_PARM_2+3
 	dey
 	bne	loop1
     
 	ldy	#8
 loop2:
-	lsr	*__mullong_PARM_1+2
+	lsr	*___mullong_PARM_1+2
 	bcc	skip2
 	clc
 	lda	*res2
-	adc	*__mullong_PARM_2+2
+	adc	*___mullong_PARM_2+2
 	sta	*res2
 	txa
-	adc	*__mullong_PARM_2+3
+	adc	*___mullong_PARM_2+3
 	tax
 skip2:
-	asl	*__mullong_PARM_2+2
-	rol	*__mullong_PARM_2+3
+	asl	*___mullong_PARM_2+2
+	rol	*___mullong_PARM_2+3
 	dey
 	bne loop2
 
 	txa
 loop3:
-	lsr 	*__mullong_PARM_1+3
+	lsr 	*___mullong_PARM_1+3
 	bcc 	skip3
 	clc
-	adc 	*__mullong_PARM_2+3
+	adc 	*___mullong_PARM_2+3
 skip3:
-	asl 	*__mullong_PARM_2+3
+	asl 	*___mullong_PARM_2+3
 	bne 	loop3
 
 	sta 	*res3

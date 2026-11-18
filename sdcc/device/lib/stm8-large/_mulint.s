@@ -1,5 +1,5 @@
 ;--------------------------------------------------------------------------
-;  _mulint.s
+;  __mulint.s
 ;
 ;  Copyright (C) 2014-2021, Krzysztof Nikiel, Ben Shi, Philipp Klaus Krause
 ;
@@ -26,11 +26,11 @@
 ;   might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-.globl __mulint
+.globl ___mulint
 
 .area CODE
 
-__mulint:
+___mulint:
 	pushw	x
 
 	ld	a, (#7, sp)

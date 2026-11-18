@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-   _divslong.c - routine for division of 32 bit long
+   __divslong.c - routine for division of 32 bit long
 
    Copyright (C) 1999, Sandeep Dutta . sandeep.dutta@usa.net
 
@@ -30,7 +30,7 @@
 #include <sdcc-lib.h>
 
 #if _SDCC_MANGLES_SUPPORT_FUNS
-unsigned long _divulong (unsigned long x, unsigned long y);
+unsigned long __divulong (unsigned long x, unsigned long y);
 #endif
 
 /*   Assembler-functions are provided for:
@@ -53,7 +53,7 @@ unsigned long _divulong (unsigned long x, unsigned long y);
 #if defined _DIVSLONG_ASM_SMALL
 
 static void
-_divslong_dummy (void) __naked
+__divslong_dummy (void) __naked
 {
 	__asm
 
@@ -62,24 +62,24 @@ _divslong_dummy (void) __naked
 	#define x2	b
 	#define x3	r3
 
-	.globl __divslong
+	.globl ___divslong
 
-	// _divslong_PARM_2 shares the same memory with _divulong_PARM_2
-	// and is defined in _divulong.c
+	// __divslong_PARM_2 shares the same memory with __divulong_PARM_2
+	// and is defined in __divulong.c
 #if defined(__SDCC_PARMS_IN_BANK1)
 	#define y0      (b1_0)
 	#define y1      (b1_1)
 	#define y2      (b1_2)
 	#define y3      (b1_3)
 #else
-	#define y0      (__divslong_PARM_2)
-	#define y1      (__divslong_PARM_2 + 1)
-	#define y2      (__divslong_PARM_2 + 2)
-	#define y3      (__divslong_PARM_2 + 3)
+	#define y0      (___divslong_PARM_2)
+	#define y1      (___divslong_PARM_2 + 1)
+	#define y2      (___divslong_PARM_2 + 2)
+	#define y3      (___divslong_PARM_2 + 3)
 #endif
-__divslong:
+___divslong:
 				; x3 in acc
-				; y3 in (__divslong_PARM_2 + 3)
+				; y3 in (___divslong_PARM_2 + 3)
 	mov	x3,a		; save x3
 
 	clr	F0 		; Flag 0 in PSW
@@ -127,7 +127,7 @@ b_not_negative:
 
 	mov	a,x3		; restore x3 in acc
 
-	lcall	__divulong
+	lcall	___divulong
 
 	jnb	F0,not_negative
 
@@ -155,7 +155,7 @@ not_negative:
 #elif defined _DIVSLONG_ASM_SMALL_AUTO
 
 static void
-_divslong_dummy (void) __naked
+__divslong_dummy (void) __naked
 {
 	__asm
 
@@ -164,9 +164,9 @@ _divslong_dummy (void) __naked
 	#define x2	b
 	#define x3	r3
 
-	.globl __divslong
+	.globl ___divslong
 
-__divslong:
+___divslong:
 
 				; x3 in acc
 	mov	x3,a		; save x3
@@ -228,7 +228,7 @@ b_not_negative:
 	dec	r0
 	dec	r0		; r0 points to y0
 
-	lcall	__divlong
+	lcall	___divlong
 
 	jnb	F0,not_negative
 
@@ -256,7 +256,7 @@ not_negative:
 #else // _DIVSLONG_ASM
 
 long
-_divslong (long x, long y) __SDCC_NONBANKED
+__divslong (long x, long y) __SDCC_NONBANKED
 {
   long r;
 

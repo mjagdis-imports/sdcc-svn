@@ -32,18 +32,18 @@
 	.optsdcc -msm83 sdcccall(1)
 
         ;; Originally from GBDK by Pascal Felber.
-.globl	__divuschar
-.globl	__divsuchar
+.globl	___divuschar
+.globl	___divsuchar
 
         .area   _CODE
 
-__divuschar:
+___divuschar:
 	ld	c, a
 	ld	b, #0
 
 	jp	signexte
 
-__divsuchar:
+___divsuchar:
 	ld	d, #0
 
 	ld	c, a             ; Sign extend

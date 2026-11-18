@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-   _mullong.c - routine for multiplication of 32 bit (unsigned) long
+   __mullong.c - routine for multiplication of 32 bit (unsigned) long
 
    Copyright (C) 1999, Jean-Louis Vern <jlvern AT gmail.com>
    Copyright (C) 1999, Sandeep Dutta <sandeep.dutta AT ieee.org>
@@ -58,7 +58,7 @@ union bil {
                           |-------> only this side 32 x 32 -> 32
 */
 
-long _mullong (long a, long b) _IL_REENTRANT
+long __mullong (long a, long b) _IL_REENTRANT
 {
 #if 0
         union bil t;

@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-   _modslong.c - routine for modulus of 32 bit signed long
+   __modslong.c - routine for modulus of 32 bit signed long
 
    Copyright (C) 1999, Sandeep Dutta <sandeep.dutta AT usa.net>
 
@@ -28,13 +28,13 @@
 
 #include <sdcc-lib.h>
 
-unsigned long _modulong (unsigned long a, unsigned long b);
+unsigned long __modulong (unsigned long a, unsigned long b);
 
-long _modslong (long a, long b) _IL_REENTRANT
+long __modslong (long a, long b) _IL_REENTRANT
 {
   long r;
 
-  r = _modulong((a < 0 ? -a : a),
+  r = __modulong((a < 0 ? -a : a),
                 (b < 0 ? -b : b));
   if (a < 0)
     return -r;

@@ -30,13 +30,13 @@
 
 ; unsigned char x unsigned char multiplication is done by code generation.
 
-.globl	__mulsuchar
-.globl	__muluschar
-.globl	__mulschar
+.globl	___mulsuchar
+.globl	___muluschar
+.globl	___mulschar
 
 ; operands have different sign
 
-__muluschar:
+___muluschar:
 	; input: A_0 L_0
 	ld      e, l
 	ld	h, #0
@@ -44,14 +44,14 @@ __muluschar:
 
 	jr      signexte  ; signextended L_0
 
-__mulsuchar:
+___mulsuchar:
 	; input: A_0 L_0
 	ld	e, a
 	ld	h, #0
 
 	jr      signexte  ; signextend A_0
 
-__mulschar:
+___mulschar:
         ; input: A_0 L_0
         ld      e, l
         ld      l, a
@@ -66,5 +66,5 @@ signexte:
         sbc     a, a
         ld      d, a
 
-        jp      __mul16_HL_DE_to_DE
+        jp      ___mul16_HL_DE_to_DE
 

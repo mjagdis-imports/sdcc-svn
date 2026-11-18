@@ -1,4 +1,4 @@
-	.module _modsint
+	.module __modsint
 
 	.define a0	"dpl"
 	.define a1	"dph"
@@ -6,10 +6,10 @@
 	ar0 = 0			; BUG register set is not considered
 	ar1 = 1
 
-	.globl __modsint
+	.globl ___modsint
 
 	.area	CSEG (CODE)
-__modsint:
+___modsint:
 
 	clr	F0 		; Flag 0 in PSW
 				; available to user for general purpose
@@ -52,7 +52,7 @@ b_not_negative:
 	dec	r0
 	mov	ar0,@r0		; b0
 
-	lcall	__modint
+	lcall	___modint
 
 	jnb	F0,not_negative
 

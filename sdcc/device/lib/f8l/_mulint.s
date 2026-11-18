@@ -1,5 +1,5 @@
 ;--------------------------------------------------------------------------
-;  _mulint.s
+;  __mulint.s
 ;
 ;  Copyright (c) 2025, Philipp Klaus Krause
 ;
@@ -26,11 +26,11 @@
 ;   might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-.globl __mulint
+.globl ___mulint
 
 .area CODE
 
-__mulint:
+___mulint:
 	ld	zh, #16
 	clrw	x
 
