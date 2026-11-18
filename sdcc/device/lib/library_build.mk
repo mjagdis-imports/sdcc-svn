@@ -45,7 +45,7 @@ else
 endif
 
 clean:
-	rm -f *.rel *.sym *.lst *~ $(CLEANSPEC) *.dump* *.asm *.lib
+	rm -f *.o *.rel *.sym *.lst *~ $(CLEANSPEC) *.dump* *.asm *.lib
 
 distclean: clean
 	rm -f Makefile

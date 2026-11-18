@@ -161,16 +161,16 @@ am_libsdcc_a_OBJECTS = char/divschar.$(OBJEXT) char/divuchar.$(OBJEXT) \
 	fixed16x16/slong2fps16x16.$(OBJEXT) \
 	fixed16x16/uchar2fps16x16.$(OBJEXT) \
 	fixed16x16/uint2fps16x16.$(OBJEXT) \
-	fixed16x16/ulong2fps16x16.$(OBJEXT) ../../_fs2schar.$(OBJEXT) \
-	../../_fs2sint.$(OBJEXT) ../../_fs2slong.$(OBJEXT) \
-	../../_fs2uchar.$(OBJEXT) ../../_fs2uint.$(OBJEXT) \
-	../../_fs2ulong.$(OBJEXT) ../../_fsadd.$(OBJEXT) \
-	../../_fsdiv.$(OBJEXT) ../../_fseq.$(OBJEXT) \
-	../../_fslt.$(OBJEXT) ../../_fsmul.$(OBJEXT) \
-	../../_fsneq.$(OBJEXT) ../../_fssub.$(OBJEXT) \
-	../../_schar2fs.$(OBJEXT) ../../_sint2fs.$(OBJEXT) \
-	../../_slong2fs.$(OBJEXT) ../../_uchar2fs.$(OBJEXT) \
-	../../_uint2fs.$(OBJEXT) ../../_ulong2fs.$(OBJEXT) \
+	fixed16x16/ulong2fps16x16.$(OBJEXT) ../../__fs2schar.$(OBJEXT) \
+	../../__fs2sint.$(OBJEXT) ../../__fs2slong.$(OBJEXT) \
+	../../__fs2uchar.$(OBJEXT) ../../__fs2uint.$(OBJEXT) \
+	../../__fs2ulong.$(OBJEXT) ../../__fsadd.$(OBJEXT) \
+	../../__fsdiv.$(OBJEXT) ../../__fseq.$(OBJEXT) \
+	../../__fslt.$(OBJEXT) ../../__fsmul.$(OBJEXT) \
+	../../__fsneq.$(OBJEXT) ../../__fssub.$(OBJEXT) \
+	../../__schar2fs.$(OBJEXT) ../../__sint2fs.$(OBJEXT) \
+	../../__slong2fs.$(OBJEXT) ../../__uchar2fs.$(OBJEXT) \
+	../../__uint2fs.$(OBJEXT) ../../__ulong2fs.$(OBJEXT) \
 	gptr/gptrget1.$(OBJEXT) gptr/gptrget2.$(OBJEXT) \
 	gptr/gptrget3.$(OBJEXT) gptr/gptrget4.$(OBJEXT) \
 	gptr/gptrload.$(OBJEXT) gptr/gptrput1.$(OBJEXT) \

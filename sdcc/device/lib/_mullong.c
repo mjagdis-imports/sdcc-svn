@@ -37,8 +37,6 @@ struct some_struct {
 	short a ;
 	char b;
 	long c ;};
-	
-#include <stdbit.h>
 
 #if __STDC_ENDIAN_NATIVE__ == __STDC_ENDIAN_BIG__
 union bil {
@@ -54,10 +52,6 @@ union bil {
         unsigned long l;
         struct { unsigned char b0; unsigned short i12; unsigned char b3;} bi;
 } ;
-#endif
-
-#if defined(__SDCC)
- #include <sdcc-lib.h>
 #endif
 
 #define bcast(x) ((union bil _AUTOMEM *)&(x))

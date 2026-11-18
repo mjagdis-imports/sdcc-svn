@@ -1,3 +1,13 @@
+2026-11-18 Gabriele Gorla <gorlik@yahoo.com>
+
+	* device/lib/_mulint.c,
+	  device/lib/_mullong.c,
+	  device/lib/common_files.mk,
+	  device/lib/library_build.mk,
+	  device/lib/pic16/libsdcc/Makefile.in,
+	  device/lib/pic14/libsdcc/__fsadd.c:
+	  Correct pic library build.
+
 2026-11-17 Gabriele Gorla <gorlik@yahoo.com>
 
 	* device/lib/pic14/Makefile.common,
