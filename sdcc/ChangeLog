@@ -2,6 +2,10 @@
 
 	* device/lib/_mullong.c:
 	  Improve 32x32->32 multiplication for targets where we have efficient 16x16->32 multiplication.
+	* device/include/string.h,
+	  device/lib/z80-common/strcmp.s,
+	  device/lib/rabbit-common/strcmp.s:
+	  Improve strcmp for some z80-related ports.
 
 2026-11-19 Philipp Klaus Krause <philipp@colecovision.eu>
 

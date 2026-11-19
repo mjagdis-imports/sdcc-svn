@@ -34,21 +34,20 @@
 	.globl _strcmp
 
 _strcmp:
-	ld	c, l
-	ld	b, h
 	ex	de, hl
+	dec	hl
 loop:
-	ld	a, (bc)
+	inc	hl
+	ld	a, (de)
+	or	a, a
+	jr	z, return
+	cp	a, (hl)
+	inc	de
+	jr	z, loop
+return:
 	sub	a, (hl)
 	ld	e, a
 	sbc	a, a
 	ld	d, a
-	or	a, e
-	ret	nz
-	ld	a, (hl)
-	or	a, a
-	ret	z
-	inc	hl
-	inc	bc
-	jp	loop
+	ret
 

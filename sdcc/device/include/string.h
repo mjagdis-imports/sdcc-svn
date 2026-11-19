@@ -123,10 +123,24 @@ extern char *strncat (char * dest, const char *src, size_t n);
 
 // Comparison functions (ISo C23 7.28.4)
 extern int memcmp (const void *s1, const void *_NEAR s2, _NEAR size_t n);
+#if defined(__SDCC_z80) || defined (__SDCC_z80n) || defined(__SDCC_z180) || defined(__SDCC_r800)
+#if __STDC_VERSION__ >= 199901L
+extern int strcmp (const char s1[static 1], const char s2[static 1]) __preserves_regs(c, b, iyl, iyh);
+#else
+extern int strcmp (const char *s1, const char *_NEAR s2) __preserves_regs(c, b, iyl, iyh);
+#endif
+#elif defined(__SDCC_r2k) || defined (__SDCC_r2ka) || defined(__SDCC_r3ka) || defined(__SDCC_r4k) || defined(__SDCC_r5k) || defined(__SDCC_r6k)
+#if __STDC_VERSION__ >= 199901L
+extern int strcmp (const char s1[static 1], const char s2[static 1]) __preserves_regs(c, b);
+#else
+extern int strcmp (const char *s1, const char *_NEAR s2) __preserves_regs(c, b);
+#endif
+#else
 #if __STDC_VERSION__ >= 199901L
 extern int strcmp (const char s1[static 1], const char s2[static 1]);
 #else
 extern int strcmp (const char *s1, const char *_NEAR s2);
+#endif
 #endif
 #define strcoll(s1, s2) strcmp(s1, s2)
 /*int strcoll(const char *s1, const char *s2) {return strcmp(s1, s2);}*/
