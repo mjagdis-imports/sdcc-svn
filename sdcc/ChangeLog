@@ -1,5 +1,10 @@
 2026-11-19 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* device/lib/_mullong.c:
+	  Improve 32x32->32 multiplication for targets where we have efficient 16x16->32 multiplication.
+
+2026-11-19 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* device/lib/_mulint.c,
 	  device/lib/_mullong.c:
 	  Fix missing stdbit.h include in multiplication support routines.

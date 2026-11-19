@@ -120,7 +120,12 @@ __mullong (long a, long b) __SDCC_NONBANKED
   bcast(a)->i.hi *= bcast(b)->i.lo;
   bcast(a)->i.hi += bcast(b)->i.hi * bcast(a)->i.lo;
 
-  /* only (a->i.lo * b->i.lo) 16x16->32 to do. asm? */
+  // only (a->i.lo * b->i.lo) 16x16->32 left to do.
+
+#if defined(__SDCC_z80) || defined(__SDCC_r4k) || defined(__SDCC_r5k) || defined(__SDCC_r6k) || defined(__SDCC_r800) // Do it as a single 16x16->32 multiplication if that is cheaper than four 8x8->16 on the target.
+  b = (unsigned long)(bcast(a)->i.lo) * (unsigned long)(bcast(b)->i.lo); // Needs target support! If the target does not have support for such multiplications, sdcc will use a 32x32->32 multiplication here, i.e. just recurse into this very function.
+  bcast(a)->i.lo = 0;
+#else // Do it via 8x8->16 multiplications
   bcast(a)->i.hi += bcast(a)->b.b1 * bcast(b)->b.b1;
 
   i12 = bcast(b)->b.b0 * bcast(a)->b.b1;
@@ -132,6 +137,7 @@ __mullong (long a, long b) __SDCC_NONBANKED
   bcast(a)->i.lo  = bcast(a)->b.b0 * bcast(b)->b.b0;
 
   bcast(b)->bi.b0 = 0;
+#endif
 
   return a + b;
 }
