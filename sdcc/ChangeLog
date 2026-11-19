@@ -1,3 +1,9 @@
+2026-11-19 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* device/lib/_mulint.c,
+	  device/lib/_mullong.c:
+	  Fix missing stdbit.h include in multiplication support routines.
+
 2026-11-18 Gabriele Gorla <gorlik@yahoo.com>
 
 	* device/lib/_mulint.c,

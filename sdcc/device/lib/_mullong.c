@@ -32,6 +32,7 @@
 
 #include <sdcc-lib.h>
 
+#include <stdbit.h>
 
 struct some_struct {
 	short a ;

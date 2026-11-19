@@ -28,6 +28,8 @@
 
 #include <sdcc-lib.h>
 
+#include <stdbit.h>
+
 #if __STDC_ENDIAN_NATIVE__ == __STDC_ENDIAN_BIG__
 union uu {
 	struct { unsigned char hi, lo; } s;
