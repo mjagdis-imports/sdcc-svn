@@ -1,3 +1,37 @@
+2026-11-19 Gabriele Gorla <gorlik@yahoo.com>
+
+	* device/include/asm/pic14/features.h,
+	  device/include/pic14/stdlib.h,
+	  support/regression/ports/pic14/spec.mk,
+	  support/regression/tests/uabs.c,
+	  device/include/pic14/stdbit.h:
+	  Enable uabs and ulabs. Disable unimplemented long long in pic14 headers.
+	* device/lib/pic14/Makefile.common,
+	  device/lib/pic14/Makefile.in,
+	  device/lib/pic14/aclocal.m4,
+	  device/lib/pic14/libc/Makefile.am,
+	  device/lib/pic14/libc/Makefile.in,
+	  device/lib/pic14/libm/Makefile.in,
+	  device/lib/pic14/libsdcc/enhanced/Makefile.in,
+	  device/lib/pic14/libsdcc/enhanced-no-xinst/Makefile.in,
+	  device/lib/pic14/libsdcc/regular/Makefile.in:
+	  Add divmixchar and modmixchar to the pic14 build.
+
+2026-11-19 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* device/lib/_mullong.c:
+	  Improve 32x32->32 multiplication for targets where we have efficient 16x16->32 multiplication.
+	* device/include/string.h,
+	  device/lib/z80-common/strcmp.s,
+	  device/lib/rabbit-common/strcmp.s:
+	  Improve strcmp for some z80-related ports.
+
+2026-11-19 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* device/lib/_mulint.c,
+	  device/lib/_mullong.c:
+	  Fix missing stdbit.h include in multiplication support routines.
+
 2026-11-18 Gabriele Gorla <gorlik@yahoo.com>
 
 	* device/include/asm/pic14/features.h,

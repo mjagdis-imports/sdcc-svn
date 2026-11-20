@@ -77,12 +77,12 @@ libc_a_SOURCES += wcstombs.c
 libc_a_SOURCES += wctomb.c
 
 # string.h
-libc_a_SOURCES += _memchr.c
-libc_a_SOURCES += _memcmp.c
+libc_a_SOURCES += memchr.c
+libc_a_SOURCES += memcmp.c
 libc_a_SOURCES += __memcpy.c
 libc_a_SOURCES += memcpy.c
 libc_a_SOURCES += memmove.c
-libc_a_SOURCES += _memset.c
+libc_a_SOURCES += memset.c
 libc_a_SOURCES += strcat.c
 libc_a_SOURCES += strchr.c
 libc_a_SOURCES += strcmp.c
@@ -96,8 +96,8 @@ libc_a_SOURCES += strncpy.c
 libc_a_SOURCES += strpbrk.c
 libc_a_SOURCES += strrchr.c
 libc_a_SOURCES += strsep.c
-libc_a_SOURCES += _strspn.c
-libc_a_SOURCES += _strstr.c
+libc_a_SOURCES += strspn.c
+libc_a_SOURCES += strstr.c
 libc_a_SOURCES += strtok.c
 libc_a_SOURCES += strxfrm.c
 
