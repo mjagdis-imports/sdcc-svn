@@ -2,8 +2,11 @@ set output "stdcbench-mcs51-score.svg"
 set terminal svg size 640,480
 set style data lines
 set key bottom right
-set xlabel "revision"
+set xlabel "SDCC revision"
 set ylabel "stdcbench score"
+
+set title "stdcbench on C8051 V2.1 board (C8051 at 98 MHz)"
+show title
 
 # Configure arrow length (to make the plot look nice)
 arrowlength = 1

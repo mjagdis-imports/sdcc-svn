@@ -11,18 +11,18 @@
 # 4.4.0: 14648
 # 4.5.0: 15246
 # 4.6.0: 16640
-# Broken: 8984-9000, 9104 (bug #2280), 9106-9114 (whetstone build segfaults), 9379-9418 (SDCC build fails), 9424 (library build fails) 9477 (SDCC build fails), 9891-9946 (stdcbench build fails), 9958-10147 (Dhrystone z80 build fails) 10233-10270 (stdcbench build segfaults), 10185-10340 (stdcbench build segfaults). 10345-10668 (sdcpp build fails). 10408 (stdcbench build segfaults). 10426-10462 (coremark build fails) 10682 (library build fails for mcs51) 11952 (library build fails). 13699 (sdcpp build fails). 14225-14238 (sdcc build fails), 14400 (build fails). 14463 (stm8 lib build fails)m 14464 (coremark build fails for z80). 16233-16331 (benchmarks issues on R4K).
+# Broken: 8984-9000, 9104 (bug #2280), 9106-9114 (whetstone build segfaults), 9379-9418 (SDCC build fails), 9424 (library build fails) 9477 (SDCC build fails), 9891-9946 (stdcbench build fails), 9958-10147 (Dhrystone z80 build fails) 10233-10270 (stdcbench build segfaults), 10185-10340 (stdcbench build segfaults). 10345-10668 (sdcpp build fails). 10408 (stdcbench build segfaults). 10426-10462 (coremark build fails) 10682 (library build fails for mcs51) 11822 (z80 stdcbench hangs) 11952 (library build fails). 12001 (z80 stdcbench hangs) 13699 (sdcpp build fails). 14225-14238 (sdcc build fails), 14400 (build fails). 14463 (stm8 lib build fails)m 14464 (coremark build fails for z80). 16233-16331 (benchmarks issues on R4K). 17150 (mcs51 Dhrystone hangs) 17201 (sdbinutils fail to build) 17205- )inconsistent state during library path changes)
 # Build of large-stack-auto lib for mcs51 was enabled in 9521.
 
-REVISIONS_R4K2 = 16340 16351 16354 16379 16400 16474 16532 16640 16642 16671 16700 16726 16753 16800 17000 17032 17034 17035 17036 17043 17050
+REVISIONS_R4K2 = 16340 16351 16354 16379 16400 16474 16532 16640 16642 16671 16700 16726 16753 16800 17000 17032 17034 17035 17036 17043 17050 17123 17201 17232 17233 17234
 REVISIONS_R4K1 = 15725 15768 15890 15891 15944 15945 15957 16016 16053 16153 16176 16220
 REVISIONS_R4K = $(REVISIONS_R4K1) $(REVISIONS_R4K2)
-REVISIONS_R3KA_WHETSTONE = 12891 12900 12969 13131 13200 13300 13495 13689 13709 13748 13772 13800 13804 13813 13825 13845 13885 13900 14000 14184 14208 14211 14246 14248 14253 14300 14346 14370 14398 14405 14443 14448 14453 14472 14510 14528 14648 14650 14710 14738 14817 14889 14955 14958 14996 15015 15022 15029 15032 15037 15060 15093 15104 15117 15118 15119 15172 15240 15246 15317 15418 15435 15451 15486 15550 15580 15669 15724 $(REVISIONS_R4K1) 16233 16305 16311 $(REVISIONS_R4K2)
+REVISIONS_R3KA_WHETSTONE = 12891 12900 12969 13131 13200 13300 13495 13689 13709 13748 13772 13800 13804 13813 13825 13845 13885 13900 14000 14184 14208 14211 14246 14248 14253 14300 14346 14370 14398 14405 14443 14448 14453 14472 14510 14528 14648 14650 14710 14738 14790 14792 14795 14808 14817 14889 14955 14958 14996 15015 15022 15029 15032 15037 15060 15093 15104 15117 15118 15119 15172 15240 15246 15317 15418 15435 15451 15486 15550 15580 15669 15724 $(REVISIONS_R4K1) 16233 16305 16311 $(REVISIONS_R4K2)
 REVISIONS_R3KA_STDCBENCH_POST = 12392 12415 12430 12450 12464 12488 12495 12508 12642 12673 12689 12692 12746 12784 12795 12827 12862 12875  $(REVISIONS_R3KA_WHETSTONE)
 # Bug #3216 resulted in wrong r3ka stdcbench scores for 12100-12243. For 12121-12300, Coremark fails for z80. For 14221-14224. Whetstone fails for mcs51.
-REVISIONS_R3KA_STDCBENCH = 12001 12056 12085 12098 $(REVISIONS_R3KA_STDCBENCH_POST) # Bug #3216 resulted in wrong r3ka stdcbench scores for 12100-12243.
-REVISIONS_R3KA = 12001 12056 12085 12098 12100 12102 12106 12109 12114 $(REVISIONS_R3KA_STDCBENCH_POST) # Earlier than 11919 doesn't have a default crt0 that works for RCM boards. For 11919 and 11972, Dhrystone hangs. For 12121-12300, Coremark fails for z80. 
-REVISIONS_MCS51 = 9521 9540 9550 9568 9581 9589 9596 9601 9602 9603 9604 9618 9624 9632 9635 9636 9637 9638 9640 9645 9646 9649 9651 9653 9654 9659 9662 9664 9665 9666 9679 9707 9730 9740 9747 9751 9761 9764 9765 9766 9767 9773 9784 9790 9791 9793 9797 9803 9807 9808 9815 9818 9819 9820 9830 9832 9836 9879 9949 9953 9955 9956 9961 10163 10165 10167 10174 10181 10182 10775 10782 10786 10787 10788 10790 10800 10900 10960 10974 11087 11100 11150 11214 11260 11330 11335 11371 11435 11438 11447 11507 11509 11533 11586 11614 11615 11625 11630 11631 11637 11638 11722 11822 $(REVISIONS_R3KA)
+REVISIONS_R3KA_STDCBENCH = 12056 12085 12098 $(REVISIONS_R3KA_STDCBENCH_POST) # Bug #3216 resulted in wrong r3ka stdcbench scores for 12100-12243.
+REVISIONS_R3KA = 12056 12085 12098 12100 12102 12106 12109 12114 $(REVISIONS_R3KA_STDCBENCH_POST) # Earlier than 11919 doesn't have a default crt0 that works for RCM boards. For 11919 and 11972, Dhrystone hangs. For 12121-12300, Coremark fails for z80. 
+REVISIONS_MCS51 = 9521 9540 9550 9568 9581 9589 9596 9601 9602 9603 9604 9618 9624 9632 9635 9636 9637 9638 9640 9645 9646 9649 9651 9653 9654 9659 9662 9664 9665 9666 9679 9707 9730 9740 9747 9751 9761 9764 9765 9766 9767 9773 9784 9790 9791 9793 9797 9803 9807 9808 9815 9818 9819 9820 9830 9832 9836 9879 9949 9953 9955 9956 9961 10163 10165 10167 10174 10181 10182 10775 10782 10786 10787 10788 10790 10800 10900 10960 10974 11087 11100 11150 11214 11260 11330 11335 11371 11435 11438 11447 11507 11509 11533 11586 11614 11615 11625 11630 11631 11637 11638 11722 $(REVISIONS_R3KA)
 REVISIONS = 9105 9120 9124 9127 9138 9157 9171 9175 9182 9187 9191 9193 9207 9208 9218 9233 9256 9275 9291 9307 9311 9319 9354 9376 9438 9442 9445 9452 9461 9478 9487 9492 9493 9498 $(REVISIONS_MCS51)
 
 BENCHMARKS = whetstone dhrystone coremark stdcbench
@@ -35,7 +35,7 @@ TARGETS = stm8 mcs51 r3ka r4k z80
 STM8_TTY = /dev/ttyUSB1
 MCS51_TTY = /dev/ttyUSB2
 R3KA_TTY = /dev/ttyUSB3
-R4K_TTY = /dev/ttyUSB4
+R4K_TTY = /dev/ttyUSB3
 Z80_TTY = /dev/ttyUSB0
 
 COMPILERS = $(foreach revision, $(REVISIONS), sdcc-$(revision)/bin/sdcc)
@@ -430,7 +430,7 @@ whetstone-r4k-scoretable: $(BENCHMARKS_WHETSTONE_R4K_SCORES)
 
 whetstone-z80-scoretable: $(BENCHMARKS_WHETSTONE_Z80_SCORES)
 	echo "Revision size speed default" > $@
-	for r in $(REVISIONS_Z80); do \
+	for r in $(REVISIONS); do \
 		SIZE_SIZE=`cat whetstone-z80-size-$$r/score`; \
 		SIZE_SPEED=`cat whetstone-z80-speed-$$r/score`; \
 		SIZE_DEFAULT=`cat whetstone-z80-default-$$r/score `; \
@@ -475,7 +475,7 @@ dhrystone-r4k-scoretable: $(BENCHMARKS_DHRYSTONE_R4K_SCORES)
 
 dhrystone-z80-scoretable: $(BENCHMARKS_DHRYSTONE_Z80_SCORES)
 	echo "Revision size speed default" > $@
-	for r in $(REVISIONS_Z80); do \
+	for r in $(REVISIONS); do \
 		SIZE_SIZE=`cat dhrystone-z80-size-$$r/score`; \
 		SIZE_SPEED=`cat dhrystone-z80-speed-$$r/score`; \
 		SIZE_DEFAULT=`cat dhrystone-z80-default-$$r/score `; \
@@ -511,7 +511,7 @@ coremark-r4k-scoretable: $(BENCHMARKS_COREMARK_R4K_SCORES)
 
 coremark-z80-scoretable: $(BENCHMARKS_COREMARK_Z80_SCORES)
 	echo "Revision size speed default" > $@
-	for r in $(REVISIONS_Z80); do \
+	for r in $(REVISIONS); do \
 		SIZE_SIZE=`cat coremark-z80-size-$$r/score`; \
 		SIZE_SPEED=`cat coremark-z80-speed-$$r/score`; \
 		SIZE_DEFAULT=`cat coremark-z80-default-$$r/score `; \
@@ -556,7 +556,7 @@ stdcbench-r4k-scoretable: $(BENCHMARKS_STDCBENCH_R4K_SCORES)
 
 stdcbench-z80-scoretable: $(BENCHMARKS_STDCBENCH_Z80_SCORES)
 	echo "Revision size speed default" > $@
-	for r in $(REVISIONS_Z80); do \
+	for r in $(REVISIONS); do \
 		SIZE_SIZE=`cat stdcbench-z80-size-$$r/score`; \
 		SIZE_SPEED=`cat stdcbench-z80-speed-$$r/score`; \
 		SIZE_DEFAULT=`cat stdcbench-z80-default-$$r/score `; \
@@ -577,7 +577,12 @@ $(BENCHMARKS_3000): %/image.ihx: $$(BENCHMARK)-$$(TARGET) sdcc-$$(REVISION)/bin/
 	cp --reflink=auto -r $(BENCHMARK)-$(TARGET) $(BENCHMARK)-$(TARGET)-$(GOAL)-$(REVISION)
 	if [ "$(TARGET)" = "mcs51" ] ; \
 	then \
-		cd $(BENCHMARK)-$(TARGET)-$(GOAL)-$(REVISION) && $(MAKE) SDCC="../sdcc-$(REVISION)/bin/sdcc" SDCCFLAGS="$(SDCCFLAGS) --nostdinc -I../sdcc-$(REVISION)/device/include -I../sdcc-$(REVISION)/device/include/$(TARGET) -L ../sdcc-$(REVISION)/device/lib/build/large-stack-auto"; \
+		if [ "$(REVISION)" < "17128" ] ; \
+		then \
+			cd $(BENCHMARK)-$(TARGET)-$(GOAL)-$(REVISION) && $(MAKE) SDCC="../sdcc-$(REVISION)/bin/sdcc" SDCCFLAGS="$(SDCCFLAGS) --nostdinc -I../sdcc-$(REVISION)/device/include -I../sdcc-$(REVISION)/device/include/$(TARGET) -L ../sdcc-$(REVISION)/device/lib/build/large-stack-auto"; \
+		else \
+			cd $(BENCHMARK)-$(TARGET)-$(GOAL)-$(REVISION) && $(MAKE) SDCC="../sdcc-$(REVISION)/bin/sdcc" SDCCFLAGS="$(SDCCFLAGS) --nostdinc -I../sdcc-$(REVISION)/device/include -I../sdcc-$(REVISION)/device/include/$(TARGET) -L ../sdcc-$(REVISION)/device/lib/build/mcs51-large-stack-auto"; \
+		fi; \
 	else \
 		cd $(BENCHMARK)-$(TARGET)-$(GOAL)-$(REVISION) && $(MAKE) SDAS="../sdcc-$(REVISION)/bin/sdas$(TARGET)" SDCC="../sdcc-$(REVISION)/bin/sdcc" SDCCFLAGS="$(SDCCFLAGS) --nostdinc -I../sdcc-$(REVISION)/device/include -L ../sdcc-$(REVISION)/device/lib/build/$(TARGET)"; \
 	fi
@@ -618,8 +623,9 @@ $(BENCHMARKS_DHRYSTONE_R4K_SCORES): %/score: %/image.ihx
 $(BENCHMARKS_DHRYSTONE_Z80_SCORES): %/score: %/image.ihx
 	./execute_benchmark-z80 $(Z80_TTY) $< | sed -e "s/Dhrystones per Second: //" > $@
 
+# 100 Iterations, 1000 ticks per second.
 $(BENCHMARKS_COREMARK_STM8_SCORES): %/score: %/image.ihx
-	echo "scale=3;" 60000 / `./execute_benchmark-stm8 $(STM8_TTY) $< | sed -e "s/Total ticks : //"` | bc > $@
+	echo "scale=3;" 100000 / `./execute_benchmark-stm8 $(STM8_TTY) $< | sed -e "s/Total ticks : //"` | bc > $@
 
 $(BENCHMARKS_COREMARK_R3KA_SCORES): %/score: %/image.ihx
 	echo "scale=3;" 1966080 / `./execute_benchmark-r3ka $(R3KA_TTY) $< | sed -e "s/Total ticks : //"` | bc > $@
@@ -627,8 +633,9 @@ $(BENCHMARKS_COREMARK_R3KA_SCORES): %/score: %/image.ihx
 $(BENCHMARKS_COREMARK_R4K_SCORES): %/score: %/image.ihx
 	echo "scale=3;" 1966080 / `./execute_benchmark-r4k $(R4K_TTY) $< | sed -e "s/Total ticks : //"` | bc > $@
 
+# 20 Iterations, 100 ticks per second.
 $(BENCHMARKS_COREMARK_Z80_SCORES): %/score: %/image.ihx
-	echo "scale=3;" 1966080 / `./execute_benchmark-z80 $(Z80_TTY) $< | sed -e "s/Total ticks : //"` | bc > $@
+	echo "scale=3;" 2000 / `./execute_benchmark-z80 $(Z80_TTY) $< | sed -e "s/Total ticks : //"` | bc > $@
 
 $(BENCHMARKS_STDCBENCH_STM8_SCORES): %/score: %/image.ihx
 	./execute_benchmark-stm8 $(STM8_TTY) $< | sed -e "s/stdcbench final score: //" > $@

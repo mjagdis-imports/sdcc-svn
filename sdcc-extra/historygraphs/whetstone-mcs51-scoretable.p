@@ -2,6 +2,9 @@
 set output "whetstone-mcs51-score.svg"
 datafile = "whetstone-mcs51-scoretable"
 
+set title "Whetstone on C8051 V2.1 board (C8051 at 98 MHz)"
+show title
+
 # Configure arrow length (to make the plot look nice)
 arrowlength = 1
 

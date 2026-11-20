@@ -5,10 +5,15 @@ datafile = "dhrystone-stm8-scoretable"
 # Configure arrow length (to make the plot look nice)
 arrowlength = 500
 
-set arrow from 9256, 4225+arrowlength to 9256, 4225
-set label "3.5.0" at 9256, 4225+arrowlength
-set arrow from 9618, 4538+arrowlength to 9618, 4538
-set label "3.6.0" at 9618, 4538+arrowlength
+sdcc_3_5_0_revision = 9256
+sdcc_3_5_0_score = 4225
+sdcc_3_6_0_revision = 9618
+sdcc_3_6_0_score = 4538
+
+set arrow from sdcc_3_5_0_revision, sdcc_3_5_0_score+arrowlength to sdcc_3_5_0_revision, sdcc_3_5_0_score
+set label "3.5.0" at sdcc_3_5_0_revision, sdcc_3_5_0_score+arrowlength
+set arrow from sdcc_3_6_0_revision, sdcc_3_6_0_score+arrowlength to sdcc_3_6_0_revision, sdcc_3_6_0_score
+set label "3.6.0" at sdcc_3_6_0_revision, sdcc_3_6_0_score+arrowlength
 set arrow from 10233, 10233+arrowlength to 10233, 10233
 set label "3.7.0" at 10233, 10233+arrowlength
 set arrow from 10582, 10817+arrowlength to 10582, 10817

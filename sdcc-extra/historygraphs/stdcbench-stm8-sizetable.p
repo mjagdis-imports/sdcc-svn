@@ -1,7 +1,7 @@
 set output "stdcbench-stm8-size.svg"
 set terminal svg size 640,480
 set style data lines
-set xlabel "revision"
+set xlabel "SDCC revision"
 set ylabel "size [B]"
 
 # Configure arrow length (to make the plot look nice)

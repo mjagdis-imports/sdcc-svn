@@ -5,16 +5,29 @@ datafile = "stdcbench-r3ka-sizetable"
 # Configure arrow length (to make the plot look nice)
 arrowlength = 200
 
-set arrow from 12085, 25331+arrowlength to 12085, 25331
-set label "4.1.0" at 12085, 25331+arrowlength
-set arrow from 13131, 24510+arrowlength to 13131, 24510
-set label "4.2.0" at 13131, 24510+arrowlength
-set arrow from 14208, 26941+arrowlength to 14208, 26941
-set label "4.3.0" at 14208, 26941+arrowlength
-set arrow from 14648, 24891+arrowlength to 14648, 24891
-set label "4.4.0" at 14648, 24891+arrowlength
-set arrow from 15246, 24436+arrowlength to 15246, 24436
-set label "4.5.0" at 15246, 24436+arrowlength
-set arrow from 16640, 22949+arrowlength to 16640, 22949
-set label "4.6.0" at 16640, 22949+arrowlength
+sdcc_4_1_0_revision = 12085
+sdcc_4_1_0_size = 25367
+sdcc_4_2_0_revision = 13131
+sdcc_4_2_0_size = 24571
+sdcc_4_3_0_revision = 14208
+sdcc_4_3_0_size = 26999
+sdcc_4_4_0_revision = 14648
+sdcc_4_4_0_size = 24948
+sdcc_4_5_0_revision = 15246
+sdcc_4_5_0_size = 24494
+sdcc_4_6_0_revision = 16640
+sdcc_4_6_0_size = 22949
+
+set arrow from sdcc_4_1_0_revision, sdcc_4_1_0_size+arrowlength to sdcc_4_1_0_revision, sdcc_4_1_0_size
+set label "4.1.0" at sdcc_4_1_0_revision, sdcc_4_1_0_size+arrowlength
+set arrow from sdcc_4_2_0_revision, sdcc_4_2_0_size+arrowlength to sdcc_4_2_0_revision, sdcc_4_2_0_size
+set label "4.2.0" at sdcc_4_2_0_revision, sdcc_4_2_0_size+arrowlength
+set arrow from sdcc_4_3_0_revision, sdcc_4_3_0_size+arrowlength to sdcc_4_3_0_revision, sdcc_4_3_0_size
+set label "4.3.0" at sdcc_4_3_0_revision, sdcc_4_3_0_size+arrowlength
+set arrow from sdcc_4_4_0_revision, sdcc_4_4_0_size+arrowlength to sdcc_4_4_0_revision, sdcc_4_4_0_size
+set label "4.4.0" at sdcc_4_4_0_revision, sdcc_4_4_0_size+arrowlength
+set arrow from sdcc_4_5_0_revision, sdcc_4_5_0_size+arrowlength to sdcc_4_5_0_revision, sdcc_4_5_0_size
+set label "4.5.0" at sdcc_4_5_0_revision, sdcc_4_5_0_size+arrowlength
+set arrow from sdcc_4_6_0_revision, sdcc_4_6_0_size+arrowlength to sdcc_4_6_0_revision, sdcc_4_6_0_size
+set label "4.6.0" at sdcc_4_6_0_revision, sdcc_4_6_0_size+arrowlength
 

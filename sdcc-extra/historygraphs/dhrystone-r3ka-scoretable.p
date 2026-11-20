@@ -2,19 +2,35 @@
 set output "dhrystone-r3ka-score.svg"
 datafile = "dhrystone-r3ka-scoretable"
 
+set title "Dhrystone on RCM3319 board (Rabbit 3000A at 44.24 MHz)"
+show title
+
 # Configure arrow length (to make the plot look nice)
 arrowlength = 100
 
-set arrow from 12085, 4107+arrowlength to 12085, 4107
-set label "4.1.0" at 12085, 4107+arrowlength
-set arrow from 13131, 4925+arrowlength to 13131, 4925
-set label "4.2.0" at 13131, 4925+arrowlength
-set arrow from 14208, 4995+arrowlength to 14208, 4995
-set label "4.3.0" at 14208, 4995+arrowlength
-set arrow from 14648, 5542+arrowlength to 14648, 5542
-set label "4.4.0" at 14648, 5542+arrowlength
-set arrow from 15246, 5327+arrowlength to 15246, 5327
-set label "4.5.0" at 15246, 5327+arrowlength
-set arrow from 16640, 5645+arrowlength to 16640, 5645
-set label "4.6.0" at 16640, 5645+arrowlength
+sdcc_4_1_0_revision = 12085
+sdcc_4_1_0_score = 4107
+sdcc_4_2_0_revision = 13131
+sdcc_4_2_0_score = 4925
+sdcc_4_3_0_revision = 14208
+sdcc_4_3_0_score = 4995
+sdcc_4_4_0_revision = 14648
+sdcc_4_4_0_score = 5542
+sdcc_4_5_0_revision = 15246
+sdcc_4_5_0_score = 5327
+sdcc_4_6_0_revision = 16640
+sdcc_4_6_0_score = 5645
+
+set arrow from sdcc_4_1_0_revision, sdcc_4_1_0_score+arrowlength to sdcc_4_1_0_revision, sdcc_4_1_0_score
+set label "4.1.0" at sdcc_4_1_0_revision, sdcc_4_1_0_score+arrowlength
+set arrow from sdcc_4_2_0_revision, sdcc_4_2_0_score+arrowlength to sdcc_4_2_0_revision, sdcc_4_2_0_score
+set label "4.2.0" at sdcc_4_2_0_revision, sdcc_4_2_0_score+arrowlength
+set arrow from sdcc_4_3_0_revision, sdcc_4_3_0_score+arrowlength to sdcc_4_3_0_revision, sdcc_4_3_0_score
+set label "4.3.0" at sdcc_4_3_0_revision, sdcc_4_3_0_score+arrowlength
+set arrow from sdcc_4_4_0_revision, sdcc_4_4_0_score+arrowlength to sdcc_4_4_0_revision, sdcc_4_4_0_score
+set label "4.4.0" at sdcc_4_4_0_revision, sdcc_4_4_0_score+arrowlength
+set arrow from sdcc_4_5_0_revision, sdcc_4_5_0_score+arrowlength to sdcc_4_5_0_revision, sdcc_4_5_0_score
+set label "4.5.0" at sdcc_4_5_0_revision, sdcc_4_5_0_score+arrowlength
+set arrow from sdcc_4_6_0_revision, sdcc_4_6_0_score+arrowlength to sdcc_4_6_0_revision, sdcc_4_6_0_score
+set label "4.6.0" at sdcc_4_6_0_revision, sdcc_4_6_0_score+arrowlength
 

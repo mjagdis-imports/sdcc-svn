@@ -1,3 +1,20 @@
+2026-11-20 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* historygraphs/Makefile,
+	  historygraphs/README,
+	  execute_benchmark-z80,
+	  historygraphs/*.p,
+	  historygraphs/*.svg:
+	  Update graphs.
+
+2026-10-21 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* historygraphs/Makefile,
+	  historygraphs/*.svg:
+	  Update graphs.
+	* execute_benchmark-z80:
+	  Prepare for z80 graphs.
+
 2026-10-20 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* historygraphs/Makefile

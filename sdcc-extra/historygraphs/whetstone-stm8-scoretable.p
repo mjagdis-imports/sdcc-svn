@@ -2,6 +2,9 @@
 set output "whetstone-stm8-score.svg"
 datafile = "whetstone-stm8-scoretable"
 
+set title "Whetstone on STM8AF board (STM8AF at 16 MHz)"
+show title
+
 # Configure arrow length (to make the plot look nice)
 arrowlength = 5
 

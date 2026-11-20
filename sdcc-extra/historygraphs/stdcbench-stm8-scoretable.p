@@ -2,8 +2,11 @@ set output "stdcbench-stm8-score.svg"
 set terminal svg size 640,480
 set style data lines
 set key bottom right
-set xlabel "revision"
+set xlabel "SDCC revision"
 set ylabel "stdcbench score"
+
+set title "stdcbench on STM8AF board (STM8AF at 16 MHz)"
+show title
 
 # Configure arrow length (to make the plot look nice)
 arrowlength = 5

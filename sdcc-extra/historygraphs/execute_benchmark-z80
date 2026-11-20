@@ -16,6 +16,7 @@ if ! python3 $ILOAD $1 hello-z80/hello.ihx &> /dev/null; then
 	echo "FAILED to write hello.ihx to device!"
 	exit 1
 fi
+
 stty --file $1 115200 cooked
 while read -r line; do
 	if [ "$line" == "Hello, World!" ]; then

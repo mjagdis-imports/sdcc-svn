@@ -5,26 +5,45 @@ datafile = "coremark-z80-sizetable"
 # Configure arrow length (to make the plot look nice)
 arrowlength = 500
 
-set arrow from 9256, 21725 to 9256, 21225
-set label "3.5.0" at 9256, 21725
-set arrow from 9618, 21647 to 9618, 21147
-set label "3.6.0" at 9618, 21647
-set arrow from 10582, 20554 to 10582, 20054
-set label "3.8.0" at 10582, 20554
-set arrow from 11214, 20836 to 11214, 20326
-set label "3.9.0" at 11214, 20836
-set arrow from 11533, 21225 to 11533, 20725
-set label "4.0.0" at 11533, 21225
-set arrow from 12085, 20770 to 12085, 20270
-set label "4.1.0" at 12085, 20770
-set arrow from 13131, 19387 to 13131, 18887
-set label "4.2.0" at 13131, 19387
-set arrow from 14208, 18706 to 14208, 18206
-set label "4.3.0" at 14208, 18706
-set arrow from 14648, 18789 to 14648, 18289
-set label "4.4.0" at 14648, 18789
-set arrow from 15246, 18123 to 15246, 17623
-set label "4.5.0" at 15246, 18123
-set arrow from 16640, 18373 to 16640, 17873
-set label "4.6.0" at 16640, 18373
+sdcc_3_5_0_revision = 9256
+sdcc_3_5_0_size = 21320
+sdcc_3_6_0_revision = 9618
+sdcc_3_6_0_size = 21242
+sdcc_3_9_0_revision = 11214
+sdcc_3_9_0_size = 20333
+sdcc_4_0_0_revision = 11533
+sdcc_4_0_0_size = 20732
+sdcc_4_1_0_revision = 12085
+sdcc_4_1_0_size = 20722
+sdcc_4_2_0_revision = 13131
+sdcc_4_2_0_size = 18884
+sdcc_4_3_0_revision = 14208
+sdcc_4_3_0_size = 18203
+sdcc_4_4_0_revision = 14648
+sdcc_4_4_0_size = 18286
+sdcc_4_5_0_revision = 15246
+sdcc_4_5_0_size = 17629
+sdcc_4_6_0_revision = 16640
+sdcc_4_6_0_size = 17870
+
+set arrow from sdcc_3_5_0_revision, sdcc_3_5_0_size+arrowlength to sdcc_3_5_0_revision, sdcc_3_5_0_size
+set label "3.5.0" at sdcc_3_5_0_revision, sdcc_3_5_0_size+arrowlength
+set arrow from sdcc_3_6_0_revision, sdcc_3_6_0_size+arrowlength to sdcc_3_6_0_revision, sdcc_3_6_0_size
+set label "3.6.0" at sdcc_3_6_0_revision, sdcc_3_6_0_size+arrowlength
+set arrow from sdcc_3_9_0_revision, sdcc_3_9_0_size+arrowlength to sdcc_3_9_0_revision, sdcc_3_9_0_size
+set label "3.9.0" at sdcc_3_9_0_revision, sdcc_3_9_0_size+arrowlength
+set arrow from sdcc_4_0_0_revision, sdcc_4_0_0_size+arrowlength to sdcc_4_0_0_revision, sdcc_4_0_0_size
+set label "4.0.0" at sdcc_4_0_0_revision, sdcc_4_0_0_size+arrowlength
+set arrow from sdcc_4_1_0_revision, sdcc_4_1_0_size+arrowlength to sdcc_4_1_0_revision, sdcc_4_1_0_size
+set label "4.1.0" at sdcc_4_1_0_revision, sdcc_4_1_0_size+arrowlength
+set arrow from sdcc_4_2_0_revision, sdcc_4_2_0_size+arrowlength to sdcc_4_2_0_revision, sdcc_4_2_0_size
+set label "4.2.0" at sdcc_4_2_0_revision, sdcc_4_2_0_size+arrowlength
+set arrow from sdcc_4_3_0_revision, sdcc_4_3_0_size+arrowlength to sdcc_4_3_0_revision, sdcc_4_3_0_size
+set label "4.3.0" at sdcc_4_3_0_revision, sdcc_4_3_0_size+arrowlength
+set arrow from sdcc_4_4_0_revision, sdcc_4_4_0_size+arrowlength to sdcc_4_4_0_revision, sdcc_4_4_0_size
+set label "4.4.0" at sdcc_4_4_0_revision, sdcc_4_4_0_size+arrowlength
+set arrow from sdcc_4_5_0_revision, sdcc_4_5_0_size+arrowlength to sdcc_4_5_0_revision, sdcc_4_5_0_size
+set label "4.5.0" at sdcc_4_5_0_revision, sdcc_4_5_0_size+arrowlength
+set arrow from sdcc_4_6_0_revision, sdcc_4_6_0_size+arrowlength to sdcc_4_6_0_revision, sdcc_4_6_0_size
+set label "4.6.0" at sdcc_4_6_0_revision, sdcc_4_6_0_size+arrowlength
 

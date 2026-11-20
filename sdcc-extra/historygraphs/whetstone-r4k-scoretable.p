@@ -2,6 +2,9 @@
 set output "whetstone-r4k-score.svg"
 datafile = "whetstone-r4k-scoretable"
 
+set title "Whetstone on RCM4110 board (Rabbit 4000 at 29.49 MHz)"
+show title
+
 # Configure arrow length (to make the plot look nice)
 arrowlength = 2
 

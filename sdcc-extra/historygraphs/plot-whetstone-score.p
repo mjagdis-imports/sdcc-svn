@@ -2,7 +2,7 @@
 set key autotitle columnhead
 set terminal svg size 640,480
 set style data lines
-set xlabel "revision"
+set xlabel "SDCC revision"
 set ylabel "Whetstone KIPS"
 set key bottom right
 
