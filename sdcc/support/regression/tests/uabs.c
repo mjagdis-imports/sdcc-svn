@@ -22,6 +22,7 @@ testAbs(void)
   ASSERT (ulabs(-1000000l)    == 1000000ul);
   ASSERT (ulabs(-2147483648l) == 2147483648ul);
 
+#ifndef __SDCC_pic14
   ASSERT (ullabs(0x7fffll) == 0x7fffllu);
   ASSERT (ullabs(-1000ll)  == 1000llu);
   ASSERT (ullabs(-9223372036854775808ll) == 9223372036854775808ull);
@@ -29,6 +30,8 @@ testAbs(void)
   ASSERT (umaxabs(0x7FFFffffll) == 0x7FFFffffull);
   ASSERT (umaxabs(-1000000ll)    == 1000000ull);
   ASSERT (umaxabs(-9223372036854775808ll) == 9223372036854775808ull);
+#endif
+
 #endif
 }
 

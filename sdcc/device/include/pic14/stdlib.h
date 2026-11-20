@@ -152,6 +152,12 @@ int abs(int j);
 #endif
 long int labs(long int j);
 
+#if __STDC_VERSION__ > 202311L
+unsigned int uabs(int j);
+unsigned long int ulabs(unsigned long int j);
+//unsigned long long int ullabs(long long int j);
+#endif
+
 /* C99 Multibyte/wide character conversion functions (ISO C11 7.22.7) */
 #if __STDC_VERSION__ >= 199901L
 int mblen(const char *s, size_t n);

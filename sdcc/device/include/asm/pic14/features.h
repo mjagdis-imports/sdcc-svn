@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-   features.h - PIC16 port features.
+   features.h - PIC14 port features.
 
    Copyright (C) 2004, Vangelis Rokas <vrokas AT otenet.gr>
    Adopted for pic14 port library by Raphael Neider <rneider at web.de> (2006)
