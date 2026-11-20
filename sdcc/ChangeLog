@@ -1,3 +1,11 @@
+2026-11-20 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
+	* src/SDCCast.c (createIvalArray): Zero omitted elements
+	  of automatic arrays when the initialiser list contains
+	  designators (bug #4266).
+	* support/regression/tests/bug-4266.c: Cover gaps, out-of-order
+	  designators, inferred bounds and aggregate elements.
+
 2026-11-19 Gabriele Gorla <gorlik@yahoo.com>
 
 	* device/include/asm/pic14/features.h,

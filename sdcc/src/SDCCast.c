@@ -1573,12 +1573,33 @@ createIvalArray (ast * sym, sym_link * type, initList * ilist, ast * rootValue)
     }
   else
     {
+      const bool automatic = AST_SYMBOL (rootValue)->islocal && !SPEC_STAT (etype);
+      bitVect *initialised = NULL;
+      int firstGap = 0;
+      bool fillingGaps = false;
+
       for (;;)
         {
           ast *aSym;
-          if (!iloop && ((lcnt && size >= lcnt) || !DCL_ELEM (type) || !AST_SYMBOL (rootValue)->islocal))
+          if (!iloop)
             {
-              break;
+              if (initialised)
+                {
+                  /* A designator can jump in either direction. Emit each
+                     omitted element once after all explicit entries. */
+                  int bound = lcnt ? lcnt : size;
+                  if (!fillingGaps)
+                    {
+                      idx = firstGap;
+                      fillingGaps = true;
+                    }
+                  while (idx < bound && bitVectBitValue (initialised, idx))
+                    idx++;
+                  if (idx >= bound)
+                    break;
+                }
+              else if ((lcnt && size >= lcnt) || !DCL_ELEM (type) || !AST_SYMBOL (rootValue)->islocal)
+                break;
             }
 
           if (iloop && iloop->designation)
@@ -1589,6 +1610,12 @@ createIvalArray (ast * sym, sym_link * type, initList * ilist, ast * rootValue)
                 }
               else
                 {
+                  if (automatic && !initialised)
+                    {
+                      /* The preceding positional entries initialised a contiguous prefix. */
+                      firstGap = idx;
+                      initialised = newBitVect (lcnt ? lcnt : idx + 1);
+                    }
                   idx = iloop->designation->designator.elemno;
                   if (iloop->designation->next)
                     {
@@ -1611,6 +1638,8 @@ createIvalArray (ast * sym, sym_link * type, initList * ilist, ast * rootValue)
               break;
             }
 
+          if (initialised && iloop && idx >= 0)
+            initialised = bitVectSetBit (initialised, idx);
           aSym = newNode ('[', sym, newAst_VALUE (valueFromLit ((float) (idx))));
           setAstFileLine (aSym, iloop ? iloop->filename : sym->filename, iloop ? iloop->lineno : sym->lineno);
           aSym = decorateType (resolveSymbols (aSym), RESULT_TYPE_NONE, true);
@@ -1618,6 +1647,8 @@ createIvalArray (ast * sym, sym_link * type, initList * ilist, ast * rootValue)
           idx++;
           iloop = (iloop ? iloop->next : NULL);
         }
+
+      freeBitVect (initialised);
     }
 
   /* if we have not been given a size  */
