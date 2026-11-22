@@ -1,3 +1,9 @@
+2026-11-22 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* support/regression/tests/bug-4171.c: disabled test for mcs51 as it
+	  has several 0xFF10 and the test decided not to choose which memory
+	  to work with
+
 2026-11-20 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
 	* src/SDCCast.c (createIvalArray): Zero omitted elements
@@ -254,7 +260,7 @@
 	  src/pic16/gen.c,
 	  support/regression/tests/libmullong.c.in:
 	  Prepend double underscores to all sdcc helper functions with C ABI (bug #4257).
-	
+
 2026-11-16 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/SDCCgen.c,
@@ -585,7 +591,7 @@
 
 2026-11-12 Gabriele Gorla <gorlik@yahoo.com>
 
-	  device/lib/_divschar.c,
+	* device/lib/_divschar.c,
 	  device/lib/_divuchar.c,
 	  device/lib/_modschar.c,
 	  device/lib/_moduchar.c,

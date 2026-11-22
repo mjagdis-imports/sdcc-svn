@@ -5,6 +5,14 @@
 
 #include <testfwk.h>
 
+#if defined(__SDCC_sm83) || defined(__SDCC_z80) || defined(__SDCC_z80n) || defined(__SDCC_z180) || defined(__SDCC_ez80) || \
+    defined(__SDCC_tlcs90) || defined(__SDCC_huc6280) || defined(__SDCC_mos6502) || defined(__SDCC_mos65c02)
+// 0xff10 plain writable RAM only on these ports (0xff00 is XPC on Rabbit, flash on HC08/S08)
+// mcs51 has several 0xFF10 and the test decided not to choose which memory to work with
+#define WRITE_0xFF10
+#endif
+
+
 unsigned char gvA1;
 void gv(unsigned char a1, ...)
 {
@@ -27,7 +35,7 @@ void g19(unsigned int a1, unsigned int a2, unsigned char a3, unsigned char a4)
     g19A4 = a4;
 }
 
-#if defined(__SDCC_sm83) || defined(__SDCC_z80) || defined(__SDCC_z80n) || defined(__SDCC_z180) || defined(__SDCC_ez80) || defined(__SDCC_tlcs90) || defined(__SDCC_huc6280) || defined(__SDCC_mos6502) || defined(__SDCC_mos65c02) || defined(__SDCC_mcs51) // 0xff10 plain writable RAM only on these ports (0xff00 is XPC on Rabbit, flash on HC08/S08)
+#ifdef WRITE_0xFF10
 
 struct S1 { unsigned char x : 8; };
 
@@ -55,7 +63,7 @@ void f14(void) // rule 14
 
 void test1(void)
 {
-#if defined(__SDCC_sm83) || defined(__SDCC_z80) || defined(__SDCC_z80n) || defined(__SDCC_z180) || defined(__SDCC_ez80) || defined(__SDCC_tlcs90) || defined(__SDCC_huc6280) || defined(__SDCC_mos6502) || defined(__SDCC_mos65c02) || defined(__SDCC_mcs51) // 0xff10 plain writable RAM only on these ports (0xff00 is XPC on Rabbit, flash on HC08/S08)
+#ifdef WRITE_0xFF10
     f1(0x5a);
     ASSERT(((volatile struct S1 *)0xff10)->x == 0x5a);
 #endif
@@ -63,7 +71,7 @@ void test1(void)
 
 void test12(void)
 {
-#if defined(__SDCC_sm83) || defined(__SDCC_z80) || defined(__SDCC_z80n) || defined(__SDCC_z180) || defined(__SDCC_ez80) || defined(__SDCC_tlcs90) || defined(__SDCC_huc6280) || defined(__SDCC_mos6502) || defined(__SDCC_mos65c02) || defined(__SDCC_mcs51) // 0xff10 plain writable RAM only on these ports (0xff00 is XPC on Rabbit, flash on HC08/S08)
+#ifdef WRITE_0xFF10
     *(volatile unsigned char *)0xff10 = 0x55;
     f12();
     ASSERT(*(volatile unsigned char *)0xff10 == 0x56);
@@ -72,7 +80,7 @@ void test12(void)
 
 void test13(void)
 {
-#if defined(__SDCC_sm83) || defined(__SDCC_z80) || defined(__SDCC_z80n) || defined(__SDCC_z180) || defined(__SDCC_ez80) || defined(__SDCC_tlcs90) || defined(__SDCC_huc6280) || defined(__SDCC_mos6502) || defined(__SDCC_mos65c02) || defined(__SDCC_mcs51) // 0xff10 plain writable RAM only on these ports (0xff00 is XPC on Rabbit, flash on HC08/S08)
+#ifdef WRITE_0xFF10
     *(volatile unsigned char *)0xff10 = 0x55;
     f13();
     ASSERT(*(volatile unsigned char *)0xff10 == 0x54);
@@ -81,7 +89,7 @@ void test13(void)
 
 void test14(void)
 {
-#if defined(__SDCC_sm83) || defined(__SDCC_z80) || defined(__SDCC_z80n) || defined(__SDCC_z180) || defined(__SDCC_ez80) || defined(__SDCC_tlcs90) || defined(__SDCC_huc6280) || defined(__SDCC_mos6502) || defined(__SDCC_mos65c02) || defined(__SDCC_mcs51) // 0xff10 plain writable RAM only on these ports (0xff00 is XPC on Rabbit, flash on HC08/S08)
+#ifdef WRITE_0xFF10
     *(volatile unsigned char *)0xff10 = 0x55;
     f14();
     ASSERT(*(volatile unsigned char *)0xff10 == 0x2a);
