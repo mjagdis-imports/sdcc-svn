@@ -1,5 +1,5 @@
-/*---------------------------------------------------------------------
-   atoi() - convert a string to an integer and return it
+/*-------------------------------------------------------------------------
+   atoi.c - convert a string to an integer and return it
 
    Copyright (C) 2015, Philipp Klaus Krause . pkk@spth.de
 

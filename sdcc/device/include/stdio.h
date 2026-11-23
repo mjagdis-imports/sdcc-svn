@@ -55,12 +55,12 @@
 
 #ifndef __RSIZE_T_DEFINED
 #define __RSIZE_T_DEFINED
-typedef size_t rsize_t;
+  typedef size_t rsize_t;
 #endif
 
 #ifndef __ERRNO_T_DEFINED
 #define __ERRNO_T_DEFINED
-typedef int errno_t;
+  typedef int errno_t;
 #endif
 
 #endif

@@ -1,7 +1,8 @@
 /*-------------------------------------------------------------------------
-   _strcspn.c - part of string library functions
+   strcspn.c - part of string library functions
 
-   Copyright (C) 1999, Sandeep Dutta . sandeep.dutta@usa.net
+   Copyright (C) 1999, Sandeep Dutta <sandeep.dutta at usa.net>
+   Bug fixed by Vangelis Rokas <vrokas at otenet.gr> (2004)
 
    This library is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -28,18 +29,20 @@
 
 #include <string.h>
 
-size_t strcspn ( const char * string, const char * control )
+size_t
+strcspn ( const char *string, const char *control )
 {
-	register size_t count = 0;
-	register char ch;
+  register size_t count = 0;
+  register char ch;
 
-	while (ch = *string) {
-		if (strchr(control,ch))
-			break;
-		else
-			count++;
-			string++;
-	}
+  while (ch = *string)
+    {
+      if (strchr (control, ch))
+        break;
+      else
+        count++ ;
+      string++;
+    }
 
-	return count;
+  return count;
 }  

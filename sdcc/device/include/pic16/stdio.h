@@ -27,23 +27,46 @@
    might be covered by the GNU General Public License.
 -------------------------------------------------------------------------*/
 
-#ifndef __STDIO_H
-#define __STDIO_H 1
+#ifndef __SDCC_STDIO_H
+#define __SDCC_STDIO_H 1
 
 /* link the C library */
 #pragma library c
 
 #include <stdarg.h>
 
+#ifdef __ds390
+#include <tinibios.h>
+#endif
+
 #include <sdcc-lib.h>
+
+#ifndef EOF
+  #define EOF (-1)
+#endif
 
 #ifndef NULL
   #define NULL (void *)0
 #endif
 
-#ifndef _SIZE_T_DEFINED
-#define _SIZE_T_DEFINED
+#ifndef __SIZE_T_DEFINED
+#define __SIZE_T_DEFINED
   typedef unsigned int size_t;
+#endif
+
+/* Bounds-checking interfaces from annex K of the C11 standard. */
+#if defined (__STDC_WANT_LIB_EXT1__) && __STDC_WANT_LIB_EXT1__
+
+#ifndef __RSIZE_T_DEFINED
+#define __RSIZE_T_DEFINED
+  typedef size_t rsize_t;
+#endif
+
+#ifndef __ERRNO_T_DEFINED
+#define __ERRNO_T_DEFINED
+  typedef int errno_t;
+#endif
+
 #endif
 
 /* stream descriptor definition */
@@ -97,16 +120,7 @@ void printf_small (const char *fmt, ...);
 /* printf_tiny() does not support float print */
 void printf_tiny (const char *fmt, ...);  // __reentrant;
 
-extern int printf (const char *fmt, ...);
-extern int fprintf (FILE *stream, const char *fmt, ...);
-extern int sprintf (char *str, const char *fmt, ...);
-
-extern int vprintf (const char *fmt, va_list ap);
 extern int vfprintf (FILE *stream, const char *fmt, va_list ap);
-extern int vsprintf (char *str, const char *fmt, va_list ap);
-
-#define PUTCHAR(C)  void putchar (char C) __wparam
-extern PUTCHAR (c);
 
 extern void __stream_putchar (FILE *stream, char c);
 
@@ -114,7 +128,40 @@ extern void __stream_usart_putchar (char c) __wparam __naked;
 extern void __stream_mssp_putchar (char c) __wparam __naked;
 extern void __stream_gpsim_putchar (char c) __wparam __naked;
 
-extern char *gets (char *str);
-extern char getchar (void);
+/*-----------------------------------------------------------------------*/
 
-#endif /* __STDIO_H */
+// Formatted input/output functions (ISO C23 7.24.6)
+#if __STDC_VERSION__ >= 199901L
+extern int printf (const char format[restrict static 1],...);
+extern int sprintf (char s[restrict static 1], const char format[restrict static 1], ...);
+extern int vprintf (const char format[restrict static 1], va_list arg);
+extern int vsprintf (char s[restrict static 1], const char format[restrict static 1], va_list);
+#else
+extern int printf (const char *format,...);
+extern int sprintf (char *s, const char *format, ...);
+extern int vprintf (const char *format, va_list arg);
+extern int vsprintf (char *s, const char *format, va_list);
+#endif
+
+
+//#define PUTCHAR(C)  void putchar (char C) __wparam
+//extern PUTCHAR (c);
+
+// Character input/output functions (ISO C23 7.24.7, and C99 gets)
+extern int getchar(void);
+#if __STDC_VERSION__ < 201112L
+#if __STDC_VERSION__ >= 199901L
+extern char *gets(char s[static 1]);
+#else
+extern char *gets(char *s);
+#endif
+#endif
+extern int putchar(int);
+#if __STDC_VERSIOn >= 199901L
+extern int puts(const char s[static 1]);
+#else
+extern int puts(const char *s);
+#endif
+
+#endif /* __SDCC_STDIO_H */
+

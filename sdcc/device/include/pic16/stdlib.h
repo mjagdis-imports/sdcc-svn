@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-   stdlib.h - ANSI functions forward declarations
+   stdlib.h - General utilities (ISO C 11 7.22)
 
    Copyright (C) 1998, Sandeep Dutta . sandeep.dutta@usa.net
    Ported to PIC16 port by Vangelis Rokas, 2004 <vrokas AT otenet.gr>
@@ -27,12 +27,26 @@
    might be covered by the GNU General Public License.
 -------------------------------------------------------------------------*/
 
-#ifndef __STDLIB_H__
-#define __STDLIB_H__ 1
+#ifndef __SDCC_STDLIB_H
+#define __SDCC_STDLIB_H 1
 
 #pragma library c
 
 #include <stdint.h>
+
+#if !defined(__SDCC_mcs51) && !defined(__SDCC_ds390) && !defined(__SDCC_ds400) && !defined(__SDCC_hc08) && !defined(__SDCC_s08) && !defined(__SDCC_mos6502) && !defined(__SDCC_mos65c02) && !defined(__SDCC_huc6280) && !defined(__SDCC_pic14) && !defined(__SDCC_pic16) && !defined(__SDCC_pdk13) && !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15)
+#define __reentrant
+#endif
+
+#ifndef __SIZE_T_DEFINED
+#define __SIZE_T_DEFINED
+  typedef unsigned int size_t;
+#endif
+
+#ifndef __WCHAR_T_DEFINED
+#define __WCHAR_T_DEFINED
+  typedef unsigned long int wchar_t;
+#endif
 
 #ifndef NULL
 # define NULL (void *)0
@@ -40,33 +54,55 @@
 
 #define RAND_MAX        0x7fffffff
 
-/* absolute value */
-int abs (int j);
-long int labs (long int j);
+/* Numeric conversion functions (ISO C11 7.22.1) */
+#if __STDC_VERSION__ >= 199901L
+extern float atof (const char nptr[static 1]);
+extern int atoi (const char nptr[static 1]);
+extern long int atol (const char nptr[static 1]);
+extern long int strtol(const char nptr[restrict static 1], char **restrict endptr, int base);
+extern unsigned long int strtoul(const char nptr[restrict static 1], char **restrict endptr, int base);
+extern long long int atoll (const char nptr[static 1]);
+extern long long int strtoll(const char nptr[restrict static 1], char **restrict endptr, int base);
+extern unsigned long long int strtoull(const char nptr[restrict static 1], char **restrict endptr, int base);
+#else
+extern float atof (const char *nptr);
+extern int atoi (const char *nptr);
+extern long int atol (const char *nptr);
+extern long int strtol(const char *nptr, char **endptr, int base);
+extern unsigned long int strtoul(const char *nptr, char **endptr, int base);
+#endif
 
-/* initialize random seed */
-void srand (unsigned long seed);
 
-/* return a random number between 0 and RAND_MAX */
+/* Pseudo-random sequence generation functions (ISO C11 7.22.2) */
 long rand (void);
+void srand (unsigned long seed);
 
 /* reentrant version of rand() */
 long rand_r (unsigned long *ctx);
 
-/* returns the CRC16 checksum of the data buffer, takes as
- * last argument an old value of crc16 checksum */
-uint16_t crc16 (uint8_t *, uint32_t, uint16_t);
+/* Memory management functions (ISO C11 7.22.3) */
+#if defined(__SDCC_mcs51) || defined(__SDCC_ds390) || defined(__SDCC_ds400)
+void __xdata *calloc (size_t nmemb, size_t size);
+void __xdata *malloc (size_t size);
+void __xdata *realloc (void *ptr, size_t size);
+#elseif defined(__SDCC_pic16)
+#define calloc(nmemb,size)    _calloc((size_t)(nmemb) * (size_t)(size))
+void __data *_calloc (size_t size);
+void __data *malloc (size_t size);
+void __data *realloc (void __data *ptr, size_t size);
+#else
+void *calloc (size_t nmemb, size_t size);
+void *malloc (size_t size);
+void *realloc (void *ptr, size_t size);
+#endif
 
-/* convert a ASCII string to float */
-float atof (char *);
+void free (void __data * ptr);
+size_t memfree (void);
+size_t memfreemax (void);
 
-/* convert a ASCII string to integer */
-int atoi (char *);
-
-/* convert a ASCII string to long */
-long atol (char *);
-
-long long int atoll (const char *);
+/* Searching and sorting utilities (ISO C11 7.22.5) */
+extern void *bsearch(const void *key, const void *base, size_t nmemb, size_t size, int (*compar)(const void *, const void *) __reentrant);
+extern void qsort(void *base, size_t nmemb, size_t size, int (*compar)(const void *, const void *) __reentrant);
 
 /* convert an unsigned/signed integer to ASCII string */
 void uitoa (unsigned int, __data char *, unsigned char);
@@ -82,5 +118,40 @@ extern char x_ftoa (float, __data char *, unsigned char, unsigned char);
 /* George M. Gallant's version of ftoa() */
 extern void g_ftoa (__data char *, float, char);
 
+/* Integer arithmetic functions (ISO C11 7.22.6) */
+#if defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_r2k) || defined(__SDCC_r2ka) || defined(__SDCC_r3ka) || defined(__SDCC_r4k) || defined(__SDCC_r5k) || defined(__SDCC_r6k) || defined(__SDCC_tlcs90) || defined (__SDCC_ez80) || defined (__SDCC_z80n) || defined(__SDCC_r800)
+int abs(int j) __preserves_regs(b, c, iyl, iyh);
+#else
+int abs(int j);
+#endif
+long int labs(long int j);
+#if __STDC_VERSION__ >= 199901L
+long long int llabs(long long int j);
+#endif
+/* C2y Integer arithmetic functions */
+#if __STDC_VERSION__ > 202311L
+unsigned int uabs(int j);
+unsigned long int ulabs(unsigned long int j);
+unsigned long long int ullabs(long long int j);
+#endif
 
-#endif	/* __STDLIB_H__ */
+/* C99 Multibyte/wide character conversion functions (ISO C11 7.22.7) */
+#if __STDC_VERSION__ >= 199901L
+int mblen(const char *s, size_t n);
+int mbtowc(wchar_t *restrict pwc, const char *restrict s, size_t n);
+int wctomb(char *s, wchar_t wc);
+#endif
+
+/* C99 Multibyte/wide string conversion functions (ISO C 11 7.22.8) */
+#if __STDC_VERSION__ >= 199901L
+size_t mbstowcs(wchar_t *restrict pwcs, const char *restrict s, size_t n);
+size_t wcstombs(char *restrict s, const wchar_t *restrict pwcs, size_t n);
+#endif
+
+/* C23 Alignment of memory */
+#if __STDC_VERSION__ >= 202311L
+size_t memalignment(const void *p);
+#endif
+
+#endif	/* __SDCC_STDLIB_H */
+

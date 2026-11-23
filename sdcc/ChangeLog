@@ -1,3 +1,47 @@
+2026-11-22 Gabriele Gorla <gorlik@yahoo.com>
+
+	* configure,
+	  configure.ac,
+	  device/include/pic14/stdlib.h,
+	  device/include/pic16/ctype.h,
+	  device/include/pic16/stdio.h,
+	  device/include/pic16/stdlib.h,
+	  device/include/pic16/string.h,
+	  device/include/signal.h,
+	  device/include/stdint.h,
+	  device/include/stdio.h,
+	  device/include/string.h,
+	  device/lib/Makefile.in,
+	  device/lib/_mulint.c,
+	  device/lib/atoi.c,
+	  device/lib/atol.c,
+	  device/lib/common_files.mk,
+	  device/lib/memchr.c,
+	  device/lib/memcmp.c,
+	  device/lib/memcpy.c,
+	  device/lib/memmove.c,
+	  device/lib/pic16/Makefile.in,
+	  device/lib/strchr.c,
+	  device/lib/strcpy.c,
+	  device/lib/strcspn.c,
+	  device/lib/strlen.c,
+	  device/lib/strncat.c,
+	  device/lib/strpbrk.c,
+	  device/lib/strrchr.c,
+	  device/lib/strspn.c,
+	  device/lib/strstr.c,
+	  device/lib/strtok.c,
+	  src/pic16/main.c,
+	  support/regression/MakeList,
+	  support/regression/ports/pic16/spec.mk,
+	  device/examples/pic16,
+	  device/examples/pic16/crc16.c,
+	  device/examples/pic16/delay,
+	  device/examples/pic16/libio,
+	  device/lib/pic14/*,
+	  device/lib/pic16/*:
+	  Convert pic libraries to new build infrastructure.
+	
 2026-11-22 Maarten Brock <sourceforge.brock AT dse.nl>
 
 	* support/regression/tests/bug-4171.c: disabled test for mcs51 as it

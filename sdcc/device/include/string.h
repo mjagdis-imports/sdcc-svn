@@ -2,6 +2,7 @@
    string.h - ISO header for string library functions
 
    Copyright (C) 1998, Sandeep Dutta
+   Copyright (C) 2004, Vangelis Rokas, vrokas AT otenet.gr
    Copyright (C) 2009-2025, Philipp Klaus Krause pkk@spth.de, philipp@colecovision.eu
    Copyright (C) 2025, Gabriele Gorla
 
@@ -55,7 +56,7 @@ typedef int errno_t;
 
 #endif
 
-#if defined(__SDCC_mcs51) || defined(__SDCC_ds390) || defined(__SDCC_mos6502) || defined(__SDCC_mos65c02) || defined(__SDCC_huc6280)
+#if defined(__SDCC_mcs51) || defined(__SDCC_ds390) || defined(__SDCC_mos6502) || defined(__SDCC_mos65c02) || defined(__SDCC_huc6280) || defined(__SDCC_pic14) || defined(__SDCC_pic16)
 #define __SDCC_BROKEN_STRING_FUNCTIONS
 #endif
 
@@ -98,8 +99,8 @@ extern char *strcpy (char dest[restrict static 1], const char src[restrict stati
 #else
 extern char *strcpy (char *dest, const char *_NEAR src);
 #endif
-
 #endif
+
 #if __STDC_VERSION__ >= 199901L
 extern char *strncpy (char *restrict dest, const char *restrict src, size_t n);
 #else
@@ -121,7 +122,7 @@ extern char *strcat (char *dest, const char *src);
 extern char *strncat (char * dest, const char *src, size_t n);
 #endif
 
-// Comparison functions (ISo C23 7.28.4)
+// Comparison functions (ISO C23 7.28.4)
 extern int memcmp (const void *s1, const void *_NEAR s2, _NEAR size_t n);
 #if defined(__SDCC_z80) || defined (__SDCC_z80n) || defined(__SDCC_z180) || defined(__SDCC_r800)
 #if __STDC_VERSION__ >= 199901L
@@ -217,7 +218,7 @@ extern char *strtok (char *restrict str, const char delim[restrict static 1]);
 extern char *strtok (char *str, const char *delim);
 #endif
 
-// Miscanelleous functions (ISo C23 7.28.6)
+// Miscanelleous functions (ISO C23 7.28.6)
 #ifdef __SDCC_BROKEN_STRING_FUNCTIONS
 extern void *memset (void *s, _NEAR unsigned char c, _NEAR size_t n); // c should be int according to standard.
 #else

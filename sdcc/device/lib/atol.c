@@ -1,5 +1,5 @@
-/*---------------------------------------------------------------------
-   atol() - convert a string to a long integer and return it
+/*-------------------------------------------------------------------------
+   atol.c - convert a string to long integer and return it
 
    Copyright (C) 2015, Philipp Klaus Krause . pkk@spth.de
 

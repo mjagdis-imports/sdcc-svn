@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-   _memchr.c - part of string library functions
+   memchr.c - part of string library functions
 
    Copyright (C) 2009-2019, Philipp Klaus Krause . pkk@spth.de
 
@@ -30,13 +30,16 @@
 
 #undef memchr /* Avoid conflict with C23 macro */
 
-void *memchr(const void *s, int c, size_t n)
+void *
+memchr (const void *s, int c, size_t n)
 {
-	unsigned char *p = (unsigned char *)s;
-	unsigned char *end = p + n;
-	for(; p != end; p++)
-		if(*p == (unsigned char)c)
-			return((void *)p);
-	return(0);
+  unsigned char *p = (unsigned char *)s;
+  unsigned char *end = p + n;
+
+  for(; p != end; p++)
+    if(*p == (unsigned char)c)
+      return((void *)p);
+
+  return(0);
 }
 

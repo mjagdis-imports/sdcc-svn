@@ -97,7 +97,7 @@ typedef unsigned long long int  uint_fast64_t;
 #endif // __SPECIFIED_WIDTH_INTEGER_TYPES_DEFINED
 
 /* Types for `void *' pointers.  */
-#if defined (__SDCC_mcs51) || defined (__SDCC_ds390)
+#if defined (__SDCC_mcs51) || defined (__SDCC_ds390) || defined (__SDCC_pic16)
   typedef long int              intptr_t;
   typedef unsigned long int     uintptr_t;
 #else

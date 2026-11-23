@@ -3,6 +3,9 @@
 
    Copyright (C) 1999, Sandeep Dutta . sandeep.dutta@usa.net
 
+   Modifications for PIC14 by
+   Copyright (C) 2019 Gonzalo Pérez de Olaguer Córdoba <salo@gpoc.es>
+
    This library is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; either version 2, or (at your option) any
@@ -51,6 +54,12 @@ __mulint (int a, int b) __SDCC_NONBANKED
 	union uu t;
         x = (union uu __xdata *)&a;
         y = (union uu __xdata *)&b;
+#elif defined(__SDCC_pic14)
+	union uu x;
+	union uu y;
+	union uu t;
+        x.t = a;
+        y.t = b;
 #else
 	register union uu *x;
 	register union uu *y;
@@ -60,8 +69,13 @@ __mulint (int a, int b) __SDCC_NONBANKED
 #endif
 
   // sdcc is bad at handling union accesses. So we use (unsigned char)a instead of x->s.lo here.
+#if defined(__SDCC_pic14)
+  t.t = x.s.lo * y.s.lo;
+  t.s.hi += (x.s.lo * y.s.hi) + (x.s.hi * y.s.lo);
+#else
   t.t = (unsigned char)a * (unsigned char)b;
   t.s.hi += ((unsigned char)a * y->s.hi) + (x->s.hi * (unsigned char)b);
+#endif
 
   return t.t;
 }

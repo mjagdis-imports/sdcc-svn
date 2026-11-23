@@ -36,16 +36,16 @@ char * strrchr ( const char * string, _NEAR char ch )
 char * strrchr ( const char * string, int ch )
 #endif
 {
-        const char * start = string;
+  const char * start = string;
 
-        while (*string++)                       /* find end of string */
-                ;
+  while (*string++)                       /* find end of string */
+    ;
                                                 /* search towards front */
-        while (--string != start && *string != ch)
-                ;
+  while (--string != start && *string != ch)
+    ;
 
-        if (*string == ch)                      /* char found ? */
-                return( (char *)string );
+  if (*string == ch)                      /* char found ? */
+    return( (char *)string );
 
-        return (NULL) ;
+  return NULL;
 }

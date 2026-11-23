@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-   string.h - ANSI functions forward declarations
+   string.h - ISO header for string library functions
 
    Copyright (C) 1998, Sandeep Dutta . sandeep.dutta@usa.net
    Ported to PIC16 port by Vangelis Rokas, 2004 <vrokas AT otenet.gr>
@@ -27,8 +27,8 @@
    might be covered by the GNU General Public License.
 -------------------------------------------------------------------------*/
 
-#ifndef __STRING_H	/* { */
-#define __STRING_H 1
+#ifndef __STDC_VERSION_STRING_H__
+#define __STDC_VERSION_STRING_H__ __STDC_VERSION__
 
 #define _STRING_SPEC	__data
 
@@ -38,37 +38,216 @@
 # define NULL (void *)0
 #endif
 
-#ifndef _SIZE_T_DEFINED
-# define _SIZE_T_DEFINED
+#ifndef __SIZE_T_DEFINED
+# define __SIZE_T_DEFINED
   typedef unsigned int size_t;
 #endif
 
-char *strcat (char *, char *);
-char *strchr (char *, char);
-int   strcmp (char *, char *);
-char *strcpy (char *, char *);
-int   strcspn(char *, char *);
-int   strlen (char *);
+/* Bounds-checking interfaces from annex K of the C11 standard. */
+#if defined (__STDC_WANT_LIB_EXT1__) && __STDC_WANT_LIB_EXT1__
+
+#ifndef __RSIZE_T_DEFINED
+#define __RSIZE_T_DEFINED
+typedef size_t rsize_t;
+#endif
+
+#ifndef __ERRNO_T_DEFINED
+#define __ERRNO_T_DEFINED
+typedef int errno_t;
+#endif
+
+#endif
+
+#if defined(__SDCC_mcs51) || defined(__SDCC_ds390) || defined(__SDCC_mos6502) || defined(__SDCC_mos65c02) || defined(__SDCC_huc6280) || defined(__SDCC_pic14) || defined(__SDCC_pic16)
+#define __SDCC_BROKEN_STRING_FUNCTIONS
+#endif
+
+#undef _NEAR
+#if (defined(__SDCC_mos6502) || defined(__SDCC_mos65c02) || defined(__SDCC_huc6280) )&& !defined(__SDCC_STACK_AUTO)
+#define _NEAR __zp
+#else
+#define _NEAR
+#endif
+
+// The function prototypes are ordered as in the ISO C11 standard.
+
+// C90 Copying functions (ISO C23 7.28.2)
+
+#if __STDC_VERSION__ >= 199901L
+void *memccpy (void *restrict dst, const void *restrict src, char c, size_t n);
+#endif
+
+#if __STDC_VERSION__ >= 199901L
+extern void *memcpy (void *restrict dest, const void *restrict src, size_t n);
+#else
+extern void *memcpy (void *dest, const void *src, size_t n);
+#endif
+
+#if defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_r2k) || defined(__SDCC_r2ka) || defined(__SDCC_r3ka) || defined(__SDCC_r4k) || defined(__SDCC_r5k) || defined(__SDCC_r6k)
+extern void *memmove (void *dest, const void *src, size_t n) __preserves_regs(iyl, iyh);
+#else
+extern void *memmove (void *dest, const void *src, size_t n);
+#endif
+
+#if defined(__SDCC_z80) || defined (__SDCC_z80n) || defined(__SDCC_z180) || defined(__SDCC_r2k) || defined(__SDCC_r2ka) || defined(__SDCC_r3ka) || defined(__SDCC_r4k) || defined(__SDCC_r5k) || defined(__SDCC_r6k) || defined(__SDCC_tlcs90) || defined (__SDCC_ez80) || defined(__SDCC_r800)
+#if __STDC_VERSION__ >= 199901L
+extern char *strcpy (char dest[restrict static 1], const char src[restrict static 1]) __preserves_regs(iyl, iyh);
+#else
+extern char *strcpy (char *dest, const char *src) __preserves_regs(iyl, iyh);
+#endif
+#else
+#if __STDC_VERSION__ >= 199901L
+extern char *strcpy (char dest[restrict static 1], const char src[restrict static 1]);
+#else
+extern char *strcpy (char *dest, const char *_NEAR src);
+#endif
+#endif
+
+#if __STDC_VERSION__ >= 199901L
+extern char *strncpy (char *restrict dest, const char *restrict src, size_t n);
+#else
+extern char *strncpy (char *dest, const char *src, size_t n);
+#endif
+
+// C23 Duplication functions
+#if __STDC_VERSION__ >= 199901L
+extern char *strdup (const char s[static 1]);
+extern char *strndup (const char *s, size_t n);
+#endif
+
+// C90 Concatenation functions (ISO C23 7.28.3)
+#if __STDC_VERSION__ >= 199901L
+extern char *strcat (char dest[restrict static 1], const char src[restrict static 1]);
+extern char *strncat (char dest[restrict static 1], const char *restrict src, size_t n);
+#else
+extern char *strcat (char *dest, const char *src);
+extern char *strncat (char * dest, const char *src, size_t n);
+#endif
+
+// Comparison functions (ISO C23 7.28.4)
+extern int memcmp (const void *s1, const void *_NEAR s2, _NEAR size_t n);
+#if defined(__SDCC_z80) || defined (__SDCC_z80n) || defined(__SDCC_z180) || defined(__SDCC_r800)
+#if __STDC_VERSION__ >= 199901L
+extern int strcmp (const char s1[static 1], const char s2[static 1]) __preserves_regs(c, b, iyl, iyh);
+#else
+extern int strcmp (const char *s1, const char *_NEAR s2) __preserves_regs(c, b, iyl, iyh);
+#endif
+#elif defined(__SDCC_r2k) || defined (__SDCC_r2ka) || defined(__SDCC_r3ka) || defined(__SDCC_r4k) || defined(__SDCC_r5k) || defined(__SDCC_r6k)
+#if __STDC_VERSION__ >= 199901L
+extern int strcmp (const char s1[static 1], const char s2[static 1]) __preserves_regs(c, b);
+#else
+extern int strcmp (const char *s1, const char *_NEAR s2) __preserves_regs(c, b);
+#endif
+#else
+#if __STDC_VERSION__ >= 199901L
+extern int strcmp (const char s1[static 1], const char s2[static 1]);
+#else
+extern int strcmp (const char *s1, const char *_NEAR s2);
+#endif
+#endif
+#define strcoll(s1, s2) strcmp(s1, s2)
+/*int strcoll(const char *s1, const char *s2) {return strcmp(s1, s2);}*/
+extern int strncmp (const char *s1, const char *s2, size_t n);
+extern size_t strxfrm (char *dest, const char *src, size_t n);
+
+// Search functions (ISO C23 7.28.5)
+
+// C90 memchr (ISO C23 7.28.5.2)
+extern void *memchr (const void *s, char c, size_t n);
+
+// C90 strchr (ISO C23 7.28.5.3)
+#ifdef __SDCC_BROKEN_STRING_FUNCTIONS
+#if __STDC_VERSION__ >= 199901L
+extern char *strchr (const char s[static 1], _NEAR char c); // c should be int according to standard.
+#else
+extern char *strchr (const char *s, _NEAR char c); // c should be int according to standard.
+#endif
+#else
+#if __STDC_VERSION__ >= 199901L
+extern char *strchr (const char s[static 1], int c);
+#else
+extern char *strchr (const char *s, int c);
+#endif
+#endif
+
+// C90 strcspn (ISO C23 7.28.5.4)
+#if __STDC_VERSION__ >= 199901L
+extern size_t strcspn(const char *s, const char *reject);
+#else
+extern size_t strcspn(const char s[static 1], const char reject[static 1]);
+#endif
+
+// C90 strpbrk (ISO C23 7.28.5.5)
+#if __STDC_VERSION__ >= 199901L
+extern char *strpbrk(const char s[static 1], const char accept[static 1]);
+#else
+extern char *strpbrk(const char *s, const char *accept);
+#endif
+
+// C90 strrchr (ISO C23 7.28.5.6)
+#ifdef __SDCC_BROKEN_STRING_FUNCTIONS
+#if __STDC_VERSION__ >= 199901L
+extern char *strrchr(const char s[static 1], _NEAR char c); // c should be int according to standard.
+#else
+extern char *strrchr(const char *s, _NEAR char c); // c should be int according to standard.
+#endif
+#else
+#if __STDC_VERSION__ >= 199901L
+extern char *strrchr(const char s[static 1], int c);
+#else
+extern char *strrchr(const char *s, int c);
+#endif
+#endif
+
+// C90 strspn (ISO C23 7.28.5.7)
+#if __STDC_VERSION__ >= 199901L
+extern size_t strspn (const char s[static 1], const char accept[static 1]);
+#else
+extern size_t strspn (const char *s, const char *accept);
+#endif
+
+// C90 strstr (ISO C23 7.28.5.8)
+#if __STDC_VERSION__ >= 199901L
+extern char *strstr (const char haystack[static 1], const char needle[static 1]);
+#else
+extern char *strstr (const char *haystack, const char *needle);
+#endif
+
+// C90 strtok (ISO C23 7.28.5.9)
+#if __STDC_VERSION__ >= 199901L
+extern char *strtok (char *restrict str, const char delim[restrict static 1]);
+#else
+extern char *strtok (char *str, const char *delim);
+#endif
+
+/* extern char *strerror(int errnum); */
+#if defined(__SDCC_z80) || defined (__SDCC_z80n) || defined(__SDCC_z180) || defined(__SDCC_tlcs90) || defined(__SDCC_ez80) || defined(__SDCC_r800)
+#if __STDC_VERSION__ >= 199901L
+extern size_t strlen (const char s[static 1]) __preserves_regs(iyl, iyh);
+#else
+extern size_t strlen (const char *s) __preserves_regs(iyl, iyh);
+#endif
+#else
+#if __STDC_VERSION__ >= 199901L
+extern size_t strlen (const char s[static 1]);
+#else
+extern size_t strlen (const char *s);
+#endif
+#endif
+
 char *strlwr (char *);
-char *strncat(char *, char *, size_t );
-int   strncmp(char *, char *, size_t );
-char *strncpy(char *, char *, size_t );
-char *strpbrk(char *, char *);
-char *strrchr(char *, char);
-int   strspn (char *, char *);
-char *strstr (char *, char *);
-char *strtok (char *, char *);
 char *strupr (char *);
 
-void *memccpy(void *, void *, char, size_t);
 void *memchr(const void *, char, size_t);
 int   memcmp (const void *, const void *, size_t);
-void *memcpy (void *, const void *, size_t);
-void *memmove (void *, const void *, size_t);
 void *memrchr(void *, char, size_t);
 void *memset (_STRING_SPEC void *, unsigned char, size_t );
 
-__code void *memchrpgm(__code void *, char, size_t);
+
+// C2y length function
+extern size_t strnlen (const char *s, size_t n);
+
+const __code void *memchrpgm(const __code void *, char, size_t);
 __data void *memchrram(__data void *, char, size_t);
 __data void *memcpypgm2ram(__data void *, __code void *, size_t);
 __data void *memcpyram2ram(__data void *, __data void *, size_t);
@@ -76,4 +255,5 @@ __data void *memcpyram2ram(__data void *, __data void *, size_t);
 void *__memcpy (void *, const void *, size_t);
 #define memcpy __memcpy
 
-#endif	/* } */
+#endif
+

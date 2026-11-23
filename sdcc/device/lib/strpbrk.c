@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------
-   _strpbrk.c - part of string library functions
+   strpbrk.c - part of string library functions
 
-   Copyright (C) 1999, Sandeep Dutta . sandeep.dutta@usa.net
+   Copyright (C) 1999, Sandeep Dutta <sandeep.dutta at usa.net>
 
    This library is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -30,7 +30,8 @@
 
 #undef strpbrk /* Avoid conflict with C23 macro */
 
-char * strpbrk ( const char * string, const char * control )
+char *
+strpbrk (const char *string, const char *control ) 
 {
 	const char *ret = NULL;
 	register char ch;

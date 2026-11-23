@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------
-   _strcpy.c - part of string library functions
+   strcpy.c - part of string library functions
 
-   Copyright (C) 1999, Sandeep Dutta . sandeep.dutta@usa.net
+   Copyright (C) 1999, Sandeep Dutta <sandeep.dutta at usa.net>
 
    This library is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -33,13 +33,15 @@
 
 #if !_SDCC_PORT_PROVIDES_STRCPY
 
-char * strcpy ( char * d, const char * s )
+char *
+strcpy ( char * d, const char * s )
 {
-    register char * d1 = d;
+  register char * d1 = d;
 
-    while (*d1++ = *s++) ;
+  while (*d1++ = *s++)
+    ;
 
-    return d;
+  return d;
 }
 
 #endif

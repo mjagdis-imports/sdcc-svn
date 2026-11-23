@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-   stdint.h - ISO C99 7.14 Signal handing <signal.h>
+   signal.h - ISO C99 7.14 Signal handing <signal.h>
 
    Copyright (C) 2019, Philipp Klaus Krause, krauseph@informatik.uni-freiburg.de
 

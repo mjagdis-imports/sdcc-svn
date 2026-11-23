@@ -34,8 +34,8 @@
    added macros: _tolower(c), _toupper(c), tolower(c), toupper(c) toascii(c)
 */
 
-#ifndef __CTYPE_H
-#define __CTYPE_H 1
+#ifndef __STDC_VERSION_CTYPE_H__
+#define __STDC_VERSION_CTYPE_H__ __STDC_VERSION__
 
 /* link the C libarary */
 #pragma library c

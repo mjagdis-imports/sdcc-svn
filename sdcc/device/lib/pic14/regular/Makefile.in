@@ -1,0 +1,200 @@
+# libc/pic14 Makefile
+
+srcdir 		= @srcdir@
+top_srcdir      = @top_srcdir@
+top_builddir 	= @top_builddir@
+abs_top_builddir = @abs_top_builddir@
+
+include $(srcdir)/../../common_files.mk
+
+# user configuration
+VPATH  		= $(srcdir):$(srcdir)/..:$(std_lib_dirs)
+AS		= /usr/bin/gpasm
+EXTRA_CFLAGS	= --opt-code-speed --no-warn-non-free
+PORT_CRT	=
+LIB_TYPE	= @LIB_TYPE@
+LIB		= pic14.lib
+#/usr/bin/gplink
+SDAR		= /usr/bin/gplib
+
+#ARCH  ?= 16f877
+#EARCH ?= 16f1788
+#'/usr/bin/gpasm' -DHAVE_CONFIG_H -I. -I../..  -I. -I../.. -I../../../../include/pic14 -I../../../../non-free/include/pic14 -I../../../../include  -p16f877 -I. -I../../../../include/pic14 -I../../../../non-free/include/pic14  -c -o _gptrget2.o _gptrget2.S
+
+#/usr/bin/gpasm -p16f877 -I. -I/include/pic14 -I/non-free/include/pic14 _gptrput4.o _gptrput4.s
+#/usr/bin/gpasm' -DHAVE_CONFIG_H -I. -I../.. -I../../../../include/pic14 -I../../../../non-free/include/pic14 -I../../../../include  -p16f877  -c -o _gptrget1.o _gptrget1.S
+
+
+ASFLAGS = -DHAVE_CONFIG -I$(srcdir) -I$(INCDIR)/pic14 \
+	-I$(top_srcdir)/device/non-free/include/pic14 -p16f877
+
+PORT_SDCC = $(COMMON_SDCC) \
+  _gptrget1 \
+  _gptrget2 \
+  _gptrget3 \
+  _gptrget4 \
+  _gptrput1 \
+  _gptrput2 \
+  _gptrput3 \
+  _gptrput4 \
+  _mulschar \
+  _muluchar \
+  shadowregs \
+  idata
+
+PORT_FLOAT = \
+  atof \
+  __fs2schar \
+  __fs2sint \
+  __fs2slong \
+  __fs2uchar \
+  __fs2uint \
+  __fs2ulong \
+  __fsadd \
+  __fsdiv \
+  __fseq \
+  __fslt \
+  __fsmul \
+  __fsneq \
+  __fssub \
+  __schar2fs \
+  __sint2fs \
+  __slong2fs \
+  __uchar2fs \
+  __uint2fs \
+  __ulong2fs
+
+PORT_LIBC = \
+  abs \
+  aligned_alloc \
+  __assert \
+  atoi \
+  atol \
+  bsearch \
+  btowc \
+  c16rtomb \
+  c16stombs \
+  c32rtomb \
+  calloc \
+  call_once \
+  errno \
+  free \
+  gets \
+  heap \
+  imaxabs \
+  isalnum \
+  isalpha \
+  isblank \
+  iscntrl \
+  isdigit \
+  isgraph \
+  islower \
+  isprint \
+  ispunct \
+  isspace \
+  isupper \
+  isxdigit \
+  __itoa \
+  __ltoa \
+  labs \
+  malloc \
+  mblen \
+  mbrlen \
+  mbrtoc16 \
+  mbrtoc32 \
+  mbrtowc \
+  mbsinit \
+  mbstoc16s \
+  mbstowcs \
+  mbtowc \
+  memalignment \
+  memccpy \
+  memchr \
+  memcmp \
+  memcpy \
+  memmove \
+  memset \
+  memset_explicit \
+  printf_large \
+  puts \
+  qsort \
+  rand \
+  realloc \
+  sprintf \
+  strcat \
+  strchr \
+  strcmp \
+  strcpy \
+  strcspn \
+  strdup \
+  strlen \
+  strncat \
+  strncmp \
+  strncpy \
+  strndup \
+  strnlen \
+  strpbrk \
+  strrchr \
+  strsep \
+  strspn \
+  strstr \
+  strtoimax \
+  strtok \
+  strtol \
+  strtoul \
+  strtoumax \
+  strxfrm \
+  tolower \
+  toupper \
+  uabs \
+  ulabs \
+  umaxabs \
+  vprintf \
+  wcrtomb \
+  wcscmp \
+  wcslen \
+  wcsncmp \
+  wcsnlen \
+  wcstoimax \
+  wcstol \
+  wcstombs \
+  wcstoul \
+  wcstoumax \
+  wctob \
+  wctomb \
+  __memcpy \
+  printfl \
+  memmisc
+
+PORT_LIBM = $(COMMON_LIBM)
+
+#include $(srcdir)/../library_build.mk
+
+PORT_OBJECTS = $(addsuffix .o, $(PORT_SDCC) $(PORT_FLOAT) $(PORT_LIBC) $(PORT_LIBM) )
+
+all: $(PORTDIR)/$(LIB) $(PORTDIR)/$(PORT_CRT)
+
+#$(PORTDIR)/$(PORT_CRT): $(PORT_CRT)
+#	cp $(PORT_CRT) $(PORTDIR)/$(PORT_CRT)
+
+$(PORTDIR)/$(LIB): $(PORT_OBJECTS) Makefile
+	$(SDAR) -c ../$(PORTDIR)/libsdcc.lib $(addsuffix .o, $(PORT_SDCC) ) \
+	  $(addsuffix .o, $(PORT_FLOAT) )
+	$(SDAR) -c ../$(PORTDIR)/libc.lib $(addsuffix .o, $(PORT_LIBC) )
+	$(SDAR) -c ../$(PORTDIR)/libm.lib $(addsuffix .o, $(PORT_LIBM) )
+
+clean:
+	rm -f *.o *.rel *.sym *.lst *~ $(CLEANSPEC) *.dump* *.asm *.lib
+
+distclean: clean
+	rm -f Makefile
+
+Makefile: $(srcdir)/Makefile.in
+	cd $(top_builddir); ./config.status device/lib/$(PORT)/Makefile
+
+%.o: %.s
+	$(AS) $(ASFLAGS) -c -o $@ $<
+
+%.o: %.c
+	$(CC) $(CFLAGS) ${CPPFLAGS} ${EXTRA_CFLAGS} -c $< -o $@
+

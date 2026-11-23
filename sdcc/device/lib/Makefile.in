@@ -244,7 +244,7 @@ objects-mcs51:
 objects-pic14:
 	$(MAKE) build-dir
 	$(MAKE) port-specific-objects-pic14
-	$(MAKE) clean_intermediate-pic
+	$(MAKE) clean_intermediate-pic14
 
 objects-pic16:
 	$(MAKE) build-dir
@@ -468,7 +468,7 @@ model-f8l:
 
 model-pic16:
 	if grep '^pic16$$' $(top_builddir)/ports.build > /dev/null; then \
-	  $(MAKE) PORT=pic16 objects-pic16; \
+	  $(MAKE) MODELFLAGS="-mpic16" PORT=pic16 objects; \
 	fi
 
 model-pic14:
@@ -499,16 +499,24 @@ port-specific-objects-pic16:
 	  cp -f $(PORT)/*/crt0*.o $(PORTDIR); \
 	fi || :
 
+
 port-specific-objects-pic14:
-	if [ -f $(PORT)/Makefile ]; then \
-	  $(MAKE) -C $(PORT) || exit 1; \
-          find $(PORT) -name 'lib*.a' | while read i; do \
-            cp -f "$$i" $(PORTDIR)/`basename "$$i" .a`.lib; \
-          done; \
-	fi || :
+	$(MAKE) -C $(PORT)/regular PORT=$(PORT) MODELFLAGS="-mpic14 -p16f877"
+	$(MAKE) -C $(PORT)/enhanced PORT=$(PORT) MODELFLAGS="-mpic14 -p16f1718" 
+
+
+#	if [ -f $(PORT)/Makefile ]; then \
+#	  $(MAKE) -C $(PORT) || exit 1; \
+#          find $(PORT) -name 'lib*.a' | while read i; do \
+#            cp -f "$$i" $(PORTDIR)/`basename "$$i" .a`.lib; \
+#          done; \
+#	fi || :
 
 clean_intermediate:
 	rm -f $(PORTDIR)/*.lst $(PORTDIR)/*.sym
+
+clean_intermediate-pic14:
+	rm -f $(PORTDIR)/*/*.lst $(PORTDIR)/*/*.sym
 
 clean_intermediate-pic:
 	$(MAKE) -C $(PORT) clean-intermediate

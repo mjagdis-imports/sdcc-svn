@@ -11,7 +11,8 @@ CPPFLAGS 	= -I$(srcdir) -I$(INCDIR)/$(PORT) -I$(INCDIR)
 # --max-allocs-per-node 32768 looks give a good compromise between compilation time nad code quality for now. Since the library is compiled relatively rarely a higher default than for user code makes sense.
 CFLAGS 		= $(MODELFLAGS) --std-c23 --max-allocs-per-node 32768
 
-std_lib_dirs	= $(srcdir)/..
+std_lib_dirs	= $(top_srcdir)/device/lib
+
 
 # override PORTDIR defined by super (parent) makefile
 override PORTDIR = ../build/$(PORT)

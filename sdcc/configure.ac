@@ -838,14 +838,15 @@ fi
 
 if test $OPT_DISABLE_PIC14 = 0; then
   AC_CONFIG_FILES(src/pic14/Makefile)
-  test $OPT_DISABLE_DEVICE_LIB = 0 && AC_CONFIG_SUBDIRS(device/lib/pic14)
+  test $OPT_DISABLE_DEVICE_LIB = 0 && AC_CONFIG_FILES([device/lib/pic14/regular/Makefile
+                                                       device/lib/pic14/enhanced/Makefile])
 fi
 if test $OPT_DISABLE_PIC14 = 0 && test $OPT_DISABLE_NON_FREE = 0; then
   test $OPT_DISABLE_DEVICE_LIB = 0 && AC_CONFIG_SUBDIRS(device/non-free/lib/pic14)
 fi
 if test $OPT_DISABLE_PIC16 = 0; then
   AC_CONFIG_FILES(src/pic16/Makefile)
-  test $OPT_DISABLE_DEVICE_LIB = 0 && AC_CONFIG_SUBDIRS(device/lib/pic16)
+  test $OPT_DISABLE_DEVICE_LIB = 0 && AC_CONFIG_FILES([device/lib/pic16/Makefile])
 fi
 if test $OPT_DISABLE_PIC16 = 0 && test $OPT_DISABLE_NON_FREE = 0; then
   test $OPT_DISABLE_DEVICE_LIB = 0 && AC_CONFIG_SUBDIRS(device/non-free/lib/pic16)

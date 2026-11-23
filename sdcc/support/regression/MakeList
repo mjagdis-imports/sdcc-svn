@@ -601,4 +601,6 @@ EXCLUDE_f8l += ${EXCLUDE_ARCH_f8}
 EXCLUDE_hc08 += ${EXCLUDE_ARCH_hc08}
 EXCLUDE_s08 += ${EXCLUDE_ARCH_hc08}
 EXCLUDE_s08-stack-auto += ${EXCLUDE_ARCH_hc08}
-
+###################################################
+EXCLUDE_pic14 = ${EXCLUDE_pdk14}
+###################################################

@@ -810,10 +810,10 @@ _pic16_linkEdit (void)
   if (!libflags.ignore)
     {
       if (libflags.want_libc)
-        addSet (&libFilesSet, Safe_strdup ("libc18f.lib"));
+        addSet (&libFilesSet, Safe_strdup ("libc.lib"));
 
       if (libflags.want_libm)
-        addSet (&libFilesSet, Safe_strdup ("libm18f.lib"));
+        addSet (&libFilesSet, Safe_strdup ("libm.lib"));
 
       if (libflags.want_libio)
         {

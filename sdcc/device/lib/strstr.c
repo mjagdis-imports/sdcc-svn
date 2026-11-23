@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------
-   _strstr.c - part of string library functions
+   strstr.c - part of string library functions
 
-   Copyright (C) 1999, Sandeep Dutta . sandeep.dutta@usa.net
+   Copyright (C) 1999, Sandeep Dutta <sandeep.dutta at usa.net>
 
    This library is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -30,28 +30,29 @@
 
 #undef strstr /* Avoid conflict with C23 macro */
 
-char *strstr ( const char *str1, const char *str2 )
+char *
+strstr ( const char *str1, const char *str2 )
 {
-	const char *cp = str1;
-	const char *s1;
-	const char *s2;
+  const char *cp = str1;
+  const char *s1;
+  const char *s2;
 
-	if (!*str2)
-	    return ((char*)str1);
+  if (!*str2)
+    return (char *)str1;
 
-	while (*cp)
-	{
-		s1 = cp;
-		s2 = str2;
+  while (*cp)
+    {
+      s1 = cp;
+      s2 = str2;
 
-		while (*s1 && *s2 && !(*s1-*s2))
-			s1++, s2++;
+      while (*s1 && *s2 && !(*s1-*s2))
+        s1++, s2++;
 
-		if (!*s2)
-			return ((char*)cp);
+      if (!*s2)
+        return (char *)cp;
 
-		cp++;
-	}
+      cp++;
+    }
 
-	return (NULL) ;
+  return NULL;
 }

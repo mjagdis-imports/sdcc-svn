@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------
-   _strncat.c - part of string library functions
+   strncat.c - part of string library functions
 
-   Copyright (C) 1999, Sandeep Dutta . sandeep.dutta@usa.net
+   Copyright (C) 1999, Sandeep Dutta <sandeep.dutta at usa.net>
 
    This library is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -28,18 +28,21 @@
 
 #include <string.h>
 
-char * strncat ( char * front, const char * back, size_t count )
+char *
+strncat ( char * front, const char * back, size_t count )
 {
-	char *start = front;
+  char *start = front;
 
-	while (*front++);
+  while (*front++)
+    ;
 
-	front--;
+  front--;
 
-	while (count--)
-		if (!(*front++ = *back++))
-			return(start);
+  while (count--)
+    if (!(*front++ = *back++))
+      return start;
 
-	*front = '\0';
-	return(start);
+  *front = '\0';
+
+  return start;
 }

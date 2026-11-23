@@ -861,9 +861,7 @@ support/packihx
 sim/ucsim
 debugger/mcs51
 support/sdbinutils
-device/lib/pic14
 device/non-free/lib/pic14
-device/lib/pic16
 device/non-free/lib/pic16'
 
 # Initialize some variables set by options.
@@ -8556,10 +8554,12 @@ if test $OPT_DISABLE_MCS51 = 0; then
 
 fi
 
+#  test $OPT_DISABLE_DEVICE_LIB = 0 && AC_CONFIG_FILES([device/lib/pic14/Makefile])
+
 if test $OPT_DISABLE_PIC14 = 0; then
   ac_config_files="$ac_config_files src/pic14/Makefile"
 
-  test $OPT_DISABLE_DEVICE_LIB = 0 && subdirs="$subdirs device/lib/pic14"
+  test $OPT_DISABLE_DEVICE_LIB = 0 && ac_config_files="$ac_config_files device/lib/pic14/regular/Makefile device/lib/pic14/enhanced/Makefile"
 
 fi
 if test $OPT_DISABLE_PIC14 = 0 && test $OPT_DISABLE_NON_FREE = 0; then
@@ -8569,8 +8569,9 @@ fi
 if test $OPT_DISABLE_PIC16 = 0; then
   ac_config_files="$ac_config_files src/pic16/Makefile"
 
-  test $OPT_DISABLE_DEVICE_LIB = 0 && subdirs="$subdirs device/lib/pic16"
+  test $OPT_DISABLE_DEVICE_LIB = 0 && ac_config_files="$ac_config_files device/lib/pic16/Makefile"
 
+#AC_CONFIG_SUBDIRS(device/lib/pic16)
 fi
 if test $OPT_DISABLE_PIC16 = 0 && test $OPT_DISABLE_NON_FREE = 0; then
   test $OPT_DISABLE_DEVICE_LIB = 0 && subdirs="$subdirs device/non-free/lib/pic16"
@@ -9404,7 +9405,10 @@ do
     "device/lib/mcs51-large-stack-auto/Makefile") CONFIG_FILES="$CONFIG_FILES device/lib/mcs51-large-stack-auto/Makefile" ;;
     "device/lib/mcs51-small-xstack-auto/Makefile") CONFIG_FILES="$CONFIG_FILES device/lib/mcs51-small-xstack-auto/Makefile" ;;
     "src/pic14/Makefile") CONFIG_FILES="$CONFIG_FILES src/pic14/Makefile" ;;
+    "device/lib/pic14/regular/Makefile") CONFIG_FILES="$CONFIG_FILES device/lib/pic14/regular/Makefile" ;;
+    "device/lib/pic14/enhanced/Makefile") CONFIG_FILES="$CONFIG_FILES device/lib/pic14/enhanced/Makefile" ;;
     "src/pic16/Makefile") CONFIG_FILES="$CONFIG_FILES src/pic16/Makefile" ;;
+    "device/lib/pic16/Makefile") CONFIG_FILES="$CONFIG_FILES device/lib/pic16/Makefile" ;;
     "src/z80/Makefile") CONFIG_FILES="$CONFIG_FILES src/z80/Makefile" ;;
     "sdas/asz80/Makefile") CONFIG_FILES="$CONFIG_FILES sdas/asz80/Makefile" ;;
     "device/lib/z80/Makefile") CONFIG_FILES="$CONFIG_FILES device/lib/z80/Makefile" ;;

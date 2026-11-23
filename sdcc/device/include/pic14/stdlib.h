@@ -114,6 +114,7 @@ inline void *aligned_alloc(size_t alignment, size_t size)
 }
 #endif
 #endif
+
 void free (void __data * ptr);
 size_t memfree (void);
 size_t memfreemax (void);
@@ -145,7 +146,7 @@ extern void *bsearch(const void *key, const void *base, size_t nmemb, size_t siz
 extern void qsort(void *base, size_t nmemb, size_t size, int (*compar)(const void *, const void *) __reentrant);
 
 /* Integer arithmetic functions (ISO C11 7.22.6) */
-#if defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_r2k) || defined(__SDCC_r3ka) || defined(__SDCC_tlcs90) || defined (__SDCC_ez80_z80)
+#if defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_r2k) || defined(__SDCC_r2ka) || defined(__SDCC_r3ka) || defined(__SDCC_r4k) || defined(__SDCC_r5k) || defined(__SDCC_r6k) || defined(__SDCC_tlcs90) || defined (__SDCC_ez80) || defined (__SDCC_z80n) || defined(__SDCC_r800)
 int abs(int j) __preserves_regs(b, c, iyl, iyh);
 #else
 int abs(int j);
@@ -188,5 +189,5 @@ typedef void (*constraint_handler_t)(const char *restrict msg, void *restrict pt
 
 #endif
 
-#endif
+#endif	/* __SDCC_STDLIB_H */
 

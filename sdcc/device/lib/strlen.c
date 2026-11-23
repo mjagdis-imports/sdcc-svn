@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------
    strlen.c - part of string library functions
  
-   Copyright (C) 1999, Sandeep Dutta . sandeep.dutta@usa.net
+   Copyright (C) 1999, Sandeep Dutta <sandeep.dutta at usa.net>
 
    This library is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -28,13 +28,14 @@
 
 #include <string.h>
 
-size_t strlen ( const char * str )
+size_t
+strlen ( const char * str )
 {
-    register size_t i = 0;
+  register size_t i = 0;
 
-    while (*str++)
-      i++ ;
+  while (*str++)
+    i++ ;
 
-    return i;
+  return i;
 }
 
