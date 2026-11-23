@@ -48,6 +48,9 @@
 	* device/lib/pic14/enhanced/Makefile.in,
 	  device/lib/pic14/regular/Makefile.in:
 	  Fix makefiles for snapshot build.
+	* device/lib/memset.c,
+	  device/lib/pic16/memset.c:
+	  Fix pic16 memset.
 
 2026-11-22 Maarten Brock <sourceforge.brock AT dse.nl>
 

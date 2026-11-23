@@ -1,10 +1,9 @@
 /*-------------------------------------------------------------------------
-   _memset.c - part of string library functions
+   memset.c - part of string library functions
 
-   Copyright (C) 1999, Sandeep Dutta . sandeep.dutta@usa.net
+   Copyright (C) 1999, Sandeep Dutta <sandeep.dutta at usa.net>
    Copyright (C) 2020, Sergey Belyashov sergey.belyashov@gmail.com
    Copyright (C) 2022, Sebastian 'basxto' Riedel
-   mcs51 assembler by Frieder Ferlemann (2007)
 
    This library is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -49,6 +48,7 @@ void *memset (void *s, int c, size_t n)
         *dst++ = data;
       } while (--sz);
     }
+
   return s;
 }
 

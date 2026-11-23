@@ -26,20 +26,22 @@
    might be covered by the GNU General Public License.
 -------------------------------------------------------------------------*/
 
+#include <stdlib.h>
 #include <string.h>
 
 #undef memset /* Avoid conflict with builtin memset() in Z80 and some related ports */
 
 void *
-memset (void _STRING_SPEC *buf, unsigned char ch, size_t count) 
+memset (void *s, unsigned char c, size_t n) 
 {
-  register unsigned char *ret = buf;
+  register unsigned char *ret = s;
 
-  while (count--)
+  while (n--)
     {
-      *(unsigned char *)ret = ch;
+      *(unsigned char *)ret = c;
       ++ret;
     }
 
-  return buf;
+  return s;
 }
+
