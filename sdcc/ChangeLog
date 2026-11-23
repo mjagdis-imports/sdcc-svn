@@ -51,6 +51,8 @@
 	* device/lib/memset.c,
 	  device/lib/pic16/memset.c:
 	  Fix pic16 memset.
+	* device/lib/pic16/Makefile.in:
+	  Enable long long mul/div/mod for PIC16.
 
 2026-11-22 Maarten Brock <sourceforge.brock AT dse.nl>
 

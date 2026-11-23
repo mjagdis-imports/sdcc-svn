@@ -22,6 +22,7 @@ ASFLAGS = -DHAVE_CONFIG -I$(srcdir) -I$(INCDIR)/pic16 \
 #-p18f1718
 
 PORT_SDCC = $(COMMON_SDCC) \
+  $(COMMON_SDCC_LL) \
   gptrget1 \
   gptrget2 \
   gptrget3 \
