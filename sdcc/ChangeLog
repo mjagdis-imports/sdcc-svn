@@ -43,7 +43,9 @@
 	  Convert pic libraries to new build infrastructure.
 	* device/lib/pic14/regular/shadowregs.c:
 	  Add missing file.
-	
+	* device/lib/pic16/Makefile.in:
+	  Add non-free include path.
+
 2026-11-22 Maarten Brock <sourceforge.brock AT dse.nl>
 
 	* support/regression/tests/bug-4171.c: disabled test for mcs51 as it
