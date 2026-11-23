@@ -17,7 +17,7 @@ LIB		= pic14.lib
 #/usr/bin/gplink
 SDAR		= /usr/bin/gplib
 
-override PORTDIR=$(abs_top_builddir)/device/lib/build/pic14/
+override PORTDIR=$(abs_top_builddir)/device/lib/build/pic14
 
 
 #ARCH  ?= 16f877
@@ -180,10 +180,10 @@ all: $(PORTDIR)/$(LIB) $(PORTDIR)/$(PORT_CRT)
 #	cp $(PORT_CRT) $(PORTDIR)/$(PORT_CRT)
 
 $(PORTDIR)/$(LIB): $(PORT_OBJECTS) Makefile
-	$(SDAR) -c ../$(PORTDIR)/libsdcce.lib $(addsuffix .o, $(PORT_SDCC) ) \
+	$(SDAR) -c $(PORTDIR)/libsdcce.lib $(addsuffix .o, $(PORT_SDCC) ) \
 	  $(addsuffix .o, $(PORT_FLOAT) )
-	$(SDAR) -c ../$(PORTDIR)/libce.lib $(addsuffix .o, $(PORT_LIBC) )
-	$(SDAR) -c ../$(PORTDIR)/libme.lib $(addsuffix .o, $(PORT_LIBM) )
+	$(SDAR) -c $(PORTDIR)/libce.lib $(addsuffix .o, $(PORT_LIBC) )
+	$(SDAR) -c $(PORTDIR)/libme.lib $(addsuffix .o, $(PORT_LIBM) )
 
 clean:
 	rm -f *.o *.rel *.sym *.lst *~ $(CLEANSPEC) *.dump* *.asm *.lib

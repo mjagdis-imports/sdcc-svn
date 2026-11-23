@@ -24,7 +24,7 @@ SDAR		= /usr/bin/gplib
 #/usr/bin/gpasm -p16f877 -I. -I/include/pic14 -I/non-free/include/pic14 _gptrput4.o _gptrput4.s
 #/usr/bin/gpasm' -DHAVE_CONFIG_H -I. -I../.. -I../../../../include/pic14 -I../../../../non-free/include/pic14 -I../../../../include  -p16f877  -c -o _gptrget1.o _gptrget1.S
 
-override PORTDIR=$(abs_top_builddir)/device/lib/build/pic14/
+override PORTDIR=$(abs_top_builddir)/device/lib/build/pic14
 
 
 ASFLAGS = -DHAVE_CONFIG -I$(srcdir) -I$(INCDIR)/pic14 \
