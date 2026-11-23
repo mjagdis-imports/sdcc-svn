@@ -24,6 +24,8 @@ SDAR		= /usr/bin/gplib
 #/usr/bin/gpasm -p16f877 -I. -I/include/pic14 -I/non-free/include/pic14 _gptrput4.o _gptrput4.s
 #/usr/bin/gpasm' -DHAVE_CONFIG_H -I. -I../.. -I../../../../include/pic14 -I../../../../non-free/include/pic14 -I../../../../include  -p16f877  -c -o _gptrget1.o _gptrget1.S
 
+override PORTDIR=$(abs_top_builddir)/device/lib/build/pic14/
+
 
 ASFLAGS = -DHAVE_CONFIG -I$(srcdir) -I$(INCDIR)/pic14 \
 	-I$(top_srcdir)/device/non-free/include/pic14 -p16f877
@@ -178,10 +180,10 @@ all: $(PORTDIR)/$(LIB) $(PORTDIR)/$(PORT_CRT)
 #	cp $(PORT_CRT) $(PORTDIR)/$(PORT_CRT)
 
 $(PORTDIR)/$(LIB): $(PORT_OBJECTS) Makefile
-	$(SDAR) -c ../$(PORTDIR)/libsdcc.lib $(addsuffix .o, $(PORT_SDCC) ) \
+	$(SDAR) -c $(PORTDIR)/libsdcc.lib $(addsuffix .o, $(PORT_SDCC) ) \
 	  $(addsuffix .o, $(PORT_FLOAT) )
-	$(SDAR) -c ../$(PORTDIR)/libc.lib $(addsuffix .o, $(PORT_LIBC) )
-	$(SDAR) -c ../$(PORTDIR)/libm.lib $(addsuffix .o, $(PORT_LIBM) )
+	$(SDAR) -c $(PORTDIR)/libc.lib $(addsuffix .o, $(PORT_LIBC) )
+	$(SDAR) -c $(PORTDIR)/libm.lib $(addsuffix .o, $(PORT_LIBM) )
 
 clean:
 	rm -f *.o *.rel *.sym *.lst *~ $(CLEANSPEC) *.dump* *.asm *.lib

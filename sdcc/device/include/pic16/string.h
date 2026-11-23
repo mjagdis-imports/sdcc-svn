@@ -220,6 +220,17 @@ extern char *strtok (char *restrict str, const char delim[restrict static 1]);
 extern char *strtok (char *str, const char *delim);
 #endif
 
+// Miscanelleous functions (ISO C23 7.28.6)
+#ifdef __SDCC_BROKEN_STRING_FUNCTIONS
+extern void *memset (void *s, _NEAR unsigned char c, _NEAR size_t n); // c should be int according to standard.
+#else
+extern void *memset (void *s, int c, size_t n);
+#endif
+
+//void *memset (_STRING_SPEC void *, unsigned char, size_t );
+
+extern void *memset_explicit (void *s, int c, size_t n);
+
 /* extern char *strerror(int errnum); */
 #if defined(__SDCC_z80) || defined (__SDCC_z80n) || defined(__SDCC_z180) || defined(__SDCC_tlcs90) || defined(__SDCC_ez80) || defined(__SDCC_r800)
 #if __STDC_VERSION__ >= 199901L
@@ -238,10 +249,7 @@ extern size_t strlen (const char *s);
 char *strlwr (char *);
 char *strupr (char *);
 
-void *memchr(const void *, char, size_t);
-int   memcmp (const void *, const void *, size_t);
 void *memrchr(void *, char, size_t);
-void *memset (_STRING_SPEC void *, unsigned char, size_t );
 
 
 // C2y length function

@@ -45,6 +45,9 @@
 	  Add missing file.
 	* device/lib/pic16/Makefile.in:
 	  Add non-free include path.
+	* device/lib/pic14/enhanced/Makefile.in,
+	  device/lib/pic14/regular/Makefile.in:
+	  Fix makefiles for snapshot build.
 
 2026-11-22 Maarten Brock <sourceforge.brock AT dse.nl>
 

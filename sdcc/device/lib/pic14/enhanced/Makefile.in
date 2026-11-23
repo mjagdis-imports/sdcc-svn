@@ -17,6 +17,9 @@ LIB		= pic14.lib
 #/usr/bin/gplink
 SDAR		= /usr/bin/gplib
 
+override PORTDIR=$(abs_top_builddir)/device/lib/build/pic14/
+
+
 #ARCH  ?= 16f877
 #EARCH ?= 16f1788
 #'/usr/bin/gpasm' -DHAVE_CONFIG_H -I. -I../..  -I. -I../.. -I../../../../include/pic14 -I../../../../non-free/include/pic14 -I../../../../include  -p16f877 -I. -I../../../../include/pic14 -I../../../../non-free/include/pic14  -c -o _gptrget2.o _gptrget2.S
