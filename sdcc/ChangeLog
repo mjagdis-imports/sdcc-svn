@@ -41,6 +41,8 @@
 	  device/lib/pic14/*,
 	  device/lib/pic16/*:
 	  Convert pic libraries to new build infrastructure.
+	* device/lib/pic14/regular/shadowregs.c:
+	  Add missing file.
 	
 2026-11-22 Maarten Brock <sourceforge.brock AT dse.nl>
 
