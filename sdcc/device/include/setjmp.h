@@ -74,6 +74,8 @@ typedef unsigned char jmp_buf[3]; /* 1 for the stack pointer, 2 for the return a
 typedef unsigned char jmp_buf[2 * __SETJMP_H_STACK_PTR_SIZE + 4];
 #elif defined (__SDCC_mcs51)
 typedef unsigned char jmp_buf[RET_SIZE + SP_SIZE + BP_SIZE + SPX_SIZE + BPX_SIZE];
+#else
+#warning "setjmp.h : setjmp/longjmp not implemented for this SDCC port"
 #endif
 
 int __setjmp (jmp_buf);

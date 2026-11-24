@@ -52,7 +52,7 @@
 # define NULL (void *)0
 #endif
 
-#define RAND_MAX        0x7fffffff
+#define RAND_MAX 32767
 
 /* Numeric conversion functions (ISO C11 7.22.1) */
 #if __STDC_VERSION__ >= 199901L
@@ -72,28 +72,34 @@ extern long int strtol(const char *nptr, char **endptr, int base);
 extern unsigned long int strtoul(const char *nptr, char **endptr, int base);
 #endif
 
+/* SDCC extensions */
+extern void __uitoa(unsigned int, char *, unsigned char);
+extern void __itoa(int, char *, unsigned char);
+extern void __ultoa(unsigned long, char *, unsigned char);
+extern void __ltoa(long, char *, unsigned char);
 
 /* Pseudo-random sequence generation functions (ISO C11 7.22.2) */
-long rand (void);
-void srand (unsigned long seed);
-
-/* reentrant version of rand() */
-long rand_r (unsigned long *ctx);
+int rand(void);
+void srand(unsigned int seed);
 
 /* Memory management functions (ISO C11 7.22.3) */
+
 #if defined(__SDCC_mcs51) || defined(__SDCC_ds390) || defined(__SDCC_ds400)
 void __xdata *calloc (size_t nmemb, size_t size);
 void __xdata *malloc (size_t size);
 void __xdata *realloc (void *ptr, size_t size);
-#elseif defined(__SDCC_pic16)
+
+#elseif defined(__SDCC_pic16) || defined(__SDCC_pic14)
 #define calloc(nmemb,size)    _calloc((size_t)(nmemb) * (size_t)(size))
 void __data *_calloc (size_t size);
 void __data *malloc (size_t size);
 void __data *realloc (void __data *ptr, size_t size);
+
 #else
 void *calloc (size_t nmemb, size_t size);
 void *malloc (size_t size);
 void *realloc (void *ptr, size_t size);
+
 #endif
 
 void free (void __data * ptr);

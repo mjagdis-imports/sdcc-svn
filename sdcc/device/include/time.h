@@ -29,6 +29,10 @@
 #ifndef __SDCC_TIME_H
 #define __SDCC_TIME_H
 
+#if defined(__SDCC_pic14)
+#warning "time.h : time functions not implemented in SDCC pic14 port"
+#endif
+
 #ifndef __TIME_UNSIGNED
 #define __TIME_UNSIGNED 1
 #endif

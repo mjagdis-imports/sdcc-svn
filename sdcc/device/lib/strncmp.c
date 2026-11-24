@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------
-   _strncmp.c - part of string library functions
+   strncmp.c - part of string library functions
 
-   Copyright (C) 1999, Sandeep Dutta . sandeep.dutta@usa.net
+   Copyright (C) 1999, Sandeep Dutta <sandeep.dutta at usa.net>
 
    This library is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -28,10 +28,11 @@
 
 #include <string.h>
 
-int strncmp ( const char * first, const char * last, size_t count )
+int
+strncmp ( const char *first, const char *last, size_t count )
 {
-	if (!count)
-		return(0);
+  if (!count)
+    return 0;
 
 	while (--count && *first && *first == *last) {
 		first++;

@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------
    __divslong.c - routine for division of 32 bit long
 
-   Copyright (C) 1999, Sandeep Dutta . sandeep.dutta@usa.net
+   Copyright (C) 1999, Sandeep Dutta <sandeep.dutta AT usa.net>
 
    This library is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -25,7 +25,6 @@
    not however invalidate any other reasons why the executable file
    might be covered by the GNU General Public License.
 -------------------------------------------------------------------------*/
-
 
 #include <sdcc-lib.h>
 

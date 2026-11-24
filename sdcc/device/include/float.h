@@ -30,7 +30,7 @@
 #define __SDC51_FLOAT_H 1
 
 #include <limits.h>
-
+#include <stdint.h>
 #include <sdcc-lib.h>
 
 #define FLT_RADIX       2

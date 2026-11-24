@@ -1,3 +1,22 @@
+2026-11-23 Gabriele Gorla <gorlik@yahoo.com>
+
+	* device/include/float.h,
+	  device/include/pic14/stdarg.h,
+	  device/include/pic14/stdlib.h,
+	  device/include/pic16/stdlib.h,
+	  device/include/sdcc-lib.h,
+	  device/include/setjmp.h,
+	  device/include/time.h,
+	  device/lib/_divslong.c,
+	  device/lib/pic16/Makefile.in,
+	  device/lib/pic16/isgraph.c,
+	  device/lib/rand.c,
+	  device/lib/strcat.c,
+	  device/lib/strncmp.c,
+	  device/lib/strncpy.c,
+	  device/lib/strrchr.c:
+	  Use generic lib implementation for PIC14 and PIC16.
+
 2026-11-22 Gabriele Gorla <gorlik@yahoo.com>
 
 	* configure,

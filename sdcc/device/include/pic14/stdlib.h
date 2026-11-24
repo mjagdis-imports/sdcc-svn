@@ -30,10 +30,12 @@
    might be covered by the GNU General Public License.
 -------------------------------------------------------------------------*/
 
-#ifndef __SDCC_STDLIB_H
-#define __SDCC_STDLIB_H 1
+#ifndef __STDC_VERSION_STDLIB_H__
+#define __STDC_VERSION_STDLIB_H__ 201710L /* TODO: replace by __STDC_VERSION__ when this header becomes C23-compliant! */
 
-#if !defined(__SDCC_mcs51) && !defined(__SDCC_ds390) && !defined(__SDCC_ds400) && !defined(__SDCC_hc08) && !defined(__SDCC_s08) && !defined(__SDCC_pic16) && !defined(__SDCC_pdk13) && !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15)
+#include <stdint.h>
+
+#if !defined(__SDCC_mcs51) && !defined(__SDCC_ds390) && !defined(__SDCC_ds400) && !defined(__SDCC_hc08) && !defined(__SDCC_s08) && !defined(__SDCC_mos6502) && !defined(__SDCC_mos65c02) && !defined(__SDCC_huc6280) && !defined(__SDCC_pic14) && !defined(__SDCC_pic16) && !defined(__SDCC_pdk13) && !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15)
 #define __reentrant
 #endif
 
@@ -66,10 +68,10 @@ extern long int strtol(const char *nptr, char **endptr, int base);
 extern unsigned long int strtoul(const char *nptr, char **endptr, int base);
 
 /* SDCC extensions */
-extern void _uitoa(unsigned int, char*, unsigned char);
-extern void _itoa(int, char*, unsigned char);
-extern void _ultoa(unsigned long, char*, unsigned char);
-extern void _ltoa(long, char*, unsigned char);
+extern void __uitoa(unsigned int, char *, unsigned char);
+extern void __itoa(int, char *, unsigned char);
+extern void __ultoa(unsigned long, char *, unsigned char);
+extern void __ltoa(long, char *, unsigned char);
 
 #if defined(__SDCC_pic14)
 
@@ -99,12 +101,18 @@ int rand(void);
 void srand(unsigned int seed);
 
 /* Memory management functions (ISO C11 7.22.3) */
-#if defined(__SDCC_pic14)
 
+#if defined(__SDCC_mcs51) || defined(__SDCC_ds390) || defined(__SDCC_ds400)
+void __xdata *calloc (size_t nmemb, size_t size);
+void __xdata *malloc (size_t size);
+void __xdata *realloc (void *ptr, size_t size);
+
+#elif defined(__SDCC_pic16) || defined(__SDCC_pic14)
 #define calloc(nmemb,size)    _calloc((size_t)(nmemb) * (size_t)(size))
 void __data *_calloc (size_t size);
 void __data *malloc (size_t size);
 void __data *realloc (void __data *ptr, size_t size);
+
 #if __STDC_VERSION__ >= 201112L
 #if 0 // Won't compile on pic14 TODO: Fix this!
 inline void *aligned_alloc(size_t alignment, size_t size)
@@ -115,21 +123,13 @@ inline void *aligned_alloc(size_t alignment, size_t size)
 #endif
 #endif
 
-void free (void __data * ptr);
-size_t memfree (void);
-size_t memfreemax (void);
-
-#else /* __SDCC_pic14 */
-
-#if defined(__SDCC_mcs51) || defined(__SDCC_ds390) || defined(__SDCC_ds400)
-void __xdata *calloc (size_t nmemb, size_t size);
-void __xdata *malloc (size_t size);
-void __xdata *realloc (void *ptr, size_t size);
 #else
 void *calloc (size_t nmemb, size_t size);
 void *malloc (size_t size);
 void *realloc (void *ptr, size_t size);
+
 #endif
+
 #if __STDC_VERSION__ >= 201112L
 inline void *aligned_alloc(size_t alignment, size_t size)
 {
@@ -137,9 +137,10 @@ inline void *aligned_alloc(size_t alignment, size_t size)
   return malloc(size);
 }
 #endif
-extern void free (void * ptr);
 
-#endif /* __SDCC_pic14 */
+void free (void __data * ptr);
+size_t memfree (void);
+size_t memfreemax (void);
 
 /* Searching and sorting utilities (ISO C11 7.22.5) */
 extern void *bsearch(const void *key, const void *base, size_t nmemb, size_t size, int (*compar)(const void *, const void *) __reentrant);
@@ -153,6 +154,7 @@ int abs(int j);
 #endif
 long int labs(long int j);
 
+/* C2y Integer arithmetic functions */
 #if __STDC_VERSION__ > 202311L
 unsigned int uabs(int j);
 unsigned long int ulabs(unsigned long int j);

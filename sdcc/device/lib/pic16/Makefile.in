@@ -53,27 +53,7 @@ PORT_SDCC = $(COMMON_SDCC) \
   _mulschar \
   _muluchar
 
-PORT_FLOAT = \
-  atof \
-  __fs2schar \
-  __fs2sint \
-  __fs2slong \
-  __fs2uchar \
-  __fs2uint \
-  __fs2ulong \
-  __fsadd \
-  __fsdiv \
-  __fseq \
-  __fslt \
-  __fsmul \
-  __fsneq \
-  __fssub \
-  __schar2fs \
-  __sint2fs \
-  __slong2fs \
-  __uchar2fs \
-  __uint2fs \
-  __ulong2fs
+PORT_FLOAT = $(COMMON_FLOAT)
 
 PORT_LIBC = \
   abs \
@@ -81,6 +61,7 @@ PORT_LIBC = \
   __assert \
   atoi \
   atol \
+  atoll \
   bsearch \
   btowc \
   c16rtomb \
@@ -88,6 +69,9 @@ PORT_LIBC = \
   c32rtomb \
   calloc \
   call_once \
+  ckd_add \
+  ckd_mul \
+  ckd_sub \
   errno \
   free \
   gets \
@@ -107,6 +91,7 @@ PORT_LIBC = \
   __itoa \
   __ltoa \
   labs \
+  llabs \
   malloc \
   mblen \
   mbrlen \
@@ -125,12 +110,23 @@ PORT_LIBC = \
   memmove \
   memset \
   memset_explicit \
-  printf \
   puts \
   qsort \
   rand \
   realloc \
+  setjmp \
   sprintf \
+  __stdc_bit_ceilull \
+  __stdc_bit_width \
+  __stdc_count_ones \
+  __stdc_first_leading_one \
+  __stdc_first_trailing_one \
+  __stdc_leading_zeros \
+  stdc_load8 \
+  stdc_memreverse8 \
+  stdc_memreverse8u \
+  stdc_store8 \
+  __stdc_trailing_ones \
   strcat \
   strchr \
   strcmp \
@@ -151,11 +147,14 @@ PORT_LIBC = \
   strtoimax \
   strtok \
   strtol \
+  strtoll \
   strtoul \
+  strtoull \
   strtoumax \
   strxfrm \
   uabs \
   ulabs \
+  ullabs \
   umaxabs \
   vprintf \
   wcrtomb \
@@ -165,13 +164,13 @@ PORT_LIBC = \
   wcsnlen \
   wcstoimax \
   wcstol \
+  wcstoll \
   wcstombs \
   wcstoul \
+  wcstoull \
   wcstoumax \
   wctob \
-  wctomb \
-  memmisc \
-  setjmp
+  wctomb
 
 PORT_LIBM = $(COMMON_LIBM)
 

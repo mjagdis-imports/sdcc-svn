@@ -34,3 +34,4 @@ char isgraph (unsigned char c)
         return 1;
     return 0;
 }
+
