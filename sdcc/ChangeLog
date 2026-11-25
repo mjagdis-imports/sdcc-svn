@@ -1,3 +1,8 @@
+2026-11-25 Gabriele Gorla <gorlik@yahoo.com>
+
+	* support/regression/tests/sizeof.c.in:
+	  Set the correct expectation for pic16 generic pointers.
+
 2026-11-23 Gabriele Gorla <gorlik@yahoo.com>
 
 	* device/include/float.h,
