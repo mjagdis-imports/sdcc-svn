@@ -3167,24 +3167,56 @@ optimizeCastCast (eBBlock **ebbs, int count)
     }
 }
 
-/*-----------------------------------------------------------------*/
-/* optimizeFinalCast - remove unneeded intermediate casts.         */
-/* Backends can handle wrong types onmany pointers in poiner write */
-/* and read. Exploit this to optimize out some casts. Typically    */
-/* done late (i.e. just before register allocation).               */
-/*-----------------------------------------------------------------*/
+/* Fold an adjacent, same-width signed-to-unsigned cast into an operation
+   that consumes the same bits. */
+static bool
+foldFinalIntegerCast (eBBlock *ebp, iCode *ic, iCode *operation)
+{
+  operand *source = IC_RIGHT (ic);
+  operand *temporary = IC_RESULT (ic);
+  sym_link *from = operandType (source);
+  sym_link *to = operandType (temporary);
+  if (!IS_INTEGRAL (from) || !IS_INTEGRAL (to) ||
+      IS_BOOL (to) || IS_BITFIELD (from) || IS_BITFIELD (to) ||
+      SPEC_USIGN (from) || !SPEC_USIGN (to) ||
+      SPEC_NOUN (from) != SPEC_NOUN (to) || bitsForType (from) != bitsForType (to) ||
+      bitsForType (to) < INTSIZE * 8 || bitsForType (to) != getSize (to) * 8 ||
+      getAddrspace (from) || isOperandVolatile (source, true) || isAtomic (from))
+    return false;
+
+  if (!IC_RESULT (operation))
+    return false;
+
+  sym_link *result = operandType (IC_RESULT (operation));
+  if (!IS_INTEGRAL (result) || !SPEC_USIGN (result) || bitsForType (result) != bitsForType (to))
+    return false;
+
+  if (isOperandEqual (IC_LEFT (operation), temporary))
+    IC_LEFT (operation) = operandFromOperand (source);
+  if (isOperandEqual (IC_RIGHT (operation), temporary))
+    IC_RIGHT (operation) = operandFromOperand (source);
+
+  bitVectUnSetBit (OP_USES (temporary), operation->key);
+  unsetDefsAndUses (ic);
+  if (IS_SYMOP (source))
+    bitVectSetBit (OP_USES (source), operation->key);
+  remiCodeFromeBBlock (ebp, ic);
+  hTabDeleteItem (&iCodehTab, ic->key, ic, DELETE_ITEM, NULL);
+  return true;
+}
+
+/* Fold casts into their final use before register allocation. */
 static void
 optimizeFinalCast (ebbIndex *ebbi)
 {
-  // Apparently this triggers a bug in the mcs51 and ds390 backends.
+  // Folding pointer access casts triggers a bug in the mcs51 and ds390 backends.
   // Some regression tests fail, including gcc-torture-execute-pr38236;
   // looking into that one for -mmcs51 --model-small , register allocation
   // puts the result of a 16-bit read from e generic pointer into dptr,
   // which codegen can't handle (it generated code where dpl is overwritten by
   // the lower byte of the result, then used as pointer once more).
   // This also triggers a pic16 bug resulting in invalid asm code being generated.
-  if (TARGET_MCS51_LIKE || TARGET_IS_PIC16)
-    return;
+  const bool foldPointerCasts = !TARGET_MCS51_LIKE && !TARGET_IS_PIC16;
 
   for (int i = 0; i < ebbi->count; i++)
     {
@@ -3197,6 +3229,14 @@ optimizeFinalCast (ebbIndex *ebbi)
             continue;
 
           if (bitVectnBitsOn (OP_USES (ic->result)) != 1 || bitVectnBitsOn (OP_DEFS (ic->result)) != 1)
+            continue;
+
+          iCode *next = ic->next;
+          if (next && next->op == '+' &&
+              bitVectBitValue (OP_USES (ic->result), next->key) && foldFinalIntegerCast (ebp, ic, next))
+            continue;
+
+          if (!foldPointerCasts)
             continue;
 
           iCode *uic = hTabItemWithKey (iCodehTab, bitVectFirstBit (OP_USES (ic->result)));

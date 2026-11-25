@@ -117,6 +117,11 @@ testlibmullong(void)
   ASSERT(mullong (0xfffffcfb, 0xfffffefd) == 0x00030e0f);
 
   ASSERT(mullong (0xffffffff, 0xffffffff) ==          1);
+
+  ASSERT(mullong (-1, 0x12345678) == -0x12345678L);
+  ASSERT(mullong (0x12345678, -1) == -0x12345678L);
+  ASSERT(mullong (-12345, 6789) == -83810205L);
+  ASSERT(mullong (-12345, -6789) == 83810205L);
 #endif
 #endif
 }

@@ -1,0 +1,57 @@
+/* bug-4168. Fold redundant copies for unsigned addition.
+
+   operation: add, sub, bits, extension, int_extension
+ */
+#include <testfwk.h>
+
+#define operation_{operation}
+
+#if defined(operation_add)
+unsigned long calculate(long a, unsigned long b)
+{
+  return (unsigned long)a + b;
+}
+#elif defined(operation_sub)
+unsigned long calculate(long a, unsigned long b)
+{
+  return (unsigned long)a - b;
+}
+#elif defined(operation_bits)
+unsigned long calculate(long a, unsigned long b)
+{
+  return ((unsigned long)a ^ b) | 0x80000000UL;
+}
+#elif defined(operation_int_extension)
+unsigned long calculate(int a, unsigned long b)
+{
+  return (unsigned long)a + b;
+}
+#else
+unsigned long calculate(signed char a, unsigned long b)
+{
+  return (unsigned long)a + b;
+}
+#endif
+
+/* Separate programs keep the cases within the smallest targets' memory. */
+void test_cast(void)
+{
+#if defined(operation_add)
+  /* Negative operands require conversion before the unsigned addition. */
+  ASSERT(calculate(-1, 1) == 0);
+  ASSERT(calculate(-12345, 6789) == (unsigned long)-5556L);
+  ASSERT(calculate(0x7fffffffL, 1) == 0x80000000UL);
+#elif defined(operation_sub)
+  /* Subtraction is outside the optimisation's scope. */
+  ASSERT(calculate(-1, 1) == ~1UL);
+  ASSERT(calculate(0, 1) == ~0UL);
+#elif defined(operation_bits)
+  /* Bitwise operations are outside the optimisation's scope. */
+  ASSERT(calculate(-1, 0x55555555UL) == (~0UL ^ 0x55555555UL));
+  ASSERT(calculate(0x12345678L, 0x55555555UL) == 0xc761032dUL);
+#else
+  /* A narrower signed source still needs sign extension. */
+  ASSERT(calculate(-1, 1) == 0);
+  ASSERT(calculate(-128, 1) == (unsigned long)-127L);
+#endif
+}

@@ -1,3 +1,16 @@
+2026-11-25 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
+	* src/SDCCopt.c (foldFinalIntegerCast): Fold single-use,
+	  same-width signed-to-unsigned casts into adjacent unsigned
+	  additions to avoid redundant copies and reduce spill storage
+	  (bug #4168).
+	  (optimizeFinalCast): Call foldFinalIntegerCast for unsigned
+	  additions.
+	* support/regression/tests/bug-3855.c: Re-enable the PDK14 test.
+	* support/regression/tests/bug-4168-add.c.in: Test modular addition
+	  and sign extension. Check subtraction and bitwise results.
+	* support/regression/tests/libmullong.c.in: Check signed products.
+
 2026-11-25 Gabriele Gorla <gorlik@yahoo.com>
 
 	* support/regression/tests/sizeof.c.in:
