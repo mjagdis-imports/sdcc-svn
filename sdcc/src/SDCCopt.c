@@ -3232,7 +3232,8 @@ optimizeFinalCast (ebbIndex *ebbi)
             continue;
 
           iCode *next = ic->next;
-          if (next && (next->op == '+' || next->op == '-') &&
+          if (next && (next->op == '+' || next->op == '-' || next->op == BITWISEAND ||
+                       next->op == '|' || next->op == '^' || next->op == '~') &&
               bitVectBitValue (OP_USES (ic->result), next->key) && foldFinalIntegerCast (ebp, ic, next))
             continue;
 

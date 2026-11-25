@@ -46,7 +46,7 @@ void test_cast(void)
   ASSERT(calculate(-1, 1) == ~1UL);
   ASSERT(calculate(0, 1) == ~0UL);
 #elif defined(operation_bits)
-  /* Bitwise operations are outside the optimisation's scope. */
+  /* Conversion must retain high bits for the bitwise operations. */
   ASSERT(calculate(-1, 0x55555555UL) == (~0UL ^ 0x55555555UL));
   ASSERT(calculate(0x12345678L, 0x55555555UL) == 0xc761032dUL);
 #else

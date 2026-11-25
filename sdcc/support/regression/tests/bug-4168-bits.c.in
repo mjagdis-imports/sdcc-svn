@@ -1,0 +1,60 @@
+/* bug-4168. Same-width unsigned bitwise casts.
+
+   operation: and, or, xor, not
+ */
+#include <testfwk.h>
+#include <limits.h>
+
+#define operation_{operation}
+
+#if defined(operation_and)
+unsigned long calculate(long a, unsigned long b)
+{
+  return (unsigned long)a & b;
+}
+#elif defined(operation_or)
+unsigned long calculate(long a, unsigned long b)
+{
+  return (unsigned long)a | b;
+}
+#elif defined(operation_xor)
+unsigned long calculate(long a, unsigned long b)
+{
+  return (unsigned long)a ^ b;
+}
+#elif defined(operation_not)
+unsigned long calculate(long a)
+{
+  return ~(unsigned long)a;
+}
+#endif
+
+/* Check negative operands, wraparound and the sign bit. */
+void test_operation(void)
+{
+#if defined(operation_and)
+  ASSERT(calculate(-1, 0x55555555UL) == (0x55555555UL));
+  ASSERT(calculate(-12345, 0xffffUL) == (0xcfc7UL));
+  ASSERT(calculate(0, ULONG_MAX) == (0));
+  ASSERT(calculate(0x12345678L, 0x55555555UL) == (0x10145450UL));
+  ASSERT(calculate(LONG_MIN, ULONG_MAX) == ((unsigned long)LONG_MIN));
+#elif defined(operation_or)
+  ASSERT(calculate(-1, 1) == (ULONG_MAX));
+  ASSERT(calculate(0, 0x55555555UL) == (0x55555555UL));
+  ASSERT(calculate(0x12345678L, 0x55555555UL) == (0x5775577dUL));
+  ASSERT(calculate(LONG_MIN, 0) == ((unsigned long)LONG_MIN));
+  ASSERT(calculate(1, 0x80000000UL) == (0x80000001UL));
+#elif defined(operation_xor)
+  ASSERT(calculate(-1, 0x55555555UL) == (~0x55555555UL));
+  ASSERT(calculate(-12345, 0xffffUL) == ((unsigned long)-53192L));
+  ASSERT(calculate(0x12345678L, 0x55555555UL) == (0x4761032dUL));
+  ASSERT(calculate(0, ULONG_MAX) == (ULONG_MAX));
+  ASSERT(calculate(LONG_MIN, 1) == ((unsigned long)(LONG_MIN + 1)));
+#elif defined(operation_not)
+  ASSERT(calculate(-1) == (0));
+  ASSERT(calculate(0) == (ULONG_MAX));
+  ASSERT(calculate(-12345) == (12344UL));
+  ASSERT(calculate(LONG_MAX) == (ULONG_MAX / 2 + 1));
+  ASSERT(calculate(LONG_MIN) == (LONG_MAX));
+#endif
+}
