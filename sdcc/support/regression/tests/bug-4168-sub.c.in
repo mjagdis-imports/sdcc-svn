@@ -1,0 +1,38 @@
+/* bug-4168. Same-width unsigned subtraction casts.
+
+   operation: sub_left, sub_right
+ */
+#include <testfwk.h>
+#include <limits.h>
+
+#define operation_{operation}
+
+#if defined(operation_sub_left)
+unsigned long calculate(long a, unsigned long b)
+{
+  return (unsigned long)a - b;
+}
+#elif defined(operation_sub_right)
+unsigned long calculate(long a, unsigned long b)
+{
+  return b - (unsigned long)a;
+}
+#endif
+
+/* Check negative operands, wraparound and the sign bit. */
+void test_operation(void)
+{
+#if defined(operation_sub_left)
+  ASSERT(calculate(-1, 1) == (~1UL));
+  ASSERT(calculate(0, 1) == (ULONG_MAX));
+  ASSERT(calculate(1, 1) == (0));
+  ASSERT(calculate(-12345, 6789) == ((unsigned long)-19134L));
+  ASSERT(calculate(LONG_MAX, 1) == (LONG_MAX - 1UL));
+#elif defined(operation_sub_right)
+  ASSERT(calculate(-1, 1) == (2));
+  ASSERT(calculate(0, 1) == (1));
+  ASSERT(calculate(1, 0) == (ULONG_MAX));
+  ASSERT(calculate(-12345, 6789) == (19134UL));
+  ASSERT(calculate(LONG_MAX, 1) == ((unsigned long)(1L - LONG_MAX)));
+#endif
+}

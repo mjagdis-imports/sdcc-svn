@@ -1,5 +1,12 @@
 2026-11-25 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
+	* src/SDCCopt.c (foldFinalIntegerCast): Fold same-width casts
+	  into unsigned subtraction.
+	* support/regression/tests/bug-4168-sub.c.in: Test both operand
+	  positions, negative values and wraparound.
+
+2026-11-25 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
 	* src/SDCCopt.c (foldFinalIntegerCast): Fold single-use,
 	  same-width signed-to-unsigned casts into adjacent unsigned
 	  additions to avoid redundant copies and reduce spill storage
