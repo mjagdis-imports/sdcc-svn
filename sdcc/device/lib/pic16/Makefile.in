@@ -72,6 +72,7 @@ PORT_LIBC = \
   ckd_add \
   ckd_mul \
   ckd_sub \
+  div \
   errno \
   free \
   gets \
@@ -91,7 +92,10 @@ PORT_LIBC = \
   __itoa \
   __ltoa \
   labs \
+  ldiv \
   llabs \
+  lldiv \
+  ltoa \
   malloc \
   mblen \
   mbrlen \
@@ -110,6 +114,7 @@ PORT_LIBC = \
   memmove \
   memset \
   memset_explicit \
+  printf \
   puts \
   qsort \
   rand \
@@ -152,10 +157,16 @@ PORT_LIBC = \
   strtoull \
   strtoumax \
   strxfrm \
+  strmgpsim \
+  strmmssp \
+  strmusart \
+  strmputchar \
+  streams \
   uabs \
   ulabs \
   ullabs \
   umaxabs \
+  vfprintf \
   vprintf \
   wcrtomb \
   wcscmp \

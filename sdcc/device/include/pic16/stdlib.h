@@ -134,6 +134,28 @@ long int labs(long int j);
 #if __STDC_VERSION__ >= 199901L
 long long int llabs(long long int j);
 #endif
+
+/* Integer division functions (ISO C 7.22.6) */
+typedef struct
+{
+	int quot;
+	int rem;
+} div_t;
+typedef struct
+{
+	long quot;
+	long rem;
+} ldiv_t;
+div_t div (int numer, int denom);
+ldiv_t ldiv (long numer, long denom);
+#if __STDC_VERSION__ >= 199901L
+typedef struct
+{
+	long long quot;
+	long long rem;
+} lldiv_t;
+lldiv_t lldiv (long long numer, long long denom);
+#endif
 /* C2y Integer arithmetic functions */
 #if __STDC_VERSION__ > 202311L
 unsigned int uabs(int j);

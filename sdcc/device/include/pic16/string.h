@@ -199,6 +199,13 @@ extern char *strrchr(const char *s, int c);
 #endif
 #endif
 
+// strsep (BSD/POSIX extension, not part of ISO C)
+#if __STDC_VERSION__ >= 199901L
+extern char *strsep (char **restrict sp, const char *restrict delim);
+#else
+extern char *strsep (char **sp, const char *delim);
+#endif
+
 // C90 strspn (ISO C23 7.28.5.7)
 #if __STDC_VERSION__ >= 199901L
 extern size_t strspn (const char s[static 1], const char accept[static 1]);

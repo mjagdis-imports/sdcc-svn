@@ -2,6 +2,10 @@
 
 	* support/regression/tests/sizeof.c.in:
 	  Set the correct expectation for pic16 generic pointers.
+	* device/include/pic16/stdlib.h,
+	  device/include/pic16/string.h,
+	  device/lib/pic16/Makefile.in:
+	  Add missing arithmetic and string functions to pic16 library.
 
 2026-11-23 Gabriele Gorla <gorlik@yahoo.com>
 
