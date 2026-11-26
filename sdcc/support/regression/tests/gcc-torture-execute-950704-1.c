@@ -8,8 +8,6 @@
 #pragma std_c99
 #endif
 
-// TODO: Enable when sdcc supports long long in these ports!
-#if !defined(__SDCC_pic14) && !defined(__SDCC_pic16)
 int errflag;
 
 long long
@@ -32,7 +30,6 @@ f (long long x, long long y)
   errflag = 1;
   return 0;
 }
-#endif
 
 void
 testTortureExecute (void)

@@ -462,6 +462,13 @@ EXCLUDE_nostructret = \
 	tst_gcc-torture-execute-990525-2 \
 	tst_gcc-torture-execute-pr39120
 
+# Target does not support long long
+EXCLUDE_nolonglong = \
+	tst_gcc-torture-execute-20060110-1 \
+	tst_gcc-torture-execute-20060127-1 \
+	tst_gcc-torture-execute-921029-1 \
+	tst_gcc-torture-execute-950704-1
+
 EXCLUDE_uc6502-stack-auto += ${EXCLUDE_nolarge_return}
 EXCLUDE_ARCH_hc08 += ${EXCLUDE_nolarge_return}
 
@@ -499,6 +506,8 @@ EXCLUDE_nocritical = \
 	tst_critical
 
 EXCLUDE_ARCH_pdk += $(EXCLUDE_nocritical)
+
+EXCLUDE_pic14 += $(EXCLUDE_nolonglong)
 
 ###################################################
 # Host Tests
@@ -602,5 +611,5 @@ EXCLUDE_hc08 += ${EXCLUDE_ARCH_hc08}
 EXCLUDE_s08 += ${EXCLUDE_ARCH_hc08}
 EXCLUDE_s08-stack-auto += ${EXCLUDE_ARCH_hc08}
 ###################################################
-EXCLUDE_pic14 = ${EXCLUDE_pdk14}
+EXCLUDE_pic14 += ${EXCLUDE_pdk14}
 ###################################################

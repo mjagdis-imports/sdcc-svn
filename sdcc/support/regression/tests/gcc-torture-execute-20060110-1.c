@@ -8,7 +8,6 @@
 #pragma std_c99
 #endif
 
-#if !defined(__SDCC_pic14) && !defined(__SDCC_pic16)
 long long 
 f (long long a) 
 { 
@@ -16,7 +15,6 @@ f (long long a)
 } 
 long long a = 0x1234567876543210LL;
 long long b = (0x1234567876543210LL << 32) >> 32;
-#endif
 
 void
 testTortureExecute (void)

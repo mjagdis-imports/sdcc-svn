@@ -8,8 +8,6 @@
 #pragma std_c99
 #endif
 
-// TODO: Enable when sdcc supports long long in these ports!
-#if !defined(__SDCC_pic14) && !defined(__SDCC_pic16)
 typedef unsigned long long ULL;
 ULL back;
 ULL hpart, lpart;
@@ -23,7 +21,6 @@ build(long h, long l)
   back = hpart | lpart;
   return back;
 }
-#endif
 
 void
 testTortureExecute (void)

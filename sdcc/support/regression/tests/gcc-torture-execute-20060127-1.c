@@ -8,8 +8,6 @@
 #pragma std_c99
 #endif
 
-// TODO: Enable when long long comes to these ports!
-#if !defined(__SDCC_pic14) && !defined(__SDCC_pic16)
 void
 f (long long a)
 {
@@ -18,7 +16,6 @@ f (long long a)
 }
 
 long long a = 0x1234567800000000LL;
-#endif
 
 void
 testTortureExecute (void)
