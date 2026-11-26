@@ -27,6 +27,14 @@
 
 #include <pic18f452.h>
 
+/* Program CONFIG2H to the WDT-off setting ("control is placed on the
+   SWDTEN bit").  The pic16 regression emits no config word, so without
+   this gpsim uses the default (all 0xFF: WDT always-on) and SWDTEN is
+   ignored; some tests then trip the short WDT window via genuine
+   instruction count.  _initEmu() additionally clears SWDTEN so the WDT
+   is guaranteed off for the whole test. */
+#pragma config WDT = OFF
+
 
 void
 _putchar(char c)
@@ -40,6 +48,9 @@ _putchar(char c)
 void
 _initEmu(void)
 {
+  /* Disable the Watchdog Timer.  */
+  WDTCONbits.SWDTEN = 0;
+
   /* load and configure the libgpsim_modules module */
   __asm
     ;; Set frequency to 20MHz

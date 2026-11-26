@@ -6,6 +6,8 @@
 	  support/regression/tests/gcc-torture-execute-921029-1.c,
 	  support/regression/tests/gcc-torture-execute-950704-1.c:
 	  Enable several long long tests for PIC16.
+	* support/regression/ports/pic16/support.c:
+	  Disable WDT.
 
 2026-11-25 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
