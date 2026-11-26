@@ -886,6 +886,28 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
                 }
               update_out_edges (G, i, key_false, key_true, v_false, v_true, ic->left->key);
             }
+          // A pointer equal to a known non-null pointer is also non-null.
+          // Use the adjacent comparison so its operands still have the compared values.
+          iCode *cmp = ic->prev;
+          if (key_true != key_false && cmp && (cmp->op == EQ_OP || cmp->op == NE_OP) &&
+              IS_ITEMP (ic->left) && isOperandEqual (ic->left, cmp->result) &&
+              IS_PTR (operandType (cmp->left)) && IS_PTR (operandType (cmp->right)))
+            {
+              const int key_equal = cmp->op == EQ_OP ? key_true : key_false;
+              const int key_unequal = cmp->op == EQ_OP ? key_false : key_true;
+              for (operand *op : {cmp->left, cmp->right})
+                {
+                  if (!IS_SYMOP (op) || IS_OP_VOLATILE (op))
+                    continue;
+                  operand *other = op == cmp->left ? cmp->right : cmp->left;
+                  struct valinfo v = getOperandValinfo (ic, op, true);
+                  if (v.anything || v.nothing || v.nonnull || !getOperandValinfo (ic, other, true).nonnull)
+                    continue;
+                  struct valinfo v_equal = v;
+                  v_equal.nonnull = true;
+                  update_out_edges (G, i, key_unequal, key_equal, v, v_equal, op->key);
+                }
+            }
           if (IS_SYMOP (ic->left) && !OP_SYMBOL (ic->left)->addrtaken && !IS_OP_VOLATILE (ic->left) &&
             (bitVectnBitsOn (OP_DEFS (ic->left)) == 1 && !OP_SYMBOL (ic->left)->ismyparm || ic->prev && !POINTER_SET (ic->prev) && isOperandEqual (ic->left, ic->prev->result)))
             {

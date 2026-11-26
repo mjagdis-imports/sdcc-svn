@@ -1,5 +1,14 @@
 2026-11-26 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
+	* src/SDCCgenconstprop.cc (recompute_node): Propagate non-nullness
+	  when a pointer compares equal to a known non-null pointer
+	  (bug #4271).
+	* support/valdiag/tests/bug-4271.c: Test warning 355 after pointer
+	  comparisons on equal, unequal and merged paths, including
+	  short-circuit conditions.
+
+2026-11-26 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
 	* src/SDCCerr.h, src/SDCCerr.c: Add disabled-by-default warning
 	  W_NULL_TO_NONOPTIONAL (378), and query its enablement state.
 	* src/SDCCast.h, src/SDCCast.c: Diagnose implicit conversions of explicit
