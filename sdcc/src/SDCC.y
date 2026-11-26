@@ -2493,7 +2493,7 @@ iteration_statement
                           NestLevel -= LEVEL_UNIT;
                           currBlockno = STACK_POP(blockNum);
                         }
-   | for '(' declaration expression_opt ';' expression_opt ')'
+   | for '(' declaration
                         {
                           if (!options.std_c99)
                             werror (E_FOR_INITAL_DECLARATION_C99);
@@ -2501,9 +2501,11 @@ iteration_statement
                           if ( $3 && IS_TYPEDEF($3->etype))
                             allocVariables ($3);
                           ignoreTypedefType = 0;
+                          /* Make the declaration visible while parsing the
+                             condition and step, which can query its type. */
                           addSymChain(&$3);
                         }
-     secondary_block
+     expression_opt ';' expression_opt ')' secondary_block
                         {
 
                           noLineno++;
@@ -2514,8 +2516,8 @@ iteration_statement
                           AST_FOR($$,falseLabel) = STACK_POP(breakStack);
                           AST_FOR($$,condLabel)  = STACK_POP(forStack);
                           AST_FOR($$,initExpr)   = 0;
-                          AST_FOR($$,condExpr)   = $4;
-                          AST_FOR($$,loopExpr)   = $6;
+                          AST_FOR($$,condExpr)   = $5;
+                          AST_FOR($$,loopExpr)   = $7;
 
                           /* This continue label is not at the correct location, */
                           /* but we need to create it now for proper binding. The */
