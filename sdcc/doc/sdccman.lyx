@@ -28429,6 +28429,56 @@ _Optional
  qualifier.
 \end_layout
 
+\begin_layout Subsubsection
+Null pointer diagnostics
+\end_layout
+
+\begin_layout Standard
+Warning 378 diagnoses an implicit conversion of a null pointer constant to a pointer whose referenced type is not
+\family typewriter
+ _Optional
+\family default
+-qualified.
+ It is disabled by default.
+\end_layout
+
+\begin_layout Standard
+Enable this warning with
+\family typewriter
+ --enable-warning 378
+\family default
+ or
+\family typewriter
+ #pragma enable_warning 378
+\family default
+.
+ It covers initialisers, assignments, function arguments and return values, for both object and function pointers.
+ It is also available with
+\family typewriter
+ --syntax-only
+\family default
+.
+\end_layout
+
+\begin_layout Standard
+For conditional expressions, the destination determines whether a null arm is permitted.
+ A destination pointer whose referenced type is
+\family typewriter
+ _Optional
+\family default
+-qualified permits a null arm without this warning.
+ Nested conditionals, comma expressions and generic selections are checked without changing expression types.
+\end_layout
+
+\begin_layout Standard
+Explicit pointer casts do not trigger this warning, except casts of integer null pointer constants to pointers to unqualified
+\family typewriter
+ void
+\family default
+.
+ Comparisons with null pointers do not trigger this warning.
+\end_layout
+
 \begin_layout Section
 Parameters
 \begin_inset Index idx

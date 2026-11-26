@@ -232,6 +232,8 @@ emitRegularMap (memmap *map, bool addPublics, bool arFlag)
                   checkScalariList (sym, sym->type, sym->ival, false);
                   ival = newNode ('=', newAst_VALUE (symbolVal (tsym)),
                                   decorateType (resolveSymbols (list2expr (tsym->ival)), RESULT_TYPE_NONE, true));
+                  if (sym->nullInitialiserChecked && !sym->nullInitialiserWarningEnabled)
+                    ival->right->nullToNonoptionalChecked = true;
                 }
               if (ival)
                 {
@@ -315,6 +317,8 @@ emitRegularMap (memmap *map, bool addPublics, bool arFlag)
                   checkScalariList (sym, sym->type, sym->ival, false);
                   ival = newNode ('=', newAst_VALUE (symbolVal (sym)),
                                   decorateType (resolveSymbols (list2expr (sym->ival)), RESULT_TYPE_NONE, true));
+                  if (sym->nullInitialiserChecked && !sym->nullInitialiserWarningEnabled)
+                    ival->right->nullToNonoptionalChecked = true;
                 }
               codeOutBuf = &statsg->oBuf;
 
@@ -1928,6 +1932,12 @@ printIvalPtr (symbol *sym, sym_link *type, initList *ilist, struct dbuf_s *oBuf)
 void
 printIval (symbol * sym, sym_link * type, initList * ilist, struct dbuf_s *oBuf, bool check)
 {
+  if (type == sym->type)
+    checkNullInitialiser (sym);
+
+  if (ilist && ilist->isempty)
+    ilist = NULL;
+
   /* Handle designated initializers */
   if (ilist && ilist->type==INIT_DEEP)
     ilist = reorderIlistIval (type, ilist);
@@ -1942,6 +1952,7 @@ printIval (symbol * sym, sym_link * type, initList * ilist, struct dbuf_s *oBuf,
       else
         {
           ast *ast = newAst_VALUE (constVal("0"));
+          ast->nullToNonoptionalChecked = true;
           ast = decorateType (ast, RESULT_TYPE_NONE, true);
           ilist = newiList(INIT_NODE, ast);
         }

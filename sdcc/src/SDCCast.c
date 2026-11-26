@@ -258,6 +258,8 @@ copyAst (ast * src)
   dest->inlined = src->inlined;
   dest->initMode = src->initMode;
   dest->addressOrigin = src->addressOrigin;
+  dest->nullToNonoptionalChecked = src->nullToNonoptionalChecked;
+  dest->nullToNonoptionalSource = src->nullToNonoptionalSource;
 
   if (src->ftype)
     dest->etype = getSpec (dest->ftype = copyLinkChain (src->ftype));
@@ -1109,6 +1111,8 @@ processParms (ast * func, value * defParm, ast ** actParm, int *parmNumber,     
 
   actualType = argumentTypeAfterDecay ((*actParm)->ftype, &convertedActual);
 
+  checkNullToNonoptional (defParm->type, *actParm);
+
   /* the parameter type must be at least castable */
   typecompat = compareType (defParm->type, actualType, false);
   if (typecompat == 0)
@@ -1805,7 +1809,15 @@ createIvalPtr (ast * sym, sym_link * type, initList * ilist, ast * rootVal)
   if (ilist)
     iexpr = decorateType (resolveSymbols (list2expr (ilist)), RESULT_TYPE_NONE, true);
   else
-    iexpr = newAst_VALUE (valueFromLit (0));
+    {
+      iexpr = newAst_VALUE (valueFromLit (0));
+      /* There is no explicit null pointer constant in a generated zero. */
+      iexpr->nullToNonoptionalChecked = true;
+    }
+
+  if (AST_SYMBOL (rootVal)->nullInitialiserChecked &&
+      !AST_SYMBOL (rootVal)->nullInitialiserWarningEnabled)
+    iexpr->nullToNonoptionalChecked = true;
 
   /* if character pointer */
   if (IS_CHAR (type->next) || IS_INT (type->next) && IS_UNSIGNED (type->next))
@@ -1822,6 +1834,9 @@ static ast *
 createIval (ast * sym, sym_link * type, initList * ilist, ast * wid, ast * rootValue, int omitStatic)
 {
   ast *rast = NULL;
+
+  if (ilist && ilist->isempty)
+    ilist = NULL;
 
   if (!ilist && (!AST_SYMBOL (rootValue)->islocal || (omitStatic && SPEC_STAT (getSpec (type)))))
     return NULL;
@@ -1861,6 +1876,7 @@ createIval (ast * sym, sym_link * type, initList * ilist, ast * wid, ast * rootV
 ast *
 initAggregates (symbol *sym, initList *ival, ast *wid)
 {
+  checkNullInitialiser (sym);
   ast *newAst = newAst_VALUE (symbolVal (sym));
   newAst->filename = sym->fileDef;
   newAst->lineno = sym->lineDef;
@@ -1884,6 +1900,8 @@ gatherAutoInit (symbol * autoChain, ast * block, int *stack)
   inInitMode = 1;
   for (sym = autoChain; sym; sym = sym->next)
     {
+      if (sym->ival)
+        checkNullInitialiser (sym);
       if (!sym->ival)
         continue;
 
@@ -3276,6 +3294,8 @@ gatherImplicitVariables (ast *tree, ast *block)
             }
 
           *decl = tempsym;
+          /* Check the supplied initialiser before lowering the compound literal. */
+          checkNullInitialiser (tempsym);
           AST_SYMBOL (tree)->iscomplit = false;
         }
     }
@@ -3940,6 +3960,104 @@ isIncompleteAggregateType (sym_link *type)
       type = type->next;
     }
   return IS_STRUCT (type) && !getSize (type);
+}
+
+/* Visit supplied pointer initialisers while their declaration's warning
+   setting is still in effect. Omitted subobjects do not convert an explicit
+   null pointer constant and are deliberately outside this warning. */
+static void
+checkNullIval (sym_link *type, initList *ilist)
+{
+  if (!ilist || ilist->type == INIT_HOLE || ilist->isempty)
+    {
+      if (ilist && ilist->isempty)
+        ilist->init.deep->init.node->nullToNonoptionalChecked = true;
+      return;
+    }
+  if (IS_PTR (type))
+    {
+      while (ilist && ilist->type == INIT_DEEP)
+        ilist = ilist->init.deep;
+      if (ilist && ilist->type == INIT_NODE)
+        {
+          ilist->init.node = decorateType (resolveSymbols (ilist->init.node), RESULT_TYPE_NONE, true);
+          checkNullToNonoptional (type, ilist->init.node);
+        }
+      return;
+    }
+  if (!IS_AGGREGATE (type) || ilist->type != INIT_DEEP)
+    return;
+
+  initList *ordered = reorderIlistIval (type, ilist);
+  initList *item = ordered ? ordered->init.deep : NULL;
+  if (IS_ARRAY (type))
+    for (; item; item = item->next)
+      checkNullIval (type->next, item);
+  else
+    for (symbol *field = SPEC_STRUCT (type)->fields; field; field = field->next)
+      {
+        if (IS_BITFIELD (field->type) && SPEC_BUNNAMED (field->etype))
+          continue;
+        if (!(IS_ARRAY (field->type) && DCL_ARRAY_LENGTH_TYPE (field->type) == ARRAY_LENGTH_UNKNOWN))
+          checkNullIval (field->type, item);
+        item = item ? item->next : NULL;
+      }
+}
+
+void
+checkNullInitialiser (symbol *sym)
+{
+  if (!sym->ival || sym->nullInitialiserChecked || SPEC_ABSA (sym->etype))
+    return;
+  sym->nullInitialiserChecked = true;
+  sym->nullInitialiserWarningEnabled = isWarningEnabled (W_NULL_TO_NONOPTIONAL);
+  if (sym->nullInitialiserWarningEnabled)
+    checkNullIval (sym->type, sym->ival);
+}
+
+/* Diagnose an implicit conversion of a null pointer constant. Explicit
+   casts to pointer types other than void * are not null pointer constants. */
+void
+checkNullToNonoptional (sym_link *target, ast *expr)
+{
+  sym_link *referenced = pointerTargetType (target);
+  if (!referenced || isOptional (referenced) || !expr ||
+      expr->nullToNonoptionalChecked || expr->isError)
+    return;
+
+  if (expr->nullToNonoptionalSource)
+    {
+      checkNullToNonoptional (target, expr->nullToNonoptionalSource);
+      return;
+    }
+
+  sym_link *source = expr->ftype;
+  value *literal = IS_AST_LIT_VALUE (expr) ? expr->opval.val :
+    IS_INTEGRAL (source) && SPEC_CONSTEXPR (expr->etype) ? constExprValue (expr, false) : NULL;
+  if (IS_NULLPTR (source) ||
+      (literal &&
+       (IS_INTEGRAL (source) || (IS_PTR (source) && IS_VOID (source->next))) &&
+       !ullFromVal (literal)))
+    {
+      if (werrorfl (expr->filename, expr->lineno, W_NULL_TO_NONOPTIONAL))
+        expr->nullToNonoptionalChecked = true;
+      return;
+    }
+
+  /* Conditional operands are converted before their destination is known.
+     Check their null arms at the assignment, argument or return instead. */
+  if (!IS_PTR (source))
+    return;
+  if (IS_TERNARY_OP (expr))
+    {
+      checkNullToNonoptional (target, expr->right->left);
+      checkNullToNonoptional (target, expr->right->right);
+    }
+  else if (IS_AST_OP (expr) && expr->opval.op == ',')
+    checkNullToNonoptional (target, expr->right);
+  else if (IS_CAST_OP (expr) && expr->values.cast.implicitCast &&
+           !expr->values.cast.semDeref)
+    checkNullToNonoptional (target, expr->right);
 }
 
 /*--------------------------------------------------------------------*/
@@ -5479,6 +5597,18 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
         changePointer (LTYPE (tree));
       checkTypeSanity (LETYPE (tree), "(cast)");
 
+      /* Folding must not turn an explicit pointer value into a null pointer
+         constant. Only an integer null pointer constant cast to unqualified
+         void * retains that status; (void *)nullptr does not. */
+      if (!tree->values.cast.implicitCast &&
+          (IS_PTR (LTYPE (tree)) &&
+           (!IS_VOID (LTYPE (tree)->next) || isConst (LTYPE (tree)->next) ||
+            isVolatile (LTYPE (tree)->next) || isOptional (LTYPE (tree)->next) ||
+            isAtomic (LTYPE (tree)->next) || getAddrspace (LTYPE (tree)->next) ||
+            !IS_INTEGRAL (RTYPE (tree)) || tree->right->nullToNonoptionalChecked) ||
+           IS_INTEGRAL (LTYPE (tree)) && IS_PTR (RTYPE (tree))))
+        tree->nullToNonoptionalChecked = true;
+
       /* if 'from' and 'to' are the same remove the superfluous cast,
        * this helps other optimizations */
       if (!tree->values.cast.semDeref &&
@@ -5487,6 +5617,9 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           /* mark that the explicit cast has been removed,
            * for proper processing (no integer promotion) of explicitly typecasted variable arguments */
           tree->right->values.cast.removedCast = 1;
+          /* Preserve explicit pointer casts that suppress null-arm warnings. */
+          if (!tree->values.cast.implicitCast && IS_PTR (LTYPE (tree)))
+            tree->right->nullToNonoptionalChecked = true;
           return tree->right;
         }
 
@@ -6109,6 +6242,15 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           else
             TTYPE (heir) = TTYPE (tree->right);
           TETYPE (heir) = getSpec (TTYPE (heir));
+          /* Keep both source arms for a later destination-aware diagnostic,
+             even when constant folding discards the null arm. The copy must
+             precede attaching it to heir, to avoid a cycle through that arm. */
+          if (IS_PTR (TTYPE (heir)) && isWarningEnabled (W_NULL_TO_NONOPTIONAL))
+            {
+              TTYPE (tree) = RTYPE (tree);
+              TETYPE (tree) = getSpec (TTYPE (tree));
+              heir->nullToNonoptionalSource = copyAst (tree);
+            }
           return heir;
         }
 
@@ -6144,7 +6286,14 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
       /* if they are equal then replace the tree */
       if (isAstEqual (tree->right->left, tree->right->right))
         {
-          return tree->right->left;
+          ast *heir = tree->right->left;
+          if (IS_PTR (RTYPE (tree)) && isWarningEnabled (W_NULL_TO_NONOPTIONAL))
+            {
+              TTYPE (tree) = RTYPE (tree);
+              TETYPE (tree) = getSpec (TTYPE (tree));
+              heir->nullToNonoptionalSource = copyAst (tree);
+            }
+          return heir;
         }
 
       TTYPE (tree) = RTYPE (tree);
@@ -6431,6 +6580,8 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
       /*      straight assignment   */
       /*----------------------------*/
     case '=':
+      checkNullToNonoptional (LTYPE (tree), tree->right);
+
       /* cannot be an array */
       if (IS_ARRAY (LTYPE (tree)))
         {
@@ -6607,6 +6758,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
                 }
             }
 
+          checkNullToNonoptional (currFunc->type->next, tree->right);
           typecompat = compareType (currFunc->type->next, RTYPE (tree), false);
 
           propagateConstExpr (&tree->right, resultType, reduceTypeAllowed);

@@ -406,6 +406,7 @@ enum {
   E_ENUM_REDECL                = 375, // enumeration redeclared with incompatible underlying type or fixedness
   E_SIZEOF_FUNCTION            = 376, // sizeof applied to a function type
   E_CONSTEXPR_INTEGER          = 377, // constexpr integer requires integer constant expression
+  W_NULL_TO_NONOPTIONAL        = 378, // null pointer constant converted to a pointer whose referenced type is not '_Optional'-qualified
 
   // If you get a merge conflict here, some #pragma disable_warning in support/valdiag and support/regression will likely need to be adapted to the resolution. Check there!
 
@@ -536,6 +537,7 @@ disabled - Disable output of specified warning
 */
 
 void setWarningDisabled (int errNum);
+int isWarningEnabled (int errNum);
 
 /*
 -------------------------------------------------------------------------------

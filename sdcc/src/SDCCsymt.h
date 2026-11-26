@@ -358,6 +358,8 @@ typedef struct symbol
   unsigned islocal:1;               /* is a local variable        */
   unsigned blockSpil:1;             /* spilt at block level       */
   unsigned remainSpil:1;            /* spilt because not used in remainder */
+  unsigned nullInitialiserChecked:1;   /* supplied pointer initialisers checked */
+  unsigned nullInitialiserWarningEnabled:1; /* warning state at the declaration */
   unsigned stackSpil:1;             /* has been spilt on temp stack location */
   unsigned onStack:1;               /* this symbol allocated on the stack */
   unsigned iaccess:1;               /* indirect access      */

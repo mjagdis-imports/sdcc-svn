@@ -819,6 +819,8 @@ struct
      "sizeof applied to a function type", 0 },
   {E_CONSTEXPR_INTEGER, ERROR_LEVEL_ERROR,
      "initialiser for constexpr integer object is not an integer constant expression", 0},
+  {W_NULL_TO_NONOPTIONAL, ERROR_LEVEL_WARNING,
+     "null pointer constant converted to a pointer whose referenced type is not '_Optional'-qualified", 1},
 };
 
 /* -------------------------------------------------------------------------------
@@ -1027,6 +1029,14 @@ void
 MSVC_style (int style)
 {
   _SDCCERRG.style = style;
+}
+
+/* Whether a numbered diagnostic would currently be emitted. */
+int
+isWarningEnabled (int errNum)
+{
+  return errNum >= 0 && errNum < NUMBER_OF_ERROR_MESSAGES &&
+    ErrTab[errNum].errType >= _SDCCERRG.logLevel && !ErrTab[errNum].disabled;
 }
 
 /* -------------------------------------------------------------------------------

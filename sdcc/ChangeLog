@@ -1,5 +1,24 @@
 2026-11-26 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
+	* src/SDCCerr.h, src/SDCCerr.c: Add disabled-by-default warning
+	  W_NULL_TO_NONOPTIONAL (378), and query its enablement state.
+	* src/SDCCast.h, src/SDCCast.c: Diagnose implicit conversions of explicit
+	  null pointer constants in arguments, assignments and returns. Check
+	  conditional null arms against the destination, retaining source arms
+	  through folding. Preserve explicit pointer-cast provenance.
+	* src/SDCCsymt.h, src/SDCCsymt.c, src/SDCCval.c, src/SDCCglue.c:
+	  Check supplied pointer initialisers while processing declarations,
+	  including --syntax-only. Preserve suppression through later emission
+	  and redeclarations. Distinguish empty initialisers and generated zeros
+	  from explicit null constants when copying and lowering initialisers.
+	* doc/sdccman.lyx: Add a null-pointer diagnostics subsection under
+	  _Optional, documenting warning 378 and how to enable it.
+	* support/valdiag/tests/null-to-nonoptional.c: Cover explicit null constants,
+	  object and function pointers, conversion contexts, nested qualifiers,
+	  conditionals, generic selections, casts, comparisons and warning controls.
+
+2026-11-26 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
 	* src/SDCC.y: Make for declarations visible while parsing the
 	  condition and iteration expression (bug #4150).
 	* support/regression/tests/bug-4150.c: Test type queries in the

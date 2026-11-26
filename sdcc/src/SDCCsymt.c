@@ -1739,7 +1739,11 @@ addSymChain (symbol **symHead)
             }
 
           if (csym->ival && !sym->ival)
-            sym->ival = csym->ival;
+            {
+              sym->ival = csym->ival;
+              sym->nullInitialiserChecked = csym->nullInitialiserChecked;
+              sym->nullInitialiserWarningEnabled = csym->nullInitialiserWarningEnabled;
+            }
           sym->generated |= csym->generated;
 
           if (IS_EXTERN (sym->etype) && IFFUNC_ISINLINE (csym->type))
@@ -1768,6 +1772,8 @@ addSymChain (symbol **symHead)
 
       /* add new entry */
       addSym (SymbolTab, sym, sym->name, sym->level, sym->block, true);
+      if (!IS_FUNC (sym->type) && !IS_TYPEDEF (sym->etype) && sym->ival)
+        checkNullInitialiser (sym);
     }
 }
 

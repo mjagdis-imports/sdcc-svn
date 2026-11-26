@@ -56,6 +56,7 @@ typedef struct ast
   unsigned rvalue:1;
   unsigned lvalue:1;
   unsigned initMode:1;
+  unsigned nullToNonoptionalChecked:1; // Avoid repeated or explicitly suppressed null diagnostics.
   unsigned reversed:1;
   unsigned inlined:1;
   unsigned addressOrigin:2;
@@ -122,6 +123,7 @@ typedef struct ast
 
   struct ast *left;             /* pointer to left tree    */
   struct ast *right;            /* pointer to right tree   */
+  struct ast *nullToNonoptionalSource; /* pointer conditional before folding */
   symbol *trueLabel;            /* if statement trueLabel  */
   symbol *falseLabel;           /* if statement falseLabel */
 }
@@ -236,6 +238,8 @@ ast *createFor (symbol *, symbol *, symbol *, symbol *, ast *, ast *, ast *, ast
 void eval2icode (ast *);
 value *constExprValue (ast *, int);
 bool constExprTree (ast *);
+void checkNullInitialiser (symbol *);
+void checkNullToNonoptional (sym_link *, ast *);
 int setAstFileLine (ast *tree, const char *filename, int lineno);
 symbol *funcOfType (const char *name, sym_link *rtype, sym_link *argtype, int nArgs, int rent);
 symbol *funcOfType2 (const char *name, sym_link *rtype, sym_link *largtype, sym_link *rargtype, int rent);

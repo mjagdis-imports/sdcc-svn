@@ -249,6 +249,7 @@ copyIlist (initList * src)
 
   if (src->next)
     assert (dest != NULL);
+  dest->isempty = src->isempty;
   dest->next = copyIlist (src->next);
 
   return dest;
@@ -280,6 +281,9 @@ initList *checkScalariList (const symbol *sym, sym_link *type, initList *ilist, 
   // Give up early on errors, to avoid reading invalid memory below.
   if (ilist->init.node->isError)
     return (ilist); 
+
+  if (!sym || !sym->nullInitialiserChecked || sym->nullInitialiserWarningEnabled)
+    checkNullToNonoptional (type, ilist->init.node);
 
   // The type must match.
   sym_link *itype = ilist->init.node->ftype;
@@ -490,6 +494,7 @@ void moveNestedInit(initList *deepParent, initList *src)
       dst = newiList(INIT_DEEP, src->init.deep);
       break;
     }
+  dst->isempty = src->isempty;
   dst->filename = src->filename;
   dst->lineno = src->lineno;
   dst->designation = src->designation->next;
@@ -711,6 +716,7 @@ static initList *reorderIlistFull (sym_link * type, initList * ilist, bool skipa
               dst = newiList(INIT_DEEP, src->init.deep);
               break;
             }
+          dst->isempty = src->isempty;
           dst->filename = src->filename;
           dst->lineno = src->lineno;
         }
@@ -726,6 +732,7 @@ static initList *reorderIlistFull (sym_link * type, initList * ilist, bool skipa
     }
 
   nlist = newiList(INIT_DEEP, revinit (nlist));
+  nlist->isempty = ilist->isempty;
   nlist->filename = ilist->filename;
   nlist->lineno = ilist->lineno;
   nlist->designation = ilist->designation;
