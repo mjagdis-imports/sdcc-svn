@@ -27,12 +27,26 @@
 -------------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------------
+ usage:
+
+ __ultoa(unsigned long value, char* string, int radix)
+ __ltoa(long value, char* string, int radix)
+
  value  ->  Number to be converted
  string ->  Result
  radix  ->  Base of value (e.g.: 2 for binary, 10 for decimal, 16 for hex)
 ---------------------------------------------------------------------------*/
 
-#define NUMBER_OF_DIGITS 32
+#include <stdlib.h>
+
+/* "11110000111100001111000011110000" base 2 */
+/* "37777777777" base 8 */
+/* "4294967295" base 10 */
+#define NUMBER_OF_DIGITS 32	/* eventually adapt if base 2 not needed */
+
+#if NUMBER_OF_DIGITS < 32
+# warning _ltoa() and _ultoa() are not safe for radix 2
+#endif
 
 #if _DEBUG
 extern void io_long(unsigned long);
@@ -42,15 +56,14 @@ extern void io_str(char *);
 
 void ultoa(unsigned long value, __data char* str, unsigned char radix)
 {
-  unsigned int index;
-  unsigned char ch;
-  unsigned char buffer[NUMBER_OF_DIGITS];  /* space for NUMBER_OF_DIGITS + '\0' */
 
-    index = NUMBER_OF_DIGITS;
+  unsigned char buffer[NUMBER_OF_DIGITS];  /* no space for '\0' */
+  unsigned char index = NUMBER_OF_DIGITS;
 
     do {
-      ch = '0' + (value % radix);
-      if ( ch > (unsigned char)'9') ch += 'a' - '9' - 1;
+    unsigned char ch = '0' + (value % radix);
+      if ( ch > (unsigned char)'9')
+        ch += 'A' - '9' - 1;
 
 #if _DEBUG
       io_str( "ultoa: " );
@@ -60,7 +73,7 @@ void ultoa(unsigned long value, __data char* str, unsigned char radix)
 
       buffer[ --index ] = ch;
       value /= radix;
-    } while (value != 0);
+    } while (value);
 
     do {
       *str++ = buffer[index++];
@@ -81,7 +94,6 @@ void ltoa(long value, __data char* str, unsigned char radix)
     value = -value;
   }
 
-
-
   ultoa((unsigned long)value, str, radix);
 }
+

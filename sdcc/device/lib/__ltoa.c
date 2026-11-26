@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------
-   _ltoa.c - integer to string conversion
+   __ltoa.c - long integer to string conversion
 
-   Copyright (c) 1999, Bela Torok, bela.torok@kssg.ch
+   Copyright (C) 1999, Bela Torok <bela.torok at kssg.ch>
 
    This library is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -45,7 +45,7 @@
 #define NUMBER_OF_DIGITS 32	/* eventually adapt if base 2 not needed */
 
 #if NUMBER_OF_DIGITS < 32
-# warning _ltoa() and _ultoa() are not save for radix 2
+# warning _ltoa() and _ultoa() are not safe for radix 2
 #endif
 
 #if defined (__SDCC_mcs51) && defined (__SDCC_MODEL_SMALL) && !defined (__SDCC_STACK_AUTO)
@@ -55,32 +55,32 @@
 # define MEMSPACE_BUFFER
 #endif
 
-void __ultoa(unsigned long value, char* string, unsigned char radix)
+void __ultoa(unsigned long value, char* str, unsigned char radix)
 {
   char MEMSPACE_BUFFER buffer[NUMBER_OF_DIGITS];  /* no space for '\0' */
   unsigned char index = NUMBER_OF_DIGITS;
 
   do {
-    unsigned char c = '0' + (value % radix);
-    if (c > (unsigned char)'9')
-       c += 'A' - '9' - 1;
-    buffer[--index] = c;
+    unsigned char ch = '0' + (value % radix);
+    if (ch > (unsigned char)'9')
+       ch += 'A' - '9' - 1;
+    buffer[--index] = ch;
     value /= radix;
   } while (value);
 
   do {
-    *string++ = buffer[index];
-  } while ( ++index != NUMBER_OF_DIGITS );
+    *str++ = buffer[index++];
+  } while ( index != NUMBER_OF_DIGITS );
 
-  *string = 0;  /* string terminator */
+  *str = 0;  /* string terminator */
 }
 
-void __ltoa(long value, char* string, unsigned char radix)
+void __ltoa(long value, char* str, unsigned char radix)
 {
   if (value < 0 && radix == 10) {
-    *string++ = '-';
+    *str++ = '-';
     value = -value;
   }
-  __ultoa(value, string, radix);
+  __ultoa(value, str, radix);
 }
 

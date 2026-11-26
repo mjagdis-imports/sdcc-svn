@@ -1,8 +1,8 @@
 /*-------------------------------------------------------------------------
    __modulong.c - routine for modulus of 32 bit unsigned long
 
-   Copyright (C) 1999, Sandeep Dutta . sandeep.dutta@usa.net
-   Bug fixes by Martijn van Balen, aed@iae.nl
+   Copyright (C) 1999, Sandeep Dutta <sandeep.dutta AT usa.net>
+   Bug fixes by Martijn van Balen, <aed AT iae.nl>
 
    This library is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -35,6 +35,12 @@ unsigned long
 __modulong (unsigned long a, unsigned long b) __SDCC_NONBANKED
 {
   unsigned char count = 0;
+
+ // if (!b)
+ //   {
+      /* Prevent endless loop in case of division by 0. */
+ //     return ~0UL;
+ //   }
 
   while (!MSB_SET(b))
   {

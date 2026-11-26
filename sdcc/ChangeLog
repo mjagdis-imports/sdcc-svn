@@ -1,3 +1,18 @@
+2026-11-25 Gabriele Gorla <gorlik@yahoo.com>
+
+	* device/include/pic16/string.h,
+	  device/include/string.h,
+	  device/lib/__ltoa.c,
+	  device/lib/__memcpy.c,
+	  device/lib/_modslong.c,
+	  device/lib/_moduchar.c,
+	  device/lib/_modulong.c,
+	  device/lib/_mullong.c,
+	  device/lib/memcmp.c,
+	  device/lib/pic16/Makefile.in,
+	  device/lib/pic16/ltoa.c:
+	  Preparing for bug #1698 fix.
+
 2026-11-26 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
 	* src/SDCCgenconstprop.cc (recompute_node): Propagate non-nullness

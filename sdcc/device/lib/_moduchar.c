@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-   __moduchar.c :- routine for signed char (8 bit) division.
+   __moduchar.c : routine for signed char (8 bit) division.
 
    Copyright (C) 2013, Philipp Klaus Krause . pkk@spth.de
 
@@ -36,3 +36,4 @@ __moduchar (unsigned char x, unsigned char y) __SDCC_NONBANKED
   volatile unsigned int ty = y;
   return (tx % ty);
 }
+

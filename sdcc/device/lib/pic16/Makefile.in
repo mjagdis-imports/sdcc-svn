@@ -110,7 +110,9 @@ PORT_LIBC = \
   memccpy \
   memchr \
   memcmp \
+  __memcpy \
   memcpy \
+  memmisc \
   memmove \
   memset \
   memset_explicit \

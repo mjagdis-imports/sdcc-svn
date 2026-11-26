@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------
-   _memcpy.c - part of string library functions
+   __memcpy.c - part of string library functions
 
-   Copyright (C) 1999, Sandeep Dutta . sandeep.dutta@usa.net
+   Copyright (C) 1999, Sandeep Dutta <sandeep.dutta at usa.net>
 
    This library is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -28,15 +28,15 @@
 
 #include <string.h>
 
-void *__memcpy (void *dst, const void *src, size_t n)
+void *
+__memcpy (void *dst, const void *src, size_t n)
 {
-	void *ret = dst;
-	char *d = dst;
-	const char *s = src;
+  char *d = dst;
+  const char *s = src;
 
-	while (n--)
-		*d++ = *s++;
+  while (n--)
+    *d++ = *s++;
 
-	return(ret);
+  return dst;
 }
 

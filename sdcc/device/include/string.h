@@ -314,6 +314,7 @@ __data void *memcpypgm2ram(__data void *, __code void *, size_t);
 __data void *memcpyram2ram(__data void *, __data void *, size_t);
 #endif
 
+// port specific builtins
 #if defined(__SDCC_z80) || defined (__SDCC_z80n) || defined(__SDCC_z180) || defined(__SDCC_r2k) || defined(__SDCC_r2ka) || defined(__SDCC_r3ka) || defined(__SDCC_r4k) || defined(__SDCC_r5k) || defined(__SDCC_r6k) || defined (__SDCC_ez80) || defined(__SDCC_r800)
 #define memcpy(dst, src, n) __builtin_memcpy(dst, src, n)
 #define strcpy(dst, src) __builtin_strcpy(dst, src)

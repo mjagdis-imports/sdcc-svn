@@ -157,6 +157,9 @@ extern size_t strxfrm (char *dest, const char *src, size_t n);
 // C90 memchr (ISO C23 7.28.5.2)
 extern void *memchr (const void *s, char c, size_t n);
 
+// memrchr (GNU/POSIX extension, not part of ISO C)
+extern void *memrchr(const void *s, char c, size_t n);
+
 // C90 strchr (ISO C23 7.28.5.3)
 #ifdef __SDCC_BROKEN_STRING_FUNCTIONS
 #if __STDC_VERSION__ >= 199901L
@@ -309,10 +312,6 @@ extern char *strsep (char **restrict sp, const char *restrict delim);
 extern char *strsep (char **sp, const char *delim);
 #endif
 
-void *memrchr(void *, char, size_t);
-char *strlwr (char *);
-char *strupr (char *);
-
 #ifdef __SDCC_ds390
 extern void __xdata *memcpyx(void __xdata *, void __xdata *, int) __naked;
 #endif
@@ -324,7 +323,17 @@ __data void *memcpypgm2ram(__data void *, __code void *, size_t);
 __data void *memcpyram2ram(__data void *, __data void *, size_t);
 #endif
 
+#if defined(__SDCC_huc6280)
+// huc memcpy needs parameters in XDATA (not ZP)
+extern void *__memcpy (void *dest, const void *src, size_t n);
+#else
+extern void *__memcpy (void *dest, const void *_NEAR src, _NEAR size_t n);
+#endif
+#define memcpy(dst, src, n) __memcpy(dst, src, n)
+
+// port specific builtins
 #if defined(__SDCC_z80) || defined (__SDCC_z80n) || defined(__SDCC_z180) || defined(__SDCC_r2k) || defined(__SDCC_r2ka) || defined(__SDCC_r3ka) || defined(__SDCC_r4k) || defined(__SDCC_r5k) || defined(__SDCC_r6k) || defined (__SDCC_ez80) || defined(__SDCC_r800)
+#undef memcpy
 #define memcpy(dst, src, n) __builtin_memcpy(dst, src, n)
 #define strcpy(dst, src) __builtin_strcpy(dst, src)
 #define strncpy(dst, src, n) __builtin_strncpy(dst, src, n)
@@ -335,14 +344,6 @@ __data void *memcpyram2ram(__data void *, __data void *, size_t);
 #define strchr(s, c) __builtin_strchr(s, c)
 #endif
 #define memset(dst, c, n) __builtin_memset(dst, c, n)
-#else
-#if defined(__SDCC_huc6280)
-// huc memcpy needs parameters in DATA (not ZP)
-extern void *__memcpy (void *dest, const void *src, size_t n);
-#else
-extern void *__memcpy (void *dest, const void *_NEAR src, _NEAR size_t n);
-#endif
-#define memcpy(dst, src, n) __memcpy(dst, src, n)
 #endif
 
 #if defined(__SDCC_mos6502) && !defined(__SDCC_STACK_AUTO)
