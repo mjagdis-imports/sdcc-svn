@@ -73,7 +73,7 @@ _entry (void) __naked __interrupt (0)
 }
 
 /* The cinit table will be filled by the linker. */
-extern __code struct
+extern const __code struct
   {
     unsigned short num_init;
     struct

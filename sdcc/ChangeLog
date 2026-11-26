@@ -1,4 +1,4 @@
-2026-11-25 Gabriele Gorla <gorlik@yahoo.com>
+2026-11-26 Gabriele Gorla <gorlik@yahoo.com>
 
 	* device/include/pic16/string.h,
 	  device/include/string.h,
@@ -12,6 +12,12 @@
 	  device/lib/pic16/Makefile.in,
 	  device/lib/pic16/ltoa.c:
 	  Preparing for bug #1698 fix.
+	* device/lib/pic16/crt0iz.c,
+	  device/non-free/lib/pic14/Makefile.common.in,
+	  device/non-free/lib/pic16/Makefile.common,
+	  device/non-free/lib/pic16/Makefile.in,
+	  device/non-free/lib/pic16/libdev/Makefile.in:
+	  Fix several warnings in pic library build.
 
 2026-11-26 Christopher Bazley <chris.bazley.wg14@gmail.com>
 

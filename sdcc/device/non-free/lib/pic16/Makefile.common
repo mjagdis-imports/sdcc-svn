@@ -4,7 +4,7 @@ AM_CPPFLAGS += -I$(top_srcdir)/../../../include/pic16 -I$(top_srcdir)/../../../i
 	-I$(top_srcdir)/../../../non-free/include/pic16
 
 AM_CFLAGS =
-AM_CFLAGS += --std-c99
+AM_CFLAGS += --std-c11
 AM_CFLAGS += --asm="$(CCAS_RAW)"
 AM_CFLAGS += --no-warn-non-free
 ##AM_CFLAGS += -Wa,-q
