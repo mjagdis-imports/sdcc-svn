@@ -18,6 +18,8 @@
 	  device/non-free/lib/pic16/Makefile.in,
 	  device/non-free/lib/pic16/libdev/Makefile.in:
 	  Fix several warnings in pic library build.
+	* support/regression/ports/uc6502/spec.mk:
+	  Remove unused variable.
 
 2026-11-26 Christopher Bazley <chris.bazley.wg14@gmail.com>
 

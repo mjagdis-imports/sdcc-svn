@@ -3,8 +3,6 @@
 # simulation timeout in cycles
 SIM_CYCLES = 1000000000
 
-EMU_PORT_FLAG=-t6502
-
 # path to uCsim
 ifdef SDCC_BIN_PATH
   UC65 = $(SDCC_BIN_PATH)/ucsim_mos6502$(EXEEXT)
