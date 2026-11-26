@@ -1369,7 +1369,7 @@ PORT z80_port =
   },
   { z80_emitDebuggerSymbol },
   {
-    256,                        /* maxCount */
+    8000,                       // maxCount
     3,                          /* sizeofElement */
     {6, 7, 8},                  /* sizeofMatchJump[] - Assumes operand allocated to registers */
     {6, 9, 15},                 /* sizeofRangeCompare[] - Assumes operand allocated to registers*/

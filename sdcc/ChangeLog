@@ -1,3 +1,8 @@
+2026-11-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/main.c:
+	  Lift 256-entry jump table limit for z80.
+
 2026-11-25 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
 	* src/SDCCast.c (decorateType): Diagnose subscripting incomplete
