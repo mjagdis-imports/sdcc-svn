@@ -630,7 +630,18 @@ buildCmdLine (const char **cmds, const char *p1, const char *p2, const char *p3,
         {
           if (!first && sep)
             dbuf_append_char (&dbuf, ' ');      /* separate it */
-          dbuf_append_str (&dbuf, from);
+
+          /* Quote the executable name when it contains whitespace. */
+          if (first && strpbrk (from, " \t") &&
+              *from != '"' && *from != '\'')
+            {
+              dbuf_append_char (&dbuf, '"');
+              dbuf_append_str (&dbuf, from);
+              dbuf_append_char (&dbuf, '"');
+            }
+          else
+            dbuf_append_str (&dbuf, from);
+
           sep = 0;
         }
 
@@ -1367,6 +1378,32 @@ char *setPrefixSuffix(const char *arg)
   for (p = arg; (*p) && isblank (*p); p++);
   arg = p;
   assert (strstr (arg, ".exe") == NULL);
+
+  /*
+   * A quoted command name may contain whitespace.
+   * Keep prefix/suffix inside the quotes.
+   */
+  if ((*arg == '"') || (*arg == '\''))
+    {
+      char quote = *arg;
+      const char *end = arg + 1;
+
+      while ((*end) && (*end != quote))
+        end++;
+
+      if (*end == quote)
+        {
+          strcpy (cmd, "");
+          strncat (cmd, arg, 1);
+          strcat (cmd, prefix);
+          strncat (cmd, arg + 1, end - (arg + 1));
+          strcat (cmd, suffix);
+          strcat (cmd, end);
+
+          return cmd;
+        }
+    }
+
   for (p = arg; (*p) && !isblank (*p); p++);
 
   /* compose new command line with prefix and suffix */
