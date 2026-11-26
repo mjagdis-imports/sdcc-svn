@@ -30,18 +30,21 @@
 
 #undef strncpy /* Avoid conflict with builtin strncpy() in Z80 and some related ports */
 
-char *strncpy ( char * d, const char * s, size_t n )
+char *
+strncpy ( char *d, const char *s, size_t n )
 {
-	register char * d1 =  d;
+  register char * d1 =  d;
 
-	while ( n && *s )
-	{
-		n-- ;
-		*d++ = *s++ ;
-	}
-	while ( n-- )
-	{
-		*d++ = '\0' ;
-	}
-	return d1;
+  while ( n && *s )
+    {
+      n-- ;
+      *d++ = *s++ ;
+    }
+
+  while ( n-- )
+    {
+      *d++ = '\0' ;
+    }
+
+  return d1;
 }

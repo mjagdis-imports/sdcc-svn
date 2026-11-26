@@ -1,8 +1,8 @@
 /*-------------------------------------------------------------------------
    __moduint.c - routine for unsigned int (16 bit) modulus
 
-   Copyright (C) 1999, Sandeep Dutta . sandeep.dutta@usa.net
-   Bug fixes by Martijn van Balen, aed@iae.nl
+   Copyright (C) 1999, Sandeep Dutta <sandeep.dutta at usa.net>
+   Bug fixes by Martijn van Balen, <aed at iae.nl>
 
    This library is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the

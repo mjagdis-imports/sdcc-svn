@@ -296,11 +296,22 @@ extern size_t strlen (const char *s);
 // C2y length function
 extern size_t strnlen (const char *s, size_t n);
 
-// Non-standard, but very common extension strsep
-char *strsep(char **restrict sp, const char *restrict delim);
+// strsep (BSD/POSIX extension, not part of ISO C)
+#if __STDC_VERSION__ >= 199901L
+extern char *strsep (char **restrict sp, const char *restrict delim);
+#else
+extern char *strsep (char **sp, const char *delim);
+#endif
 
 #ifdef __SDCC_ds390
 extern void __xdata *memcpyx(void __xdata *, void __xdata *, int) __naked;
+#endif
+
+#ifdef __SDCC_pic16
+const __code void *memchrpgm(const __code void *, char, size_t);
+__data void *memchrram(__data void *, char, size_t);
+__data void *memcpypgm2ram(__data void *, __code void *, size_t);
+__data void *memcpyram2ram(__data void *, __data void *, size_t);
 #endif
 
 #if defined(__SDCC_z80) || defined (__SDCC_z80n) || defined(__SDCC_z180) || defined(__SDCC_r2k) || defined(__SDCC_r2ka) || defined(__SDCC_r3ka) || defined(__SDCC_r4k) || defined(__SDCC_r5k) || defined(__SDCC_r6k) || defined (__SDCC_ez80) || defined(__SDCC_r800)
@@ -315,7 +326,7 @@ extern void __xdata *memcpyx(void __xdata *, void __xdata *, int) __naked;
 #endif
 #define memset(dst, c, n) __builtin_memset(dst, c, n)
 #else
-#ifdef __SDCC_huc6280
+#if defined(__SDCC_huc6280)
 // huc memcpy needs parameters in DATA (not ZP)
 extern void *__memcpy (void *dest, const void *src, size_t n);
 #else

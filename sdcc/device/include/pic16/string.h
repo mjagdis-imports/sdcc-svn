@@ -1,8 +1,10 @@
 /*-------------------------------------------------------------------------
    string.h - ISO header for string library functions
 
-   Copyright (C) 1998, Sandeep Dutta . sandeep.dutta@usa.net
-   Ported to PIC16 port by Vangelis Rokas, 2004 <vrokas AT otenet.gr>
+   Copyright (C) 1998, Sandeep Dutta
+   Copyright (C) 2004, Vangelis Rokas, vrokas AT otenet.gr
+   Copyright (C) 2009-2025, Philipp Klaus Krause pkk@spth.de, philipp@colecovision.eu
+   Copyright (C) 2025, Gabriele Gorla
 
    This library is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -199,13 +201,6 @@ extern char *strrchr(const char *s, int c);
 #endif
 #endif
 
-// strsep (BSD/POSIX extension, not part of ISO C)
-#if __STDC_VERSION__ >= 199901L
-extern char *strsep (char **restrict sp, const char *restrict delim);
-#else
-extern char *strsep (char **sp, const char *delim);
-#endif
-
 // C90 strspn (ISO C23 7.28.5.7)
 #if __STDC_VERSION__ >= 199901L
 extern size_t strspn (const char s[static 1], const char accept[static 1]);
@@ -253,22 +248,106 @@ extern size_t strlen (const char *s);
 #endif
 #endif
 
-char *strlwr (char *);
-char *strupr (char *);
+// C23 const-preserving wrapper macros
 
-void *memrchr(void *, char, size_t);
+#if __STDC_VERSION__ >= 202311L
 
+#ifndef __XFER_PTR_QUAL
+#define __XFER_PTR_QUAL(P, T)   typeof(_Generic(1 ? (P) : (void *)(P), \
+                                                const void * : (const T)nullptr, \
+                                                restrict void * : (restrict T)nullptr, \
+                                                restrict const void * : (restrict const T)nullptr, \
+                                                volatile void * : (volatile T)nullptr, \
+                                                volatile const void * : (volatile const T)nullptr, \
+                                                volatile restrict void * : (volatile restrict T)nullptr, \
+                                                volatile restrict const void * : (volatile restrict const T)nullptr, \
+                                                _Optional void * : (_Optional T)nullptr, \
+                                                _Optional const void * : (_Optional const T)nullptr, \
+                                                _Optional restrict void * : (_Optional restrict T)nullptr, \
+                                                _Optional restrict const void * : (_Optional restrict const T)nullptr, \
+                                                _Optional volatile void * : (_Optional volatile T)nullptr, \
+                                                _Optional volatile const void * : (_Optional volatile const T)nullptr, \
+                                                _Optional volatile restrict void * : (_Optional volatile restrict T)nullptr, \
+                                                _Optional volatile restrict const void * : (_Optional volatile restrict const T)nullptr, \
+                                                default : (T)nullptr))
+
+/* TODO: Once _Atomic is properly supported, add cases for _Atomic to __XFER_PTR_QUAL, here and in wchar.h:
+                                                _Atomic void * : (_Atomic T)nullptr, \
+                                                _Atomic const void * : (_Atomic const T)nullptr, \
+                                                _Atomic restrict void * : (_Atomic restrict T)nullptr, \
+                                                _Atomic restrict const void * : (_Atomic restrict const T)nullptr, \
+                                                _Atomic volatile void * : (_Atomic volatile T)nullptr, \
+                                                _Atomic volatile const void * : (_Atomic volatile const T)nullptr, \
+                                                _Atomic volatile restrict void * : (_Atomic volatile restrict T)nullptr, \
+                                                _Atomic volatile restrict const void * : (_Atomic volatile restrict const T)nullptr, \
+                                                _Optional _Atomic void * : (_Optional _Atomic T)nullptr, \
+                                                _Optional _Atomic const void * : (_Optional _Atomic const T)nullptr, \
+                                                _Optional _Atomic restrict void * : (_Optional _Atomic restrict T)nullptr, \
+                                                _Optional _Atomic restrict const void * : (_Optional _Atomic restrict const T)nullptr, \
+                                                _Optional _Atomic volatile void * : (_Optional _Atomic volatile T)nullptr, \
+                                                _Optional _Atomic volatile const void * : (_Optional _Atomic volatile const T)nullptr, \
+                                                _Optional _Atomic volatile restrict void * : (_Optional _Atomic volatile restrict T)nullptr, \
+                                                _Optional _Atomic volatile restrict const void * : (_Optional _Atomic volatile restrict const T)nullptr, \
+*/
+#endif
+
+#define memchr(s, c, n)         ((__XFER_PTR_QUAL(s, void *))(memchr)(s, c, n))
+#define strchr(s, c)            ((__XFER_PTR_QUAL(s, char *))(strchr)(s, c))
+#define strpbrk(s1, s2)         ((__XFER_PTR_QUAL(s1, char *))(strpbrk)(s1, s2))
+#define strrchr(s, c)           ((__XFER_PTR_QUAL(s, char *))(strrchr)(s, c))
+#define strstr(s1, s2)          ((__XFER_PTR_QUAL(s1, char *))(strstr)(s1, s2))
+
+#endif
 
 // C2y length function
 extern size_t strnlen (const char *s, size_t n);
 
+// strsep (BSD/POSIX extension, not part of ISO C)
+#if __STDC_VERSION__ >= 199901L
+extern char *strsep (char **restrict sp, const char *restrict delim);
+#else
+extern char *strsep (char **sp, const char *delim);
+#endif
+
+void *memrchr(void *, char, size_t);
+char *strlwr (char *);
+char *strupr (char *);
+
+#ifdef __SDCC_ds390
+extern void __xdata *memcpyx(void __xdata *, void __xdata *, int) __naked;
+#endif
+
+#ifdef __SDCC_pic16
 const __code void *memchrpgm(const __code void *, char, size_t);
 __data void *memchrram(__data void *, char, size_t);
 __data void *memcpypgm2ram(__data void *, __code void *, size_t);
 __data void *memcpyram2ram(__data void *, __data void *, size_t);
+#endif
 
-void *__memcpy (void *, const void *, size_t);
-#define memcpy __memcpy
+#if defined(__SDCC_z80) || defined (__SDCC_z80n) || defined(__SDCC_z180) || defined(__SDCC_r2k) || defined(__SDCC_r2ka) || defined(__SDCC_r3ka) || defined(__SDCC_r4k) || defined(__SDCC_r5k) || defined(__SDCC_r6k) || defined (__SDCC_ez80) || defined(__SDCC_r800)
+#define memcpy(dst, src, n) __builtin_memcpy(dst, src, n)
+#define strcpy(dst, src) __builtin_strcpy(dst, src)
+#define strncpy(dst, src, n) __builtin_strncpy(dst, src, n)
+#if __STDC_VERSION__ >= 202311L
+#undef strchr
+#define strchr(s, c)            ((__XFER_PTR_QUAL(s, char *))(__builtin_strchr)(s, c))
+#else
+#define strchr(s, c) __builtin_strchr(s, c)
+#endif
+#define memset(dst, c, n) __builtin_memset(dst, c, n)
+#else
+#if defined(__SDCC_huc6280)
+// huc memcpy needs parameters in DATA (not ZP)
+extern void *__memcpy (void *dest, const void *src, size_t n);
+#else
+extern void *__memcpy (void *dest, const void *_NEAR src, _NEAR size_t n);
+#endif
+#define memcpy(dst, src, n) __memcpy(dst, src, n)
+#endif
+
+#if defined(__SDCC_mos6502) && !defined(__SDCC_STACK_AUTO)
+//#define memset(dst, c, n) __builtin_memset(dst, c, n)
+#endif
 
 #endif
 

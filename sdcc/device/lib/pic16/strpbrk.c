@@ -39,6 +39,7 @@ strpbrk (const char *string, const char *control )
     {
       if (strchr (control, ch))
         return (char *)string;
+      string++;
     }
 
   return NULL;

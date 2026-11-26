@@ -35,16 +35,3 @@ __modschar (signed char x, signed char y) __SDCC_NONBANKED
   return ((int)x % (int)y);
 }
 
-/*
-signed int
-__moduschar (unsigned char x, signed char y) __SDCC_NONBANKED
-{
-  return ((int)x % (int)y);
-}
-
-signed int
-__modsuchar (signed char x, unsigned char y) __SDCC_NONBANKED
-{
-  return ((int)x % (int)y);
-}
-*/

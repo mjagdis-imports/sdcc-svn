@@ -30,12 +30,16 @@
 
 char * strcat ( char * dst, const char * src )
 {
-        char * cp = dst;
+  char * cp = dst;
 
-        while( *cp )
-                cp++;                   /* find end of dst */
+  /* find end of dst */
+  while( *cp )
+    cp++;
 
-        while( *cp++ = *src++ ) ;       /* Copy src to end of dst */
+  /* Copy src to end of dst */
+  while( *cp++ = *src++ )
+    ;
 
-        return( dst );                  /* return dst */
+  /* return dst */
+  return dst;
 }

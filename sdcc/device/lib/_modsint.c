@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------
    __modsint.c - routine for signed int (16 bit) modulus
 
-   Copyright (C) 1999, Sandeep Dutta . sandeep.dutta@usa.net
+   Copyright (C) 1999, Sandeep Dutta <sandeep.dutta at usa.net>
 
    This library is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -26,11 +26,10 @@
    might be covered by the GNU General Public License.
 -------------------------------------------------------------------------*/
 
-
 #include <sdcc-lib.h>
 
 #if _SDCC_MANGLES_SUPPORT_FUNS
-unsigned unsigned __moduint (unsigned a, unsigned b);
+unsigned __moduint (unsigned a, unsigned b);
 #endif
 
 int __modsint (int a, int b) __SDCC_NONBANKED

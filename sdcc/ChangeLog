@@ -15,6 +15,24 @@
 	  device/non-free/lib/pic16/libdev/Makefile.in,
 	  src/SDCCutil.c:
 	  Fix bug #4112
+	* device/include/pic16/string.h,
+	  device/include/string.h,
+	  device/lib/_divschar.c,
+	  device/lib/_divsint.c,
+	  device/lib/_modschar.c,
+	  device/lib/_modsint.c,
+	  device/lib/_moduint.c,
+	  device/lib/_mulint.c,
+	  device/lib/pic16/_divsint.c,
+	  device/lib/pic16/_modsint.c,
+	  device/lib/pic16/strpbrk.c,
+	  device/lib/strcat.c,
+	  device/lib/strchr.c,
+	  device/lib/strcmp.c,
+	  device/lib/strncmp.c,
+	  device/lib/strncpy.c,
+	  device/lib/strtok.c:
+	  Make PIC16 use the common implementation for several libsdcc and libc functions.
 
 2026-11-25 Christopher Bazley <chris.bazley.wg14@gmail.com>
 

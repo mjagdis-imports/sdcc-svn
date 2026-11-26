@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-   divsint.c : routine for signed int (16 bit) division. just calls
+   __divsint.c : routine for signed int (16 bit) division. just calls
                routine for unsigned division after sign adjustment
 
    Copyright (C) 1999, Sandeep Dutta <sandeep.dutta at usa.net>

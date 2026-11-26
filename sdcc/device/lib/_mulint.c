@@ -1,10 +1,9 @@
 /*-------------------------------------------------------------------------
    __mulint.c - routine for (unsigned) int (16 bit) multiplication
 
-   Copyright (C) 1999, Sandeep Dutta . sandeep.dutta@usa.net
-
-   Modifications for PIC14 by
-   Copyright (C) 2019 Gonzalo Pérez de Olaguer Córdoba <salo@gpoc.es>
+   Copyright (C) 1999, Sandeep Dutta <sandeep.dutta at usa.net>
+   PIC16 code Copyright (C) 2004, Vangelis Rokas, <vrokas at otenet.gr> (2004)
+   PIC14 code Copyright (C) 2019, Gonzalo Pérez de Olaguer Córdoba <salo@gpoc.es>
 
    This library is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -52,27 +51,30 @@ __mulint (int a, int b) __SDCC_NONBANKED
 	union uu __xdata *x;
 	union uu __xdata *y;
 	union uu t;
+
         x = (union uu __xdata *)&a;
         y = (union uu __xdata *)&b;
-#elif defined(__SDCC_pic14)
+#elif defined(__SDCC_pic14) || defined(__SDCC_pic16)
 	union uu x;
 	union uu y;
 	union uu t;
+
         x.t = a;
         y.t = b;
 #else
 	register union uu *x;
 	register union uu *y;
 	union uu t;
+
         x = (union uu *)&a;
         y = (union uu *)&b;
 #endif
 
-  // sdcc is bad at handling union accesses. So we use (unsigned char)a instead of x->s.lo here.
-#if defined(__SDCC_pic14)
+#if defined(__SDCC_pic14) || defined(__SDCC_pic16)
   t.t = x.s.lo * y.s.lo;
   t.s.hi += (x.s.lo * y.s.hi) + (x.s.hi * y.s.lo);
 #else
+  // sdcc is bad at handling union accesses. So we use (unsigned char)a instead of x->s.lo here.
   t.t = (unsigned char)a * (unsigned char)b;
   t.s.hi += ((unsigned char)a * y->s.hi) + (x->s.hi * (unsigned char)b);
 #endif

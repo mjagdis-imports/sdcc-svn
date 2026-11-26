@@ -35,37 +35,40 @@
 
 char *strtok (char *restrict str, const char control[restrict static 1])
 {
-	static char * s;
-	register char * s1;
+  static char * s;
+  register char * s1;
 
-	if ( str )
-		s = str;
+  if ( str )
+    s = str;
 
-	if ( !s )
-		return NULL;
+  if ( !s )
+    return NULL;
 
-	while (*s) {
-		if (strchr(control,*s))
-			s++;
-		else
-			break;
-	}
+  while (*s)
+    {
+      if (strchr (control, *s))
+        s++;
+      else
+        break;
+    }
 
-	s1 = s;
+  s1 = s;
 
-	while (*s) {
-		if (strchr(control,*s)) {
-			*s++ = '\0';
-			return s1;
-		}
-		s++ ;
-	}
+  while (*s)
+    {
+      if (strchr (control, *s))
+        {
+          *s++ = '\0';
+          return s1;
+        }
+      s++;
+    }
 
-	s = NULL;
+  s = NULL;
 
-	if (*s1)
-		return s1;
-	else
-		return NULL;
+  if (*s1)
+    return s1;
+  else
+    return NULL;
 }
 

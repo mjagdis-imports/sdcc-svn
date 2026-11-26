@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------
-   _strcmp.c - part of string library functions
+   strcmp.c - part of string library functions
 
-   Copyright (C) 1999, Sandeep Dutta . sandeep.dutta@usa.net
+   Copyright (C) 1999, Sandeep Dutta <sandeep.dutta at usa.net>
 
    This library is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -33,12 +33,12 @@
 
 int strcmp ( const char * asrc, const char * adst )
 {
-	register int ret = 0;
+  register int ret = 0;
 
-	while( ! (ret = *(unsigned char *)asrc - *(unsigned char *)adst) && *adst)
-		++asrc, ++adst;
+  while( ! (ret = *(unsigned char *)asrc - *(unsigned char *)adst) && *adst)
+    ++asrc, ++adst;
 
-	return( ret );
+  return ret;
 }
 
 #endif

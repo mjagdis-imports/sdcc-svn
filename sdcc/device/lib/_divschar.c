@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-   __divschar.c :- routine for signed char (8 bit) division. just calls
+   __divschar.c - routine for signed char (8 bit) division. just calls
                   routine for signed int division after sign extension
 
    Copyright (C) 2013, Philipp Klaus Krause . pkk@spth.de
