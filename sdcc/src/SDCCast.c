@@ -4190,6 +4190,20 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           goto errorTreeReturn;
         }
 
+      if (IS_PTR (LTYPE (tree)))
+        {
+          sym_link *targetType = LTYPE (tree)->next;
+          if (IS_VOID (targetType))
+            werrorfl (tree->filename, tree->lineno, W_SIZEOF_VOID);
+          while (IS_ARRAY (targetType) && DCL_ARRAY_LENGTH_TYPE (targetType) != ARRAY_LENGTH_UNKNOWN)
+            targetType = targetType->next;
+          if (IS_ARRAY (targetType) || IS_STRUCT (targetType) && !getSize (targetType))
+            {
+              werrorfl (tree->filename, tree->lineno, E_INVALID_OP, "[]");
+              goto errorTreeReturn;
+            }
+        }
+
       propagateConstExpr (&tree->right, resultType, reduceTypeAllowed);
 
       // Check index against bounds, if we can.

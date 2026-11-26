@@ -1,3 +1,8 @@
+2026-11-25 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
+	* src/SDCCast.c (decorateType): Diagnose subscripting incomplete
+	types and void pointers (bug #4086)
+
 2026-11-25 Gabriele Gorla <gorlik@yahoo.com>
 
 	* support/regression/MakeList,
