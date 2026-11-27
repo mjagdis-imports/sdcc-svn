@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-   _slslonglong.c - routine for shift left of 64 bit signed long long
+   __slslonglong.c - routine for shift left of 64 bit signed long long
 
    Copyright (C) 2012, Philipp Klaus Krause . philipp@informatik.uni-frankfurt.de
 
@@ -32,7 +32,7 @@
 
 #ifdef __SDCC_LONGLONG
 
-long long _slslonglong(long long l, unsigned char s) __SDCC_NONBANKED
+long long __slslonglong(long long l, unsigned char s) __SDCC_NONBANKED
 {
     return((unsigned long long)(l) << s);
 }

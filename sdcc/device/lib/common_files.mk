@@ -31,10 +31,10 @@ COMMON_SDCC_LL = \
 # SDCC LONG LONG shifts support.
 # Required for ports that implement long long shifts with support routines
 COMMON_SDCC_LL_SHIFT = \
-  _slslonglong \
-  _slulonglong \
-  _srslonglong \
-  _srulonglong
+  __slslonglong \
+  __slulonglong \
+  __srslonglong \
+  __srulonglong
 
 # LIBC support for div, ldiv, lldiv, imaxdiv.
 # Should be merged into COMMON_LIBC when all ports fully support struct return

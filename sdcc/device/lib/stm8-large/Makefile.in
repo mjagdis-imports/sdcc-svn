@@ -17,7 +17,6 @@ LIB		= stm8.lib
 
 PORT_SDCC = $(COMMON_SDCC) \
   $(COMMON_SDCC_LL) \
-  $(COMMON_SDCC_LL_SHIFT) \
   _fast_long_neg \
   _mulschar \
   __mulsint2slong \

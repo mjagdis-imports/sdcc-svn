@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-   _slulonglong.c - routine for shift left of 64 bit unsigned long long
+   __srulonglong.c - routine for shift right of 64 bit unsigned long long
 
    Copyright (C) 2012, Philipp Klaus Krause . philipp@informatik.uni-frankfurt.de
 
@@ -35,53 +35,49 @@
 #ifdef __SDCC_LONGLONG
 
 #if __STDC_ENDIAN_NATIVE__ == __STDC_ENDIAN_BIG__
-
-unsigned long long _slulonglong(unsigned long long l, unsigned char s) __SDCC_NONBANKED
+unsigned long long __srulonglong(unsigned long long l, unsigned char s) __SDCC_NONBANKED
 {
-    uint32_t * const top =    (uint32_t *)((char *)(&l) + 0);
-    uint16_t * const middle = (uint16_t *)((char *)(&l) + 4);
-    uint32_t * const bottom = (uint32_t *)((char *)(&l) + 4);
-    uint16_t * const w =      (uint16_t *)(&l);
+    uint32_t *const top =    (uint32_t *)((char *)(&l) + 0);
+    uint32_t *const middle = (uint32_t *)((char *)(&l) + 2);
+    uint32_t *const bottom = (uint32_t *)((char *)(&l) + 4);
+    uint16_t *const w =      (uint16_t *)(&l);
 
-    for (; s >= 16; s-= 16)
-    {
-        w[0] = w[1];
-        w[1] = w[2];
-        w[2] = w[3];
-        w[3] = 0;
-    }
-
-    (*top) <<= s;
-    (*top) |= (((uint32_t)((*middle) & 0xffffu) << s) >> 16);
-    (*bottom) <<= s;
-
-    return(l);
-}
-
-#elif __STDC_ENDIAN_NATIVE__ == __STDC_ENDIAN_LITTLE__
-
-unsigned long long _slulonglong(unsigned long long l, unsigned char s) __SDCC_NONBANKED
-{
-    _AUTOMEM uint32_t * const top =    (_AUTOMEM uint32_t *)((_AUTOMEM char *)(&l) + 4);
-    _AUTOMEM uint16_t * const middle = (_AUTOMEM uint16_t *)((_AUTOMEM char *)(&l) + 2);
-    _AUTOMEM uint32_t * const bottom = (_AUTOMEM uint32_t *)((_AUTOMEM char *)(&l) + 0);
-    _AUTOMEM uint16_t * const w =      (_AUTOMEM uint16_t *)(&l);
-
-    for (; s >= 16; s-= 16)
+    for (; s >= 16; s -= 16)
     {
         w[3] = w[2];
         w[2] = w[1];
         w[1] = w[0];
-        w[0] = 0;
+        w[0] = 0x000000;
     }
 
-    (*top) <<= s;
-    (*top) |= (((uint32_t)((*middle) & 0xffffu) << s) >> 16);
-    (*bottom) <<= s;
+    (*bottom) >>= s;
+    (*middle) |= (((*middle & 0xffff0000ul) >> s) & 0x0000fffful);
+    (*top) >>= s;
 
     return(l);
 }
+#elif __STDC_ENDIAN_NATIVE__ == __STDC_ENDIAN_LITTLE__
+unsigned long long __srulonglong(unsigned long long l, unsigned char s) __SDCC_NONBANKED
+{
+    _AUTOMEM uint32_t *const top =    (_AUTOMEM uint32_t *)((_AUTOMEM char *)(&l) + 4);
+    _AUTOMEM uint16_t *const middle = (_AUTOMEM uint16_t *)((_AUTOMEM char *)(&l) + 4);
+    _AUTOMEM uint32_t *const bottom = (_AUTOMEM uint32_t *)((_AUTOMEM char *)(&l) + 0);
+    _AUTOMEM uint16_t *const w =      (_AUTOMEM uint16_t *)(&l);
 
+    for (; s >= 16; s -= 16)
+    {
+        w[0] = w[1];
+        w[1] = w[2];
+        w[2] = w[3];
+        w[3] = 0x000000;
+    }
+
+    (*bottom) >>= s;
+    (*middle) |= (uint16_t)(((uint32_t)(*middle) << 16) >> s);
+    (*top) |= (((*middle) & 0xffff0000ul) >> s);
+
+    return(l);
+}
 #else
 #error Support for mixed endiannness not implemented!
 #endif

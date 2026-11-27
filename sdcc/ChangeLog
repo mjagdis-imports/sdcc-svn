@@ -1,3 +1,12 @@
+2026-11-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* device/lib/common_files.mk,
+	  src/SDCCsymt.c,
+	  device/lib/__s*longlong.c,
+	  device/lib/stm8/Makefile.in,
+	  device/lib/stm8-large/Makefile.in:
+	  Move long long shift support functions into implementation namespace.
+
 2026-11-26 Gabriele Gorla <gorlik@yahoo.com>
 
 	* device/include/pic16/string.h,

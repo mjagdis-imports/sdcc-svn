@@ -5582,6 +5582,7 @@ initCSupport (void)
       muldiv[muldivmod][bwd][1] = muldiv[muldivmod][bwd][0];
     }
 
+  // Shift support functions
   for (slsr = 0; slsr < 2; slsr++)
     {
       for (bwd = 0; bwd < 4; bwd++)
@@ -5594,7 +5595,7 @@ initCSupport (void)
                 {
                   struct dbuf_s dbuf;
                   dbuf_init (&dbuf, 128);
-                  dbuf_printf (&dbuf, "_%s%s%s", srlrr[slsr], ssu[su], sbwd[bwd]);
+                  dbuf_printf (&dbuf, "__%s%s%s", srlrr[slsr], ssu[su], sbwd[bwd]);
                   rlrr[slsr][bwd][su] = funcOfType2 (_mangleFunctionName (dbuf_c_str (&dbuf)), multypes[bwd][su], multypes[bwd][su], multypes[0][0], options.intlong_rent);
                   dbuf_destroy (&dbuf);
                 }
