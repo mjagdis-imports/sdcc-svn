@@ -23,6 +23,8 @@
 	* configure,
 	  configure.ac:
 	  Generate DS390/DS400 makefiles only when necessary. 
+	* support/regression/ports/pic16/spec.mk:
+	  Use pic18f4620 for the regression (more memory).
 
 2026-11-27 Philipp Klaus Krause <philipp@colecovision.eu>
 
