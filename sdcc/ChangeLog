@@ -8,6 +8,9 @@
 	  Detect location of gputils instead of hardcoded /usr/bin.
 	* device/lib/pic14/Makefile:
 	  Add cleaning of pic14 library.
+	* configure,
+	  configure.ac:
+	  Generate DS390/DS400 makefiles only when necessary. 
 
 2026-11-27 Philipp Klaus Krause <philipp@colecovision.eu>
 
