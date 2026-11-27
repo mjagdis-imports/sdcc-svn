@@ -8,8 +8,10 @@
 #endif
 
 #ifndef SKIP_C23
-static constexpr _Bool zero = 0, one = 1;
-static constexpr _Bool positive = (_Bool)2, negative = (_Bool)-1;
+static constexpr _Bool zero = 0;
+static constexpr _Bool one = 1;
+static constexpr _Bool positive = (_Bool)2;
+static constexpr _Bool negative = (_Bool)-1;
 static constexpr _Bool wide = (_Bool)0x100000000ULL;
 static constexpr _Bool flags[] = {0, 1, (_Bool)2};
 struct S { _Bool flag; int number; };
