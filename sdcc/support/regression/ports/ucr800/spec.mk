@@ -29,7 +29,7 @@ ifdef CROSSCOMPILING
   SDCCFLAGS += -I$(top_srcdir)
 endif
 
-SDCCFLAGS += -mr800 --less-pedantic
+SDCCFLAGS += -mr800 --less-pedantic --data-loc 0xa000
 LINKFLAGS += r800.lib
 
 OBJEXT = .rel
