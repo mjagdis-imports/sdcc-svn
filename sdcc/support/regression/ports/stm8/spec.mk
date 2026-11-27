@@ -21,7 +21,7 @@ else
 
 ifndef CROSSCOMPILING
   SDCCFLAGS += --nostdinc -I$(top_srcdir)
-  LINKFLAGS += --nostdlib -L$(top_builddir)/device/lib/build/stm8
+  LINKFLAGS += --nostdlib -L$(top_builddir)/device/lib/build/stm8-medium
 endif
 endif
 

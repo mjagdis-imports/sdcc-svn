@@ -421,7 +421,7 @@ get_model (void)
   switch (options.model)
     {
     case MODEL_MEDIUM:
-      return ("stm8");
+      return ("stm8-medium");
       break;
     case MODEL_LARGE:
       return ("stm8-large");

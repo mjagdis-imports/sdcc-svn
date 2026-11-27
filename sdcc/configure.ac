@@ -867,12 +867,12 @@ fi
 
 if test $OPT_DISABLE_R2K = 0 || test $OPT_DISABLE_R2KA = 0 || test $OPT_DISABLE_R3KA = 0 || test $OPT_DISABLE_R4K = 0 || test $OPT_DISABLE_R5K = 0 || test $OPT_DISABLE_R6K = 0; then
   AC_CONFIG_FILES([sdas/asrab/Makefile])
-  test $OPT_DISABLE_DEVICE_LIB = 0 && AC_CONFIG_FILES([device/lib/r2k/Makefile
-                                                       device/lib/r2ka/Makefile
-                                                       device/lib/r3ka/Makefile
-                                                       device/lib/r4k/Makefile
-                                                       device/lib/r5k/Makefile
-                                                       device/lib/r6k/Makefile])
+  test $OPT_DISABLE_DEVICE_LIB = 0 && AC_CONFIG_FILES([device/lib/r2k-small/Makefile
+                                                       device/lib/r2ka-small/Makefile
+                                                       device/lib/r3ka-small/Makefile
+                                                       device/lib/r4k-small/Makefile
+                                                       device/lib/r5k-small/Makefile
+                                                       device/lib/r6k-small/Makefile])
 fi
 
 if test $OPT_DISABLE_TLCS90 = 0; then
@@ -888,7 +888,7 @@ fi
 if test $OPT_DISABLE_STM8 = 0; then
   AC_CONFIG_FILES([src/stm8/Makefile
                    sdas/asstm8/Makefile])
-  test $OPT_DISABLE_DEVICE_LIB = 0 && AC_CONFIG_FILES([device/lib/stm8/Makefile
+  test $OPT_DISABLE_DEVICE_LIB = 0 && AC_CONFIG_FILES([device/lib/stm8-medium/Makefile
                                                        device/lib/stm8-large/Makefile])
 fi
 

@@ -1,5 +1,23 @@
 2026-11-27 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* device/lib/ports.mk,
+	  device/lib/Makefile.in,
+	  device/lib/stm8-medium,
+	  device/lib/r?k-small,
+	  device/lib/r?ka-small,
+	  configure.ac,
+	  configure.in,
+	  src/stm8/main.c,
+	  src/z80/main.c,
+	  support/scripts/sdcc.nsi,
+	  support/regression/ports/stm8/spec.mk,
+	  support/regression/ports/ucr?k/spec.mk,
+	  support/regression/ports/ucr?ka/spec.mk,
+	  .version:
+	  Make default model explicit in library paths for stm8 and rab.
+
+2026-11-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* device/lib/common_files.mk,
 	  src/SDCCsymt.c,
 	  device/lib/__s*longlong.c,

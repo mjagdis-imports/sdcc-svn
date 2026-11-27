@@ -1233,6 +1233,43 @@ oclsExpense (struct memmap *oclass)
   return 0;
 }
 
+static const char *
+get_model (void)
+{
+  if (!IS_RAB)
+    return port->target;
+
+  switch (options.model)
+    {
+    case MODEL_SMALL:
+      return
+        IS_R2K ? "r2k-small" :
+        IS_R2KA ? "r2ka-small" :
+        IS_R3KA ? "r3ka-small" :
+        IS_R4K ? "r4k-small" :
+        IS_R5K ? "r5k-small" :
+        "r6k-small";
+      break;
+    case MODEL_MEDIUM:
+      return
+        IS_R2K ? "r2k-medium" :
+        IS_R2KA ? "r2ka-medium" :
+        IS_R3KA ? "r3ka-medium" :
+        IS_R4K ? "r4k-medium" :
+        IS_R5K ? "r5k-medium" :
+        "r6k-small";
+      break;
+    case MODEL_LARGE:
+      return
+        IS_R4K ? "r4k-large" :
+        IS_R5K ? "r5k-large" :
+        "r6k-large";
+      break;
+    default:
+      werror (W_UNKNOWN_MODEL, __FILE__, __LINE__);
+      return "unknown";
+    }
+}
 
 //#define LINKCMD "sdld{port} -nf {dstfilename}"
 /*

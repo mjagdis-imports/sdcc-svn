@@ -160,27 +160,27 @@ TARGETS        += model-z80n
 endif
 
 ifeq ($(OPT_DISABLE_R2K), 0)
-TARGETS        += model-r2k
+TARGETS        += model-r2k-small
 endif
 
 ifeq ($(OPT_DISABLE_R2KA), 0)
-TARGETS        += model-r2ka
+TARGETS        += model-r2ka-small
 endif
 
 ifeq ($(OPT_DISABLE_R3KA), 0)
-TARGETS        += model-r3ka
+TARGETS        += model-r3ka-small
 endif
 
 ifeq ($(OPT_DISABLE_R4K), 0)
-TARGETS        += model-r4k
+TARGETS        += model-r4k-small
 endif
 
 ifeq ($(OPT_DISABLE_R5K), 0)
-TARGETS        += model-r5k
+TARGETS        += model-r5k-small
 endif
 
 ifeq ($(OPT_DISABLE_R6K), 0)
-TARGETS        += model-r6k
+TARGETS        += model-r6k-small
 endif
 
 ifeq ($(OPT_DISABLE_TLCS90), 0)
@@ -196,7 +196,7 @@ TARGETS        += model-r800
 endif
 
 ifeq ($(OPT_DISABLE_STM8), 0)
-TARGETS        += model-stm8
+TARGETS        += model-stm8-medium
 TARGETS        += model-stm8-large
 endif
 
@@ -341,34 +341,34 @@ model-z80n:
 	  $(MAKE) MODELFLAGS="-mz80n" PORT=z80n objects OEXT=.o || exit 1; \
 	fi
 
-model-r2k:
+model-r2k-small:
 	if grep '^z80$$' $(top_builddir)/ports.build > /dev/null; then \
-	  $(MAKE) MODELFLAGS="-mr2k" PORT=r2k objects OEXT=.o || exit 1; \
+	  $(MAKE) MODELFLAGS="-mr2k" PORT=r2k-small objects OEXT=.o || exit 1; \
 	fi
 
-model-r2ka:
+model-r2ka-small:
 	if grep '^z80$$' $(top_builddir)/ports.build > /dev/null; then \
-	  $(MAKE) MODELFLAGS="-mr2ka" PORT=r2ka objects OEXT=.o || exit 1; \
+	  $(MAKE) MODELFLAGS="-mr2ka" PORT=r2ka-small objects OEXT=.o || exit 1; \
 	fi
 
-model-r3ka:
+model-r3ka-small:
 	if grep '^z80$$' $(top_builddir)/ports.build > /dev/null; then \
-	  $(MAKE) MODELFLAGS="-mr3ka" PORT=r3ka objects OEXT=.o || exit 1; \
+	  $(MAKE) MODELFLAGS="-mr3ka" PORT=r3ka-small objects OEXT=.o || exit 1; \
 	fi
 
-model-r4k:
+model-r4k-small:
 	if grep '^z80$$' $(top_builddir)/ports.build > /dev/null; then \
-	  $(MAKE) MODELFLAGS="-mr4k" PORT=r4k objects OEXT=.o || exit 1; \
+	  $(MAKE) MODELFLAGS="-mr4k" PORT=r4k-small objects OEXT=.o || exit 1; \
 	fi
 
-model-r5k:
+model-r5k-small:
 	if grep '^z80$$' $(top_builddir)/ports.build > /dev/null; then \
-	  $(MAKE) MODELFLAGS="-mr5k" PORT=r5k objects OEXT=.o || exit 1; \
+	  $(MAKE) MODELFLAGS="-mr5k" PORT=r5k-small objects OEXT=.o || exit 1; \
 	fi
 
-model-r6k:
+model-r6k-small:
 	if grep '^z80$$' $(top_builddir)/ports.build > /dev/null; then \
-	  $(MAKE) MODELFLAGS="-mr6k" PORT=r6k objects OEXT=.o || exit 1; \
+	  $(MAKE) MODELFLAGS="-mr6k" PORT=r6k-small objects OEXT=.o || exit 1; \
 	fi
 
 model-tlcs90:
@@ -426,9 +426,9 @@ model-huc6280:
 	  $(MAKE) MODELFLAGS="-mhuc6280" PORT=huc6280 objects || exit 1; \
 	fi
 
-model-stm8:
+model-stm8-medium:
 	if grep '^stm8$$' $(top_builddir)/ports.build > /dev/null; then \
-	  $(MAKE) MODELFLAGS="-mstm8" PORT=stm8 objects || exit 1; \
+	  $(MAKE) MODELFLAGS="-mstm8" PORT=stm8-medium objects || exit 1; \
 	fi
 
 model-stm8-large:

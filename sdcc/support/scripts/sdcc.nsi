@@ -520,34 +520,34 @@ ${Section} "SDCC Z180 library" SEC09
   File "${DEV_ROOT}\lib\z180\*.*"
 ${SectionEnd}
 
-${Section} "SDCC Rabbit 2000 library" SEC10
+${Section} "SDCC Rabbit 2000 small model library" SEC10
   SectionIn 1 2
-  SetOutPath "$INSTDIR\lib\r2k"
-  File "${DEV_ROOT}\lib\r2k\*.*"
+  SetOutPath "$INSTDIR\lib\r2k-small"
+  File "${DEV_ROOT}\lib\r2k-small\*.*"
 ${SectionEnd}
 
-${Section} "SDCC Rabbit 3000A library" SEC11
+${Section} "SDCC Rabbit 3000A small model library" SEC11
   SectionIn 1 2
-  SetOutPath "$INSTDIR\lib\r3ka"
-  File "${DEV_ROOT}\lib\r3ka\*.*"
+  SetOutPath "$INSTDIR\lib\r3ka-small"
+  File "${DEV_ROOT}\lib\r3ka-small\*.*"
 ${SectionEnd}
 
-${Section} "SDCC Rabbit 4000 library" SEC12
+${Section} "SDCC Rabbit 4000 small model library" SEC12
   SectionIn 1 2
-  SetOutPath "$INSTDIR\lib\r4k"
-  File "${DEV_ROOT}\lib\r4k\*.*"
+  SetOutPath "$INSTDIR\lib\r4k-small"
+  File "${DEV_ROOT}\lib\r4k-small\*.*"
 ${SectionEnd}
 
-${Section} "SDCC Rabbit 5000 library" SEC13
+${Section} "SDCC Rabbit 5000 small model library" SEC13
   SectionIn 1 2
-  SetOutPath "$INSTDIR\lib\r5k"
-  File "${DEV_ROOT}\lib\r5k\*.*"
+  SetOutPath "$INSTDIR\lib\r5k-small"
+  File "${DEV_ROOT}\lib\r5k-small\*.*"
 ${SectionEnd}
 
-${Section} "SDCC Rabbit 6000 library" SEC14
+${Section} "SDCC Rabbit 6000 small model library" SEC14
   SectionIn 1 2
-  SetOutPath "$INSTDIR\lib\r6k"
-  File "${DEV_ROOT}\lib\r6k\*.*"
+  SetOutPath "$INSTDIR\lib\r6k-small"
+  File "${DEV_ROOT}\lib\r6k-small\*.*"
 ${SectionEnd}
 
 ${Section} "SDCC Z80 library" SEC15
@@ -905,10 +905,10 @@ ${Section} "SDCC Z80N library" SEC35
   File "${DEV_ROOT}\lib\z80n\*.*"
 ${SectionEnd}
 
-${Section} "SDCC Rabbit 2000A library" SEC36
+${Section} "SDCC Rabbit 2000A small model library" SEC36
   SectionIn 1 2
-  SetOutPath "$INSTDIR\lib\r2ka"
-  File "${DEV_ROOT}\lib\r2ka\*.*"
+  SetOutPath "$INSTDIR\lib\r2ka-small"
+  File "${DEV_ROOT}\lib\r2ka-small\*.*"
 ${SectionEnd}
 
 ${Section} "SDCC MOS 6502 library" SEC37
@@ -1153,8 +1153,8 @@ ${Section} Uninstall SECUNINSTALL
   Delete "$INSTDIR\lib\src\s08\s08.lib"
   Delete "$INSTDIR\lib\src\s08\Makefile"
 
-  Delete "$INSTDIR\lib\src\stm8\stm8.lib"
-  Delete "$INSTDIR\lib\src\stm8\Makefile"
+  Delete "$INSTDIR\lib\src\stm8-medium\stm8.lib"
+  Delete "$INSTDIR\lib\src\stm8-medium\Makefile"
 
   Delete "$INSTDIR\lib\src\stm8-large\stm8.lib"
   Delete "$INSTDIR\lib\src\stm8-large\Makefile"
@@ -1174,17 +1174,17 @@ ${Section} Uninstall SECUNINSTALL
   Delete "$INSTDIR\lib\src\sm83\README"
   Delete "$INSTDIR\lib\src\sm83\Makefile"
 
-  Delete "$INSTDIR\lib\src\r2k\*.s"
+  Delete "$INSTDIR\lib\src\r2k-small\*.s"
 
-  Delete "$INSTDIR\lib\src\r2ka\*.s"
+  Delete "$INSTDIR\lib\src\r2ka-small\*.s"
 
-  Delete "$INSTDIR\lib\src\r3ka\*.s"
+  Delete "$INSTDIR\lib\src\r3ka-small\*.s"
 
-  Delete "$INSTDIR\lib\src\r4k\*.s"
+  Delete "$INSTDIR\lib\src\r4k-small\*.s"
 
-  Delete "$INSTDIR\lib\src\r5k\*.s"
+  Delete "$INSTDIR\lib\src\r5k-small\*.s"
   
-  Delete "$INSTDIR\lib\src\r6k\*.s"
+  Delete "$INSTDIR\lib\src\r6k-small\*.s"
 
   Delete "$INSTDIR\lib\src\ez80\*.s"
   Delete "$INSTDIR\lib\src\ez80\ez80.lib"
@@ -1261,7 +1261,7 @@ ${Section} Uninstall SECUNINSTALL
 
   Delete "$INSTDIR\lib\s08\*.lib"
 
-  Delete "$INSTDIR\lib\stm8\*.lib"
+  Delete "$INSTDIR\lib\stm8-medium\*.lib"
 
   Delete "$INSTDIR\lib\stm8-large\*.lib"
 
@@ -1271,23 +1271,23 @@ ${Section} Uninstall SECUNINSTALL
   Delete "$INSTDIR\lib\z180\*.rel"
   Delete "$INSTDIR\lib\z180\*.lib"
 
-  Delete "$INSTDIR\lib\r2k\*.rel"
-  Delete "$INSTDIR\lib\r2k\*.lib"
+  Delete "$INSTDIR\lib\r2k-small\*.rel"
+  Delete "$INSTDIR\lib\r2k-small\*.lib"
 
-  Delete "$INSTDIR\lib\r2ka\*.rel"
-  Delete "$INSTDIR\lib\r2ka\*.lib"
+  Delete "$INSTDIR\lib\r2ka-small\*.rel"
+  Delete "$INSTDIR\lib\r2ka-small\*.lib"
 
-  Delete "$INSTDIR\lib\r3ka\*.rel"
-  Delete "$INSTDIR\lib\r3ka\*.lib"
+  Delete "$INSTDIR\lib\r3ka-small\*.rel"
+  Delete "$INSTDIR\lib\r3ka-small\*.lib"
 
-  Delete "$INSTDIR\lib\r4k\*.rel"
-  Delete "$INSTDIR\lib\r4k\*.lib"
+  Delete "$INSTDIR\lib\r4k-small\*.rel"
+  Delete "$INSTDIR\lib\r4k-small\*.lib"
 
-  Delete "$INSTDIR\lib\r5k\*.rel"
-  Delete "$INSTDIR\lib\r5k\*.lib"
+  Delete "$INSTDIR\lib\r5k-small\*.rel"
+  Delete "$INSTDIR\lib\r5k-small\*.lib"
 
-  Delete "$INSTDIR\lib\r6k\*.rel"
-  Delete "$INSTDIR\lib\r6k\*.lib"
+  Delete "$INSTDIR\lib\r6k-small\*.rel"
+  Delete "$INSTDIR\lib\r6k-small\*.lib"
 
   Delete "$INSTDIR\lib\ez80\*.rel"
   Delete "$INSTDIR\lib\ez80\*.lib"
@@ -1447,19 +1447,19 @@ ${Section} Uninstall SECUNINSTALL
   RMDir "$INSTDIR\lib\src\z80"
   RMDir "$INSTDIR\lib\src\z180"
   RMDir "$INSTDIR\lib\src\sm83"
-  RMDir "$INSTDIR\lib\src\r2k"
-  RMDir "$INSTDIR\lib\src\r2ka"
-  RMDir "$INSTDIR\lib\src\r3ka"
-  RMDir "$INSTDIR\lib\src\r4k"
-  RMDir "$INSTDIR\lib\src\r5k"
-  RMDir "$INSTDIR\lib\src\r6k"
+  RMDir "$INSTDIR\lib\src\r2k-small"
+  RMDir "$INSTDIR\lib\src\r2ka-small"
+  RMDir "$INSTDIR\lib\src\r3ka-small"
+  RMDir "$INSTDIR\lib\src\r4k-small"
+  RMDir "$INSTDIR\lib\src\r5k-small"
+  RMDir "$INSTDIR\lib\src\r6k-small"
   RMDir "$INSTDIR\lib\src\ez80"
   RMDir "$INSTDIR\lib\src\ds390\examples"
   RMDir "$INSTDIR\lib\src\ds390"
   RMDir "$INSTDIR\lib\src\ds400"
   RMDir "$INSTDIR\lib\src\hc08"
   RMDir "$INSTDIR\lib\src\s08"
-  RMDir "$INSTDIR\lib\src\stm8"
+  RMDir "$INSTDIR\lib\src\stm8-medium"
   RMDir "$INSTDIR\lib\src\stm8-large"
   RMDir "$INSTDIR\lib\src\pdk13"
   RMDir "$INSTDIR\lib\src\pdk14"
@@ -1484,12 +1484,12 @@ ${Section} Uninstall SECUNINSTALL
   RMDir "$INSTDIR\non-free\lib\pic16"
   RMDir "$INSTDIR\lib\z80"
   RMDir "$INSTDIR\lib\z180"
-  RMDir "$INSTDIR\lib\r2k"
-  RMDir "$INSTDIR\lib\r2ka"
-  RMDir "$INSTDIR\lib\r3ka"
-  RMDir "$INSTDIR\lib\r4k"
-  RMDir "$INSTDIR\lib\r5k"
-  RMDir "$INSTDIR\lib\r6k"
+  RMDir "$INSTDIR\lib\r2k-small"
+  RMDir "$INSTDIR\lib\r2ka-small"
+  RMDir "$INSTDIR\lib\r3ka-small"
+  RMDir "$INSTDIR\lib\r4k-small"
+  RMDir "$INSTDIR\lib\r5k-small"
+  RMDir "$INSTDIR\lib\r6k-small"
   RMDir "$INSTDIR\lib\ez80"
   RMDir "$INSTDIR\lib\mcs51-small"
   RMDir "$INSTDIR\lib\mcs51-medium"
@@ -1502,7 +1502,7 @@ ${Section} Uninstall SECUNINSTALL
   RMDir "$INSTDIR\lib\ds400"
   RMDir "$INSTDIR\lib\hc08"
   RMDir "$INSTDIR\lib\s08"
-  RMDir "$INSTDIR\lib\stm8"
+  RMDir "$INSTDIR\lib\stm8-medium"
   RMDir "$INSTDIR\lib\stm8-large"
   RMDir "$INSTDIR\lib\pdk13"
   RMDir "$INSTDIR\lib\pdk14"

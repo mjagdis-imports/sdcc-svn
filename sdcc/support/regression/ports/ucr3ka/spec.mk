@@ -21,7 +21,7 @@ else
 
 ifndef CROSSCOMPILING
   SDCCFLAGS += --nostdinc -I$(top_srcdir)
-  LINKFLAGS += --nostdlib -L$(top_builddir)/device/lib/build/r3ka
+  LINKFLAGS += --nostdlib -L$(top_builddir)/device/lib/build/r3ka-small
 endif
 endif
 

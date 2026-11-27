@@ -17,16 +17,16 @@ RELPORTS = \
   pdk15 \
   pic14 \
   pic16 \
-  r2k \
-  r2ka \
-  r3ka \
-  r4k \
-  r5k \
-  r6k \
+  r2k-small \
+  r2ka-small \
+  r3ka-small \
+  r4k-small \
+  r5k-small \
+  r6ksmall \
   r800 \
   s08 \
   sm83 \
-  stm8 \
+  stm8-medium \
   stm8-large \
   tlcs90 \
   z180 \
