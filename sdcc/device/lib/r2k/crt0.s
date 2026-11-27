@@ -121,7 +121,7 @@ _exit::
 	ld	a,#0
 	rst     #0x28
 1$:
-	;halt		; opcode for halt used for 'altd' on rabbit processors
+	;halt		; opcode for halt used for 'altd' on Rabbit processors
 	jr	1$
 
 	.area   _GSINIT

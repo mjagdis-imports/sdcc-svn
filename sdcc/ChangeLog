@@ -6,6 +6,13 @@
 	  device/lib/stm8/Makefile.in,
 	  device/lib/stm8-large/Makefile.in:
 	  Move long long shift support functions into implementation namespace.
+	* device/lib/rab-common,
+	  device/lib/ez80/Makefile.in,
+	  device/lib/r?k/Makefile.in,
+	  device/lib/r?k/crt0.s,
+	  device/lib/r?ka/Makefile.in,
+	  device/lib/tlcs90/Makefile.in:
+	  Rename rabbit-common to rab-common, since rab is what we use for Rabbits in all other filenames.
 
 2026-11-26 Gabriele Gorla <gorlik@yahoo.com>
 
