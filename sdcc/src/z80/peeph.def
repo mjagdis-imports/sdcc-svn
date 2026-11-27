@@ -529,6 +529,14 @@ replace restart {
 } if operandsLiteral(%1 %2), immdInRange(0x00 0xFF '|' %1 %2 %x3)
 
 replace restart {
+	rr	%1
+	res	7, %1
+} by {
+	; common peephole 40c merged mask into shift.
+	srl	%1
+} if notVolatile(%1), notUsed('sf' 'zf' 'pf')
+	
+replace restart {
 	ld	%1, %2
 	ld	%1, %3
 } by {

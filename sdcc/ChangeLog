@@ -1,3 +1,8 @@
+2026-11-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/peeph.def:
+	  Optimistion for mask following right shift.
+
 2026-11-27 Christopher Bazley <chris.bazley.wg14@gmail.com>
 
 	* src/SDCCast.c (checkNullIval): Resolve and decorate a copy of
