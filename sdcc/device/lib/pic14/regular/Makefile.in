@@ -9,13 +9,16 @@ include $(srcdir)/../../common_files.mk
 
 # user configuration
 VPATH  		= $(srcdir):$(srcdir)/..:$(std_lib_dirs)
-AS		= /usr/bin/gpasm
+AS		= @GPASM@
 EXTRA_CFLAGS	= --opt-code-speed --no-warn-non-free
 PORT_CRT	=
 LIB_TYPE	= @LIB_TYPE@
 LIB		= pic14.lib
 #/usr/bin/gplink
-SDAR		= /usr/bin/gplib
+SDAR		= @GPLIB@
+
+override PORTDIR=$(abs_top_builddir)/device/lib/build/pic14
+
 
 #ARCH  ?= 16f877
 #EARCH ?= 16f1788
@@ -23,8 +26,6 @@ SDAR		= /usr/bin/gplib
 
 #/usr/bin/gpasm -p16f877 -I. -I/include/pic14 -I/non-free/include/pic14 _gptrput4.o _gptrput4.s
 #/usr/bin/gpasm' -DHAVE_CONFIG_H -I. -I../.. -I../../../../include/pic14 -I../../../../non-free/include/pic14 -I../../../../include  -p16f877  -c -o _gptrget1.o _gptrget1.S
-
-override PORTDIR=$(abs_top_builddir)/device/lib/build/pic14
 
 
 ASFLAGS = -DHAVE_CONFIG -I$(srcdir) -I$(INCDIR)/pic14 \

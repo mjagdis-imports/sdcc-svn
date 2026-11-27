@@ -836,6 +836,18 @@ if test $OPT_DISABLE_MCS51 = 0; then
                                                        device/lib/mcs51-small-xstack-auto/Makefile])
 fi
 
+if test $OPT_DISABLE_PIC14 = 0 || test $OPT_DISABLE_PIC16 = 0; then
+  AC_CHECK_PROG(GPASM,	gpasm,	gpasm, :)
+  AC_CHECK_PROG(GPLINK,	gplink,	gplink, :)
+  AC_CHECK_PROG(GPLIB,	gplib,	gplib, :)
+  case ":$GPASM:$GPLINK:$GPLIB" in
+    *:::*)
+        AC_MSG_ERROR([gputils (gpasm, gplink, and gplib) are required but not found.
+          Either install gputils or reconfigure with --disable-pic14-port and --disable-pic16-port.])
+        ;;
+  esac;
+fi
+
 if test $OPT_DISABLE_PIC14 = 0; then
   AC_CONFIG_FILES(src/pic14/Makefile)
   test $OPT_DISABLE_DEVICE_LIB = 0 && AC_CONFIG_FILES([device/lib/pic14/regular/Makefile

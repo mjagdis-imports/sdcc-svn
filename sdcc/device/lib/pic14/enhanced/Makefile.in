@@ -9,13 +9,13 @@ include $(srcdir)/../../common_files.mk
 
 # user configuration
 VPATH  		= $(srcdir):$(srcdir)/..:$(std_lib_dirs)
-AS		= /usr/bin/gpasm
+AS		= @GPASM@
 EXTRA_CFLAGS	= --opt-code-speed --no-warn-non-free
 PORT_CRT	=
 LIB_TYPE	= @LIB_TYPE@
 LIB		= pic14.lib
 #/usr/bin/gplink
-SDAR		= /usr/bin/gplib
+SDAR		= @GPLIB@
 
 override PORTDIR=$(abs_top_builddir)/device/lib/build/pic14
 

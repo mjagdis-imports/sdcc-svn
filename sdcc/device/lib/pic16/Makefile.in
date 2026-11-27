@@ -9,13 +9,13 @@ include $(srcdir)/../common_files.mk
 
 # user configuration
 VPATH  		= $(srcdir):$(srcdir)/..:$(std_lib_dirs)
-AS		= /usr/bin/gpasm
+AS		= @GPASM@
 EXTRA_CFLAGS	= --opt-code-speed --use-non-free -I$(top_srcdir)/device/non-free/include/pic16
 PORT_CRT	= crt0iz.o
 LIB_TYPE	= @LIB_TYPE@
 LIB		= pic16.lib
 #/usr/bin/gplink
-SDAR		= /usr/bin/gplib
+SDAR		= @GPLIB@
 
 ASFLAGS = -DHAVE_CONFIG -I$(srcdir) -I$(INCDIR)/pic16 \
 	-I$(top_srcdir)/device/non-free/include/pic16 
