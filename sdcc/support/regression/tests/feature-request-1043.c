@@ -163,7 +163,7 @@ test_const_globals(void)
 void
 test_static_const_globals(void)
 {
-#ifndef __SDCC_pdk14
+#if !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15)
   /* static_global_value stays 11; the pointer still targets global_pointee.
      Treating the pointee as const would reuse 10 after the write, not 23. */
   observe_char(&static_global_value);
@@ -182,7 +182,7 @@ test_static_const_globals(void)
 void
 test_mutable_globals(void)
 {
-#ifndef __SDCC_pdk14
+#if !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15)
   /* The calls change the globals to 17 and &replacement; reusing 9 or
      &global_pointee would fail the corresponding assertion. */
   mutable_global_value = 9;

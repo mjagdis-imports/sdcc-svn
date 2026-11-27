@@ -7,6 +7,8 @@
 	  support/regression/ports/ucz80/spec.mk,
 	  support/regression/ports/ucz80n/spec.mk:
 	  Move data segment to get more code memory at the expense of data memory in regression tests.
+	* support/regression/tests/feature-request-1043.c:
+	  Partially disable a test for pdk15, which has not enough code memory.
 
 2026-11-27 Gabriele Gorla <gorlik@yahoo.com>
 
