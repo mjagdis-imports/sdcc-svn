@@ -4661,7 +4661,7 @@ genPointerGet (const iCode *ic, iCode *ifx)
                       pushed_a = true;
                     }
                 }
-              else
+              else if (result->aop->type != AOP_DUMMY)
                 genMove_o (result->aop, i, ASMOP_AP, 0, 2, true, true);
               i++;
               continue;

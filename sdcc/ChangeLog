@@ -15,6 +15,8 @@
 	  support/regression/ports/ucr?ka/spec.mk,
 	  .version:
 	  Make default model explicit in library paths for stm8 and rab.
+	* src/pdk/gen.c:
+	  Fix pdk codegen for unused result on read from pointer to volatile.
 
 2026-11-27 Philipp Klaus Krause <philipp@colecovision.eu>
 
