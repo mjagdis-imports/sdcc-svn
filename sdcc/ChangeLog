@@ -1,3 +1,8 @@
+2026-11-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/peeph.def:
+	  Optimise some 32-bit loads.
+
 2026-11-27 Gabriele Gorla <gorlik@yahoo.com>
 
 	* configure,
