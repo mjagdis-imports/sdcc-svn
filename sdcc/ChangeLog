@@ -6,6 +6,8 @@
 	  device/lib/pic14/regular/Makefile.in,
 	  device/lib/pic16/Makefile.in:
 	  Detect location of gputils instead of hardcoded /usr/bin.
+	* device/lib/pic14/Makefile:
+	  Add cleaning of pic14 library.
 
 2026-11-27 Philipp Klaus Krause <philipp@colecovision.eu>
 
