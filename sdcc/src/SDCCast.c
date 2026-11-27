@@ -3980,8 +3980,11 @@ checkNullIval (sym_link *type, initList *ilist)
         ilist = ilist->init.deep;
       if (ilist && ilist->type == INIT_NODE)
         {
-          ilist->init.node = decorateType (resolveSymbols (ilist->init.node), RESULT_TYPE_NONE, true);
-          checkNullToNonoptional (type, ilist->init.node);
+          /* Leave the original call arguments untouched until inline expansion. */
+          ast *expr = decorateType (resolveSymbols (copyAst (ilist->init.node)), RESULT_TYPE_NONE, true);
+          checkNullToNonoptional (type, expr);
+          if (expr && expr->nullToNonoptionalChecked)
+            ilist->init.node->nullToNonoptionalChecked = true;
         }
       return;
     }

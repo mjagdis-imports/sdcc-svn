@@ -425,3 +425,22 @@ int *explicit_null = nullptr; /* WARNING(SDCC) */
 int *explicit_array[1] = {0}; /* WARNING(SDCC) */
 union Choice { int *p; int n; } explicit_union = {.p = nullptr}; /* WARNING(SDCC) */
 #endif
+
+#ifdef TEST26
+#pragma enable_warning 378
+
+void *alloc (unsigned);
+
+static inline void *
+wrap (unsigned size)
+{
+  return alloc (size);
+}
+
+int *
+pointer_initialiser_calls_inline (void)
+{
+  int *p = wrap (2);
+  return p;
+}
+#endif

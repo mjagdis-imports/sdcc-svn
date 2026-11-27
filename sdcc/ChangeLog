@@ -1,3 +1,17 @@
+2026-11-27 Christopher Bazley <chris.bazley.wg14@gmail.com>
+
+	* src/SDCCast.c (checkNullIval): Resolve and decorate a copy of
+	  the pointer initialiser for the early null conversion check.
+	  Decorating the original call before inline expansion left it
+	  marked as decorated after the inliner rewrote it. The later
+	  decoration pass then skipped the rewritten subtree, leaving
+	  an argument without type information when generating iCode.
+	  Propagate the checked flag back to the original expression
+	  when the early check has already issued a diagnostic.
+	* support/valdiag/tests/null-to-nonoptional.c: Compile a pointer
+	  initialiser that calls an inline function with warning 378
+	  enabled. Expect no diagnostic.
+
 2026-11-27 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* device/lib/ports.mk,
