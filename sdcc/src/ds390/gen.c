@@ -3380,22 +3380,23 @@ stackAdjust (int n)
         }
       else
         {
+          n = -n;
           PROTECT_SP;
-          emitcode ("clr", "c");
           emitcode ("mov", "a,sp");
-          emitcode ("subb", "a,#!constbyte", (unsigned)(n & 0xffu));
+          emitcode ("add", "a,#!constbyte", (unsigned)(n & 0xffu));
           emitcode ("mov", "sp,a");
           emitcode ("mov", "a,esp");
           adjustEsp ("a");
-          emitcode ("subb", "a,#!constbyte", (unsigned)((n >> 8) & 0xffu));
+          emitcode ("addc", "a,#!constbyte", (unsigned)((n >> 8) & 0xffu));
           emitcode ("mov", "esp,a");
           UNPROTECT_SP;
         }
     }
   else if (n > 3)
     {
+      n = -n;
       emitcode ("mov", "a,%s", spname);
-      emitcode ("add", "a,#!constbyte", (unsigned)((-n) & 0xffu));
+      emitcode ("add", "a,#!constbyte", (unsigned)(n & 0xffu));
       emitcode ("mov", "%s,a", spname);
     }
   else
@@ -3430,14 +3431,24 @@ emitPassStructReturnPointer (operand * result)
       /* Address of a stack result. */
       if (options.stack10bit)
         {
-          emitcode ("mov", "dpl,bpx");
-          emitcode ("mov", "a,dpl");
-          emitcode ("add", "a,#!constbyte", (unsigned)(sym->stack & 0xffu));
-          emitcode ("mov", "dpl,a");
-          emitcode ("mov", "dph,bpx+1");
-          emitcode ("mov", "a,dph");
-          emitcode ("addc", "a,#!constbyte", (unsigned)((sym->stack >> 8) & 0xffu));
-          emitcode ("mov", "dph,a");
+          if (sym->stack >= 0 && sym->stack < 7)
+            {
+              int i;
+
+              emitcode ("mov", "dpl,bpx");
+              emitcode ("mov", "dph,bpx+1");
+              for (i = 0; i < sym->stack; i++)
+                emitcode ("inc", "dptr");
+            }
+          else
+            {
+              emitcode ("mov", "a,bpx");
+              emitcode ("add", "a,#!constbyte", (unsigned)(sym->stack & 0xffu));
+              emitcode ("mov", "dpl,a");
+              emitcode ("mov", "a,bpx+1");
+              emitcode ("addc", "a,#!constbyte", (unsigned)((sym->stack >> 8) & 0xffu));
+              emitcode ("mov", "dph,a");
+            }
         }
       else
         {
@@ -4570,8 +4581,24 @@ emitStructReturnFromDptr (iCode * ic, int size, int pointerOffset)
         emitcode ("mov", "acc1,a");
 
       emitLoadStructReturnPointer (pointerOffset - savedSourceBytes);
-      for (j = 0; j < i; j++)
-        emitcode ("inc", "dptr");
+      if (i < 18)
+        {
+          for (j = 0; j < i; j++)
+            emitcode ("inc", "dptr");
+        }
+      else
+        {
+          /* The 24-bit add takes 18 bytes; inc dptr takes one byte. */
+          emitcode ("mov", "a,dpl");
+          emitcode ("add", "a,#!constbyte", (unsigned)(i & 0xffu));
+          emitcode ("mov", "dpl,a");
+          emitcode ("mov", "a,dph");
+          emitcode ("addc", "a,#!constbyte", (unsigned)((i >> 8) & 0xffu));
+          emitcode ("mov", "dph,a");
+          emitcode ("mov", "a,dpx");
+          emitcode ("addc", "a,#!constbyte", (unsigned)((i >> 16) & 0xffu));
+          emitcode ("mov", "dpx,a");
+        }
 
       if (usesPrimaryDptr)
         emitpop ("acc");
@@ -4619,7 +4646,6 @@ genStructReturn (iCode * ic, int size)
 
   if (AOP_TYPE (IC_LEFT (ic)) == AOP_DPTR ||
       AOP_TYPE (IC_LEFT (ic)) == AOP_DPTRn ||
-      AOP_TYPE (IC_LEFT (ic)) == AOP_DPTR2 ||
       AOP_TYPE (IC_LEFT (ic)) == AOP_STR)
     emitStructReturnFromDptr (ic, size, pointerOffset);
   else

@@ -152,6 +152,14 @@
 	* src/SDCCast.c (decorateType): Diagnose subscripting incomplete
 	types and void pointers (bug #4086)
 
+2026-11-25 Lishin <lishin1008@gmail.com>
+
+	* src/ds390/gen.c (stackAdjust, emitPassStructReturnPointer,
+	  emitStructReturnFromDptr, genStructReturn): Improve struct return
+	  copying and stack address calculation.
+	* support/regression/tests/ds390-structreturn-static.c:
+	  Test a 300-byte struct return.
+
 2026-11-25 Gabriele Gorla <gorlik@yahoo.com>
 
 	* support/regression/MakeList,
